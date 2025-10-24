@@ -2,3 +2,5 @@
 
 
 ## Don't forget to use: `pip3 install -r requirements.txt` to install the required packages, and `pip3 freeze > requirements.txt` to update the requirements file.
+
+## Don't Migrate until all the models are ready.
