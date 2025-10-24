@@ -1,29 +1,28 @@
 #!/usr/bin/env python3
-'''
-Module for CustomUser and all the User models that inherit from the Base CustomUser class
-'''
+"""
+Custom User model and manager using phone number as primary login field.
+Supports global phone numbers via `phonenumbers`.
+"""
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from datetime import timezone
+from django.utils import timezone
 import phonenumbers
 import uuid
-# Create your models here.
 
 
 class CustomUserManager(BaseUserManager):
     """
-    Custom manager for CustomUser, using phone as the unique identifier.
+    Custom manager for CustomUser, using phone_number1 as the unique identifier.
     """
 
-    def normalize_phone(self, phone_number1):
+    def normalize_phone(self, phone_number):
         """
-        Validates and normalizes the phone number to E.164 international format.
-        Raises ValidationError if invalid.
+        Validate and normalize a phone number to E.164 international format.
         """
         try:
-            parsed = phonenumbers.parse(phone_number1, None)
+            parsed = phonenumbers.parse(phone_number, None)
             if not phonenumbers.is_valid_number(parsed):
                 raise ValidationError(_("Invalid phone number"))
             return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
@@ -32,74 +31,90 @@ class CustomUserManager(BaseUserManager):
 
     def create_user(self, phone_number1, password=None, **extra_fields):
         """
-        Create and save a regular user with the given phone and password.
+        Create and save a regular user with the given phone number and password.
         """
         if not phone_number1:
             raise ValueError(_("The phone number must be set"))
         phone_number1 = self.normalize_phone(phone_number1)
 
-        user = self.model(phone=phone_number1, **extra_fields)
+        user = self.model(phone_number1=phone_number1, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone, password=None, **extra_fields):
+    def create_superuser(self, phone_number1, password=None, **extra_fields):
         """
-        Create and save a superuser with the given phone and password.
+        Create and save a superuser with the given phone number and password.
         """
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_active", True)
 
-        if extra_fields.get('is_staff') is not True:
+        if not extra_fields.get("is_staff"):
             raise ValueError(_("Superuser must have is_staff=True."))
-        if extra_fields.get('is_superuser') is not True:
+        if not extra_fields.get("is_superuser"):
             raise ValueError(_("Superuser must have is_superuser=True."))
 
-        return self.create_user(phone, password, **extra_fields)
+        return self.create_user(phone_number1, password, **extra_fields)
 
 
 class CustomUser(AbstractUser):
-    """the base class that all the users inherit from"""
+    """
+    Base custom user model with global phone number authentication.
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # primary identifier and should have a Whatsapp account
-    phone_number1 = models.CharField(
-        _("Whatsapp phone number"), max_length=12, unique=True)
 
-    phone_number2 = models.CharField(_("alternative phone number"),
-                                     max_length=12, unique=False, null=True, blank=True)
+    phone_number1 = models.CharField(
+        _("WhatsApp phone number"), max_length=15, unique=True
+    )
+    phone_number2 = models.CharField(
+        _("Alternative phone number"), max_length=15, null=True, blank=True
+    )
 
     email = models.EmailField(unique=True, null=True, blank=True)
+    first_name = models.CharField(max_length=128)
+    last_name = models.CharField(max_length=128)
 
-    first_name = models.CharField(max_length=128)  # first and second name
-    last_name = models.CharField(max_length=128)  # third and fourth name
-    USERNAME_FIELD = "phone_number1"
-    username = None
-    REQUIRED_FIELDS = []
-
-    date_joined = models.DateTimeField(
-        _("date joined"), default=timezone.now, auto_now_add=True)
-
+    date_joined = models.DateTimeField(default=timezone.now)
     dob = models.DateField(_("date of birth"))
 
     nid_number = models.CharField(
-        _("National id number"), max_length=15, null=True, blank=True)
-
+        _("National ID number"), max_length=15, null=True, blank=True
+    )
     gender = models.CharField(
         max_length=10,
         choices=[("male", "Male"), ("female", "Female")],
     )
 
     address = models.TextField(null=True, blank=True)
-
     location = models.URLField(max_length=512, null=True, blank=True)
+    role = models.CharField(
+        max_length=20,
+        choices=[
+            ("student", "Student"),
+            ("instructor", "Instructor"),
+            ("parent", "Parent"),
+            ("admin", "Admin"),
+        ],
+        default="student",
+    )
+
+    # Authentication settings
+    username = None
+    USERNAME_FIELD = "phone_number1"
+    REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
 
     def __str__(self):
-        return f"{self.get_full_name()}"
+        return self.get_full_name() or self.phone_number1
+
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
 
     class Meta:
         indexes = [
-            models.Index(fields=['phone_number1']),
+            models.Index(fields=["phone_number1"]),
         ]
+        verbose_name = _("User")
+        verbose_name_plural = _("Users")
