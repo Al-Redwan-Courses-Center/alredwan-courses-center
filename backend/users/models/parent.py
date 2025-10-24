@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 from django.db import models
 from .user import CustomUser
-import uuid
 '''
-Module for Parent model inheriting from CustomUser
+Module for Parent model that represents a parent user
 '''
-# Create your models here.
 
 
-class Parent(CustomUser):
+class Parent(models.Model):
     '''
-    Parent model inheriting from CustomUser
+    Parent model that represents a parent user
     '''
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(
         CustomUser, on_delete=models.CASCADE, related_name='parent_profile')
+    image = models.URLField(max_length=512, null=True, blank=True)
 
     class Meta:
+        """Meta options for the Parent model."""
         verbose_name = "Parent"
         verbose_name_plural = "Parents"
