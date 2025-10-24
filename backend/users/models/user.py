@@ -2,13 +2,13 @@
 '''
 Module for CustomUser and all the User models that inherit from the Base CustomUser class
 '''
-from datetime import timezone
-import uuid
-from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.exceptions import ValidationError
+from django.db import models
 from django.utils.translation import gettext_lazy as _
+from datetime import timezone
 import phonenumbers
+import uuid
 # Create your models here.
 
 
