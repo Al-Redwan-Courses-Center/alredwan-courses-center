@@ -72,8 +72,8 @@ class CustomUser(AbstractUser):
     )
 
     email = models.EmailField(unique=True, null=True, blank=True)
-    first_name = models.CharField(max_length=128)
-    last_name = models.CharField(max_length=128)
+    first_name = models.CharField(max_length=128)  # 1st and 2nd names
+    last_name = models.CharField(max_length=128)  # 3rd and 4th names
 
     date_joined = models.DateTimeField(default=timezone.now)
     dob = models.DateField(_("date of birth"))
@@ -111,6 +111,13 @@ class CustomUser(AbstractUser):
 
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
+
+    def clean(self):
+        """Custom validation for phone numbers."""
+        if self.phone_number1 == self.phone_number2:
+            raise ValidationError(
+                _("Primary and alternative phone numbers must be different.")
+            )
 
     class Meta:
         indexes = [

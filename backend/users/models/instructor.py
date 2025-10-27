@@ -35,3 +35,6 @@ class Instructor(models.Model):
     def __str__(self):
         """String representation of the Instructor."""
         return f"{self.user.first_name} {self.user.last_name}"
+
+
+# add ratings here, and figure out the rating system
