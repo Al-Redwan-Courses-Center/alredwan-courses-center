@@ -78,8 +78,13 @@ class CustomUser(AbstractUser):
     date_joined = models.DateTimeField(default=timezone.now)
     dob = models.DateField(_("date of birth"))
 
-    nid_number = models.CharField(
-        _("National ID number"), max_length=15, null=True, blank=True
+    identity_number = models.CharField(
+        _("Government ID / Passport"), max_length=30)
+    identity_type = models.CharField(
+        max_length=20,
+        choices=[("nid", "National ID"), ("passport",
+                                          "Passport"), ("other", "Other")],
+        default="nid"
     )
     gender = models.CharField(
         max_length=10,
