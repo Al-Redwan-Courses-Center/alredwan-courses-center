@@ -3,13 +3,17 @@
 Module for Student model that represents a student user
 '''
 from django.db import models
-from django.core.validators import MinLengthValidator
+from core.utils.image_utils import validate_image_size, ImageOptimizationMixin
 from .user import CustomUser
 import random
 import string
 
 
-class StudentUser(models.Model):
+def student_upload_path(instance, filename):
+    return f"students/{instance.id}/{filename}"
+
+
+class StudentUser(ImageOptimizationMixin, models.Model):
     '''
     Student model that represents a student user
     '''
@@ -17,7 +21,10 @@ class StudentUser(models.Model):
         CustomUser, on_delete=models.CASCADE, related_name='student_profile')
     unique_code = models.CharField(max_length=6, unique=True, editable=False)
 
-    image = models.URLField(max_length=512, null=True, blank=True)
+    image = models.ImageField(
+        upload_to=student_upload_path,
+        validators=[validate_image_size]
+    )
 
     def generate_unique_code(self):
         """Generate a unique code for the student."""
