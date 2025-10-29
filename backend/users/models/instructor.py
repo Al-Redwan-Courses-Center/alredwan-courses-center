@@ -101,7 +101,6 @@ class InstructorAttendance(models.Model):
         PRESENT = "present", _("Present")
         ABSENT = "absent", _("Absent")
         LATE = "late", _("Late")
-        EXCUSED = "excused", _("Excused Leave")
 
     instructor = models.ForeignKey(
         "Instructor", on_delete=models.CASCADE, related_name="attendance_records"
