@@ -164,7 +164,6 @@ class ParentLinkRequest(models.Model):
     """
     Represents a request by a parent to link themselves to an existing child.
     """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     child = models.ForeignKey(
         'Child', on_delete=models.CASCADE, related_name='link_requests')
     requester = models.ForeignKey(
