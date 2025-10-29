@@ -114,9 +114,6 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.get_full_name() or self.phone_number1
 
-    def get_full_name(self):
-        return f"{self.first_name} {self.last_name}".strip()
-
     def clean(self):
         """Custom validation for phone numbers."""
         if self.phone_number1 == self.phone_number2:
