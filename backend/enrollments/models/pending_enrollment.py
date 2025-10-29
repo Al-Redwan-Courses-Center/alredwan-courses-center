@@ -3,8 +3,6 @@ from datetime import timezone
 from django.db import models
 import uuid
 
-from .enrollment_model import Enrollment
-
 class Status(models.TextChoices):
     """Enumeration for pending enrollment status choices."""
     PENDING = 'pending', 'Pending'
@@ -109,6 +107,13 @@ class PendingEnrollment(models.Model):
             self.status = Status.EXPIRED
             self.processed_at = timezone.now()
             self.save()
+
+    def save(self, *args, **kwargs):
+        # add price from course if not set
+        if not self.price and self.course:
+            self.price = self.course.price
+        self.clean()  # Validate before saving
+        super().save(*args, **kwargs)
 
     def __str__(self):
         """String representation of the PendingEnrollment"""

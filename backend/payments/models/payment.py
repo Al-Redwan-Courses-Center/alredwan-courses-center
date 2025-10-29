@@ -111,6 +111,13 @@ class Payment(models.Model):
             self.payment_date = timezone.now()
         self.save()
 
+    def save(self, *args, **kwargs):
+        # Auto-set amount from pending enrollment if not set
+        if not self.amount and self.pending_enrollment:
+            self.amount = self.pending_enrollment.price
+        self.clean()  # Validate before saving
+        super().save(*args, **kwargs)
+
     def __str__(self):
         """String representation of the Payment."""
         payer = self.payer_parent.first_name if self.payer_parent else self.payer_student.first_name if self.payer_student else 'Unknown'

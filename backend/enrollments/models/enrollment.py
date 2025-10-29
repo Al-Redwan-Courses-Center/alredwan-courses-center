@@ -85,6 +85,11 @@ class Enrollment(models.Model):
         if (self.child is None and self.student is None) or (self.child is not None and self.student is not None):
             raise ValidationError("Select exactly one of student or child.")
         
+    def save(self, *args, **kwargs):
+        """clean before saving."""
+        self.clean()
+        super().save(*args, **kwargs)
+    
     def __str__(self):
         """String representation of the Enrollment."""
         participant = self.student if self.student else self.child or 'Unknown'

@@ -1,3 +1,4 @@
+import datetime
 from django.db import models
 import uuid
 from django.core.exceptions import ValidationError
@@ -57,6 +58,27 @@ class Lecture(models.Model):
 
         self.status = new_status
         self.save()
+
+    def get_duration(self):
+        """Calculate the duration of the lecture."""
+        if self.start_time and self.end_time:
+            duration = (datetime.combine(datetime.date.today(), self.end_time) - 
+                        datetime.combine(datetime.date.today(), self.start_time))
+            return duration.total_seconds() / 3600  # return duration in hours
+        return None
+
+    def save(self, *args, **kwargs):
+        # overide start_time, end_time, instructor_id from course if not set
+        if not self.start_time or not self.end_time or not self.instructor:
+            course = self.course
+            if not self.start_time:
+                self.start_time = course.default_start_time
+            if not self.end_time:
+                self.end_time = course.default_end_time
+            if not self.instructor:
+                self.instructor = course.default_instructor
+        self.clean()  # Validate before saving
+        super().save(*args, **kwargs)
 
     # func for auto generating 
     def __str__(self):

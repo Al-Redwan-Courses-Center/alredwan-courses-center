@@ -11,7 +11,11 @@ class LectureAttendance(models.Model):
     child = models.ForeignKey('users.Child', null=True, blank=True, on_delete=models.CASCADE, related_name='lecture_attendances')
     student = models.ForeignKey('users.StudentUser', null=True, blank=True, on_delete=models.CASCADE, related_name='lecture_attendances')
     present = models.BooleanField(null=True) # null = not marked yet # defalut is not attended
-    rating = models.DecimalField(max_digits=4, decimal_places=2, null=True, default=7.5) # 1.00 to 10.00 # default 7.5
+    rating = models.DecimalField(max_digits=4, decimal_places=2, null=True, default=7.5, 
+                                 validators=[
+                                    models.validators.MinValueValidator(1.00),
+                                    models.validators.MaxValueValidator(10.00)
+                                ]) # 1.00 to 10.00 # default 7.5
     notes = models.TextField(null=True, blank=True)
     marked_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='marked_lecture_attendances') 
     marked_at = models.DateTimeField(null=True, blank=True)
@@ -25,6 +29,11 @@ class LectureAttendance(models.Model):
             models.CheckConstraint(
                 check=Q(child__isnull=False, student__isnull=True) | Q(child__isnull=True, student__isnull=False),
                 name='child_or_student'
+            ),
+            # Ensure rating is between 1.00 and 10.00 if not null
+            models.CheckConstraint(
+                check=Q(rating__gte=1.00, rating__lte=10.00) | Q(rating__isnull=True),
+                name='lecture_attendance_rating_range'
             ),
         ]
         indexes = [
@@ -41,6 +50,8 @@ class LectureAttendance(models.Model):
             raise ValidationError("Must specify exactly one of child or student.")
         if (self.present is not None or self.rating is not None) and self.marked_at is None: # if present or rating is provided, marked_at must be set
             raise ValidationError("Marked at must be set if present or rating is provided.")
+        if self.rating is not None and (self.rating < 1.00 or self.rating > 10.00): # rating must be between 1.00 and 10.00
+            raise ValidationError("Rating must be between 1.00 and 10.00.")
 
     # wait for edit 
     def update_attendance(self, present_value, rating_value=None, notes_value=None, marked_by=None):
@@ -57,6 +68,11 @@ class LectureAttendance(models.Model):
         # Update marked_at only if present is not null or rating is provided
         self.marked_at = timezone.now() if (present_value is not None or rating_value is not None) else self.marked_at
         self.save()
+
+    def save(self, *args, **kwargs):
+        """clean before saving."""
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         """String representation of the LectureAttendance."""
