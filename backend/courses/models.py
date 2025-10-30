@@ -2,30 +2,48 @@ from django.db import models
 
 # Create your models here.
 
+class SeasonChoices(models.TextChoices):
+    """Enumeration for season_type status choices."""
 
-class Seasons(models.Model):
+    SUMMER_CAMP = 'summer_camp', 'Summer camp'
+    SCHOOL = 'school', 'School'
+    RAMADAN = 'ramadan', 'Ramadan'
+    EID = 'eid', 'Eid'
+    OTHER = 'other', 'Other'
+
+class ExamChoices(models.TextChoices):
+    """Enumeration for exam_type status choices."""
+
+    QUIZ = 'quiz', 'Quiz'
+    MIDTERM = 'midterm', 'Midterm'
+    FINAL = 'final', 'Final'
+    ASSIGNMENT = 'assignment', 'Assignment'
+    OTHER = 'other', 'Other'
+
+class Season(models.Model):
     """
-    Seasons model
+    Season model
     """
 
-    seasons_choices = [
-        ("su", "summer_camp"),
-        ("sch", "school"),
-        ("ramd", "ramadan"),
-        ("eid", "eid"),
-        ("oth", "other"),
-    ]
-    name = models.CharField(max_length=50)
-    season_type = models.CharField(max_leagth=1, choices=seasons_choices)
+    name = models.CharField(max_length=128)
+    season_type = models.CharField(max_leagth=1, choices=SeasonChoices)
     start_date = models.DateField()
     end_date = models.DateField()
     description = models.TextField()
-    is_active = models.BooleanField(default=True)
-    create_at = models.DateTimeField(auto_now_add=True)
-    update_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        """Meta class for Season model."""
+
+        indexes = [
+            models.Index(fields=['start_date'], name='start_date_index'),
+            models.Index(fields=['end_date'], name='end_date_index'),
+        ]
 
 # Model Tag
-class Tags(models.Model):
+class Tag(models.Model):
     """
     Tags model
     """
@@ -33,16 +51,16 @@ class Tags(models.Model):
     name = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
 
-# Model Courses
-class Courses(models.Model):
+# Model Course
+class Course(models.Model):
     """
-    Courses model
+    Course model
     """
 
     name = models.CharField(max_length=50)
     description = models.TextField()
-    start_date = models.dateField()
-    end_date = models.dateField()
+    start_date = models.DateField()
+    end_date = models.DateField()
     num_lectures = models.IntegerField()
     capacity = models.IntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -53,23 +71,32 @@ class Courses(models.Model):
 
     # relationships
 
-    # relationship with season table
-    season_id = models.ForeignKey(Seasons, null=True)
-    # relationship with instructor table
-    instructor_id = models.ForeignKey(Instructor)
+    season = models.ForeignKey(Season, null=True)     # relationship with season table
+    instructor = models.ForeignKey(Instructor)     # relationship with instructor table
+    tags = models.ManyToManyField(Tag, related_name="course")
+
+    class Meta:
+        """Meta class for Course model."""
+
+        indexes = [
+            models.Index(fields=['instructor'], name='instructor_index'),
+            models.Index(fields=['season'], name='season_index'),
+            models.Index(fields=['start_date'], name='start_date_index'),
+        ]
 
 # Model courses schedule
 class CourseSchedule(models.Model):
     """
     Course Schedule mode
     """
-    MONDAY = 0
-    TUESDAY = 1
-    WEDNESDAY = 2
-    THURSDAY = 3
-    FRIDAY = 4
-    SATURDAY = 5
-    SUNDAY = 6
+    SATURDAY = 0
+    SUNDAY = 1
+    MONDAY = 2
+    TUESDAY = 3
+    WEDNESDAY = 4
+    THURSDAY = 5
+    FRIDAY = 6
+
 
     WEEKDAYS = [
         (MONDAY, 'Monday'),
@@ -87,68 +114,42 @@ class CourseSchedule(models.Model):
 
     # Relationship
     # Link to courses via ForeignKey
-    courses_id = models.ForeignKey(Courses)
-
-class CourseTag(models.Model):
-    """
-    Course tage model for handling ManyToMany relationship between Tag and Courses models.
-    """
-
-    course = models.ForeignKey(Courses, on_delete=models.CASCADE)
-    tag = models.ForeignKey(Tags, on_delete=models.CASCADE)
-
-    class Meta:
-        """ Unique key"""
-
-        unique_key = ('course', 'tag')
-
-
-class InstructorTag(models.Model):
-    """
-    Instructor tage model for handling ManyToMany relationship between Tag and Instructor models.
-    """
-
-    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE)
-    tag = models.ForeignKey(Tags, on_delete=models.CASCADE)
-
-    class Meta:
-        """ Unique key"""
-
-        unique_key = ('instructor', 'tag')
+    course = models.ForeignKey(Course)
 
 # Model Exam
-class Exams(models.Model):
+class Exam(models.Model):
     """
     Exam model
     """
-    exam_choices = [
-        ('qz', 'quiz'),
-        ('mt', 'midterm'),
-        ('f', 'final'),
-        ('assi', 'assignment'),
-        ('oth', 'other')
-    ]
 
     name = models.CharField(max_length=100)
-    scheduled_at = models.DateField()
+    scheduled_at = models.DateField(auto_now=True)
     total_marks = models.DecimalField(max_digit=5, decimal_places=2)
     description = models.TextField(null=True)
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     exam_type = models.CharField(max_length=1,
-                                 choices=exam_choices,
-                                 default='oth')
+                                 choices=ExamChoices,
+                                 default='other')
 
     # Relationship
     # Link to courses
-    course_id = models.ForeignKey('courses', on_delete=models.CASCADE)
-    created_by = models.ForeignKey('Instructor', on_delete=models.CASCADE)
+    course = models.ForeignKey('courses', on_delete=models.CASCADE)
+    instructor = models.ForeignKey('Instructor', on_delete=models.CASCADE)
 
-# Model Exam results
-class ExamResults(models.Model):
+    class Meta:
+        """Meta class for Exam model."""
+
+        indexes = [
+            models.Index(fields=['course'], name='course_id_index'),
+            models.Index(fields=['scheduled_at'], name='scheduled_at_index'),
+        ]
+
+# Model Exam result
+class ExamResult(models.Model):
     """
-    Exam results model
+    Exam result model
     """
 
     marks_obtained = models.DecimalField(max_digits=5, decimal_places=2)
@@ -159,7 +160,18 @@ class ExamResults(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     # Relationship
-    entered_by = models.ForeignKey('users')
-    exam_id = models.ForeignKey('exams')
-    child_id = models.ForeignKey('children')
-    student_id = models.ForeignKey('student')
+    user = models.ForeignKey('users')
+    exam = models.ForeignKey('exams')
+    child = models.ForeignKey('children')
+    student = models.ForeignKey('student')
+
+    class Meta:
+        """Meta class for Exam result model."""
+
+        indexes = [
+            models.Index(fields=['exam'], name='exam_id_index'),
+            models.Index(fields=['child'], name='child_id_index'),
+            models.Index(fields=['student'], name='student_id_index'),
+            models.Index(fields=['exam', 'child'], name='exam_child_index'),
+            models.Index(fields=['exam', 'student'], name='exam_student_index'),
+        ]
