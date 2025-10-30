@@ -10,7 +10,7 @@ class LectureAttendance(models.Model):
     lecture = models.ForeignKey('lectures.Lecture', on_delete=models.CASCADE, related_name='lecture_attendances')
     child = models.ForeignKey('users.Child', null=True, blank=True, on_delete=models.CASCADE, related_name='lecture_attendances')
     student = models.ForeignKey('users.StudentUser', null=True, blank=True, on_delete=models.CASCADE, related_name='lecture_attendances')
-    present = models.BooleanField(null=True) # null = not marked yet # defalut is not attended
+    present = models.BooleanField(null=True) # null = not marked yet or student enrolled after this lecture # defalut is not attended
     rating = models.DecimalField(max_digits=4, decimal_places=2, null=True, default=7.5, 
                                  validators=[
                                     models.validators.MinValueValidator(1.00),
@@ -53,20 +53,19 @@ class LectureAttendance(models.Model):
         if self.rating is not None and (self.rating < 1.00 or self.rating > 10.00): # rating must be between 1.00 and 10.00
             raise ValidationError("Rating must be between 1.00 and 10.00.")
 
-    # wait for edit 
-    def update_attendance(self, present_value, rating_value=None, notes_value=None, marked_by=None):
+
+    def update_attendance(self, present_value, marked_by, rating_value=None, notes_value=None):
         """Update attendance record with validation."""
-        if present_value is not None and not isinstance(present_value, bool): # present must be boolean
-            raise ValidationError("Present must be a boolean value.")
-        if rating_value is not None and (rating_value < 1.00 or rating_value > 10.00): # rating must be between 1.00 and 10.00
+        if present_value not in [True, False]:
+            raise ValidationError("Present value must be True or False.")
+        if rating_value is not None and (rating_value < 1.00 or rating_value > 10.00):
             raise ValidationError("Rating must be between 1.00 and 10.00.")
         
         self.present = present_value
         self.rating = rating_value
-        self.notes = notes_value # if you want to update the notes or rating or present
-        self.marked_by = marked_by # who update the attendance 
-        # Update marked_at only if present is not null or rating is provided
-        self.marked_at = timezone.now() if (present_value is not None or rating_value is not None) else self.marked_at
+        self.notes = notes_value
+        self.marked_by = marked_by
+        self.marked_at = timezone.now()
         self.save()
 
     def save(self, *args, **kwargs):

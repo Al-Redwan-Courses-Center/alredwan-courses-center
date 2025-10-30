@@ -1,5 +1,6 @@
 from django.db import models
 import uuid
+from django.core.exceptions import ValidationError
 
 class Status(models.TextChoices): 
     """Enumeration for enrollment status choices."""
@@ -17,10 +18,9 @@ class Enrollment(models.Model):
     student = models.ForeignKey('student_users.StudentUser', null=True, blank=True, on_delete=models.CASCADE, related_name='enrollments') 
     child = models.ForeignKey('children.Child', null=True, blank=True, on_delete=models.CASCADE, related_name='enrollments')
     payment = models.OneToOneField('payments.Payment', null=True, blank=True, on_delete=models.SET_NULL, related_name='enrollment') 
-    created_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, related_name='created_enrollments') # connected to admin who approved the enrollment
-
+    processed_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, related_name='created_enrollments') # connected to admin who approved the enrollment
+    notes = models.TextField(null=True, blank=True)
     enrolled_at = models.DateTimeField() # date time when he wanted to enroll from pending enrollment to active enrollment
-    active = models.BooleanField(default=True) # default active because when admin approves the pending enrollment it becomes active
     status = models.CharField(max_length=10, choices=Status.choices, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -36,11 +36,6 @@ class Enrollment(models.Model):
                 models.Q(child__isnull=False, student__isnull=True) | 
                 models.Q(child__isnull=True, student__isnull=False),
                 name='one_child_or_student'
-            ),
-            # check that active is true when status is active, and false otherwise
-            models.CheckConstraint(
-                check=models.Q(active=True) | models.Q(status=Status.COMPLETED),
-                name='active_or_completed'
             ),
             # unique constraint to prevent duplicate enrollments for the same course and child/student
             models.UniqueConstraint(fields=['course', 'child'], name='unique_course_child'), 
@@ -80,7 +75,6 @@ class Enrollment(models.Model):
             
     def clean(self):
         """Ensure either child or student is set, but not both or neither."""
-        from django.core.exceptions import ValidationError
 
         if (self.child is None and self.student is None) or (self.child is not None and self.student is not None):
             raise ValidationError("Select exactly one of student or child.")

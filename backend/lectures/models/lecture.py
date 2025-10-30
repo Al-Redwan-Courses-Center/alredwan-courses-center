@@ -14,7 +14,7 @@ class Lecture(models.Model):
     """Model representing a lecture scheduled for a course."""
     
     course = models.ForeignKey('courses.Course', on_delete=models.CASCADE, related_name='lectures') # protect course is perpenant
-    scheduled_at = models.DateTimeField()
+    scheduled_at = models.DateTimeField() # override from course schedule
     lecture_number = models.IntegerField()
     start_time = models.TimeField(null=True, blank=True) # Optional override from course schedule
     end_time = models.TimeField(null=True, blank=True) # Optional override from course schedule
@@ -67,20 +67,23 @@ class Lecture(models.Model):
             return duration.total_seconds() / 3600  # return duration in hours
         return None
 
+    def update_scheduled_time(self, new_scheduled_at, start_time=None, end_time=None):
+        """Update the scheduled time of the lecture with validation."""
+        if new_scheduled_at < timezone.now():
+            raise ValidationError("Cannot reschedule to a past time.")
+        if start_time:
+            self.start_time = start_time
+        if end_time:
+            self.end_time = end_time
+        self.scheduled_at = new_scheduled_at
+        self.save()
+
     def save(self, *args, **kwargs):
-        # overide start_time, end_time, instructor_id from course if not set
-        if not self.start_time or not self.end_time or not self.instructor:
-            course = self.course
-            if not self.start_time:
-                self.start_time = course.default_start_time
-            if not self.end_time:
-                self.end_time = course.default_end_time
-            if not self.instructor:
-                self.instructor = course.default_instructor
+        """Clean before saving."""
         self.clean()  # Validate before saving
         super().save(*args, **kwargs)
 
-    # func for auto generating 
+    # Function for auto-generating 
     def __str__(self):
         """String representation of the Lecture."""
         return f"Lecture {self.lecture_number} for {self.course} at {self.scheduled_at}"

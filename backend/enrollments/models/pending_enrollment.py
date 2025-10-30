@@ -1,14 +1,14 @@
 from django.forms import ValidationError
-from datetime import timezone
+import django.utils.timezone as timezone
 from django.db import models
 import uuid
 
 class Status(models.TextChoices):
     """Enumeration for pending enrollment status choices."""
-    PENDING = 'pending', 'Pending'
-    CANCELLED = 'cancelled', 'Cancelled'
-    EXPIRED = 'expired', 'Expired'
-    ACCEPTED = 'accepted', 'Accepted'
+    PENDING = 'pending', 'Pending' # pending enrollment when created
+    CANCELLED = 'cancelled', 'Cancelled' # admin cancelled
+    EXPIRED = 'expired', 'Expired' # auto expired after expires_at
+    ACCEPTED = 'accepted', 'Accepted' # enrollment accepted by admin
 
 class PendingEnrollment(models.Model):
     """Model representing a pending enrollment request for a course."""
@@ -22,7 +22,6 @@ class PendingEnrollment(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2) # price auto from course 
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(null=True, blank=True) # auto after like 7 days
-    notes = models.TextField(null=True, blank=True)
     processed_by = models.ForeignKey('users.User', null=True, blank=True, on_delete=models.SET_NULL, related_name='processed_pending_enrollments')
     processed_at = models.DateTimeField(null=True, blank=True) # auto when accepted or cancelled
 
