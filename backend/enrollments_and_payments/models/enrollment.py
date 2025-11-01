@@ -11,6 +11,7 @@ class EnrollmentStatus(models.TextChoices):
     COMPLETED = 'completed', 'Completed'  # Enrollment finished successfully
     DROPPED = 'dropped', 'Dropped'  # Enrollment cancelled or dropped
     SUSPENDED = 'suspended', 'Suspended'  # Enrollment temporarily paused
+    REFUNDED = 'refunded', 'Refunded'  # Enrollment refunded
 
 
 class PaymentMethod(models.TextChoices):
@@ -99,6 +100,7 @@ class Enrollment(models.Model):
             EnrollmentStatus.SUSPENDED: [EnrollmentStatus.ACTIVE, EnrollmentStatus.DROPPED],
             EnrollmentStatus.COMPLETED: [],
             EnrollmentStatus.DROPPED: [],
+            EnrollmentStatus.REFUNDED: [],
         }
         if new_status not in valid_transitions[self.status]:
             raise ValidationError(f"Invalid status transition from {self.status} to {new_status}.")
