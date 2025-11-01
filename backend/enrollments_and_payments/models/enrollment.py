@@ -36,9 +36,19 @@ class Enrollment(models.Model):
     transaction_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)  # Unique transaction identifier auto created
     notes = models.TextField(null=True, blank=True)  # Notes on payment, refunds, etc.
     processed_by = models.ForeignKey('users.User', on_delete=models.SET_NULL)  # Admin who processed the enrollment
-    created_at = models.DateTimeField(auto_now_add=True)  # Timestamp when enrollment was created
-    updated_at = models.DateTimeField(auto_now=True)  # Timestamp when enrollment was last updated
 
+    # Refund tracking (critical for dropped enrollments)
+    refund_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    refund_date = models.DateTimeField(null=True, blank=True)
+    refund_method = models.CharField(max_length=20, choices=PaymentMethod.choices, null=True, blank=True)
+    refund_reference = models.CharField(max_length=100, null=True, blank=True)
+
+    # Timestamps
+    enrolled_at = models.DateTimeField(default=timezone.now, db_index=True)  # Renamed from created_at for clarity
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True, db_index=True)  # NEW - when course ended
+    dropped_at = models.DateTimeField(null=True, blank=True)  # NEW - when enrollment was cancelled
+    
     class Meta:
         """Meta class for Enrollment model."""
         constraints = [
@@ -46,6 +56,15 @@ class Enrollment(models.Model):
             models.CheckConstraint(
                 check=Q(child__isnull=False, student__isnull=True) | Q(child__isnull=True, student__isnull=False),
                 name='child_or_student_enrollment'  
+            ),
+            # Ensure amount is positive and refund amount is non-negative
+            models.CheckConstraint(
+                check=Q(amount__gt=0),
+                name='positive_enrollment_amount'  
+            ),
+            models.CheckConstraint(
+                check=Q(refund_amount__gte=0),
+                name='non_negative_refund_amount'  
             ),
 
             models.UniqueConstraint(fields=['course', 'child'], name='unique_course_child_enrollment'),  # Prevent duplicate enrollments for child
@@ -66,6 +85,40 @@ class Enrollment(models.Model):
         # Ensure only one of child or student is set
         if (self.child is None and self.student is None) or (self.child is not None and self.student is not None):
             raise ValidationError("Must specify exactly one of child or student.")
+        # Refund amount cannot be negative
+        if self.refund_amount is not None and self.refund_amount < 0:
+            raise ValidationError("Refund amount cannot be negative.")
+        # amoutt must be positive
+        if self.amount <= 0:
+            raise ValidationError("Enrollment amount must be positive.")
+        
+    def update_status(self, new_status):
+        """Update enrollment status with timestamp management."""
+        valid_transitions = {
+            EnrollmentStatus.ACTIVE: [EnrollmentStatus.COMPLETED, EnrollmentStatus.DROPPED, EnrollmentStatus.SUSPENDED],
+            EnrollmentStatus.SUSPENDED: [EnrollmentStatus.ACTIVE, EnrollmentStatus.DROPPED],
+            EnrollmentStatus.COMPLETED: [],
+            EnrollmentStatus.DROPPED: [],
+        }
+        if new_status not in valid_transitions[self.status]:
+            raise ValidationError(f"Invalid status transition from {self.status} to {new_status}.")
+
+        self.status = new_status
+        now = timezone.now()
+        if new_status == EnrollmentStatus.COMPLETED:
+            self.completed_at = now
+        elif new_status == EnrollmentStatus.DROPPED:
+            self.dropped_at = now
+        self.save()
+
+    def get_participant(self):
+        """Get the enrolled participant (child or student)."""
+        return self.child if self.child else self.student
+
+    def save(self, *args, **kwargs):
+        """Override save to ensure clean is called."""
+        self.full_clean()  # Call clean method before saving
+        super().save(*args, **kwargs)
 
     def __str__(self):
         """String representation of the Enrollment."""

@@ -35,7 +35,17 @@ class EnrollmentRequest(models.Model):
                 ),
                 name='parent_child_or_student'  
             ),
-            
+            # ensure positive price
+            models.CheckConstraint(
+                check=Q(price__gt=0),
+                name='positive_price'
+            ),
+            # ensure expires_at is in the future if set
+            models.CheckConstraint(
+                check=Q(expires_at__gt=timezone.now()) | Q(expires_at__isnull=True),
+                name='valid_expires_at'
+            ),
+
             models.UniqueConstraint(fields=['course', 'child'], name='unique_course_child_request'),  # Prevent duplicate requests for the same course and child
             models.UniqueConstraint(fields=['course', 'student'], name='unique_course_student_request'),  # Prevent duplicate requests for the same course and student
         ]
@@ -57,6 +67,22 @@ class EnrollmentRequest(models.Model):
         if not ((self.parent is not None and self.child is not None and self.student is None) or 
                 (self.student is not None and self.parent is None and self.child is None)):
             raise ValidationError("Select either a parent and child together or a student alone.")
+
+    def save(self, *args, **kwargs):
+        """Override save to set defaults and validate."""
+        # Auto-set expires_at if not provided (7 days from creation)
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(days=7)
+        # get price from course if not set
+        if not self.price:
+            self.price = self.course.price
+
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def get_participant(self):
+        """Get the participant (child or student)."""
+        return self.child if self.child else self.student
 
     def __str__(self):
         """String representation of the EnrollmentRequest."""
