@@ -20,16 +20,25 @@ class ExamChoices(models.TextChoices):
     ASSIGNMENT = 'assignment', 'Assignment'
     OTHER = 'other', 'Other'
 
+class Weekday(models.IntegerChoices):
+    SATURDAY = 0, _("Saturday")
+    SUNDAY = 1, _("Sunday")
+    MONDAY = 2, _("Monday")
+    TUESDAY = 3, _("Tuesday")
+    WEDNESDAY = 4, _("Wednesday")
+    THURSDAY = 5, _("Thursday")
+    FRIDAY = 6, _("Friday")
+
 class Season(models.Model):
     """
     Season model
     """
 
     name = models.CharField(max_length=128)
-    season_type = models.CharField(max_leagth=1, choices=SeasonChoices)
+    season_type = models.CharField(max_leagth=1, choices=SeasonChoices.choices)
     start_date = models.DateField()
-    end_date = models.DateField()
-    description = models.TextField()
+    end_date = models.DateField(null=True)
+    description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -38,7 +47,7 @@ class Season(models.Model):
         """Meta class for Season model."""
 
         indexes = [
-            models.Index(fields=['start_date'], name='start_date_index'),
+            models.Index(fields=['start_date'], name='season_start_date_index'),
             models.Index(fields=['end_date'], name='end_date_index'),
         ]
 
@@ -60,8 +69,8 @@ class Course(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField()
     start_date = models.DateField()
-    end_date = models.DateField()
-    num_lectures = models.IntegerField()
+    end_date = models.DateField(null=True)
+    num_lectures = models.IntegerField(null=True)
     capacity = models.IntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     enrolled_count = models.IntegerField(default=0)
@@ -71,9 +80,9 @@ class Course(models.Model):
 
     # relationships
 
-    season = models.ForeignKey(Season, null=True)     # relationship with season table
-    instructor = models.ForeignKey(Instructor)     # relationship with instructor table
-    tags = models.ManyToManyField(Tag, related_name="course")
+    season = models.ForeignKey(Season, on_delete=models.CASCADE, null=True, related_name="link_course_season")     # relationship with season table
+    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name="link_course_instructor")     # relationship with instructor table
+    tags = models.ManyToManyField(Tag, on_delete=models.CASCADE, related_name="ManyToMany_course_tags")
 
     class Meta:
         """Meta class for Course model."""
@@ -81,7 +90,7 @@ class Course(models.Model):
         indexes = [
             models.Index(fields=['instructor'], name='instructor_index'),
             models.Index(fields=['season'], name='season_index'),
-            models.Index(fields=['start_date'], name='start_date_index'),
+            models.Index(fields=['start_date'], name='course_start_date_index'),
         ]
 
 # Model courses schedule
@@ -89,26 +98,8 @@ class CourseSchedule(models.Model):
     """
     Course Schedule mode
     """
-    SATURDAY = 0
-    SUNDAY = 1
-    MONDAY = 2
-    TUESDAY = 3
-    WEDNESDAY = 4
-    THURSDAY = 5
-    FRIDAY = 6
 
-
-    WEEKDAYS = [
-        (MONDAY, 'Monday'),
-        (TUESDAY, 'Tuesday'),
-        (WEDNESDAY, 'Wednesday'),
-        (THURSDAY, 'Thursday'),
-        (FRIDAY, 'Friday'),
-        (SATURDAY, 'Saturday'),
-        (SUNDAY, 'Sunday'),
-    ]
-
-    weekday = models.IntegerField(choices=WEEKDAYS)
+    weekday = models.PositiveSmallIntegerField(choices=Weekday.choices)
     start_time = models.DateField()
     end_time = models.DateField()
 
@@ -123,20 +114,20 @@ class Exam(models.Model):
     """
 
     name = models.CharField(max_length=100)
-    scheduled_at = models.DateField(auto_now=True)
+    scheduled_at = models.DateTimeField(auto_now=True)
     total_marks = models.DecimalField(max_digit=5, decimal_places=2)
-    description = models.TextField(null=True)
+    description = models.TextField(blank=True, null=True)
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     exam_type = models.CharField(max_length=1,
-                                 choices=ExamChoices,
+                                 choices=ExamChoices.choices,
                                  default='other')
 
     # Relationship
     # Link to courses
-    course = models.ForeignKey('courses', on_delete=models.CASCADE)
-    instructor = models.ForeignKey('Instructor', on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="link_exam_course")
+    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name="link_exam_instructor")
 
     class Meta:
         """Meta class for Exam model."""
@@ -152,22 +143,29 @@ class ExamResult(models.Model):
     Exam result model
     """
 
-    marks_obtained = models.DecimalField(max_digits=5, decimal_places=2)
-    percentage = models.DecimalField(max_digits=5, decimal_places=2)
+    marks_obtained = models.DecimalField(max_digits=5, decimal_places=2, null=True)
+    percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True)
+    passed = models.BooleanField()
     notes = models.TextField(null=True)
     entered_at = models.DateField()
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     # Relationship
-    user = models.ForeignKey('users')
-    exam = models.ForeignKey('exams')
-    child = models.ForeignKey('children')
-    student = models.ForeignKey('student')
+    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="link_examResults_users")
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name="link_examResults_exam")
+    child = models.ForeignKey(Children, on_delete=models.CASCADE, related_name="link_examResults_child")
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="link_examResults_student")
 
     class Meta:
         """Meta class for Exam result model."""
 
+        # Constraints
+        constraints = [
+            models.UniqueConstraint(fields=['exam', 'child'], name='unique_exam_child'),
+            models.UniqueConstraint(fields=['exam', 'student'], name='unique_exam_student')
+        ]
+        # Indexes
         indexes = [
             models.Index(fields=['exam'], name='exam_id_index'),
             models.Index(fields=['child'], name='child_id_index'),
