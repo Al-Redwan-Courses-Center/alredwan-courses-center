@@ -3,6 +3,7 @@ import uuid
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.db.models import Q
+from datetime import timedelta
 
 
 class EnrollmentRequestStatus(models.TextChoices):
