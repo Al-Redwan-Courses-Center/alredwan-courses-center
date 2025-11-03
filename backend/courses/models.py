@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 
 # Create your models here.
 
@@ -48,8 +49,13 @@ class Season(models.Model):
 
         indexes = [
             models.Index(fields=['start_date'], name='season_start_date_index'),
-            models.Index(fields=['end_date'], name='end_date_index'),
+            models.Index(fields=['end_date'], name='season_end_date_index'),
         ]
+
+    def clean(self):
+        # Ensure that end_date after start_date
+        if self.end_date > self.start_date:
+            raise ValidationError("End date must be after start date.")
 
 # Model Tag
 class Tag(models.Model):
@@ -93,6 +99,11 @@ class Course(models.Model):
             models.Index(fields=['start_date'], name='course_start_date_index'),
         ]
 
+    def clean(self):
+        # Ensure that end_date after start_date
+        if self.end_date > self.start_date:
+            raise ValidationError("End date must be after start date.")
+
 # Model courses schedule
 class CourseSchedule(models.Model):
     """
@@ -106,6 +117,11 @@ class CourseSchedule(models.Model):
     # Relationship
     # Link to courses via ForeignKey
     course = models.ForeignKey(Course)
+
+    def clean(self):
+        # Ensure that end_date after start_date
+        if self.end_date > self.start_date:
+            raise ValidationError("End date must be after start date.")
 
 # Model Exam
 class Exam(models.Model):
@@ -171,5 +187,8 @@ class ExamResult(models.Model):
             models.Index(fields=['child'], name='child_id_index'),
             models.Index(fields=['student'], name='student_id_index'),
             models.Index(fields=['exam', 'child'], name='exam_child_index'),
-            models.Index(fields=['exam', 'student'], name='exam_student_index'),
         ]
+
+        def clean(self):
+            if not self.student and not self.child:
+                raise ValidationError("Either student or child must be provided.")
