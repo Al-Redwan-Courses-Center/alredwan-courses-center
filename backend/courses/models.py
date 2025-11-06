@@ -86,9 +86,9 @@ class Course(models.Model):
 
     # relationships
 
-    season = models.ForeignKey(Season, on_delete=models.CASCADE, null=True, related_name="link_course_season")     # relationship with season table
-    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name="link_course_instructor")     # relationship with instructor table
-    tags = models.ManyToManyField(Tag, on_delete=models.CASCADE, related_name="ManyToMany_course_tags")
+    season = models.ForeignKey('courses.Season', on_delete=models.CASCADE, null=True, related_name="course")     # relationship with season table
+    instructor = models.ForeignKey('users.Instructor', on_delete=models.CASCADE, related_name="course")     # relationship with instructor table
+    tags = models.ManyToManyField('courses.Tag', on_delete=models.CASCADE, related_name="course")
 
     class Meta:
         """Meta class for Course model."""
@@ -103,6 +103,10 @@ class Course(models.Model):
         # Ensure that end_date after start_date
         if self.end_date > self.start_date:
             raise ValidationError("End date must be after start date.")
+
+        # Ensure that end_date or num_lec must be null
+        if not self.end_date and not self.num_lectures:
+            raise ValidationError("Either 'end_date' or 'num_lectures' must be provided.")
 
 # Model courses schedule
 class CourseSchedule(models.Model):
@@ -142,8 +146,8 @@ class Exam(models.Model):
 
     # Relationship
     # Link to courses
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="link_exam_course")
-    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name="link_exam_instructor")
+    course = models.ForeignKey('courses.Course', on_delete=models.CASCADE, related_name="exam")
+    instructor = models.ForeignKey('users.Instructor', on_delete=models.CASCADE, related_name="exam")
 
     class Meta:
         """Meta class for Exam model."""
@@ -168,10 +172,10 @@ class ExamResult(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     # Relationship
-    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="link_examResults_users")
-    exam = models.ForeignKey(Exam, on_delete=models.CASCADE, related_name="link_examResults_exam")
-    child = models.ForeignKey(Children, on_delete=models.CASCADE, related_name="link_examResults_child")
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="link_examResults_student")
+    user = models.ForeignKey('users.Users', on_delete=models.CASCADE, related_name="exam_results")
+    exam = models.ForeignKey("courses.Exam", on_delete=models.CASCADE, related_name="exam_results")
+    child = models.ForeignKey("users.Children", on_delete=models.CASCADE, related_name="exam_results")
+    student = models.ForeignKey("users.Student", on_delete=models.CASCADE, related_name="exam_results")
 
     class Meta:
         """Meta class for Exam result model."""
