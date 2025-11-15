@@ -5,6 +5,8 @@
 
 ## Don't Migrate until all the models are ready.
 
+
+
 ## Installation
 * ### 1. **Clone the repository**:
    ```bash
@@ -68,3 +70,15 @@ and enter your credentials for this superuser/admin account.
    ```bash
    python3.10 manage.py runserver;
    ```
+
+
+
+later:
+
+Add a boolean is_phone_verified.
+
+Add a verification code model linked to CustomUser.
+
+Use a library like django-phonenumber-field
+
+Add a signal to notify the primary parent when a new link request is made.
