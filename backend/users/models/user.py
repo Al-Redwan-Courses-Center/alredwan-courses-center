@@ -78,6 +78,8 @@ class CustomUser(AbstractUser):
     date_joined = models.DateTimeField(default=timezone.now)
     dob = models.DateField(_("date of birth"))
 
+    # Phone and admin verification status
+    is_verified = models.BooleanField(default=False)
     identity_number = models.CharField(
         _("Government ID / Passport"), max_length=30)
     identity_type = models.CharField(

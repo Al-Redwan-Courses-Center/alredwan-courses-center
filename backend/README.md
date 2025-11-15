@@ -39,3 +39,5 @@ Add a boolean is_phone_verified.
 Add a verification code model linked to CustomUser.
 
 Use a library like django-phonenumber-field
+
+Add a signal to notify the primary parent when a new link request is made.

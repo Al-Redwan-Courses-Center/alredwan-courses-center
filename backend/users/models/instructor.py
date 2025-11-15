@@ -1,4 +1,5 @@
 
+from django.forms import ValidationError
 from django.utils import timezone
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -13,10 +14,12 @@ Module for Instructor model that represents an instructor user profile
 
 
 def nid_upload_path(instance, filename):
+    """Generate file path for uploading NID images of an instructor."""
     return f"instructors/{instance.user.id}/nid/{filename}"
 
 
 def instructor_upload_path(instance, filename):
+    """Generate file path for uploading profile images of an instructor."""
     return f"instructors/{instance.id}/{filename}"
 
 
@@ -29,7 +32,7 @@ class Instructor(models.Model):
         NORMAL = "normal", _("Normal / External")
 
     user = models.OneToOneField(
-        'users.CustomUser', on_delete=models.CASCADE, related_name='instructor_profile')
+        CustomUser, on_delete=models.CASCADE, related_name='instructor_profile')
     bio = models.TextField(null=True, blank=True)
     monthly_salary = models.DecimalField(max_digits=10, decimal_places=2)
 
@@ -76,7 +79,7 @@ class Weekday(models.IntegerChoices):
 
 class SupervisorSchedule(models.Model):
     instructor = models.ForeignKey(
-        "users.Instructor",
+        Instructor,
         on_delete=models.CASCADE,
         related_name="supervisor_schedules"
     )
@@ -88,6 +91,13 @@ class SupervisorSchedule(models.Model):
         unique_together = ("instructor", "day_of_week")
         verbose_name = "instructor Schedule"
         verbose_name_plural = "instructor Schedules"
+
+    def clean(self):
+        """Ensure that end_time is after start_time."""
+        if self.start_time >= self.end_time:
+            raise ValidationError(
+                {"end_time": _("End time must be after start time.")}
+            )
 
     def __str__(self):
         return f"{self.instructor} — {self.get_day_of_week_display()} {self.start_time}-{self.end_time}"
@@ -140,7 +150,7 @@ class InstructorAttendance(models.Model):
     )
 
     rated_by = models.ForeignKey(
-        "CustomUser",
+        CustomUser,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
