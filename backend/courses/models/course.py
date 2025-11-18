@@ -114,6 +114,9 @@ class Course(models.Model):
                                    related_name="courses")
     tags = models.ManyToManyField(
         'courses.Tag', related_name="courses", blank=True)
+    for_adults = models.BooleanField(default=True)
+    min_age = models.PositiveSmallIntegerField(null=True, blank=True)
+    max_age = models.PositiveSmallIntegerField(null=True, blank=True)
 
     class Meta:
         indexes = [
