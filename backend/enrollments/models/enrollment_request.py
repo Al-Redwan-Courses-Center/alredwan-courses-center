@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-from django.db import models
 from django.core.exceptions import ValidationError
-from django.utils import timezone
+from django.db import models
 from django.db.models import Q
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
 from datetime import timedelta
 import uuid
 '''Enrollment Request related Models'''
@@ -10,22 +12,23 @@ import uuid
 
 class EnrollmentRequestStatus(models.TextChoices):
     """Enumeration for enrollment request status choices."""
-    PENDING = 'pending', 'Pending'  # Initial state when request is created
+    PENDING = 'pending', _('Pending')  # Initial state when request is created
 
     # State when enrollment is being processed ==> mainly if we integrate with external payment gateways will use this
-    PROCESSING = 'processing', 'Processing'
+    PROCESSING = 'processing', _('Processing')
 
-    PROCESSED = 'processed', 'Processed'
+    PROCESSED = 'processed', _('Processed')
 
 
 class PaymentMethod(models.TextChoices):
     """Enumeration for payment method choices."""
-    CASH = 'cash', 'Cash'  # Payment in cash at the center
-    CARD = 'card', 'Card'  # Credit/debit card payment
-    BANK_TRANSFER = 'bank_transfer', 'Bank Transfer'  # Bank wire transfer
-    INSTAPAY = 'instapay', 'Instapay'  # Instapay service
-    VODAFONE_CASH = 'vodafone_cash', 'Vodafone Cash'  # Vodafone cash service
-    OTHER = 'other', 'Other'  # Other payment methods
+    CASH = 'cash', _('Cash')
+    CARD = 'card', _('Card')
+    BANK_TRANSFER = 'bank_transfer', _('Bank Transfer')
+    INSTAPAY = 'instapay', _('Instapay')
+    VODAFONE_CASH = 'vodafone_cash', _(
+        'Vodafone Cash')
+    OTHER = 'other', _('Other')
 
 
 class EnrollmentRequest(models.Model):
@@ -104,7 +107,7 @@ class EnrollmentRequest(models.Model):
             raise ValidationError("Expiration time must be in the future.")
 
     def save(self, *args, **kwargs):
-        '''Override save to set default values and validate.'''
+        '''Override save to set default values and validate.'''  # a payer may make a partial payment, yet be accepted in a course.
         if not self.expires_at:
             self.expires_at = timezone.now() + timedelta(days=7)
 
