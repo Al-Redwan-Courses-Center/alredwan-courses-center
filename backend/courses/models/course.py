@@ -118,6 +118,8 @@ class Course(models.Model):
     min_age = models.PositiveSmallIntegerField(null=True, blank=True)
     max_age = models.PositiveSmallIntegerField(null=True, blank=True)
 
+    slug = models.SlugField(max_length=150, blank=True, null=True)
+
     class Meta:
         indexes = [
             models.Index(fields=['instructor'], name='course_instructor_idx'),

@@ -4,3 +4,4 @@ Module for importing all the Course related models to make them accessible from 
 '''
 from .course import *
 from .exam import *
+from .lecture import *
