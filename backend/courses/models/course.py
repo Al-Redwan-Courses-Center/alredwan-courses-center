@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 ''' Models for Course app'''
+from datetime import timedelta
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -152,6 +153,58 @@ class Course(models.Model):
         if self.enrolled_count and self.enrolled_count > self.capacity:
             raise ValidationError(_("Enrolled count cannot exceed capacity."))
 
+    def generate_lectures(self):
+        ''' Generate lectures based on course schedules
+
+        Only used if all the Course Schedules for a course are created before any lectures.'''
+        from .lecture import Lecture
+        course_start_date = self.start_date
+        course_end_date = self.end_date if self.end_date else None
+        course_number_of_lectures = self.num_lectures if self.num_lectures else None
+        created_at, updated_at = self.created_at, self.updated_at
+        if course_end_date and not course_number_of_lectures:
+            count = 0
+            current_date = course_start_date
+            schedules = self.schedules.all()
+            while current_date <= course_end_date:
+                for schedule in schedules:
+                    if current_date.weekday() == schedule.weekday:
+                        Lecture.objects.create(
+                            course=self,
+                            day=current_date,
+                            start_time=schedule.start_time,
+                            end_time=schedule.end_time,
+                            lecture_number=count + 1,
+                            instructor=self.instructor,
+                            created_at=created_at,
+                            updated_at=updated_at,
+                        )
+                        count += 1
+                current_date += timedelta(days=1)
+            self.num_lectures = count
+        elif course_number_of_lectures:
+            count = 0
+            current_date = course_start_date
+            end_date = None
+            schedules = self.schedules.all()
+            while count < course_number_of_lectures:
+                for schedule in schedules:
+                    if current_date.weekday() == schedule.weekday and count < course_number_of_lectures:
+                        Lecture.objects.create(
+                            course=self,
+                            day=current_date,
+                            start_time=schedule.start_time,
+                            end_time=schedule.end_time,
+                            lecture_number=count + 1,
+                            instructor=self.instructor,
+                            created_at=created_at,
+                            updated_at=updated_at,
+                        )
+                        end_date = current_date
+                        count += 1
+                current_date += timedelta(days=1)
+            self.end_date = end_date
+
     def __str__(self):
         return f"{self.name}"
 
@@ -171,6 +224,12 @@ class CourseSchedule(models.Model):
         '''Validate the course schedule.'''
         if self.end_time <= self.start_time:
             raise ValidationError(_("End time must be after start time."))
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['course'], name='course_schedule_course_idx'),
+        ]
+        ordering = ['course', 'weekday', 'start_time']
 
     def __str__(self):
         return f"{self.course} — {self.get_weekday_display()} {self.start_time}-{self.end_time}"
