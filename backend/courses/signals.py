@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 ''' Signals for Course app'''
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from .models import Lecture, CourseSchedule
-from datetime import timedelta, timezone
+from datetime import timezone
 
 
 @receiver(pre_delete, sender=CourseSchedule)
