@@ -155,8 +155,8 @@ class Course(models.Model):
 
     def generate_lectures(self):
         ''' Generate lectures based on course schedules
-
-        Only used if all the Course Schedules for a course are created before any lectures.'''
+        Only used if all the Course Schedules for a course are created before any lectures.
+        '''
         from .lecture import Lecture
         course_start_date = self.start_date
         course_end_date = self.end_date if self.end_date else None
