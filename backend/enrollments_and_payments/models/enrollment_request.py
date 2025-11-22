@@ -1,31 +1,36 @@
 #!/usr/bin/env python3
-from django.db import models
 from django.core.exceptions import ValidationError
-from django.utils import timezone
+from django.db import models
 from django.db.models import Q
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
 from datetime import timedelta
 import uuid
+
+from enrollments.models import enrollment
 '''Enrollment Request related Models'''
 
 
 class EnrollmentRequestStatus(models.TextChoices):
     """Enumeration for enrollment request status choices."""
-    PENDING = 'pending', 'Pending'  # Initial state when request is created
-
-    # State when enrollment is being processed ==> mainly if we integrate with external payment gateways will use this
-    PROCESSING = 'processing', 'Processing'
-
-    PROCESSED = 'processed', 'Processed'
+    PENDING = "pending", "Pending"
+    PROCESSING = "processing", "Processing"
+    REJECTED = "rejected", "Rejected"
+    # accepted but not necessarily paid (we'll treat accept==create enrollment)
+    ACCEPTED = "accepted", "Accepted"
+    EXPIRED = "expired", "Expired"
 
 
 class PaymentMethod(models.TextChoices):
     """Enumeration for payment method choices."""
-    CASH = 'cash', 'Cash'  # Payment in cash at the center
-    CARD = 'card', 'Card'  # Credit/debit card payment
-    BANK_TRANSFER = 'bank_transfer', 'Bank Transfer'  # Bank wire transfer
-    INSTAPAY = 'instapay', 'Instapay'  # Instapay service
-    VODAFONE_CASH = 'vodafone_cash', 'Vodafone Cash'  # Vodafone cash service
-    OTHER = 'other', 'Other'  # Other payment methods
+    CASH = 'cash', _('Cash')
+    CARD = 'card', _('Card')
+    BANK_TRANSFER = 'bank_transfer', _('Bank Transfer')
+    INSTAPAY = 'instapay', _('Instapay')
+    VODAFONE_CASH = 'vodafone_cash', _(
+        'Vodafone Cash')
+    OTHER = 'other', _('Other')
 
 
 class EnrollmentRequest(models.Model):
@@ -49,6 +54,7 @@ class EnrollmentRequest(models.Model):
                               default=EnrollmentRequestStatus.PENDING)
 
     created_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True)
 
     notes = models.TextField(null=True, blank=True)
@@ -57,7 +63,18 @@ class EnrollmentRequest(models.Model):
                                       choices=PaymentMethod.choices,
                                       default=PaymentMethod.CASH)
 
+    processed_by = models.ForeignKey("users.CustomUser", null=True, blank=True,
+                                     on_delete=models.SET_NULL, related_name="processed_enrollment_requests")
+
     class Meta:
+
+        indexes = [
+            models.Index(fields=["course"], name="er_course_idx"),
+            models.Index(fields=["parent"], name="er_parent_idx"),
+            models.Index(fields=["student"], name="er_student_idx"),
+            models.Index(fields=["child"], name="er_child_idx"),
+        ]
+
         constraints = [
 
             # Parent + child OR student only
@@ -99,12 +116,16 @@ class EnrollmentRequest(models.Model):
             raise ValidationError(
                 "Select either a parent+child OR a student alone.")
 
+        if self.parent and self.child:
+            if not (self.child.primary_parent_id == self.parent.id or self.child.extra_parents.filter(parent=self.parent).exists()):
+                raise ValidationError(
+                    "The provided parent is not linked to the chosen child.")
         # expires_at must be future if provided
         if self.expires_at and self.expires_at <= timezone.now():
             raise ValidationError("Expiration time must be in the future.")
 
     def save(self, *args, **kwargs):
-        '''Override save to set default values and validate.'''
+        '''Override save to set default values and validate.'''  # a payer may make a partial payment, yet be accepted in a course.
         if not self.expires_at:
             self.expires_at = timezone.now() + timedelta(days=7)
 
@@ -117,6 +138,54 @@ class EnrollmentRequest(models.Model):
     def get_participant(self):
         """Return the participant of the enrollment request, either a child or a student."""
         return self.child or self.student
+
+    def approve(self, processed_by_user, paid_amount=None, payment_method=None, payment_notes=None):
+        """Approve the enrollment request and create an Enrollment."""
+        if self.status != EnrollmentRequestStatus.PENDING:
+            raise ValidationError("Only pending requests may be approved.")
+
+        from .enrollment import Enrollment, EnrollmentStatus
+
+        enrollment = Enrollment.objects.create(
+            course=self.course,
+            student=self.student,
+            child=self.child,
+            enrolled_at=timezone.now(),
+            status=EnrollmentStatus.ACTIVE,
+            created_by=processed_by_user
+        )
+        if paid_amount:
+            from .payment import Payment
+            Payment.objects.create(
+                enrollment=enrollment,
+                payer_parent=self.parent if self.parent else None,
+                payer_student=self.student if self.student else None,
+                amount=paid_amount,
+                method=payment_method if payment_method else "cash",
+                status="paid",
+                processed_by=processed_by_user,
+                processed_at=timezone.now(),
+                notes=payment_notes
+            )
+        self.status = EnrollmentRequestStatus.ACCEPTED
+        self.processed_by = processed_by_user
+        self.processed_at = timezone.now()
+        self.save(update_fields=["status", "processed_by", "processed_at"])
+
+        return enrollment
+
+    def reject(self, processed_by_user, reason=None):
+        """Reject the enrollment request."""
+        if self.status != EnrollmentRequestStatus.PENDING:
+            raise ValidationError("Only pending requests may be rejected.")
+
+        self.status = EnrollmentRequestStatus.REJECTED
+        self.processed_by = processed_by_user
+        self.processed_at = timezone.now()
+        if reason:
+            self.note = (self.note or "") + f"\n[REJECTION REASON] {reason}"
+        self.save(update_fields=[
+                  "status", "processed_by", "processed_at", "note"])
 
     def __str__(self):
         participant = self.student or self.child or 'Unknown'
