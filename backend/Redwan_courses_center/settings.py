@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "debug_toolbar",
+    'django_crontab',
     "users",
     "attendance",
     "core",
@@ -137,3 +138,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = "users.CustomUser"
+
+CRONJOBS = [
+    # Every Sunday at 00:05 AM
+    ('5 0 * * 0', 'instructors.cron.generate_attendance_weekly'),
+    # Cron Format: minute hour day month weekday, 0 = Sunday here
+
+]
