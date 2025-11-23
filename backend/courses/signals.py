@@ -12,7 +12,6 @@ def delete_lectures_on_schedule_delete(sender, instance, **kwargs):
     course = instance.course
     lectures_to_delete = Lecture.objects.filter(
         course=course,
-        # Django's week_day is 1 (Sunday) to 7 (Saturday)
         day__week_day=instance.weekday,
         day__gt=timezone.now())
     lectures_to_delete.delete()
