@@ -3,9 +3,12 @@ from django.forms import ValidationError
 from django.utils import timezone
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-
-from core.utils.image_utils import validate_image_size
 from django.utils.translation import gettext_lazy as _
+
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from core.utils.image_utils import validate_image_size
 
 from courses.models.lecture import Lecture
 from .user import CustomUser
@@ -187,6 +190,22 @@ class InstructorAttendance(models.Model):
     def __str__(self):
         return f"{self.instructor} - {self.rating}/10 on {self.date}"
 
+    def broadcast_update(self):
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "attendance_live",
+            {
+                "type": "attendance_update",
+                "data": {
+                    "instructor": self.instructor.user.get_full_name(),
+                    "id": self.id,
+                    "time": str(self.check_in_time),
+                    "status": self.status,
+                    "date": str(self.date),
+                },
+            },
+        )
+
     def mark_checked_in(self, device=None, method="fingerprint"):
         now = timezone.now()
         self.check_in_time = now
@@ -208,10 +227,12 @@ class InstructorAttendance(models.Model):
             self.status = AttendanceStatus.PRESENT
 
         self.save()
+        self.broadcast_update()
 
     def mark_checked_out(self):
         self.check_out_time = timezone.now()
         self.save()
+        self.broadcast_update()
 
     def mark_absent(self):
         """Mark the instructor as absent for the day."""
