@@ -1,11 +1,10 @@
 import datetime
 from django.db import models
-import uuid
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 
-class Status(models.TextChoices):
+class LectureStatus(models.TextChoices):
     """Enumeration for lecture status choices."""
     SCHEDULED = 'scheduled', 'Scheduled'
     COMPLETED = 'completed', 'Completed'
@@ -14,6 +13,8 @@ class Status(models.TextChoices):
 
 class Lecture(models.Model):
     """Model representing a lecture scheduled for a course."""
+
+    title = models.CharField(max_length=255)
 
     course = models.ForeignKey('courses.Course', on_delete=models.CASCADE,
                                related_name='lectures')  # protect course is perpenant
@@ -26,7 +27,7 @@ class Lecture(models.Model):
     instructor = models.ForeignKey('users.Instructor', null=True, blank=True,
                                    on_delete=models.SET_NULL, related_name='lectures')  # Can override course instructor
     status = models.CharField(
-        max_length=10, choices=Status.choices, default=Status.SCHEDULED)
+        max_length=10, choices=LectureStatus.choices, default=LectureStatus.SCHEDULED)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -38,8 +39,8 @@ class Lecture(models.Model):
         ]
         indexes = [
             models.Index(fields=['course'], name='lecture_course_index'),
-            models.Index(fields=['scheduled_at'],
-                         name='lecture_scheduled_at_index'),
+            models.Index(fields=['day'],
+                         name='lecture_day_index'),
             models.Index(fields=['course', 'lecture_number'],
                          name='lecture_course_lecture_index'),
         ]
@@ -48,7 +49,7 @@ class Lecture(models.Model):
 
     def clean(self):
         """Validate lecture scheduling and time coherence."""
-        if self.status == Status.SCHEDULED and self.scheduled_at and self.scheduled_at < timezone.now():  # cannot schedule in the past
+        if self.status == LectureStatus.SCHEDULED and self.day and self.day < timezone.now().da:  # cannot schedule in the past
             raise ValidationError("Scheduled lectures cannot be in the past.")
         if self.start_time and self.end_time and self.start_time >= self.end_time:  # start time must be before end time
             raise ValidationError("Start time must be before end time.")
@@ -57,12 +58,12 @@ class Lecture(models.Model):
         """Update the lecture status with validation."""
         allowed_transitions = {
             # status can change from scheduled to completed or cancelled
-            Status.SCHEDULED: [Status.COMPLETED, Status.CANCELLED],
-            Status.COMPLETED: [],
-            Status.CANCELLED: [],  # no transitions allowed from completed or cancelled
+            LectureStatus.SCHEDULED: [LectureStatus.COMPLETED, LectureStatus.CANCELLED],
+            LectureStatus.COMPLETED: [],
+            LectureStatus.CANCELLED: [],  # no transitions allowed from completed or cancelled
         }
 
-        if new_status not in Status.values:
+        if new_status not in LectureStatus.values:
             # check if new status is valid
             raise ValidationError(f"Invalid status: {new_status}")
         if new_status not in allowed_transitions[self.status]:
@@ -81,23 +82,25 @@ class Lecture(models.Model):
             return duration.total_seconds() / 3600  # return duration in hours
         return None
 
-    def update_scheduled_time(self, new_scheduled_at, start_time=None, end_time=None):
+    def update_scheduled_time(self, new_day, start_time=None, end_time=None):
         """Update the scheduled time of the lecture with validation."""
-        if new_scheduled_at < timezone.now():
+        if new_day < timezone.now():
             raise ValidationError("Cannot reschedule to a past time.")
         if start_time:
             self.start_time = start_time
         if end_time:
             self.end_time = end_time
-        self.scheduled_at = new_scheduled_at
+        self.day = new_day
         self.save()
 
     def save(self, *args, **kwargs):
         """Clean before saving."""
         self.clean()  # Validate before saving
+        if not self.title:
+            self.title = f"Lecture {self.lecture_number}"
         super().save(*args, **kwargs)
 
     # Function for auto-generating
     def __str__(self):
         """String representation of the Lecture."""
-        return f"Lecture {self.lecture_number} for {self.course} at {self.scheduled_at}"
+        return f"Lecture {self.lecture_number} for {self.course} at {self.day}"
