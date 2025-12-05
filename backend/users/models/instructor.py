@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 from django.forms import ValidationError
 from django.utils import timezone
 from django.db import models

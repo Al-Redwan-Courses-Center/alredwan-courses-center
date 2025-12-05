@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+''' Model representing a lecture scheduled for a course '''
 import datetime
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -25,11 +27,14 @@ class Lecture(models.Model):
     end_time = models.TimeField(null=True, blank=True)
     lecture_number = models.IntegerField()
     instructor = models.ForeignKey('users.Instructor', null=True, blank=True,
-                                   on_delete=models.SET_NULL, related_name='lectures')  # Can override course instructor
+                                   # Can override course instructor
+                                   on_delete=models.SET_NULL, related_name='lectures')
     status = models.CharField(
         max_length=10, choices=LectureStatus.choices, default=LectureStatus.SCHEDULED)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    attendanceTaken = models.BooleanField(default=False)
 
     class Meta:
         """Meta class for Lecture model."""
@@ -42,7 +47,7 @@ class Lecture(models.Model):
             models.Index(fields=['day'],
                          name='lecture_day_index'),
             models.Index(fields=['course', 'lecture_number'],
-                         name='lecture_course_lecture_index'),
+                         name='lecture_course_lecture_index')
         ]
         verbose_name = 'Lecture'
         verbose_name_plural = 'Lectures'
@@ -53,6 +58,15 @@ class Lecture(models.Model):
             raise ValidationError("Scheduled lectures cannot be in the past.")
         if self.start_time and self.end_time and self.start_time >= self.end_time:  # start time must be before end time
             raise ValidationError("Start time must be before end time.")
+        if self.lecture_number <= 0:
+            raise ValidationError("Lecture number must be a positive integer.")
+
+    def delete(self, using=..., keep_parents=...):
+        """Override delete to prevent deletion if attendance has been taken."""
+        if self.attendanceTaken:
+            raise ValidationError(
+                "Cannot delete lecture with taken attendance.")
+        return super().delete(using, keep_parents)
 
     def update_status(self, new_status):
         """Update the lecture status with validation."""
