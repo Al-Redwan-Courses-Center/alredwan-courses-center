@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 ''' Signals for Course app'''
-from django.db.models.signals import pre_delete, post_save
+from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from .models import Lecture, CourseSchedule
 from attendance.models.lecture_attendance import LectureAttendance
