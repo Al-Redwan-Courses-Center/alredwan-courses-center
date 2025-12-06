@@ -1,0 +1,3 @@
+
+
+class StudentRatingInstrucor(models.Model)
