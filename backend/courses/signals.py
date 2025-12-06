@@ -1,13 +1,6 @@
 
 ''' Signals for Course app'''
-from django.db.models.signals import pre_delete, post_save
-from django.dispatch import receiver
-from django.conf import settings
-from .models import Lecture, CourseSchedule, Lecture
-from attendance.models.lecture_attendance import LectureAttendance
-from datetime import timezone, timedelta, datetime
 
-# courses/signals.py
 from datetime import timedelta, datetime, time as dt_time
 from django.db import transaction
 from django.db.models.signals import post_save, post_delete
