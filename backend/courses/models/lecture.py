@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-''' Model representing a lecture scheduled for a course '''
+"""Model representing a lecture scheduled for a course."""
 import datetime
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -16,105 +16,114 @@ class LectureStatus(models.TextChoices):
 class Lecture(models.Model):
     """Model representing a lecture scheduled for a course."""
 
-    title = models.CharField(max_length=255)
-
-    course = models.ForeignKey('courses.Course', on_delete=models.CASCADE,
-                               related_name='lectures')  # protect course is perpenant
-    day = models.DateField()  # override from course schedule
-    # Optional override from course schedule
+    title = models.CharField(max_length=255, blank=True)
+    course = models.ForeignKey(
+        'courses.Course', on_delete=models.CASCADE, related_name='lectures')
+    day = models.DateField()  # date of lecture (local date in Africa/Cairo)
     start_time = models.TimeField(null=True, blank=True)
-    # Optional override from course schedule
     end_time = models.TimeField(null=True, blank=True)
-    lecture_number = models.IntegerField()
+    lecture_number = models.PositiveIntegerField()
     instructor = models.ForeignKey('users.Instructor', null=True, blank=True,
-                                   # Can override course instructor
                                    on_delete=models.SET_NULL, related_name='lectures')
     status = models.CharField(
         max_length=10, choices=LectureStatus.choices, default=LectureStatus.SCHEDULED)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    attendanceTaken = models.BooleanField(default=False)
+    attendance_taken = models.BooleanField(default=False)
 
     class Meta:
-        """Meta class for Lecture model."""
         constraints = [
             models.UniqueConstraint(
                 fields=['course', 'lecture_number'], name='unique_course_lecture'),
         ]
         indexes = [
             models.Index(fields=['course'], name='lecture_course_index'),
-            models.Index(fields=['day'],
-                         name='lecture_day_index'),
+            models.Index(fields=['day'], name='lecture_day_index'),
             models.Index(fields=['course', 'lecture_number'],
                          name='lecture_course_lecture_index')
         ]
         verbose_name = 'Lecture'
         verbose_name_plural = 'Lectures'
 
+    def __str__(self):
+        return f"{self.title or f'Lecture {self.lecture_number}'} — {self.course} @ {self.day}"
+
     def clean(self):
         """Validate lecture scheduling and time coherence."""
-        if self.status == LectureStatus.SCHEDULED and self.day and self.day < timezone.now().da:  # cannot schedule in the past
-            raise ValidationError("Scheduled lectures cannot be in the past.")
-        if self.start_time and self.end_time and self.start_time >= self.end_time:  # start time must be before end time
-            raise ValidationError("Start time must be before end time.")
+        # Validate lecture_number
         if self.lecture_number <= 0:
             raise ValidationError("Lecture number must be a positive integer.")
 
-    def delete(self, using=..., keep_parents=...):
-        """Override delete to prevent deletion if attendance has been taken."""
-        if self.attendanceTaken:
+        # Validate times
+        if self.start_time and self.end_time and self.start_time >= self.end_time:
+            raise ValidationError("Start time must be before end time.")
+
+        # For scheduled lectures, prevent scheduling in the past
+        if self.status == LectureStatus.SCHEDULED:
+            # combine day + start_time into datetime if start_time exists, else compare dates
+            now = timezone.now()
+            if self.start_time:
+                start_dt = timezone.make_aware(datetime.datetime.combine(
+                    self.day, self.start_time), timezone.get_current_timezone())
+                if start_dt < now:
+                    raise ValidationError(
+                        "Scheduled lectures cannot be in the past.")
+            else:
+                # compare date only (no time)
+                if self.day < now.date():
+                    raise ValidationError(
+                        "Scheduled lectures cannot be in the past.")
+
+    def delete(self, using=None, keep_parents=False):
+        """Prevent deletion if attendance has been taken."""
+        if self.attendance_taken:
             raise ValidationError(
                 "Cannot delete lecture with taken attendance.")
-        return super().delete(using, keep_parents)
+        return super().delete(using=using, keep_parents=keep_parents)
+
+    def get_start_datetime(self):
+        """Return timezone-aware start datetime for this lecture (best-effort)."""
+        if self.start_time:
+            return timezone.make_aware(datetime.datetime.combine(self.day, self.start_time), timezone.get_current_timezone())
+        # fallback: start of the day
+        return timezone.make_aware(datetime.datetime.combine(self.day, datetime.time.min), timezone.get_current_timezone())
+
+    def get_end_datetime(self):
+        """Return timezone-aware end datetime for this lecture (best-effort)."""
+        if self.end_time:
+            return timezone.make_aware(datetime.datetime.combine(self.day, self.end_time), timezone.get_current_timezone())
+        # fallback: end of the day
+        return timezone.make_aware(datetime.datetime.combine(self.day, datetime.time.max), timezone.get_current_timezone())
 
     def update_status(self, new_status):
         """Update the lecture status with validation."""
         allowed_transitions = {
-            # status can change from scheduled to completed or cancelled
             LectureStatus.SCHEDULED: [LectureStatus.COMPLETED, LectureStatus.CANCELLED],
             LectureStatus.COMPLETED: [],
-            LectureStatus.CANCELLED: [],  # no transitions allowed from completed or cancelled
+            LectureStatus.CANCELLED: [],
         }
-
         if new_status not in LectureStatus.values:
-            # check if new status is valid
             raise ValidationError(f"Invalid status: {new_status}")
         if new_status not in allowed_transitions[self.status]:
-            # check if transition is allowed
             raise ValidationError(
                 f"Cannot transition from {self.status} to {new_status}")
-
         self.status = new_status
         self.save()
 
-    def get_duration(self):
-        """Calculate the duration of the lecture."""
-        if self.start_time and self.end_time:
-            duration = (datetime.combine(datetime.date.today(), self.end_time) -
-                        datetime.combine(datetime.date.today(), self.start_time))
-            return duration.total_seconds() / 3600  # return duration in hours
-        return None
-
-    def update_scheduled_time(self, new_day, start_time=None, end_time=None):
-        """Update the scheduled time of the lecture with validation."""
-        if new_day < timezone.now():
-            raise ValidationError("Cannot reschedule to a past time.")
-        if start_time:
-            self.start_time = start_time
-        if end_time:
-            self.end_time = end_time
-        self.day = new_day
-        self.save()
-
     def save(self, *args, **kwargs):
-        """Clean before saving."""
-        self.clean()  # Validate before saving
+        """Clean before saving; also auto-set title if empty."""
+        self.clean()
         if not self.title:
             self.title = f"Lecture {self.lecture_number}"
         super().save(*args, **kwargs)
 
-    # Function for auto-generating
-    def __str__(self):
-        """String representation of the Lecture."""
-        return f"Lecture {self.lecture_number} for {self.course} at {self.day}"
+    def duration_hours(self):
+        """Return duration in hours (float) or None."""
+        if self.start_time and self.end_time:
+            start_dt = datetime.datetime.combine(
+                datetime.date.today(), self.start_time)
+            end_dt = datetime.datetime.combine(
+                datetime.date.today(), self.end_time)
+            return (end_dt - start_dt).total_seconds() / 3600.0
+        return None
