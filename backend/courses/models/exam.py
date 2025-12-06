@@ -74,7 +74,7 @@ class ExamResult(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # If you keep both child and student, enforce XOR (exactly one is set).
+    # If we keep both child and student, enforce XOR (exactly one is set).
     exam = models.ForeignKey(
         'courses.Exam', on_delete=models.CASCADE, related_name="results")
     student = models.ForeignKey('users.StudentUser', on_delete=models.CASCADE, null=True, blank=True,
