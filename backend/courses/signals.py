@@ -188,3 +188,4 @@ def create_lecture_attendance_on_lecture_create(sender, instance, created, **kwa
                     student=enrollment.student
                 )
  """
+

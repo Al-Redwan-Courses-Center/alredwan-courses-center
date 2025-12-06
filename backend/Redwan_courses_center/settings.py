@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "debug_toolbar",
+    'django_crontab',
+    'channels',
     "users",
     "attendance",
     "core",
@@ -77,6 +79,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'Redwan_courses_center.wsgi.application'
+ASGI_APPLICATION = "core.asgi.application"
 
 
 # Database
@@ -118,7 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "Africa/Cairo"
 
 USE_I18N = True
 
@@ -129,9 +132,29 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = "users.CustomUser"
+
+CRONJOBS = [
+    # Every Sunday at 00:05 AM
+    ('5 0 * * 0', 'attendance.cron.generate_instructor_attendance_weekly'),
+    # Cron Format: minute hour day month weekday, 0 = Sunday here
+    ('59 23 * * *', 'attendance.cron.mark_absent_daily'),
+
+]
+
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],  # in Docker
+        },
+    },
+}

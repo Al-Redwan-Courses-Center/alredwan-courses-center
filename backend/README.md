@@ -5,6 +5,8 @@
 
 ## Don't Migrate until all the models are ready.
 
+
+
 ## Installation
 * ### 1. **Clone the repository**:
    ```bash
@@ -68,3 +70,90 @@ and enter your credentials for this superuser/admin account.
    ```bash
    python3.10 manage.py runserver;
    ```
+
+
+
+later:
+
+Add a boolean is_phone_verified.
+
+Add a verification code model linked to CustomUser.
+
+Use a library like django-phonenumber-field
+
+Add a signal to notify the primary parent when a new link request is made.
+
+
+
+Tests / checklist
+Create a course and schedule several lectures (past, today, future).
+
+Create an enrollment for a child:
+
+Enrollment created before a future lecture → attendance rows created for that lecture.
+
+Enrollment created within 5 minutes to lecture end (simulate by setting lecture.start_dt <= now) → no attendance created.
+
+Attempt to submit attendance for a future lecture → API returns 403.
+
+Submit attendance for today's lecture:
+
+Missing rating → API returns 400.
+
+All present/rating provided → creates/updates LectureAttendance rows and sets lecture.attendance_taken = True.
+
+Try to delete a lecture with attendance_taken = True → fails with ValidationError.
+
+Delete enrollment → verify future LectureAttendance rows deleted; past rows stay.
+
+Attempt to resubmit attendance after 25 hours → only admin allowed.
+
+Test UniqueConstraint behavior: creating two LectureAttendance rows for same (lecture, child) should fail.
+---
+
+
+Backend enforcement helpers and submission workflow
+```py
+def submit_attendance(request, lecture_id):
+    user = request.user
+    lecture = Lecture.objects.select_for_update().get(pk=lecture_id)
+
+    # 1) permission: only instructor of the lecture or admin
+    if not user.is_admin and lecture.instructor and lecture.instructor.user != user:
+        return 403
+
+    # 2) allow marking only if LectureAttendance.can_mark_now(lecture) OR user.is_admin
+    if not user.is_admin and not LectureAttendance.can_mark_now(lecture):
+        return 403 (explain allowed window)
+
+    payload = request.data  # either manual list or batch tokens
+
+    # 3) resolve participants -> list of (attendance_obj, present, rating, notes)
+    # for batch tokens: resolve by parsing token -> find child/student -> find attendance row for lecture
+    # if attendance row missing (participant not enrolled) include in `not_enrolled` list and skip or signal to admin
+
+    # 4) Validate: EVERY targeted participant must have present in {True, False}. Also rating must be provided.
+    for row in rows:
+        if row.present is None:
+            return 400 "All participants must have attendance value"
+        if row.rating is None:
+            return 400 "Rating required for each participant"
+
+    # 5) Atomic write
+    with transaction.atomic():
+        for row in rows:
+            att = row.attendance_obj
+            att.present = row.present
+            att.rating = Decimal(row.rating)
+            att.notes = row.notes
+            att.marked_by = user
+            att.marked_at = timezone.now()
+            att.save()
+
+        lecture.attendance_taken = True
+        lecture.save()
+
+        # create audit log entry
+
+    # 6) return response with created/updated counts and not_enrolled list
+```
