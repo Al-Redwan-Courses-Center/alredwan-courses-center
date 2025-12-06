@@ -1,4 +1,4 @@
-
+#!usr/bin/env python3
 ''' Signals for Course app'''
 
 from datetime import timedelta, datetime, time as dt_time
