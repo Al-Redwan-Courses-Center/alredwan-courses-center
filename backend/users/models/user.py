@@ -82,12 +82,12 @@ class CustomUser(AbstractUser):
     # Phone and admin verification status
     is_verified = models.BooleanField(default=False)
     identity_number = models.CharField(
-        _("Government ID / Passport"), max_length=30)
+        _("Government ID / Passport"), max_length=30, null=True, unique=True)
     identity_type = models.CharField(
         max_length=20,
         choices=[("nid", "National ID"), ("passport",
                                           "Passport"), ("other", "Other")],
-        default="nid"
+        default="nid",
     )
     gender = models.CharField(
         max_length=10,
@@ -101,6 +101,7 @@ class CustomUser(AbstractUser):
         choices=[
             ("student", "Student"),
             ("instructor", "Instructor"),
+            ("supervisor", "Supervisor"),
             ("parent", "Parent"),
             ("admin", "Admin"),
         ],

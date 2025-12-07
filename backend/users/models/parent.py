@@ -69,8 +69,8 @@ class Child(ImageOptimizationMixin, models.Model):
         max_length=10,
         choices=[("boy", "Boy"), ("girl", "Girl")],
     )
-    nid_number = models.CharField(
-        _("National ID number"), max_length=15, unique=True)
+    """nid_number = models.CharField(
+        _("National ID number"), max_length=15, unique=True) """
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -82,6 +82,7 @@ class Child(ImageOptimizationMixin, models.Model):
 
     def save(self, *args, **kwargs):
         """Override save method to set unique_code if not already set."""
+        self.clean()
         if not self.unique_code:
             code = self.generate_unique_code()
             while Child.objects.filter(unique_code=code).exists():
@@ -105,6 +106,9 @@ class Child(ImageOptimizationMixin, models.Model):
                 self.phone = format_number(parsed, PhoneNumberFormat.E164)
             except Exception:
                 raise ValidationError(_("Invalid phone number format"))
+        if self.unique_code:
+            raise ValidationError(
+                _("Unique code is auto-generated and cannot be set manually."))
 
     class Meta:
         """Meta options for the Child model."""
