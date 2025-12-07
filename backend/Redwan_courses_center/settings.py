@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "exams",
     "lectures",
     "enrollments",
+    'enrollments_and_payments',
     "payments",
 ]
 
@@ -142,9 +143,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = "users.CustomUser"
 
 CRONJOBS = [
+    # Cron Format: minute hour day month weekday, 0 = Sunday here
     # Every Sunday at 00:05 AM
     ('5 0 * * 0', 'attendance.cron.generate_instructor_attendance_weekly'),
-    # Cron Format: minute hour day month weekday, 0 = Sunday here
     ('59 23 * * *', 'attendance.cron.mark_absent_daily'),
 
 ]
