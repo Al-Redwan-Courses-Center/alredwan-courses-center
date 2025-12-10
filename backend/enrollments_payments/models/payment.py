@@ -28,7 +28,7 @@ class Payment(models.Model):
     """Model representing a payment transaction related to an enrollment or standalone payment."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    enrollment = models.ForeignKey("enrollments.Enrollment", null=True,
+    enrollment = models.ForeignKey("enrollments_payments.Enrollment", null=True,
                                    blank=True, on_delete=models.CASCADE, related_name="payments")
 
     payer_parent = models.ForeignKey(
@@ -181,7 +181,7 @@ class RefundRequest(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     enrollment = models.ForeignKey(
-        "enrollments.Enrollment", on_delete=models.CASCADE, related_name="refund_requests")
+        "enrollments_payments.Enrollment", on_delete=models.CASCADE, related_name="refund_requests")
     requested_by_parent = models.ForeignKey(
         "users.Parent", null=True, blank=True, on_delete=models.SET_NULL, related_name="refund_requests")
     requested_by_student = models.ForeignKey(

@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.db.models import Q
 from django.conf import settings
-
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class LectureAttendance(models.Model):
     """Model representing attendance records for a lecture."""
@@ -16,13 +16,13 @@ class LectureAttendance(models.Model):
                                 on_delete=models.CASCADE, related_name='lecture_attendances')
 
     # null = not marked yet
-    present = models.NullBooleanField(default=None)
+    present = models.BooleanField(null=True, default=None)
     # rating required at submit time (1.00 - 10.00). We enforce rating presence at API level,
     # and add a DB-level check that rating is present if present is not null.
     rating = models.DecimalField(max_digits=4, decimal_places=2, null=True, default=None,
                                  validators=[
-                                     models.validators.MinValueValidator(1.00),
-                                     models.validators.MaxValueValidator(10.00)
+                                    MinValueValidator(1.00),
+                                    MaxValueValidator(10.00),
                                  ])
     notes = models.TextField(null=True, blank=True)
     marked_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,

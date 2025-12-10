@@ -1,18 +1,20 @@
 from django.db import models
 from django.db.models import Q
-
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class StudentInstructorRating(models.Model):
     """Model representing ratings given by students to instructors."""
 
     student = models.ForeignKey('users.StudentUser', on_delete=models.CASCADE,
                                 related_name='instructor_ratings')
-    instructor = models.ForeignKey('users.InstructorUser', on_delete=models.CASCADE,
+    instructor = models.ForeignKey('users.Instructor', on_delete=models.CASCADE,
                                    related_name='student_ratings')
+    course = models.ForeignKey('courses.Course', on_delete=models.CASCADE,
+                               related_name='student_instructor_ratings')
     rating = models.DecimalField(max_digits=4, decimal_places=2,
                                  validators=[
-                                     models.validators.MinValueValidator(1.00),
-                                     models.validators.MaxValueValidator(10.00)
+                                     MinValueValidator(1.00),
+                                     MaxValueValidator(10.00)
                                  ])  # 1.00 to 10.00
     feedback = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -44,14 +46,16 @@ class StudentInstructorRating(models.Model):
 class ParentInstructorRating(models.Model):
     """Model representing ratings given by parents to instructors."""
 
-    parent = models.ForeignKey('users.ParentUser', on_delete=models.CASCADE,
+    parent = models.ForeignKey('users.Parent', on_delete=models.CASCADE,
                                related_name='instructor_ratings')
-    instructor = models.ForeignKey('users.InstructorUser', on_delete=models.CASCADE,
+    instructor = models.ForeignKey('users.Instructor', on_delete=models.CASCADE,
                                    related_name='parent_ratings')
+    course = models.ForeignKey('courses.Course', on_delete=models.CASCADE,
+                               related_name='parent_instructor_ratings')
     rating = models.DecimalField(max_digits=4, decimal_places=2,
                                  validators=[
-                                     models.validators.MinValueValidator(1.00),
-                                     models.validators.MaxValueValidator(10.00)
+                                     MinValueValidator(1.00),
+                                     MaxValueValidator(10.00)
                                  ])  # 1.00 to 10.00
     feedback = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

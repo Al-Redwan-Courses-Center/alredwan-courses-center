@@ -44,11 +44,7 @@ INSTALLED_APPS = [
     "attendance",
     "core",
     "courses",
-    "exams",
-    "lectures",
-    "enrollments",
-    'enrollments_and_payments',
-    "payments",
+    'enrollments_payments',
 ]
 
 MIDDLEWARE = [

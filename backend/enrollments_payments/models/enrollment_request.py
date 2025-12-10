@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from datetime import timedelta
 import uuid
 
-from enrollments.models import enrollment
+
 '''Enrollment Request related Models'''
 
 

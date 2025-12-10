@@ -117,7 +117,6 @@ class Child(ImageOptimizationMixin, models.Model):
 
         indexes = [
             models.Index(fields=['unique_code']),
-            models.Index(fields=['nid_number']),
         ]
 
 
