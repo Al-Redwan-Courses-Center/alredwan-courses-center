@@ -34,9 +34,7 @@ class StudentInstructorRating(models.Model):
             )
         ]
         indexes = [
-            models.Index(fields=['student'], name='rating_student_index'),
-            models.Index(fields=['instructor'],
-                         name='rating_instructor_index'),
+            models.Index(fields=['student'], name='rating_student_index')
         ]
 
         verbose_name = 'Student Instructor Rating'
@@ -75,9 +73,7 @@ class ParentInstructorRating(models.Model):
             )
         ]
         indexes = [
-            models.Index(fields=['parent'], name='rating_parent_index'),
-            models.Index(fields=['instructor'],
-                         name='rating_instructor_index'),
+            models.Index(fields=['parent'], name='rating_parent_index')
         ]
 
         verbose_name = 'Parent Instructor Rating'
