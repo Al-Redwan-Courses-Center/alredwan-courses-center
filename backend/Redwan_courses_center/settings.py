@@ -12,28 +12,36 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Initialize environ
+env = environ.Env(
+    DEBUG=(bool, False)
+)
+
+# Read .env file
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+SECRET_KEY = env("DJANGO_SECRET_KEY", default="django-insecure-temporary-key-change-this")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = DEBUG = bool(os.environ.get("DEBUG", default=0))
-
+DEBUG = env("DEBUG")
 
 # ALLOWED_HOSTS = []
-ALLOWED_HOSTS =  os.environ.get("DJANGO_ALLOWED_HOSTS","127.0.0.1").split(",")
+ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'simpleui',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -127,7 +135,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-us'  # Changed from 'ar' to avoid missing locale file
 
 TIME_ZONE = "Africa/Cairo"
 
@@ -140,6 +148,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # Add this for collectstatic
+STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -165,4 +175,22 @@ CHANNEL_LAYERS = {
             "hosts": [("redis", 6379)],  # in Docker
         },
     },
+}
+
+# ============================================
+# Django Simple UI Configuration
+# ============================================
+
+# تفعيل اللغة العربية
+SIMPLEUI_DEFAULT_THEME = 'admin.lte.css'
+# SIMPLEUI_LOGO = '/static/logo.png'  # Commented out to avoid 404 errors
+# SIMPLEUI_HOME_PAGE = '/admin/'  # Commented out to prevent iframe recursion
+SIMPLEUI_HOME_TITLE = 'مركز الرضوان للدورات'
+SIMPLEUI_HOME_ICON = 'fa fa-graduation-cap'
+SIMPLEUI_INDEX = ''  # Disable custom home page to prevent iframe loop
+
+# إعدادات الواجهة - عرض جميع النماذج بشكل بسيط
+SIMPLEUI_CONFIG = {
+    'system_keep': True,  # Keep default Django admin groups
+    'dynamic': True,  # Enable dynamic menu
 }
