@@ -1,15 +1,21 @@
 import CourseCard from "@/components/courses/CourseCard";
-import { PublicCourse } from "@/dev-data/public-courses";
-import { JSONResponse } from "@/types";
-import axios from "axios";
+import { courses as coursesApi, PublicCourse } from "@/dev-data/public-courses";
 
 export default async function CoursesList() {
   const {
-    data: {
-      data: { courses },
-    },
-  } = await axios.get<JSONResponse<{ courses: PublicCourse[] }>>(
-    `${process.env.SERVER_URL}/public-courses`,
+    data: { courses },
+  }: { status: string; data: { courses: PublicCourse[] } } = await new Promise(
+    (resolve) =>
+      setTimeout(
+        () =>
+          resolve({
+            status: "success",
+            data: {
+              courses: coursesApi,
+            },
+          }),
+        1500,
+      ),
   );
 
   return (

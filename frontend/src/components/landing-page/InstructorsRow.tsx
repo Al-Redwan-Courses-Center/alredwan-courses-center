@@ -1,21 +1,27 @@
-import { PublicInstructor } from "@/dev-data/instructors";
-import { JSONResponse } from "@/types";
-import cn from "@/utils/cn";
-import axios from "axios";
-import Image from "next/image";
 import InstructorProfile from "@/assets/instructor-profile.png";
+import { PublicInstructor, publicInstructors } from "@/dev-data/instructors";
+import cn from "@/utils/cn";
+import Image from "next/image";
 
 const straight = cn("rounded-tr-[19rem] rounded-bl-[19rem]");
 const reversed = cn("rounded-tl-[19rem] rounded-br-[19rem]");
 
 export default async function InstructorsRow() {
   const {
-    data: {
-      data: { instructors },
-    },
-  } = await axios.get<JSONResponse<{ instructors: PublicInstructor[] }>>(
-    `${process.env.SERVER_URL}/public-instructors`,
-  );
+    data: { instructors },
+  }: { status: string; data: { instructors: PublicInstructor[] } } =
+    await new Promise((resolve) =>
+      setTimeout(
+        () =>
+          resolve({
+            status: "success",
+            data: {
+              instructors: publicInstructors,
+            },
+          }),
+        1500,
+      ),
+    );
 
   return (
     <div className="grid w-full grid-cols-3 gap-20 text-[1.5rem] text-gray-500">

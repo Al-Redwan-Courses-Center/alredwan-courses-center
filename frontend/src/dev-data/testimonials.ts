@@ -1,5 +1,5 @@
 export interface Testimonial {
-  id: string;
+  id: number;
   name: string;
   role: string;
   avatarUrl: string;
@@ -9,7 +9,7 @@ export interface Testimonial {
 
 export const testimonials: Testimonial[] = [
   {
-    id: "t-uuid-1",
+    id: 1,
     name: "عمر حسن",
     role: "طالب",
     avatarUrl:
@@ -19,7 +19,7 @@ export const testimonials: Testimonial[] = [
       "الحمد لله، هذه المنصة عمقت فهمي للإسلام. الدورات شاملة والمعلمون رائعون وأوصي بها لكل من يبحث عن علم نافع.",
   },
   {
-    id: "t-uuid-2",
+    id: 2,
     name: "سارة أحمد",
     role: "ولي أمر",
     avatarUrl:
@@ -29,7 +29,7 @@ export const testimonials: Testimonial[] = [
       "تجربة ممتازة لابني في حفظ جزء عم. الشيخ يتميز بالصبر والأسلوب التربوي الذي حبب الطفل في الحلقة.",
   },
   {
-    id: "t-uuid-3",
+    id: 3,
     name: "خالد محمود",
     role: "طالب",
     avatarUrl:
