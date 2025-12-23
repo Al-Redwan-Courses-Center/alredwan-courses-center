@@ -1,27 +1,46 @@
-# Next.js build output
-.next/
-out/
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Node modules
-node_modules/
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# Environment variables
-.env
-.env*.local
+# testing
+/coverage
 
-# Logs
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# IDE and OS specific files
-.DS_Store
-.idea/
-.vscode/
-*.swp
-*.bak
-*.swo
+# env files (can opt-in for committing if needed)
+.env*
 
-# Vercel specific files (if deploying to Vercel)
-.vercel/
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+/.vscode/
+/.idea/
+/code.txt
+/tailwind.config.ts
