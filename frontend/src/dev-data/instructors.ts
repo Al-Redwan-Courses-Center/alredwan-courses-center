@@ -1,4 +1,4 @@
-export const publicInstructor = [
+export const publicInstructors = [
   {
     id: 1,
     fullName: "أ. أحمد محمد",
@@ -31,4 +31,4 @@ export const publicInstructor = [
   },
 ];
 
-export type PublicInstructor = (typeof publicInstructor)[number];
+export type PublicInstructor = (typeof publicInstructors)[number];

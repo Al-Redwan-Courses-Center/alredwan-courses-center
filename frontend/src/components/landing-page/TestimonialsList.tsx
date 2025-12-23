@@ -1,11 +1,12 @@
-import { Testimonial } from "@/dev-data/testimonials";
-import { JSONResponse } from "@/types";
-import cn from "@/utils/cn";
-import axios from "axios";
-import Image from "next/image";
 import AvatarProfile from "@/assets/user-avatar.png";
-import StarIcon from "@/components/icons/StarIcon";
 import HalfStarIcon from "@/components/icons/HalfStarIcon";
+import StarIcon from "@/components/icons/StarIcon";
+import {
+  Testimonial,
+  testimonials as testimonialsApi,
+} from "@/dev-data/testimonials";
+import cn from "@/utils/cn";
+import Image from "next/image";
 
 function renderRating(rating: number) {
   const flooredRating = Math.floor(rating);
@@ -27,12 +28,20 @@ function renderRating(rating: number) {
 
 export default async function TestimonialsList() {
   const {
-    data: {
-      data: { testimonials },
-    },
-  } = await axios.get<JSONResponse<{ testimonials: Testimonial[] }>>(
-    `${process.env.SERVER_URL}/testimonials`,
-  );
+    data: { testimonials },
+  }: { status: string; data: { testimonials: Testimonial[] } } =
+    await new Promise((resolve) =>
+      setTimeout(
+        () =>
+          resolve({
+            status: "success",
+            data: {
+              testimonials: testimonialsApi,
+            },
+          }),
+        1500,
+      ),
+    );
 
   return (
     <div className="flex items-center gap-14">
