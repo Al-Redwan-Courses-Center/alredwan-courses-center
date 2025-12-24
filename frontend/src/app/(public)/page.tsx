@@ -1,4 +1,3 @@
-import NavBar from "@/components/nav/NavBar";
 import LandingPage from "@/components/landing-page/LandingPage";
 import EmailIcon from "@/components/icons/EmailIcon";
 import PhoneIcon from "@/components/icons/PhoneIcon";
@@ -10,11 +9,9 @@ import { toHindiDigits } from "@/utils/toHindiDigits";
 export default function Home() {
   return (
     <>
-      <NavBar />
-
       <LandingPage />
 
-      <footer className="px-53 py-18 pb-14">
+      <footer className="bg-[linear-gradient(180deg,#D0D9C7_0%,#FFF_100%)] px-53 py-18 pb-14">
         <div className="text-olive-500 grid grid-cols-3 grid-rows-[auto_1fr] text-[1.6rem] [&>h3]:mb-9 [&>h3]:text-[1.8rem] [&>h3]:font-bold [&>h3]:not-last-of-type:pr-11">
           <h3>معلومات التواصل</h3>
 
