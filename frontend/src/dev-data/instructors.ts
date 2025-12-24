@@ -2,7 +2,7 @@ export const publicInstructors = [
   {
     id: 1,
     fullName: "أ. أحمد محمد",
-    role: "مدير الأكاديمية",
+    role: "مدير الواحة",
     avatarUrl:
       "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed&gender=male",
     specialization: "تعليم القرآن الكريم",

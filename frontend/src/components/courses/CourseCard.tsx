@@ -27,7 +27,7 @@ export default function CourseCard({
       <div className="px-22 py-10">
         <h3 className="mb-3 text-3xl font-bold">{course.title}</h3>
         <p className="mb-5">
-          كورس شامل لتعلم تلاوة القرآن الكريم وأحكام التجويد
+          دورات شامل لتعلم تلاوة القرآن الكريم وأحكام التجويد
         </p>
 
         <div className="mb-5 grid grid-cols-[repeat(auto-fill,minmax(5rem,auto))] items-center gap-2">
@@ -83,7 +83,7 @@ export default function CourseCard({
             href="#"
             className="px-0 text-[1.125rem]"
           >
-            عرض الكورس
+            عرض الدورات
           </Button>
 
           <Button

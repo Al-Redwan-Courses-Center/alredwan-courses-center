@@ -35,11 +35,11 @@ export default function LandingPage() {
           </p>
 
           <div className="grid w-fit grid-cols-2 gap-6">
-            <Button variant="primary" size="m" href="#">
-              تصفح الكورسات
+            <Button variant="primary" size="m" href="/courses">
+              تصفح الدورات
             </Button>
 
-            <Button variant="secondary" size="m" href="#">
+            <Button variant="secondary" size="m" href="/signup">
               سجل الآن
             </Button>
           </div>
@@ -78,7 +78,7 @@ export default function LandingPage() {
         <FeaturesGrid />
       </section>
 
-      <section className="container-wide">
+      <section className="container-wide bg-[linear-gradient(180deg,#f8f9f8_0%,#FFF_100%)]">
         <div className="title-block">
           <h2>
             طاقم التدريس <span>المتميز</span>
@@ -106,10 +106,10 @@ export default function LandingPage() {
           </p>
 
           <div className="grid w-163 grid-cols-2 gap-9 *:px-0">
-            <Button variant="primary" href="#">
+            <Button variant="primary" href="/contact-us">
               اتصل بنا الآن
             </Button>
-            <Button variant="secondary" href="#">
+            <Button variant="secondary" href="/courses">
               تعرف على مناهجنا
             </Button>
           </div>
@@ -131,22 +131,22 @@ export default function LandingPage() {
         <PictureGrid />
       </section>
 
-      <section className="flex flex-col items-center">
+      <section className="flex flex-col items-center bg-[linear-gradient(180deg,#FFF_0%,#F3F6F4_100%)]">
         <div className="title-block">
           <h2>
-            الكورسات <span>المميزة</span>
+            الدورات <span>المميزة</span>
           </h2>
 
           <p className="mb-36 text-center text-4xl text-gray-500">
-            اكتشف أفضل الكورسات التعليمية المصممة خصيصاً لتطوير مهارات الأطفال
+            اكتشف أفضل الدورات التعليمية المصممة خصيصاً لتطوير مهارات الأطفال
             والشباب
           </p>
         </div>
 
         <CoursesList />
 
-        <Button variant="primary" href="#" className="self-start">
-          تصفح الكورسات
+        <Button variant="primary" href="/courses" className="self-start">
+          تصفح الدورات
         </Button>
       </section>
 
@@ -177,16 +177,16 @@ export default function LandingPage() {
           </h2>
 
           <p className="mb-9 max-w-220 text-4xl">
-            انضم إلى أكثر من 500 عائلة اختارت أكاديمية الرضوان لتعليم أطفالهم
-            القرآن الكريم والعلوم الإسلامية
+            انضم إلى أكثر من 500 عائلة اختارت واحة الرضوان لتعليم أطفالهم القرآن
+            الكريم والعلوم الإسلامية
           </p>
 
           <div className="mb-12 grid w-fit grid-cols-2 gap-6">
-            <Button variant="primary" size="m" href="#">
+            <Button variant="primary" size="m" href="/signup">
               سجل الآن
             </Button>
 
-            <Button variant="secondary" size="m" href="#">
+            <Button variant="secondary" size="m" href="/signup">
               جرب درس تجريبي
             </Button>
           </div>
