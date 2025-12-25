@@ -88,6 +88,7 @@ class CustomUser(AbstractUser):
         choices=[("nid", "National ID"), ("passport",
                                           "Passport"), ("other", "Other")],
         default="nid",
+        null=True
     )
     gender = models.CharField(
         max_length=10,
@@ -111,7 +112,7 @@ class CustomUser(AbstractUser):
     # Authentication settings
     username = None
     USERNAME_FIELD = "phone_number1"
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ["dob"]
 
     objects = CustomUserManager()
 

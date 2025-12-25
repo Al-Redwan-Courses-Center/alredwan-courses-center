@@ -20,8 +20,12 @@ from debug_toolbar.toolbar import debug_toolbar_urls
 from django.conf import settings
 from django.conf.urls.static import static
 
+
+admin.site.site_header = "لوحة إدارة كورسات واحة الرضوان"
+admin.site.site_title = "واحة الرضوان"
+admin.site.index_title = "الصفحة الرئيسية"
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('courses-admin/', admin.site.urls),
 ] + debug_toolbar_urls()
 
 

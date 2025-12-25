@@ -34,6 +34,7 @@ ALLOWED_HOSTS =  os.environ.get("DJANGO_ALLOWED_HOSTS","127.0.0.1").split(",")
 # Application definition
 
 INSTALLED_APPS = [
+    "simpleui",  # MUST be first
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',  # ← ADD THIS
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -127,22 +129,64 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "ar"
+
+LANGUAGES = [
+    ("ar", "Arabic"),
+    ("en", "English"),
+]
+
+USE_I18N = True
+USE_L10N = True
+USE_TZ = True
 
 TIME_ZONE = "Africa/Cairo"
 
-USE_I18N = True
-
-USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Specify simpleui's default theme, specify a filename, and the relative path is read from simpleui's theme directory
+SIMPLEUI_DEFAULT_THEME = 'admin.lte.css'
+SIMPLEUI_HOME_TITLE = 'My Home Title'
+SIMPLEUI_CONFIG = {
+    "system_keep": False,
+
+    # Branding
+    
+    "system_name": "لوحة إدارة واحة الرضوان",
+    "system_title": "Redwan Courses Center",
+    "system_icon": "fas fa-chalkboard-teacher",
+
+    # Welcome text
+    "welcome_sign": "مرحبًا بك في لوحة الإدارة",
+
+    # Copyright
+    "copyright": "Redwan Courses Center © 2025",
+
+    # Whether to enable animations
+    "animation": True,
+
+    # Show language switcher
+    "language": True,
+
+    # Default home page
+    "home_page": "/courses-admin/",
+
+    # Disable UI builder for production stability
+    "dynamic": False,
+}
+
+SIMPLEUI_ICON = {
+    'System_Manage': 'fab fa-apple',
+    'Employeee_Manage': 'fas fa-user-tie'
+}
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
