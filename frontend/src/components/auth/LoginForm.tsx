@@ -10,11 +10,7 @@ interface LoginInputs {
 }
 
 export default function LoginForm() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginInputs>();
+  const { register, handleSubmit } = useForm<LoginInputs>();
 
   const onSubmit: SubmitHandler<LoginInputs> = async (credentials) => {
     await signIn("credentials", {
