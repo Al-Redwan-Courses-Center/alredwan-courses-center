@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { El_Messiri } from "next/font/google";
 import "./globals.css";
+import AuthProvider from "@/providers/AuthProvider";
 
 const medad = localFont({
   src: "./fonts/medad-platinum.ttf",
@@ -29,10 +30,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${medad.variable} ${messiri.variable} overflow-x-clip antialiased`}
+        className={`${medad.variable} ${messiri.variable} grid min-h-dvh overflow-x-clip antialiased`}
         dir="rtl"
       >
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

@@ -80,10 +80,10 @@ export default function CourseCard({
           <Button
             variant="primary"
             size="sm"
-            href="#"
+            href={`/courses/${course.id}`}
             className="px-0 text-[1.125rem]"
           >
-            عرض الدورات
+            عرض الدورة
           </Button>
 
           <Button
