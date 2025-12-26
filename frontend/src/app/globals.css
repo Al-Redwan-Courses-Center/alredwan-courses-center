@@ -69,3 +69,7 @@ img,
 svg {
   user-select: none;
 }
+
+button, a {
+    cursor: pointer;
+}
