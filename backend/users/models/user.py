@@ -85,14 +85,13 @@ class CustomUser(AbstractUser):
         _("Government ID / Passport"), max_length=30, null=True, unique=True)
     identity_type = models.CharField(
         max_length=20,
-        choices=[("nid", "National ID"), ("passport",
-                                          "Passport"), ("other", "Other")],
+        choices=[("nid", "بطاقة وطنية"), ("passport", "جواز سفر"), ("other", "أخرى")],
         default="nid",
         null=True
     )
     gender = models.CharField(
         max_length=10,
-        choices=[("male", "Male"), ("female", "Female")],
+        choices=[("male", "ذكر"), ("female", "أنثى")],
     )
 
     address = models.TextField(null=True, blank=True)
@@ -100,11 +99,11 @@ class CustomUser(AbstractUser):
     role = models.CharField(
         max_length=20,
         choices=[
-            ("student", "Student"),
-            ("instructor", "Instructor"),
-            ("supervisor", "Supervisor"),
-            ("parent", "Parent"),
-            ("admin", "Admin"),
+            ("student", "طالب"),
+            ("instructor", "مدرس"),
+            ("supervisor", "مشرف"),
+            ("parent", "ولي أمر"),
+            ("admin", "مدير"),
         ],
         default="student",
     )
@@ -130,5 +129,5 @@ class CustomUser(AbstractUser):
         indexes = [
             models.Index(fields=["phone_number1"]),
         ]
-        verbose_name = _("User")
-        verbose_name_plural = _("Users")
+        verbose_name = _("مستخدم")
+        verbose_name_plural = _("المستخدمون")
