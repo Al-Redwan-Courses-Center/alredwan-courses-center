@@ -19,6 +19,8 @@ services:
         - "8000:8000"
     depends_on:
         - db
+    volumes:
+        - .:/app
     environment:
         DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
         DEBUG: ${DEBUG}
@@ -33,7 +35,6 @@ services:
         DATABASE_PORT: ${DATABASE_PORT}
     env_file:
         - .env
-    command: python3 manage.py runserver 0.0.0.0:8000
  pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
