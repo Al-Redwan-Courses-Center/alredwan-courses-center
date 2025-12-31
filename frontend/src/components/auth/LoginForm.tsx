@@ -10,7 +10,12 @@ interface LoginInputs {
 }
 
 export default function LoginForm() {
-  const { register, handleSubmit } = useForm<LoginInputs>();
+  const { register, handleSubmit } = useForm<LoginInputs>({
+    defaultValues: {
+      email: "abcd@test.com",
+      password: "test1234",
+    },
+  });
 
   const onSubmit: SubmitHandler<LoginInputs> = async (credentials) => {
     await signIn("credentials", {
@@ -24,7 +29,7 @@ export default function LoginForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col items-center justify-center gap-10 text-3xl [&>input]:bg-gray-300"
+      className="flex flex-col items-center justify-center gap-10 py-150 text-3xl [&>input]:bg-gray-300"
     >
       <label htmlFor="email">Email</label>
       <input type="email" id="email" {...register("email")} />

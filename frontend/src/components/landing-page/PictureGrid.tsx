@@ -7,14 +7,14 @@ import Image6 from "@/assets/image-grid/image-6.jpg";
 import Image7 from "@/assets/image-grid/image-7.jpg";
 import Image8 from "@/assets/image-grid/image-8.jpg";
 import Image9 from "@/assets/image-grid/image-9.jpg";
-import cn from "@/utils/cn";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 const baseStyles = cn("border-[2rem] border-white");
 
 export default function PictureGrid() {
   return (
-    <div className="relative grid h-272 w-full">
+    <div className="tablet:origin-top-left tablet:scale-40 tablet:h-120 tablet:-left-[3.5%] relative grid h-272 w-full">
       <Image
         src={Image1}
         alt="Activity Image"
@@ -100,7 +100,7 @@ export default function PictureGrid() {
         alt="Activity Image"
         className={cn(
           baseStyles,
-          "absolute top-84 right-0 h-185 w-139 rounded-[0_17.375rem]",
+          "absolute top-84 left-565 h-185 w-139 rounded-[0_17.375rem]",
         )}
         draggable="false"
       />

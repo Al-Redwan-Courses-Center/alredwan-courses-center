@@ -5,5 +5,9 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <div>Signup Page</div>;
+  return (
+    <div className="content-center py-150 text-center text-8xl font-bold">
+      Signup Page
+    </div>
+  );
 }

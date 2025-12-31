@@ -19,7 +19,7 @@ export default async function CoursesList() {
   );
 
   return (
-    <div className="mb-17 grid grid-cols-3 gap-27">
+    <div className="tablet:grid-cols-2 tablet:gap-17 mb-17 grid grid-cols-3 gap-27">
       {courses.map((course, i) => (
         <CourseCard key={course.id} course={course} index={i} />
       ))}

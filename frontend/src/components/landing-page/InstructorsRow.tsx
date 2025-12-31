@@ -1,6 +1,6 @@
 import InstructorProfile from "@/assets/instructor-profile.png";
 import { PublicInstructor, publicInstructors } from "@/dev-data/instructors";
-import cn from "@/utils/cn";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 const straight = cn("rounded-tr-[19rem] rounded-bl-[19rem]");
@@ -24,7 +24,7 @@ export default async function InstructorsRow() {
     );
 
   return (
-    <div className="grid w-full grid-cols-3 gap-20 text-[1.5rem] text-gray-500">
+    <div className="tablet:grid-cols-1 tablet:gap-40 grid w-full grid-cols-3 gap-20 text-[1.5rem] text-gray-500">
       {instructors.map((instructor, i) => (
         <div
           key={instructor.id}

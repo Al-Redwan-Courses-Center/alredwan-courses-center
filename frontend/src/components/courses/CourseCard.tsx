@@ -1,12 +1,11 @@
 import Image from "next/image";
 import CourseImage from "@/assets/course-img.jpg";
 import { PublicCourse } from "@/dev-data/public-courses";
-import cn from "@/utils/cn";
-import { toHindiDigits } from "@/utils/toHindiDigits";
 import CalendarIcon from "@/components/icons/CalendarIcon";
 import BookIcon from "@/components/icons/BookIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import Button from "@/components/ui/Button";
+import { cn, toHindiDigits } from "@/lib/utils";
 
 export default function CourseCard({
   course,
@@ -73,13 +72,13 @@ export default function CourseCard({
 
         <div
           className={cn(
-            "relative grid w-7/8 grid-cols-2 gap-4",
-            index % 2 === 0 ? "-left-30" : "-right-18",
+            "relative grid w-7/8 grid-cols-2 gap-4 self-end",
+            index % 2 === 0 ? "tablet:-left-28 -left-30" : "-right-18",
           )}
         >
           <Button
             variant="primary"
-            size="sm"
+            size="small"
             href={`/courses/${course.id}`}
             className="px-0 text-[1.125rem]"
           >
@@ -88,7 +87,7 @@ export default function CourseCard({
 
           <Button
             variant="secondary"
-            size="sm"
+            size="small"
             href="#"
             className="px-0 text-[1.125rem]"
           >

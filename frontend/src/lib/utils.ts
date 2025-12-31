@@ -1,3 +1,13 @@
+import clsx from "clsx";
+import { ClassNameValue, twMerge } from "tailwind-merge";
+import { cva } from "class-variance-authority";
+
+export function cn(...inputs: ClassNameValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+export { cva };
+
 export function toHindiDigits(num: number | string): string {
   const westernToHindi: Record<string, string> = {
     "0": "٠",
