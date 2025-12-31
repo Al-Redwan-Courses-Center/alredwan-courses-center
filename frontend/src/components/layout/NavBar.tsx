@@ -25,9 +25,10 @@ export default function NavBar() {
       </ul>
 
       <NavLink
-        boldWidth={false}
         href="/"
         className="tablet:mr-auto flex items-center gap-3"
+        boldWidth={false}
+        canActivate={false}
       >
         <Image alt="Logo" src={Logo} />
       </NavLink>

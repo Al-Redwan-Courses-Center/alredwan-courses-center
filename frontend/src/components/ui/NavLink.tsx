@@ -19,12 +19,14 @@ export default function NavLink({
   href,
   className = "",
   boldWidth = true,
+  canActivate = true,
   children,
 }: {
   href: string;
   className?: string;
   active?: boolean;
   boldWidth?: boolean;
+  canActivate?: boolean;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -34,7 +36,7 @@ export default function NavLink({
       href={href}
       className={cn(
         navLinkStyles,
-        pathname === href && activeStyles,
+        canActivate && pathname === href && activeStyles,
         boldWidth && boldWidthStyles,
         className,
       )}
