@@ -26,7 +26,7 @@ export default function NavBar() {
 
       <NavLink
         boldWidth={false}
-        href="/frontend/public"
+        href="/"
         className="tablet:mr-auto flex items-center gap-3"
       >
         <Image alt="Logo" src={Logo} />
