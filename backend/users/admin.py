@@ -32,6 +32,7 @@ class UserAdmin(BaseUserAdmin):
         return obj.date_joined
     get_date_joined.short_description = 'تاريخ الانضمام'
     get_date_joined.admin_order_field = 'date_joined'
+    
     def get_phone_number1(self, obj):
         return obj.phone_number1
     get_phone_number1.short_description = 'رقم الهاتف'
