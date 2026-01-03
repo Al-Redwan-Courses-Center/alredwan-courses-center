@@ -36,6 +36,11 @@ class CustomUserManager(BaseUserManager):
         if not phone_number1:
             raise ValueError(_("The phone number must be set"))
         phone_number1 = self.normalize_phone(phone_number1)
+        
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        extra_fields.setdefault('role', 'student')
 
         user = self.model(phone_number1=phone_number1, **extra_fields)
         user.set_password(password)

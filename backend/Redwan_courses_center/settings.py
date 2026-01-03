@@ -224,3 +224,33 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
    'AUTH_HEADER_TYPES': ('JWT',),
 }
+
+
+# Djoser configuration for phone number authentication
+DJOSER = {
+    # Use phone_number1 as the login field
+    'LOGIN_FIELD': 'phone_number1',
+    
+    # Require re_password on registration
+    'USER_CREATE_PASSWORD_RETYPE': True,
+    
+    # Require current password and retype on password change
+    'SET_PASSWORD_RETYPE': True,
+    
+    # Custom serializers - IMPORTANT for security!
+    # Prevents users from setting is_staff, is_superuser, role via API
+    'SERIALIZERS': {
+        'user_create': 'users.serializers.CustomUserCreateSerializer',
+        'user': 'users.serializers.CustomUserSerializer',
+        'current_user': 'users.serializers.CustomUserSerializer',
+    },
+    
+    # Permissions
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.IsAuthenticated'],
+        'user_list': ['rest_framework.permissions.IsAdminUser'],
+    },
+    
+    # Hide sensitive user IDs from non-admin users
+    'HIDE_USERS': True,
+}
