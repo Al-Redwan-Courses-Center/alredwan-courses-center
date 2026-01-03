@@ -205,6 +205,21 @@ class Course(models.Model):
                 current_date += timedelta(days=1)
             self.end_date = end_date
 
+
+    def delete_lectures(self):
+        """Delete all lectures generated for this course and reset lecture information."""
+        from .lecture import Lecture
+
+        # Delete all existing lectures for this course
+        Lecture.objects.filter(course=self).delete()
+
+        # Reset fields that depend on generated lectures
+        self.num_lectures = None
+        self.end_date = None
+
+        # Save the course after cleanup
+        self.save()
+
     def __str__(self):
         return f"{self.name}"
 
