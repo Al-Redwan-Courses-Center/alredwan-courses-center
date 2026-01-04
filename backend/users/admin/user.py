@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models.user import CustomUser
+from ..models.user import CustomUser
 
 @admin.register(CustomUser)
 class UserAdmin(BaseUserAdmin):
@@ -8,7 +8,6 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('role', 'is_verified', 'is_active', 'gender', 'identity_type', 'date_joined')
     search_fields = ('phone_number1', 'phone_number2', 'first_name', 'last_name', 'email', 'identity_number')
     ordering = ('-date_joined',)
-    
     fieldsets = (
         (None, {'fields': ('phone_number1', 'password')}),
         ('المعلومات الشخصية', {'fields': ('first_name', 'last_name', 'email', 'phone_number2', 'dob', 'gender', 'identity_number', 'identity_type', 'address', 'location')}),
