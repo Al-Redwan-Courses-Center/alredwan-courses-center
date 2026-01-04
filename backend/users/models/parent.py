@@ -41,8 +41,8 @@ class Parent(ImageOptimizationMixin, models.Model):
 
     class Meta:
         """Meta options for the Parent model."""
-        verbose_name = "Parent"
-        verbose_name_plural = "Parents"
+        verbose_name = _("ولي أمر")
+        verbose_name_plural = _("أولياء الأمور")
 
 
 class Child(ImageOptimizationMixin, models.Model):
@@ -112,8 +112,8 @@ class Child(ImageOptimizationMixin, models.Model):
 
     class Meta:
         """Meta options for the Child model."""
-        verbose_name = "Child"
-        verbose_name_plural = "Children"
+        verbose_name = _("طفل")
+        verbose_name_plural = _("الأطفال")
 
         indexes = [
             models.Index(fields=['unique_code']),
@@ -141,8 +141,8 @@ class ChildParents(models.Model):
 
     class Meta:
         """Meta options for the ChildParents model."""
-        verbose_name = "Child-Parent Association"
-        verbose_name_plural = "Child-Parent Associations"
+        verbose_name = _("رابط طفل بولي أمر")
+        verbose_name_plural = _("روابط الأطفال بأولياء الأمور")
         unique_together = ('child', 'parent')
 
     def save(self, *args, **kwargs):
@@ -204,6 +204,8 @@ class ParentLinkRequest(models.Model):
 
     class Meta:
         unique_together = ('child', 'requester', 'primary_parent')
+        verbose_name = _("طلب ربط ولي أمر بطفل")
+        verbose_name_plural = _("طلبات ربط أولياء أمور ثانويين بأطفال")
     '''
     🧠 Workflow Example
 

@@ -5,7 +5,6 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
 
-
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from core.utils.image_utils import validate_image_size
@@ -70,7 +69,9 @@ class Instructor(models.Model):
 
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.type})"
-
+    class Meta:
+        verbose_name = _("معلم")
+        verbose_name_plural = _("المعلمون")
 
 class Weekday(models.IntegerChoices):
     SATURDAY = 0, _("Saturday")
@@ -179,8 +180,8 @@ class InstructorAttendance(models.Model):
     notes = models.TextField(blank=True, null=True)
 
     class Meta:
-        verbose_name = "Instructor Attendance"
-        verbose_name_plural = "Instructor Attendance Records"
+        verbose_name = _("سجل حضور معلم")
+        verbose_name_plural = _("سجلات حضور المعلمين")
         unique_together = ("instructor", "date")
         indexes = [
             models.Index(fields=["instructor", "date"]),

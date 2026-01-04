@@ -8,11 +8,11 @@ from django.utils import timezone
 
 class ExamChoices(models.TextChoices):
     """Enumeration for exam_type status choices."""
-    QUIZ = 'quiz', _('Quiz')
-    MIDTERM = 'midterm', _('Midterm')
-    FINAL = 'final', _('Final')
-    ASSIGNMENT = 'assignment', _('Assignment')
-    OTHER = 'other', _('Other')
+    QUIZ = 'quiz', _('امتحان صغير')
+    MIDTERM = 'midterm', _('امتحان نصفي')
+    FINAL = 'final', _('امتحان نهائي')
+    ASSIGNMENT = 'assignment', _('واجب')
+    OTHER = 'other', _('أخرى')
 
 
 class Exam(models.Model):
@@ -43,6 +43,8 @@ class Exam(models.Model):
                          name='exam_scheduled_at_idx'),
         ]
         ordering = ['-scheduled_at']
+        verbose_name = _("امتحان")
+        verbose_name_plural = _("الامتحانات")
 
     def clean(self):
         '''Validate the exam before saving'''
@@ -99,6 +101,8 @@ class ExamResult(models.Model):
             models.Index(fields=['child'], name='exam_result_child_idx'),
         ]
         ordering = ['-entered_at']
+        verbose_name = _("نتيجة امتحان")
+        verbose_name_plural = _("نتائج الامتحانات")
 
     def clean(self):
         '''Validate the exam result before saving'''

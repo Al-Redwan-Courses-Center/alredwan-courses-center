@@ -4,13 +4,14 @@ import datetime
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 
 class LectureStatus(models.TextChoices):
     """Enumeration for lecture status choices."""
-    SCHEDULED = 'scheduled', 'Scheduled'
-    COMPLETED = 'completed', 'Completed'
-    CANCELLED = 'cancelled', 'Cancelled'
+    SCHEDULED = 'scheduled', _('Scheduled')
+    COMPLETED = 'completed', _('Completed')
+    CANCELLED = 'cancelled', _('Cancelled')
 
 
 class Lecture(models.Model):
@@ -43,8 +44,8 @@ class Lecture(models.Model):
             models.Index(fields=['course', 'lecture_number'],
                          name='lecture_course_lecture_index')
         ]
-        verbose_name = 'Lecture'
-        verbose_name_plural = 'Lectures'
+        verbose_name = _("محاضرة")
+        verbose_name_plural = _("المحاضرات")
 
     def __str__(self):
         return f"{self.title or f'Lecture {self.lecture_number}'} — {self.course} @ {self.day}"

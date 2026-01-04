@@ -4,6 +4,7 @@ Module for Student model that represents a student user
 '''
 from django.db import models
 from core.utils.image_utils import validate_image_size, ImageOptimizationMixin
+from django.utils.translation import gettext_lazy as _
 from .user import CustomUser
 import random
 import string
@@ -47,8 +48,8 @@ class StudentUser(ImageOptimizationMixin, models.Model):
 
     class Meta:
         """Meta options for the StudentUser model."""
-        verbose_name = "Student"
-        verbose_name_plural = "Students"
+        verbose_name = _("طالب")
+        verbose_name_plural = _("الطلاب")
         indexes = [
             models.Index(fields=['unique_code']),
         ]
