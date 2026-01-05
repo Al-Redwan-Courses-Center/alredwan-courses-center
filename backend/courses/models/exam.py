@@ -81,7 +81,7 @@ class ExamResult(models.Model):
         'courses.Exam', on_delete=models.CASCADE, related_name="results")
     student = models.ForeignKey('users.StudentUser', on_delete=models.CASCADE, null=True, blank=True,
                                 related_name="exam_results")
-    child = models.ForeignKey('users.Child', on_delete=models.CASCADE, null=True, blank=True,
+    child = models.ForeignKey('parents.Child', on_delete=models.CASCADE, null=True, blank=True,
                               related_name="exam_results")
     entered_by = models.ForeignKey('users.CustomUser', on_delete=models.SET_NULL, null=True, blank=True,
                                    related_name='entered_exam_results')
