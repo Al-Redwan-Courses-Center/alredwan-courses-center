@@ -17,21 +17,21 @@ class LectureStatus(models.TextChoices):
 class Lecture(models.Model):
     """Model representing a lecture scheduled for a course."""
 
-    title = models.CharField(max_length=255, blank=True)
+    title = models.CharField(max_length=255, blank=True, verbose_name=_("Title"))
     course = models.ForeignKey(
-        'courses.Course', on_delete=models.CASCADE, related_name='lectures')
-    day = models.DateField()  # date of lecture (local date in Africa/Cairo)
-    start_time = models.TimeField(null=True, blank=True)
-    end_time = models.TimeField(null=True, blank=True)
-    lecture_number = models.PositiveIntegerField()
+        'courses.Course', on_delete=models.CASCADE, related_name='lectures', verbose_name=_("Course"))
+    day = models.DateField(verbose_name=_("Day"))  # date of lecture (local date in Africa/Cairo)
+    start_time = models.TimeField(null=True, blank=True, verbose_name=_("Start time"))
+    end_time = models.TimeField(null=True, blank=True, verbose_name=_("End time"))
+    lecture_number = models.PositiveIntegerField(verbose_name=_("Lecture number"))
     instructor = models.ForeignKey('users.Instructor', null=True, blank=True,
-                                   on_delete=models.SET_NULL, related_name='lectures')
+                                   on_delete=models.SET_NULL, related_name='lectures', verbose_name=_("Instructor"))
     status = models.CharField(
-        max_length=10, choices=LectureStatus.choices, default=LectureStatus.SCHEDULED)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+        max_length=10, choices=LectureStatus.choices, default=LectureStatus.SCHEDULED, verbose_name=_("Status"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created at"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated at"))
 
-    attendance_taken = models.BooleanField(default=False)
+    attendance_taken = models.BooleanField(default=False, verbose_name=_("Attendance taken"))
 
     class Meta:
         constraints = [

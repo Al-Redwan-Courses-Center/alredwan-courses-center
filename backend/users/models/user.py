@@ -77,30 +77,32 @@ class CustomUser(AbstractUser):
         _("Alternative phone number"), max_length=15, null=True, blank=True
     )
 
-    email = models.EmailField(unique=True, null=True, blank=True)
-    first_name = models.CharField(max_length=128)  # 1st and 2nd names
-    last_name = models.CharField(max_length=128)  # 3rd and 4th names
+    email = models.EmailField(unique=True, null=True, blank=True, verbose_name=_("Email"))
+    first_name = models.CharField(max_length=128, verbose_name=_("First name"))  # 1st and 2nd names
+    last_name = models.CharField(max_length=128, verbose_name=_("Last name"))  # 3rd and 4th names
 
     date_joined = models.DateTimeField(default=timezone.now)
     dob = models.DateField(_("date of birth"))
 
     # Phone and admin verification status
-    is_verified = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False, verbose_name=_("Is verified"))
     identity_number = models.CharField(
         _("Government ID / Passport"), max_length=30, null=True, unique=True)
     identity_type = models.CharField(
         max_length=20,
         choices=[("nid", "بطاقة وطنية"), ("passport", "جواز سفر"), ("other", "أخرى")],
         default="nid",
-        null=True
+        null=True,
+    verbose_name = _("Identity type")
     )
     gender = models.CharField(
         max_length=10,
         choices=[("male", "ذكر"), ("female", "أنثى")],
+        verbose_name=_("Gender")
     )
 
-    address = models.TextField(null=True, blank=True)
-    location = models.URLField(max_length=512, null=True, blank=True)
+    address = models.TextField(null=True, blank=True, verbose_name=_("Address"))
+    location = models.URLField(max_length=512, null=True, blank=True, verbose_name=_("Location"))
     role = models.CharField(
         max_length=20,
         choices=[
@@ -111,6 +113,7 @@ class CustomUser(AbstractUser):
             ("admin", "مدير"),
         ],
         default="student",
+        verbose_name=_("Role")
     )
 
     # Authentication settings

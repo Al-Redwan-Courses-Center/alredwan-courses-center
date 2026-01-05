@@ -3,6 +3,7 @@ import uuid
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.db.models import Q, F
+from django.utils.translation import gettext_lazy as _
 
 
 class EnrollmentStatus(models.TextChoices):
@@ -18,21 +19,21 @@ class Enrollment(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     course = models.ForeignKey(
-        'courses.Course', on_delete=models.CASCADE, related_name='enrollments')
+        'courses.Course', on_delete=models.CASCADE, related_name='enrollments', verbose_name=_("Course"))
     student = models.ForeignKey(
-        'users.StudentUser', null=True, blank=True, on_delete=models.CASCADE, related_name='enrollments')
+        'users.StudentUser', null=True, blank=True, on_delete=models.CASCADE, related_name='enrollments', verbose_name=_("Student"))
     child = models.ForeignKey('parents.Child', null=True, blank=True,
-                              on_delete=models.CASCADE, related_name='enrollments')
+                              on_delete=models.CASCADE, related_name='enrollments', verbose_name=_("Child"))
 
-    enrolled_at = models.DateTimeField(default=timezone.now, db_index=True)
+    enrolled_at = models.DateTimeField(default=timezone.now, db_index=True, verbose_name=_("Enrolled at"))
 
     status = models.CharField(max_length=10, choices=EnrollmentStatus.choices,
-                              default=EnrollmentStatus.ACTIVE)
+                              default=EnrollmentStatus.ACTIVE, verbose_name=_("Status"))
 
     created_by = models.ForeignKey("users.CustomUser", null=True, blank=True,
-                                   on_delete=models.SET_NULL, related_name="created_enrollments")
+                                   on_delete=models.SET_NULL, related_name="created_enrollments", verbose_name=_("Created at"))
 
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated at"))
 
     class Meta:
         """Meta class for Enrollment model."""

@@ -36,21 +36,23 @@ class Instructor(models.Model):
         NORMAL = "normal", _("Normal / External")
 
     user = models.OneToOneField(
-        CustomUser, on_delete=models.CASCADE, related_name='instructor_profile')
-    bio = models.TextField(null=True, blank=True)
-    monthly_salary = models.DecimalField(max_digits=10, decimal_places=2)
+        CustomUser, on_delete=models.CASCADE, related_name='instructor_profile',  verbose_name=_("User"))
+    bio = models.TextField(null=True, blank=True,  verbose_name=_("Bio"))
+    monthly_salary = models.DecimalField(max_digits=10, decimal_places=2,  verbose_name=_("Monthly salary"))
 
     nid_front = models.ImageField(
         upload_to=nid_upload_path,
         validators=[validate_image_size],
         blank=True,
         null=True,
+        verbose_name=_("Nid front")
     )
     nid_back = models.ImageField(
         upload_to=nid_upload_path,
         validators=[validate_image_size],
         blank=True,
         null=True,
+        verbose_name=_("Nid back")
     )
     image = models.ImageField(
         upload_to=instructor_upload_path,
@@ -58,13 +60,15 @@ class Instructor(models.Model):
         default="defaults/user_default.png",
         blank=True,
         null=True,
+        verbose_name=_("Image")
     )
-    joined_date = models.DateField(auto_now_add=True)
+    joined_date = models.DateField(auto_now_add=True,  verbose_name=_("Joined date"))
 
     type = models.CharField(
         max_length=20,
         choices=InstructorType.choices,
         default=InstructorType.NORMAL,
+        verbose_name=_("Type")
     )
 
     def __str__(self):
@@ -87,14 +91,15 @@ class SupervisorSchedule(models.Model):
     instructor = models.ForeignKey(
         Instructor,
         on_delete=models.CASCADE,
-        related_name="supervisor_schedules"
+        related_name="supervisor_schedules",
+        verbose_name = _("Course")
     )
-    day_of_week = models.PositiveSmallIntegerField(choices=Weekday.choices)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    day_of_week = models.PositiveSmallIntegerField(choices=Weekday.choices,  verbose_name=_("Day of week"))
+    start_time = models.TimeField(verbose_name=_("Start time"))
+    end_time = models.TimeField(verbose_name=_("End time"))
 
-    grace_period_minutes = models.PositiveIntegerField(default=20)
-    auto_absent_after_minutes = models.PositiveIntegerField(default=60)
+    grace_period_minutes = models.PositiveIntegerField(default=20, verbose_name=_("Grace period minutes"))
+    auto_absent_after_minutes = models.PositiveIntegerField(default=60, verbose_name=_("Auto absent after minutes"))
 
     class Meta:
         unique_together = ("instructor", "day_of_week")
@@ -124,20 +129,21 @@ class InstructorAttendance(models.Model):
     """Track attendance and rating of instructors (check-in/check-out)."""
 
     instructor = models.ForeignKey(
-        "Instructor", on_delete=models.CASCADE, related_name="attendance_records"
+        "Instructor", on_delete=models.CASCADE, related_name="attendance_records", verbose_name=_("Instructor")
     )
-    date = models.DateField(default=timezone.localdate)
-    check_in_time = models.DateTimeField(null=True, blank=True)
-    check_out_time = models.DateTimeField(null=True, blank=True)
+    date = models.DateField(default=timezone.localdate, verbose_name=_("date"))
+    check_in_time = models.DateTimeField(null=True, blank=True, verbose_name=_("Check in time"))
+    check_out_time = models.DateTimeField(null=True, blank=True, verbose_name=_("Check out time"))
 
     check_in_method = models.CharField(
-        max_length=20, null=True, blank=True
+        max_length=20, null=True, blank=True, verbose_name=_("Check in method")
     )  # fingerprint, RFID, admin
 
     status = models.CharField(
         max_length=20,
         choices=AttendanceStatus.choices,
-        default=AttendanceStatus.NOT_STARTED
+        default=AttendanceStatus.NOT_STARTED,
+        verbose_name=_("Status")
     )
     schedule = models.ForeignKey(
         SupervisorSchedule,
@@ -146,27 +152,32 @@ class InstructorAttendance(models.Model):
         blank=True,
         related_name="attendances",
         help_text=_("Linked schedule if this instructor is a supervisor."),
+        verbose_name=_("Schedule")
     )
     lecture = models.ForeignKey(
         Lecture, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='instructor_attendances'
+        null=True, blank=True, related_name='instructor_attendances',
+        verbose_name = _("Lecture")
     )
 
     check_in_device = models.ForeignKey(
         "attendance.AttendanceDevice", on_delete=models.SET_NULL,
-        null=True, blank=True
+        null=True, blank=True,
+        verbose_name=_("Check in device")
     )
     season = models.ForeignKey(
         "courses.Season",
         on_delete=models.CASCADE,
         related_name="instructor_attendance",
+        verbose_name=_("Season")
     )
     rating = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)],
         null=True,
         blank=True,
         help_text=_("Rating of the instructor for the day (1-10)."),
-        default=8
+        default=8,
+        verbose_name=_("Rating")
     )
 
     rated_by = models.ForeignKey(
@@ -176,8 +187,9 @@ class InstructorAttendance(models.Model):
         blank=True,
         related_name="given_instructor_ratings",
         help_text=_("The admin who rated or updated this attendance."),
+        verbose_name=_("Rated by")
     )
-    notes = models.TextField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True, verbose_name=_("Notes"))
 
     class Meta:
         verbose_name = _("سجل حضور معلم")

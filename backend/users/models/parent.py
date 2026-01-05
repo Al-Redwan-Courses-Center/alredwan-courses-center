@@ -30,13 +30,14 @@ class Parent(ImageOptimizationMixin, models.Model):
     '''
 
     user = models.OneToOneField(
-        CustomUser, on_delete=models.CASCADE, related_name='parent_profile')
+        CustomUser, on_delete=models.CASCADE, related_name='parent_profile', verbose_name=_("User"))
     image = models.ImageField(
         upload_to=parent_upload_path,
         validators=[validate_image_size],
         default='defaults/user_default.png',
         blank=True,
         null=True,
+        verbose_name=_("Image")
     )
 
     class Meta:
@@ -51,9 +52,9 @@ class Child(ImageOptimizationMixin, models.Model):
     '''
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     primary_parent = models.ForeignKey(
-        Parent, on_delete=models.PROTECT, related_name='primary_children')
-    first_name = models.CharField(max_length=128)
-    last_name = models.CharField(max_length=128)
+        Parent, on_delete=models.PROTECT, related_name='primary_children', verbose_name=_("Primary parent"))
+    first_name = models.CharField(max_length=128, verbose_name=_("First name"))
+    last_name = models.CharField(max_length=128, verbose_name=_("Last name"))
 
     phone = models.CharField(
         _("phone number"), max_length=11, null=True, blank=True)
@@ -62,17 +63,19 @@ class Child(ImageOptimizationMixin, models.Model):
     image = models.ImageField(
         upload_to=child_upload_path,
         validators=[validate_image_size],
-        null=True, blank=True, default='defaults/user_default.png'
+        null=True, blank=True, default='defaults/user_default.png',
+        verbose_name=_("Image")
     )
 
     gender = models.CharField(
         max_length=10,
         choices=[("boy", "Boy"), ("girl", "Girl")],
+        verbose_name=_("gender")
     )
     """nid_number = models.CharField(
         _("National ID number"), max_length=15, unique=True) """
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created at"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated at"))
 
     def generate_unique_code(self):
         """Generate a unique code for the child."""
@@ -126,9 +129,9 @@ class ChildParents(models.Model):
     '''
 
     child = models.ForeignKey(
-        Child, on_delete=models.CASCADE, related_name='extra_parents')
+        Child, on_delete=models.CASCADE, related_name='extra_parents', verbose_name=_("Child"))
     parent = models.ForeignKey(
-        Parent, on_delete=models.CASCADE, related_name='extra_children')
+        Parent, on_delete=models.CASCADE, related_name='extra_children', verbose_name=_("Parent"))
 
     def clean(self):
         if ChildParents.objects.filter(child=self.child).count() >= 2:
@@ -168,11 +171,11 @@ class ParentLinkRequest(models.Model):
     Represents a request by a parent to link themselves to an existing child.
     """
     child = models.ForeignKey(
-        'Child', on_delete=models.CASCADE, related_name='link_requests')
+        'Child', on_delete=models.CASCADE, related_name='link_requests', verbose_name=_("Child"))
     requester = models.ForeignKey(
-        'Parent', on_delete=models.CASCADE, related_name='sent_link_requests')
+        'Parent', on_delete=models.CASCADE, related_name='sent_link_requests', verbose_name=_("Parent"))
     primary_parent = models.ForeignKey(
-        'Parent', on_delete=models.CASCADE, related_name='received_link_requests')
+        'Parent', on_delete=models.CASCADE, related_name='received_link_requests', verbose_name=_("Primary parent"))
 
     status_choices = [
         ('pending', 'Pending'),
@@ -182,8 +185,8 @@ class ParentLinkRequest(models.Model):
     status = models.CharField(
         max_length=10, choices=status_choices, default='pending')
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created at"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated at"))
 
     def approve(self):
         """Approve the request and create the ChildParents link."""

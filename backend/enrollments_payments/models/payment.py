@@ -4,6 +4,7 @@ import uuid
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 
 
 class PaymentMethod(models.TextChoices):
@@ -29,33 +30,33 @@ class Payment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     enrollment = models.ForeignKey("enrollments_payments.Enrollment", null=True,
-                                   blank=True, on_delete=models.CASCADE, related_name="payments")
+                                   blank=True, on_delete=models.CASCADE, related_name="payments",  verbose_name=_("Enrolment"))
 
     payer_parent = models.ForeignKey(
-        'parents.Parent', null=True, blank=True, on_delete=models.SET_NULL, related_name='payments')
+        'parents.Parent', null=True, blank=True, on_delete=models.SET_NULL, related_name='payments',  verbose_name=_("Payer parent"))
 
     payer_student = models.ForeignKey(
-        'users.StudentUser', null=True, blank=True, on_delete=models.SET_NULL, related_name='payments')
+        'users.StudentUser', null=True, blank=True, on_delete=models.SET_NULL, related_name='payments',  verbose_name=_("Payer student"))
 
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2,  verbose_name=_("Amount"))
 
     method = models.CharField(
-        max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH)
+        max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH, verbose_name=_("Method"))
 
     status = models.CharField(
-        max_length=10, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
+        max_length=10, choices=PaymentStatus.choices, default=PaymentStatus.PENDING,  verbose_name=_("Status"))
 
-    notes = models.TextField(null=True, blank=True)
+    notes = models.TextField(null=True, blank=True,  verbose_name=_("Notes"))
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True,  verbose_name=_("Created at"))
+    updated_at = models.DateTimeField(auto_now=True,  verbose_name=_("Updated at"))
 
     processed_by = models.ForeignKey(
-        'users.CustomUser', null=True, blank=True, on_delete=models.SET_NULL, related_name='processed_payments')
+        'users.CustomUser', null=True, blank=True, on_delete=models.SET_NULL, related_name='processed_payments',  verbose_name=_("Processed by"))
 
-    processed_at = models.DateTimeField(null=True, blank=True)
+    processed_at = models.DateTimeField(null=True, blank=True,  verbose_name=_("Processed at"))
 
-    reference_number = models.CharField(max_length=100, null=True, blank=True)
+    reference_number = models.CharField(max_length=100, null=True, blank=True,  verbose_name=_("Reference number"))
 
     class Meta:
         """Meta class for Payment model."""
@@ -175,27 +176,27 @@ class RefundRequest(models.Model):
     """
 
     class RefundStatus(models.TextChoices):
-        REQUESTED = "requested", "Requested"
-        APPROVED = "approved", "Approved"
-        REJECTED = "rejected", "Rejected"
-        PROCESSED = "processed", "Processed"
+        REQUESTED = "requested", _("Requested")
+        APPROVED = "approved", _("Approved")
+        REJECTED = "rejected", _("Rejected")
+        PROCESSED = "processed", _("Processed")
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     enrollment = models.ForeignKey(
-        "enrollments_payments.Enrollment", on_delete=models.CASCADE, related_name="refund_requests")
+        "enrollments_payments.Enrollment", on_delete=models.CASCADE, related_name="refund_requests",  verbose_name=_("Enrollment"))
     requested_by_parent = models.ForeignKey(
-        "parents.Parent", null=True, blank=True, on_delete=models.SET_NULL, related_name="refund_requests")
+        "parents.Parent", null=True, blank=True, on_delete=models.SET_NULL, related_name="refund_requests",  verbose_name=_("Requested by parent"))
     requested_by_student = models.ForeignKey(
-        "users.StudentUser", null=True, blank=True, on_delete=models.SET_NULL, related_name="refund_requests")
-    reason = models.TextField(null=True, blank=True)
+        "users.StudentUser", null=True, blank=True, on_delete=models.SET_NULL, related_name="refund_requests",  verbose_name=_("Requested by student"))
+    reason = models.TextField(null=True, blank=True,  verbose_name=_("Reason"))
     status = models.CharField(
-        max_length=20, choices=RefundStatus.choices, default=RefundStatus.REQUESTED)
+        max_length=20, choices=RefundStatus.choices, default=RefundStatus.REQUESTED,  verbose_name=_("Status"))
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True,  verbose_name=_("Created at"))
     processed_by = models.ForeignKey(
-        "users.CustomUser", null=True, blank=True, on_delete=models.SET_NULL, related_name="processed_refunds")
-    processed_at = models.DateTimeField(null=True, blank=True)
-    processed_note = models.TextField(null=True, blank=True)
+        "users.CustomUser", null=True, blank=True, on_delete=models.SET_NULL, related_name="processed_refunds",  verbose_name=_("Processed by"))
+    processed_at = models.DateTimeField(null=True, blank=True,  verbose_name=_("Processed at"))
+    processed_note = models.TextField(null=True, blank=True,  verbose_name=_("Processed note"))
 
     class Meta:
         verbose_name = 'طلب إسترداد'

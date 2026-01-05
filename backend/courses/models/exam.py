@@ -20,21 +20,21 @@ class Exam(models.Model):
     Exam model
     """
 
-    name = models.CharField(max_length=100)
-    scheduled_at = models.DateTimeField()
-    total_marks = models.DecimalField(max_digits=5, decimal_places=2)
-    description = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    name = models.CharField(max_length=100, verbose_name=_("Name"))
+    scheduled_at = models.DateTimeField(verbose_name=_("Scheduled at"))
+    total_marks = models.DecimalField(max_digits=5, decimal_places=2, verbose_name=_("Total marks"))
+    description = models.TextField(blank=True, null=True, verbose_name=_("Description"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created at"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated at"))
 
     exam_type = models.CharField(
         max_length=16, choices=ExamChoices.choices, default=ExamChoices.OTHER
     )
 
     course = models.ForeignKey(
-        'courses.Course', on_delete=models.CASCADE, related_name="exams")
+        'courses.Course', on_delete=models.CASCADE, related_name="exams", verbose_name=_("Course"))
     instructor = models.ForeignKey('users.Instructor', on_delete=models.SET_NULL, null=True, blank=True,
-                                   related_name="exams")
+                                   related_name="exams", verbose_name=_("Instructor"))
 
     class Meta:
         indexes = [
@@ -67,24 +67,24 @@ class ExamResult(models.Model):
     """
 
     marks_obtained = models.DecimalField(
-        max_digits=5, decimal_places=2, null=True, blank=True)
+        max_digits=5, decimal_places=2, null=True, blank=True, verbose_name=_("Marks obtained"))
     percentage = models.DecimalField(
-        max_digits=5, decimal_places=2, null=True, blank=True)
-    passed = models.BooleanField(default=True)
-    notes = models.TextField(null=True, blank=True)
-    entered_at = models.DateTimeField(default=timezone.now)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+        max_digits=5, decimal_places=2, null=True, blank=True, verbose_name=_("Percentage"))
+    passed = models.BooleanField(default=True, verbose_name=_("Passed"))
+    notes = models.TextField(null=True, blank=True, verbose_name=_("Notes"))
+    entered_at = models.DateTimeField(default=timezone.now, verbose_name=_("Entered at"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created at"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated at"))
 
     # If we keep both child and student, enforce XOR (exactly one is set).
     exam = models.ForeignKey(
-        'courses.Exam', on_delete=models.CASCADE, related_name="results")
+        'courses.Exam', on_delete=models.CASCADE, related_name="results", verbose_name=_("Exam"))
     student = models.ForeignKey('users.StudentUser', on_delete=models.CASCADE, null=True, blank=True,
-                                related_name="exam_results")
+                                related_name="exam_results", verbose_name=_("Student"))
     child = models.ForeignKey('parents.Child', on_delete=models.CASCADE, null=True, blank=True,
-                              related_name="exam_results")
+                              related_name="exam_results", verbose_name=_("Child"))
     entered_by = models.ForeignKey('users.CustomUser', on_delete=models.SET_NULL, null=True, blank=True,
-                                   related_name='entered_exam_results')
+                                   related_name='entered_exam_results', verbose_name=_("Entered by"))
 
     class Meta:
         constraints = [

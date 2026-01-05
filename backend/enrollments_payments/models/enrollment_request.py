@@ -37,35 +37,35 @@ class EnrollmentRequest(models.Model):
     """Model representing an enrollment request."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    course = models.ForeignKey('courses.Course', on_delete=models.CASCADE)
+    course = models.ForeignKey('courses.Course', on_delete=models.CASCADE, verbose_name=_("Course"))
 
     parent = models.ForeignKey(
-        'parents.Parent', null=True, blank=True, on_delete=models.CASCADE)
+        'parents.Parent', null=True, blank=True, on_delete=models.CASCADE, verbose_name=_("Parent"))
     student = models.ForeignKey(
-        'users.StudentUser', null=True, blank=True, on_delete=models.CASCADE)
+        'users.StudentUser', null=True, blank=True, on_delete=models.CASCADE, verbose_name=_("Student"))
     child = models.ForeignKey('parents.Child', null=True,
-                              blank=True, on_delete=models.CASCADE)
+                              blank=True, on_delete=models.CASCADE, verbose_name=_("Child"))
 
     # ALLOW null before save() sets it
     price = models.DecimalField(
         # parent may choose to pay a partial amount then pay the rest later
-        max_digits=10, decimal_places=2, null=True, blank=True)
+        max_digits=10, decimal_places=2, null=True, blank=True, verbose_name=_("Price"))
 
     status = models.CharField(max_length=20, choices=EnrollmentRequestStatus.choices,
-                              default=EnrollmentRequestStatus.PENDING)
+                              default=EnrollmentRequestStatus.PENDING, verbose_name=_("Status"))
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    processed_at = models.DateTimeField(null=True, blank=True)
-    expires_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created at"))
+    processed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Processed at"))
+    expires_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Expires at"))
 
-    notes = models.TextField(null=True, blank=True)
+    notes = models.TextField(null=True, blank=True, verbose_name=_("Notes"))
 
     payment_method = models.CharField(max_length=20,
                                       choices=PaymentMethod.choices,
-                                      default=PaymentMethod.CASH)
+                                      default=PaymentMethod.CASH, verbose_name=_("Payment method"))
 
     processed_by = models.ForeignKey("users.CustomUser", null=True, blank=True,
-                                     on_delete=models.SET_NULL, related_name="processed_enrollment_requests")
+                                     on_delete=models.SET_NULL, related_name="processed_enrollment_requests", verbose_name=_("Processed by"))
 
     class Meta:
         verbose_name = 'طلب إلتحاق'

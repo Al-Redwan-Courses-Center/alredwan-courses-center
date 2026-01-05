@@ -40,15 +40,15 @@ class Season(models.Model):
     """
 
     # consider adding a celery task to deactivate old seasons and activate new ones based on dates
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128, verbose_name=_("Name"))
     season_type = models.CharField(
         max_length=32, choices=SeasonChoices.choices)
-    start_date = models.DateField()
-    end_date = models.DateField(null=True, blank=True)
-    description = models.TextField(blank=True, null=True)
-    is_active = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    start_date = models.DateField(verbose_name=_("Start date"))
+    end_date = models.DateField(null=True, blank=True, verbose_name=_("End date"))
+    description = models.TextField(blank=True, null=True, verbose_name=_("description"))
+    is_active = models.BooleanField(default=False, verbose_name=_("Is active"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created at"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated at"))
 
     # we could cache number of lectures and enrolled students
 
@@ -78,8 +78,8 @@ class Tag(models.Model):
     Tags model
     """
 
-    name = models.CharField(max_length=50)
-    created_at = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=50, verbose_name=_("Name"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created at"))
 
     class Meta:
         ordering = ['name']
@@ -97,34 +97,34 @@ class Course(models.Model):
     Course model
     """
 
-    name = models.CharField(max_length=128)
-    description = models.TextField(blank=True)
+    name = models.CharField(max_length=128, verbose_name=_("Name"))
+    description = models.TextField(blank=True, verbose_name=_("Description"))
 
-    start_date = models.DateField()
+    start_date = models.DateField(verbose_name=_("Start date"))
     # optional if you later drive off schedules/lectures
-    end_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True, verbose_name=_("End date"))
 
     # compute this from Lectures or use it to compute lectures
-    num_lectures = models.IntegerField(null=True, blank=True)
-    capacity = models.IntegerField(validators=[MinValueValidator(1)])
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    num_lectures = models.IntegerField(null=True, blank=True, verbose_name=_("Num lectures"))
+    capacity = models.IntegerField(validators=[MinValueValidator(1)], verbose_name=_("Capacity"))
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_("Price"))
     enrolled_count = models.IntegerField(
-        default=0, validators=[MinValueValidator(0)])
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+        default=0, validators=[MinValueValidator(0)], verbose_name=_("Enrolled count"))
+    is_active = models.BooleanField(default=True, verbose_name=_("Is active"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created at"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated at"))
 
     season = models.ForeignKey('courses.Season', on_delete=models.SET_NULL, null=True, blank=True,
-                               related_name="courses")
+                               related_name="courses", verbose_name=_("Season"))
     instructor = models.ForeignKey('users.Instructor', on_delete=models.SET_NULL, null=True, blank=True,
-                                   related_name="courses")
+                                   related_name="courses", verbose_name=_("Instructor"))
     tags = models.ManyToManyField(
-        'courses.Tag', related_name="courses", blank=True)
-    for_adults = models.BooleanField(default=True)
-    min_age = models.PositiveSmallIntegerField(null=True, blank=True)
-    max_age = models.PositiveSmallIntegerField(null=True, blank=True)
+        'courses.Tag', related_name="courses", blank=True, verbose_name=_("Tags"))
+    for_adults = models.BooleanField(default=True, verbose_name=_("For adults"))
+    min_age = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name=_("Min age"))
+    max_age = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name=_("max_age"))
 
-    slug = models.SlugField(max_length=150, blank=True, null=True)
+    slug = models.SlugField(max_length=150, blank=True, null=True, verbose_name=_("Slug"))
 
     class Meta:
         indexes = [
@@ -259,10 +259,10 @@ class CourseSchedule(models.Model):
     """
 
     course = models.ForeignKey(
-        'courses.Course', on_delete=models.CASCADE, related_name='schedules')
-    weekday = models.PositiveSmallIntegerField(choices=Weekday.choices)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+        'courses.Course', on_delete=models.CASCADE, related_name='schedules', verbose_name=_("Course"))
+    weekday = models.PositiveSmallIntegerField(choices=Weekday.choices, verbose_name=_("Weekday"))
+    start_time = models.TimeField(verbose_name=_("Start time"))
+    end_time = models.TimeField(verbose_name=_("End time"))
 
     def clean(self):
         '''Validate the course schedule.'''
