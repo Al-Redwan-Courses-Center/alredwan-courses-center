@@ -32,7 +32,7 @@ class Payment(models.Model):
                                    blank=True, on_delete=models.CASCADE, related_name="payments")
 
     payer_parent = models.ForeignKey(
-        'users.Parent', null=True, blank=True, on_delete=models.SET_NULL, related_name='payments')
+        'parents.Parent', null=True, blank=True, on_delete=models.SET_NULL, related_name='payments')
 
     payer_student = models.ForeignKey(
         'users.StudentUser', null=True, blank=True, on_delete=models.SET_NULL, related_name='payments')
@@ -59,6 +59,9 @@ class Payment(models.Model):
 
     class Meta:
         """Meta class for Payment model."""
+        verbose_name = 'سجل دفع'
+        verbose_name_plural = 'سجلات الدفع'
+
         constraints = [
             # Ensure that either payer_parent or payer_student is set, but not both
             models.CheckConstraint(
@@ -84,8 +87,6 @@ class Payment(models.Model):
             models.Index(fields=["payer_student"], name="pay_student_idx"),
             models.Index(fields=["status"], name="pay_status_idx"),
         ]
-        verbose_name = 'Payment'
-        verbose_name_plural = 'Payments'
 
     def clean(self):
         """Validate payment record constraints."""
@@ -183,7 +184,7 @@ class RefundRequest(models.Model):
     enrollment = models.ForeignKey(
         "enrollments_payments.Enrollment", on_delete=models.CASCADE, related_name="refund_requests")
     requested_by_parent = models.ForeignKey(
-        "users.Parent", null=True, blank=True, on_delete=models.SET_NULL, related_name="refund_requests")
+        "parents.Parent", null=True, blank=True, on_delete=models.SET_NULL, related_name="refund_requests")
     requested_by_student = models.ForeignKey(
         "users.StudentUser", null=True, blank=True, on_delete=models.SET_NULL, related_name="refund_requests")
     reason = models.TextField(null=True, blank=True)
@@ -197,6 +198,8 @@ class RefundRequest(models.Model):
     processed_note = models.TextField(null=True, blank=True)
 
     class Meta:
+        verbose_name = 'طلب إسترداد'
+        verbose_name_plural = 'طلبات الإسترداد'
         indexes = [
             models.Index(fields=["enrollment"], name="refund_enrollment_idx"),
             models.Index(fields=["status"], name="refund_status_idx"),

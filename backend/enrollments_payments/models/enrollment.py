@@ -21,7 +21,7 @@ class Enrollment(models.Model):
         'courses.Course', on_delete=models.CASCADE, related_name='enrollments')
     student = models.ForeignKey(
         'users.StudentUser', null=True, blank=True, on_delete=models.CASCADE, related_name='enrollments')
-    child = models.ForeignKey('users.Child', null=True, blank=True,
+    child = models.ForeignKey('parents.Child', null=True, blank=True,
                               on_delete=models.CASCADE, related_name='enrollments')
 
     enrolled_at = models.DateTimeField(default=timezone.now, db_index=True)
@@ -36,6 +36,8 @@ class Enrollment(models.Model):
 
     class Meta:
         """Meta class for Enrollment model."""
+        verbose_name = 'إلتحاق'
+        verbose_name_plural = 'الإلتحاقات'
         constraints = [
             models.CheckConstraint(
                 check=Q(child__isnull=False, student__isnull=True) | Q(

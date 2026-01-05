@@ -14,23 +14,23 @@ import uuid
 
 class EnrollmentRequestStatus(models.TextChoices):
     """Enumeration for enrollment request status choices."""
-    PENDING = "pending", "Pending"
-    PROCESSING = "processing", "Processing"
-    REJECTED = "rejected", "Rejected"
+    PENDING = "pending", _("معلق")
+    PROCESSING = "processing", _("قيد المعالجة")
+    REJECTED = "rejected", _("مرفوض")
     # accepted but not necessarily paid (we'll treat accept==create enrollment)
-    ACCEPTED = "accepted", "Accepted"
-    EXPIRED = "expired", "Expired"
+    ACCEPTED = "accepted", _("مقبول")
+    EXPIRED = "expired", _("منتهي الصلاحية")
 
 
 class PaymentMethod(models.TextChoices):
     """Enumeration for payment method choices."""
-    CASH = 'cash', _('Cash')
-    CARD = 'card', _('Card')
-    BANK_TRANSFER = 'bank_transfer', _('Bank Transfer')
-    INSTAPAY = 'instapay', _('Instapay')
+    CASH = 'cash', _('نقدًا')
+    CARD = 'card', _('بطاقة')
+    BANK_TRANSFER = 'bank_transfer', _('تحويل بنكي')
+    INSTAPAY = 'instapay', _('إنستاباي')
     VODAFONE_CASH = 'vodafone_cash', _(
-        'Vodafone Cash')
-    OTHER = 'other', _('Other')
+        'فودافون كاش')
+    OTHER = 'other', _('طريقة أخرى')
 
 
 class EnrollmentRequest(models.Model):
@@ -40,15 +40,16 @@ class EnrollmentRequest(models.Model):
     course = models.ForeignKey('courses.Course', on_delete=models.CASCADE)
 
     parent = models.ForeignKey(
-        'users.Parent', null=True, blank=True, on_delete=models.CASCADE)
+        'parents.Parent', null=True, blank=True, on_delete=models.CASCADE)
     student = models.ForeignKey(
         'users.StudentUser', null=True, blank=True, on_delete=models.CASCADE)
-    child = models.ForeignKey('users.Child', null=True,
+    child = models.ForeignKey('parents.Child', null=True,
                               blank=True, on_delete=models.CASCADE)
 
     # ALLOW null before save() sets it
     price = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True)  # parent may choose to pay a partial amount then pay the rest later
+        # parent may choose to pay a partial amount then pay the rest later
+        max_digits=10, decimal_places=2, null=True, blank=True)
 
     status = models.CharField(max_length=20, choices=EnrollmentRequestStatus.choices,
                               default=EnrollmentRequestStatus.PENDING)
@@ -67,6 +68,8 @@ class EnrollmentRequest(models.Model):
                                      on_delete=models.SET_NULL, related_name="processed_enrollment_requests")
 
     class Meta:
+        verbose_name = 'طلب إلتحاق'
+        verbose_name_plural = 'طلبات الإلنحاق'
 
         indexes = [
             models.Index(fields=["course"], name="er_course_idx"),
@@ -139,6 +142,7 @@ class EnrollmentRequest(models.Model):
         """Return the participant of the enrollment request, either a child or a student."""
         return self.child or self.student
 
+    # link paid amount enrollment request price
     def approve(self, processed_by_user, paid_amount=None, payment_method=None, payment_notes=None):
         """Approve the enrollment request and create an Enrollment."""
         if self.status != EnrollmentRequestStatus.PENDING:
