@@ -1,10 +1,13 @@
 from django.contrib import admin
-from ..models.parent import Parent, Child, ChildParents, ParentLinkRequest
+from ..models import Parent, Child, ChildParents, ParentLinkRequest
+
+
 @admin.register(Parent)
 class ParentAdmin(admin.ModelAdmin):
     list_display = ('get_full_name', 'get_phone', 'get_email', 'image')
-    search_fields = ('user__first_name', 'user__last_name', 'user__phone_number1', 'user__email')
-    
+    search_fields = ('user__first_name', 'user__last_name',
+                     'user__phone_number1', 'user__email')
+
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         if 'user' in form.base_fields:
@@ -12,15 +15,15 @@ class ParentAdmin(admin.ModelAdmin):
         if 'image' in form.base_fields:
             form.base_fields['image'].label = 'الصورة'
         return form
-    
+
     def get_full_name(self, obj):
         return obj.user.get_full_name()
     get_full_name.short_description = 'الاسم الكامل'
-    
+
     def get_phone(self, obj):
         return obj.user.phone_number1
     get_phone.short_description = 'رقم الهاتف'
-    
+
     def get_email(self, obj):
         return obj.user.email
     get_email.short_description = 'البريد الإلكتروني'
@@ -28,13 +31,15 @@ class ParentAdmin(admin.ModelAdmin):
 
 @admin.register(Child)
 class ChildAdmin(admin.ModelAdmin):
-    list_display = ('get_unique_code', 'get_first_name', 'get_last_name', 'get_gender', 'get_dob', 'get_primary_parent', 'get_phone')
+    list_display = ('get_unique_code', 'get_first_name', 'get_last_name',
+                    'get_gender', 'get_dob', 'get_primary_parent', 'get_phone')
     list_filter = ('gender', 'created_at')
     search_fields = ('unique_code', 'first_name', 'last_name', 'phone')
     readonly_fields = ('unique_code', 'created_at', 'updated_at')
-    
+
     fieldsets = (
-        ('معلومات الطفل', {'fields': ('primary_parent', 'first_name', 'last_name', 'gender', 'dob')}),
+        ('معلومات الطفل', {'fields': ('primary_parent',
+         'first_name', 'last_name', 'gender', 'dob')}),
         ('معلومات التواصل', {'fields': ('phone', 'unique_code')}),
         ('الصورة', {'fields': ('image',)}),
         ('التواريخ', {'fields': ('created_at', 'updated_at')}),
@@ -103,7 +108,8 @@ class ChildAdmin(admin.ModelAdmin):
 @admin.register(ChildParents)
 class ChildParentsAdmin(admin.ModelAdmin):
     list_display = ('get_child', 'get_parent')
-    search_fields = ('child__first_name', 'child__last_name', 'parent__user__first_name')
+    search_fields = ('child__first_name', 'child__last_name',
+                     'parent__user__first_name')
 
     def get_child(self, obj):
         return obj.child
@@ -126,9 +132,11 @@ class ChildParentsAdmin(admin.ModelAdmin):
 
 @admin.register(ParentLinkRequest)
 class ParentLinkRequestAdmin(admin.ModelAdmin):
-    list_display = ('get_child', 'get_requester', 'get_primary_parent', 'get_status', 'get_created_at')
+    list_display = ('get_child', 'get_requester',
+                    'get_primary_parent', 'get_status', 'get_created_at')
     list_filter = ('status', 'created_at')
-    search_fields = ('child__first_name', 'requester__user__first_name', 'primary_parent__user__first_name')
+    search_fields = ('child__first_name', 'requester__user__first_name',
+                     'primary_parent__user__first_name')
     readonly_fields = ('created_at', 'updated_at')
 
     def get_child(self, obj):

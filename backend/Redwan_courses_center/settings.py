@@ -28,13 +28,13 @@ DEBUG = DEBUG = bool(os.environ.get("DEBUG", default=0))
 
 
 # ALLOWED_HOSTS = []
-ALLOWED_HOSTS =  os.environ.get("DJANGO_ALLOWED_HOSTS","127.0.0.1").split(",")
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    #"simpleui",  # MUST be first
+    # "simpleui",  # MUST be first
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django_crontab',
     'channels',
     "users",
+    "parents",
     "attendance",
     "core",
     "courses",
@@ -91,15 +92,15 @@ ASGI_APPLICATION = "core.asgi.application"
 
 DATABASES = {
     'default': {
-         'ENGINE': 'django.db.backends.{}'.format(
-             os.getenv('DATABASE_ENGINE', 'sqlite3')
-         ),
-         'NAME': os.getenv('DATABASE_NAME', 'polls'),
-         'USER': os.getenv('DATABASE_USERNAME', 'myprojectuser'),
-         'PASSWORD': os.getenv('DATABASE_PASSWORD', 'password'),
-         'HOST': os.getenv('DATABASE_HOST', '127.0.0.1'),
-         'PORT': os.getenv('DATABASE_PORT', 5432),
-     }
+        'ENGINE': 'django.db.backends.{}'.format(
+            os.getenv('DATABASE_ENGINE', 'sqlite3')
+        ),
+        'NAME': os.getenv('DATABASE_NAME', 'polls'),
+        'USER': os.getenv('DATABASE_USERNAME', 'myprojectuser'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'password'),
+        'HOST': os.getenv('DATABASE_HOST', '127.0.0.1'),
+        'PORT': os.getenv('DATABASE_PORT', 5432),
+    }
 }
 INTERNAL_IPS = [
     # ...
@@ -143,7 +144,6 @@ USE_L10N = True
 USE_TZ = True
 
 TIME_ZONE = "Africa/Cairo"
-
 
 
 # Static files (CSS, JavaScript, Images)
@@ -222,7 +222,7 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-   'AUTH_HEADER_TYPES': ('JWT',),
+    'AUTH_HEADER_TYPES': ('JWT',),
 }
 
 
@@ -230,13 +230,13 @@ SIMPLE_JWT = {
 DJOSER = {
     # Use phone_number1 as the login field
     'LOGIN_FIELD': 'phone_number1',
-    
+
     # Require re_password on registration
     'USER_CREATE_PASSWORD_RETYPE': True,
-    
+
     # Require current password and retype on password change
     'SET_PASSWORD_RETYPE': True,
-    
+
     # Custom serializers - IMPORTANT for security!
     # Prevents users from setting is_staff, is_superuser, role via API
     'SERIALIZERS': {
@@ -244,13 +244,13 @@ DJOSER = {
         'user': 'users.serializers.CustomUserSerializer',
         'current_user': 'users.serializers.CustomUserSerializer',
     },
-    
+
     # Permissions
     'PERMISSIONS': {
         'user': ['rest_framework.permissions.IsAuthenticated'],
         'user_list': ['rest_framework.permissions.IsAdminUser'],
     },
-    
+
     # Hide sensitive user IDs from non-admin users
     'HIDE_USERS': True,
 }

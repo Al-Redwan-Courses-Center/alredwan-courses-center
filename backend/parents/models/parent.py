@@ -4,7 +4,7 @@ from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 
-from .user import CustomUser
+from users.models.user import CustomUser
 from core.utils.image_utils import ImageOptimizationMixin, validate_image_size
 
 from phonenumbers import parse, is_valid_number, format_number, PhoneNumberFormat
