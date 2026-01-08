@@ -1,4 +1,4 @@
-from .student import *
-from .user import *
-from .instructor import *
-from .parent import *
+from .student import StudentUserAdmin
+from .user import UserAdmin
+from .instructor import InstructorAdmin
+from .student_instructor_rating import StudentInstructorRatingAdmin, ParentInstructorRatingAdmin

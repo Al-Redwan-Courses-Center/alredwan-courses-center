@@ -147,6 +147,7 @@ class Course(models.Model):
             raise ValidationError(
                 _("Either 'end_date' or 'num_lectures' must be provided."))
 
+        # 1 only of them
         # If bound to a season, the course window should be inside season (if season has an end)
         if self.season:
             if self.start_date < self.season.start_date:

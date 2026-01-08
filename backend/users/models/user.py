@@ -36,7 +36,7 @@ class CustomUserManager(BaseUserManager):
         if not phone_number1:
             raise ValueError(_("The phone number must be set"))
         phone_number1 = self.normalize_phone(phone_number1)
-        
+
         extra_fields.setdefault('is_active', True)
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
@@ -90,7 +90,8 @@ class CustomUser(AbstractUser):
         _("Government ID / Passport"), max_length=30, null=True, unique=True)
     identity_type = models.CharField(
         max_length=20,
-        choices=[("nid", "بطاقة وطنية"), ("passport", "جواز سفر"), ("other", "أخرى")],
+        choices=[("nid", "بطاقة وطنية"),
+                 ("passport", "جواز سفر"), ("other", "أخرى")],
         default="nid",
         null=True
     )
@@ -116,7 +117,7 @@ class CustomUser(AbstractUser):
     # Authentication settings
     username = None
     USERNAME_FIELD = "phone_number1"
-    REQUIRED_FIELDS = ["dob"]
+    REQUIRED_FIELDS = ["dob", "first_name", "last_name"]
 
     objects = CustomUserManager()
 
@@ -135,4 +136,4 @@ class CustomUser(AbstractUser):
             models.Index(fields=["phone_number1"]),
         ]
         verbose_name = _("مستخدم")
-        verbose_name_plural = _("المستخدمون")
+        verbose_name_plural = _("جميع المستخدمين")
