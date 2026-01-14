@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-from django.forms import ValidationError
-from django.utils import timezone
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
 
 from channels.layers import get_channel_layer
@@ -32,8 +29,8 @@ class Instructor(models.Model):
     Instructor model that represents an instructor or supervisor user
     '''
     class InstructorType(models.TextChoices):
-        SUPERVISOR = "supervisor", _("Supervisor")
-        NORMAL = "normal", _("Normal / External")
+        SUPERVISOR = "supervisor", _("مشرف")
+        NORMAL = "normal", _("عادي / خارجي")
 
     user = models.OneToOneField(
         CustomUser, on_delete=models.CASCADE, related_name='instructor_profile')

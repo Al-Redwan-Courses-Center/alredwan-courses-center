@@ -71,10 +71,10 @@ class CustomUser(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     phone_number1 = models.CharField(
-        _("WhatsApp phone number"), max_length=15, unique=True
+        _("رقم الواتس آب"), max_length=15, unique=True
     )
     phone_number2 = models.CharField(
-        _("Alternative phone number"), max_length=15, null=True, blank=True
+        _("رقم هاتف بديل"), max_length=15, null=True, blank=True
     )
 
     email = models.EmailField(unique=True, null=True, blank=True)

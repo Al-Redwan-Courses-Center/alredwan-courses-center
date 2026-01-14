@@ -20,18 +20,20 @@ class Lecture(models.Model):
     title = models.CharField(max_length=255, blank=True)
     course = models.ForeignKey(
         'courses.Course', on_delete=models.CASCADE, related_name='lectures')
-    day = models.DateField()  # date of lecture (local date in Africa/Cairo)
+    # date of lecture (local date in Africa/Cairo)
+    day = models.DateField(verbose_name=_("تاريخ المحاضرة"))
     start_time = models.TimeField(null=True, blank=True)
     end_time = models.TimeField(null=True, blank=True)
     lecture_number = models.PositiveIntegerField()
     instructor = models.ForeignKey('users.Instructor', null=True, blank=True,
                                    on_delete=models.SET_NULL, related_name='lectures')
     status = models.CharField(
-        max_length=10, choices=LectureStatus.choices, default=LectureStatus.SCHEDULED)
+        max_length=10, choices=LectureStatus.choices, default=LectureStatus.SCHEDULED, verbose_name=_("حالة المحاضرة"))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    attendance_taken = models.BooleanField(default=False)
+    attendance_taken = models.BooleanField(
+        default=False, verbose_name=_("هل تم أخذ الحضور"))
 
     class Meta:
         constraints = [
