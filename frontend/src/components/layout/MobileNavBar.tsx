@@ -17,42 +17,42 @@ export default function MobileNavBar() {
       </div>
 
       <ul className="text-primary flex w-full items-center justify-center gap-8 text-[14px] [&>a_div]:flex [&>a_div]:flex-col [&>a_div]:items-center">
-        <NavLink href="/">
+        <NavLink variant="landing" href="/">
           <div>
             <Image src={Logo} alt="Logo" className="h-auto w-10" />
             <span>الرئيسية</span>
           </div>
         </NavLink>
 
-        <NavLink href="/courses">
+        <NavLink variant="landing" href="/courses">
           <div>
             <Image src={Logo} alt="Logo" className="h-auto w-10" />
             <span>الدورات</span>
           </div>
         </NavLink>
 
-        <NavLink href="/about">
+        <NavLink variant="landing" href="/about">
           <div>
             <Image src={Logo} alt="Logo" className="h-auto w-10" />
             <span>عن الواحة</span>
           </div>
         </NavLink>
 
-        <NavLink href="/activities">
+        <NavLink variant="landing" href="/activities">
           <div>
             <Image src={Logo} alt="Logo" className="h-auto w-10" />
             <span>الأنشطة</span>
           </div>
         </NavLink>
 
-        <NavLink href="/contact-us">
+        <NavLink variant="landing" href="/contact-us">
           <div>
             <Image src={Logo} alt="Logo" className="h-auto w-10" />
             <span>تواصل معنا</span>
           </div>
         </NavLink>
 
-        <NavLink href="/login">
+        <NavLink variant="landing" href="/login">
           <div>
             <Image src={Logo} alt="Logo" className="h-auto w-10" />
             <span>تسجيل الدخول</span>
