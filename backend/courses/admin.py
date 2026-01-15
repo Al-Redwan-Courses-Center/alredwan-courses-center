@@ -356,7 +356,7 @@ class SeasonAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
         """Display active status with color indicator."""
         if obj.is_active:
             return format_html(
-                '<span style="color: #27ae60; font-weight: bold;">🟢 نشط</span>'
+                '<span style="color: #27ae60; font-weight: bold;">✅ نشط</span>'
             )
         return format_html(
             '<span style="color: #e74c3c;">🔴 غير نشط</span>'
