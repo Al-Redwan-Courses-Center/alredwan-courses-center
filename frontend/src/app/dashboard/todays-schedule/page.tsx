@@ -1,4 +1,5 @@
 import LecturesTable from "@/components/lectures/LecturesTable";
+import { Suspense } from "react";
 
 export default function Page() {
   return (
@@ -7,7 +8,9 @@ export default function Page() {
         السلام عليكم يا أخ مسعد
       </h1>
 
-      <LecturesTable />
+      <Suspense>
+        <LecturesTable />
+      </Suspense>
     </div>
   );
 }

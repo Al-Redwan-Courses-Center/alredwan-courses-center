@@ -1,3 +1,5 @@
+'use client';
+
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
@@ -8,7 +10,7 @@ export function useSearchData<T>(data: T[], searchableValues: (keyof T)[]) {
 
   const searchedData = useMemo(() => {
     if (!search) return data;
-
+    
     return data.filter((item) =>
       searchableValues.some((value) =>
         String(item[value] || "")

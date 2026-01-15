@@ -1,3 +1,5 @@
+"use client";
+
 import { TableSortConfig } from "@/types";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
