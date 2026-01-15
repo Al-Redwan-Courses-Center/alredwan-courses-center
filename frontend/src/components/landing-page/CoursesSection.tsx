@@ -9,7 +9,7 @@ export default function CoursesSection() {
           الدورات <span>المميزة</span>
         </h2>
 
-        <p className="mb-36 text-center text-4xl text-gray-500">
+        <p className="mb-36 text-center text-4xl text-gray-600">
           اكتشف أفضل الدورات التعليمية المصممة خصيصاً لتطوير مهارات الأطفال
           والشباب
         </p>

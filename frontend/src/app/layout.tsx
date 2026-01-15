@@ -1,12 +1,12 @@
+import AuthProvider from "@/providers/AuthProvider";
 import type { Metadata, Viewport } from "next";
-import localFont from "next/font/local";
 import { El_Messiri } from "next/font/google";
-import "./globals.css";
+import localFont from "next/font/local";
+import { ReactNode } from "react";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import AuthProvider from "@/providers/AuthProvider";
-import { ReactNode } from "react";
+import "./globals.css";
 
 const medad = localFont({
   src: "./fonts/medad-platinum.ttf",

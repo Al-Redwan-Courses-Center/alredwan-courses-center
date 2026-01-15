@@ -8,7 +8,7 @@ export default function ActivitiesSection() {
           أنشطتنا <span>المتنوعة</span>
         </h2>
 
-        <p className="mb-36 max-w-200 text-center text-4xl text-gray-500">
+        <p className="mb-36 max-w-200 text-center text-4xl text-gray-600">
           نقدم باقة شاملة من الأنشطة التعليمية والترفيهية التي تساهم في بناء
           شخصية الطفل المسلم المتكاملة
         </p>

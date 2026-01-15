@@ -1,12 +1,13 @@
 import { cn, cva } from "@/lib/utils";
 import { VariantProps } from "class-variance-authority";
 import Link from "next/link";
-import { ComponentProps, MouseEvent } from "react";
+import { ComponentProps, MouseEvent, ReactNode } from "react";
 
 interface BaseProps {
   className?: string;
   variant?: VariantProps<typeof buttonStyles>["intent"];
   size?: VariantProps<typeof buttonStyles>["size"];
+  icon?: ReactNode;
 }
 
 interface LinkProps extends BaseProps, ComponentProps<"a"> {
@@ -45,12 +46,15 @@ const buttonStyles = cva(
   },
 );
 
+const buttonWrapperStyles = cn("flex items-center gap-5");
+
 export default function Button({
   href,
   onClick,
   variant,
   size,
   className,
+  icon = null,
   children,
 }: LinkProps | ButtonProps) {
   if (href)
@@ -60,7 +64,10 @@ export default function Button({
         className={cn(buttonStyles({ intent: variant, size: size }), className)}
         draggable="false"
       >
-        {children}
+        <div className={cn(buttonWrapperStyles, !icon && "justify-center")}>
+          {icon}
+          {children}
+        </div>
       </Link>
     );
 
@@ -70,7 +77,10 @@ export default function Button({
       className={cn(buttonStyles({ intent: variant, size: size }), className)}
       draggable="false"
     >
-      {children}
+      <div className={cn(buttonWrapperStyles, !icon && "justify-center")}>
+        {icon}
+        {children}
+      </div>
     </button>
   );
 }

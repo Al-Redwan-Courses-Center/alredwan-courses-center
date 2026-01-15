@@ -8,7 +8,7 @@ export default function GoalsSection() {
           واحة الرضوان التعليمية
         </h2>
 
-        <p className="mb-36 text-center text-4xl text-gray-500">
+        <p className="mb-36 text-center text-4xl text-gray-600">
           نُقدّم تعليمًا متكاملًا يجمع بين حفظ القرآن وتعلّم السنة، وبين العلوم
           الحديثة كالرياضيات والبرمجة واللغات، بأساليب مبتكرة تُلهم العقل وتُهذب
           الروح.

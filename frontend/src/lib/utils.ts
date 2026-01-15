@@ -1,6 +1,6 @@
+import { cva } from "class-variance-authority";
 import clsx from "clsx";
 import { ClassNameValue, twMerge } from "tailwind-merge";
-import { cva } from "class-variance-authority";
 
 export function cn(...inputs: ClassNameValue[]) {
   return twMerge(clsx(inputs));
@@ -25,4 +25,24 @@ export function toHindiDigits(num: number | string): string {
   return num
     .toString()
     .replace(/[0-9]/g, (digit) => westernToHindi[digit] || digit);
+}
+
+export function formatTime(date: Date) {
+  return date
+    .toLocaleTimeString("ar-EG", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
+    .replaceAll("م", "مـ")
+    .replaceAll("ص", "صـ");
+}
+
+export function debounceFn(fn: (...args: any[]) => any, delay: number) {
+  let timerId: NodeJS.Timeout;
+
+  return (...args: any[]) => {
+    clearTimeout(timerId);
+    timerId = setTimeout(() => fn(...args), delay);
+  };
 }

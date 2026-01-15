@@ -22,7 +22,7 @@ function renderRating(rating: number) {
     starsArray.push(<HalfStarIcon key={`half`} className="text-beige-500" />);
 
   for (let i = starsArray.length; i < 5; i++) {
-    starsArray.push(<StarIcon key={`empty-${i}`} className="text-gray-500" />);
+    starsArray.push(<StarIcon key={`empty-${i}`} className="text-gray-600" />);
   }
 
   return starsArray;
@@ -85,7 +85,7 @@ export default function TestimonialsSlider({
                   <h3 className="text-olive-500 text-[2.4rem] font-bold">
                     {testimonial.name}
                   </h3>
-                  <span className="text-gray-500">{testimonial.role}</span>
+                  <span className="text-gray-600">{testimonial.role}</span>
                 </div>
 
                 <div className="flex items-center gap-1">

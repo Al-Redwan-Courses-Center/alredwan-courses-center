@@ -17,14 +17,25 @@ export default function NavBar() {
       </div>
 
       <ul className="text-primary tablet:hidden absolute left-1/2 flex transform-[translateX(-50%)] items-center gap-8 text-[14px]">
-        <NavLink href="/">الرئيسية</NavLink>
-        <NavLink href="/courses">الدورات</NavLink>
-        <NavLink href="/about">عن الواحة</NavLink>
-        <NavLink href="/activities">الأنشطة</NavLink>
-        <NavLink href="/contact-us">تواصل معنا</NavLink>
+        <NavLink variant="landing" href="/">
+          الرئيسية
+        </NavLink>
+        <NavLink variant="landing" href="/courses">
+          الدورات
+        </NavLink>
+        <NavLink variant="landing" href="/about">
+          عن الواحة
+        </NavLink>
+        <NavLink variant="landing" href="/activities">
+          الأنشطة
+        </NavLink>
+        <NavLink variant="landing" href="/contact-us">
+          تواصل معنا
+        </NavLink>
       </ul>
 
       <NavLink
+        variant="landing"
         href="/"
         className="tablet:mr-auto flex items-center gap-3"
         boldWidth={false}
