@@ -52,7 +52,6 @@ class Instructor(models.Model):
     image = models.ImageField(
         upload_to=instructor_upload_path,
         validators=[validate_image_size],
-        default="defaults/user_default.png",
         blank=True,
         null=True,
     )
