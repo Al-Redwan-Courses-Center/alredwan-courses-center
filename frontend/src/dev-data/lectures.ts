@@ -1,4 +1,4 @@
-import { Lecture } from "@/types";
+import { Lecture } from "@/types/config";
 
 const getTodayAt = (hours: number, minutes: number = 0) => {
   const date = new Date();

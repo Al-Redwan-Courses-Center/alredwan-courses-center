@@ -5,9 +5,9 @@ RUN npm ci
 COPY . .
 
 FROM base as dev
-CMD [ "npm", "run", "dev" ]
+CMD ["npx", "nodemon", "--watch", "package.json", "--ignore", "package-lock.json", "--exec", "npm install && npm run dev"]
 
-FROM base AS build
+FROM base AS builder
 RUN npm run build
 
 FROM node:lts-alpine3.23 AS final

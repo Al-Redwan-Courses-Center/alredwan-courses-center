@@ -7,6 +7,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "./globals.css";
+import ToastProvider from "@/providers/ToastProvider";
 
 const medad = localFont({
   src: "./fonts/medad-platinum.ttf",
@@ -42,6 +43,7 @@ export default function RootLayout({
         className={`${medad.variable} ${messiri.variable} grid min-h-dvh antialiased`}
         dir="rtl"
       >
+        <ToastProvider />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

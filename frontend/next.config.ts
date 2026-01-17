@@ -6,9 +6,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "api.dicebear.com",
+        hostname: "mockmind-api.uifaces.co",
         port: "",
-        pathname: "/7.x/avataaars/svg/**",
+        pathname: "/content/human/**",
       },
     ],
   },

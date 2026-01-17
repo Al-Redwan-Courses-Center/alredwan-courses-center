@@ -1,6 +1,6 @@
 "use client";
 
-import { TableSortConfig } from "@/types";
+import { TableSortConfig } from "@/types/components";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
@@ -24,5 +24,5 @@ export function useSortData<T>(data: T[], sortConfig: TableSortConfig<T>) {
     return sorted;
   }, [data, sortConfig, field, isAsc]);
 
-  return { sortedData };
+  return sortedData;
 }

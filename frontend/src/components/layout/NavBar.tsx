@@ -2,19 +2,32 @@ import NavLink from "@/components/ui/NavLink";
 import Button from "@/components/ui/Button";
 import Image from "next/image";
 import Logo from "@/assets/logo.svg";
+import { getServerSession } from "next-auth";
+import { authConfig } from "@/app/api/auth/[...nextauth]/route";
+import LogoutButton from "@/components/auth/LogoutButton";
 
-export default function NavBar() {
+export default async function NavBar() {
+  const session = await getServerSession(authConfig);
+
   return (
     <nav className="shadow-soft tablet:hidden sticky top-0 z-100 flex h-26 w-full items-center justify-between bg-gray-100/80 px-128 backdrop-blur-md">
-      <div className="tablet:hidden grid grid-cols-2 items-center gap-4">
-        <Button variant="primary" size="small" href="/login">
-          تسجيل دخول
-        </Button>
+      {!!session?.user ? (
+        <div className="tablet:hidden grid content-center">
+          <LogoutButton variant="primary" size="small">
+            تسجيل الخروج
+          </LogoutButton>
+        </div>
+      ) : (
+        <div className="tablet:hidden grid grid-cols-2 items-center gap-4">
+          <Button variant="primary" size="small" href="/login">
+            تسجيل دخول
+          </Button>
 
-        <Button variant="secondary" size="small" href="/signup">
-          إنشاء حساب
-        </Button>
-      </div>
+          <Button variant="secondary" size="small" href="/signup">
+            إنشاء حساب
+          </Button>
+        </div>
+      )}
 
       <ul className="text-primary tablet:hidden absolute left-1/2 flex transform-[translateX(-50%)] items-center gap-8 text-[14px]">
         <NavLink variant="landing" href="/">

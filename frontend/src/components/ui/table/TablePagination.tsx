@@ -14,6 +14,8 @@ export function TablePagination() {
   const { numPages, page, nextPage, prevPage, setPage } =
     useContext(TableContext);
 
+  if (numPages <= 0) return null;
+
   return (
     <div className="absolute right-1/2 bottom-9 flex translate-x-[50%] items-center gap-10">
       <button
