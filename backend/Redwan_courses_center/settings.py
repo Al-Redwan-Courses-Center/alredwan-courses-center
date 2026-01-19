@@ -73,6 +73,7 @@ def show_toolbar(request):
 
 DEBUG_TOOLBAR_CONFIG = {
     "SHOW_TOOLBAR_CALLBACK": show_toolbar,
+    "IS_RUNNING_TESTS": False,  # Allow tests to run with debug toolbar installed
 }
 
 
@@ -189,7 +190,7 @@ SIMPLEUI_CONFIG = {
     "language": True,
 
     # Default home page
-    "home_page": "/courses-admin/",
+    "home_page": "/Al-Redwan-superadmin-dashboard/",
 
     # Disable UI builder for production stability
     "dynamic": False,

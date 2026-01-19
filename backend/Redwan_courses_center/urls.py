@@ -25,7 +25,7 @@ admin.site.site_header = "لوحة إدارة كورسات واحة الرضوا
 admin.site.site_title = "واحة الرضوان"
 admin.site.index_title = "الصفحة الرئيسية"
 urlpatterns = [
-    path('courses-admin/', admin.site.urls),
+    path('Al-Redwan-superadmin-dashboard/', admin.site.urls),
     re_path(r'^auth/', include('djoser.urls')),
     re_path(r'^auth/', include('djoser.urls.jwt')),
 ] + debug_toolbar_urls()

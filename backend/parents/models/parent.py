@@ -2,7 +2,7 @@
 from django.db import models
 from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
-
+from django.utils import timezone
 
 from users.models.user import CustomUser
 from core.utils.image_utils import ImageOptimizationMixin, validate_image_size
@@ -79,6 +79,15 @@ class Child(ImageOptimizationMixin, models.Model):
         gender_char = self.gender[0].upper() if self.gender else "U"
         digits = ''.join(random.choices(string.digits, k=5))
         return f"{gender_char}{digits}"
+
+    def get_age_on_date(self, date=timezone.now().date()):
+        """Calculate age of the user on a given date."""
+        if not self.dob:
+            return None
+        born = self.dob
+        age = date.year - born.year - \
+            ((date.month, date.day) < (born.month, born.day))
+        return age
 
     def save(self, *args, **kwargs):
         """Override save method to set unique_code if not already set."""

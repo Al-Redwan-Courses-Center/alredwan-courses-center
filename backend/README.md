@@ -195,7 +195,7 @@ dj createsuperuser
 Admin panel is available at:
 
 ```
-http://localhost:8000/courses-admin/
+http://localhost:8000/Al-Redwan-superadmin-dashboard/
 ```
 
 Admin branding is customized in `urls.py`.

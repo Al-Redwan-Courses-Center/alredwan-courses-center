@@ -137,3 +137,12 @@ class CustomUser(AbstractUser):
         ]
         verbose_name = _("مستخدم")
         verbose_name_plural = _("جميع المستخدمين")
+
+    def get_age_on_date(self, date=timezone.now().date()):
+        """Calculate age of the user on a given date."""
+        if not self.dob:
+            return None
+        born = self.dob
+        age = date.year - born.year - \
+            ((date.month, date.day) < (born.month, born.day))
+        return age

@@ -2,9 +2,9 @@
 ''' Signals for Course app'''
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
+from django.utils import timezone
 from .models.enrollment import Enrollment
 from attendance.models.lecture_attendance import LectureAttendance
-from datetime import timezone
 
 
 @receiver(post_save, sender=Enrollment)

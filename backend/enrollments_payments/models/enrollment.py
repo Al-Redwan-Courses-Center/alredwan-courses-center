@@ -61,7 +61,12 @@ class Enrollment(models.Model):
         """Validate enrollment constraints."""
         # Ensure only one of child or student is set
         if (self.child is None and self.student is None) or (self.child is not None and self.student is not None):
-            raise ValidationError("Must specify exactly one of child or student.")
+            raise ValidationError(
+                "Must specify exactly one of child or student.")
+
+        if (self.get_participant() is not None and
+                self.course.is_participant_eligible(self.get_participant()) is False):
+            raise ValidationError("هذا المستخدم ليس طالبًا")
 
     def get_payments(self):
         """Return queryset of payments for this enrollment (payments app)."""

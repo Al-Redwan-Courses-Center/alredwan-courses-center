@@ -7,6 +7,7 @@ from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.utils.text import slugify
+from django.db.models import Count, Q
 # Create your models here.
 
 
@@ -108,8 +109,7 @@ class Course(models.Model):
     num_lectures = models.IntegerField(null=True, blank=True)
     capacity = models.IntegerField(validators=[MinValueValidator(1)])
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    enrolled_count = models.IntegerField(
-        default=0, validators=[MinValueValidator(0)])
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -157,10 +157,6 @@ class Course(models.Model):
                 raise ValidationError(
                     _("Course end date cannot be after its season end date."))
 
-        # enrolled_count cannot exceed capacity
-        if self.enrolled_count and self.enrolled_count > self.capacity:
-            raise ValidationError(_("Enrolled count cannot exceed capacity."))
-
     @staticmethod
     def _system_weekday_to_python(system_weekday: int) -> int:
         """
@@ -168,6 +164,22 @@ class Course(models.Model):
         where Monday=0..Sunday=6.
         """
         return (system_weekday + 5) % 7
+
+    def is_participant_eligible(self, participant) -> bool:
+        """Check if a participant (StudentUser or Child) is eligible for this course."""
+        if not participant:
+            return False
+
+        age = participant.user.get_age_on_date(self.start_date)
+        if age is None:
+            return False
+        if self.for_adults and age < 15:
+            return False
+        if not self.for_adults and age > 15:
+            return False
+        if participant.user and participant.user.role != "student":
+            return False
+        return True
 
     def generate_lectures(self):
         ''' Generate lectures based on course schedules
@@ -252,6 +264,21 @@ class Course(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+    @property
+    def enrolled_count(self):
+        """Return count of active enrollments for this course."""
+        return self.enrollments.filter(status='active').count()
+
+    @property
+    def available_spots(self):
+        """Return number of available spots in the course."""
+        return max(0, self.capacity - self.enrolled_count)
+
+    @property
+    def is_full(self):
+        """Check if the course has reached capacity."""
+        return self.enrolled_count >= self.capacity
 
 
 class CourseSchedule(models.Model):

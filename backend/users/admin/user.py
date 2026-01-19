@@ -2,26 +2,32 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from ..models.user import CustomUser
 
+
 @admin.register(CustomUser)
 class UserAdmin(BaseUserAdmin):
-    list_display = ('get_full_name_display', 'get_phone_number1', 'get_role', 'get_gender', 'get_date_joined', 'get_is_verified', 'get_is_active')
-    list_filter = ('role', 'is_verified', 'is_active', 'gender', 'identity_type', 'date_joined')
-    search_fields = ('phone_number1', 'phone_number2', 'first_name', 'last_name', 'email', 'identity_number')
+    list_display = ('get_full_name_display', 'get_phone_number1', 'get_phone_number2', 'get_role',
+                    'get_gender', 'get_date_joined', 'get_is_verified', 'get_is_active')
+    list_filter = ('role', 'is_verified', 'is_active',
+                   'gender', 'identity_type', 'date_joined')
+    search_fields = ('phone_number1', 'first_name',
+                     'last_name', 'email', 'identity_number')
     ordering = ('-date_joined',)
     fieldsets = (
         (None, {'fields': ('phone_number1', 'password')}),
-        ('المعلومات الشخصية', {'fields': ('first_name', 'last_name', 'email', 'phone_number2', 'dob', 'gender', 'identity_number', 'identity_type', 'address', 'location')}),
-        ('الصلاحيات', {'fields': ('is_active', 'is_verified', 'is_staff', 'is_superuser', 'role', 'groups', 'user_permissions')}),
+        ('المعلومات الشخصية', {'fields': ('first_name', 'last_name', 'email', 'phone_number2',
+         'dob', 'gender', 'identity_number', 'identity_type', 'address', 'location')}),
+        ('الصلاحيات', {'fields': ('is_active', 'is_verified', 'is_staff',
+         'is_superuser', 'role', 'groups', 'user_permissions')}),
         ('التواريخ المهمة', {'fields': ('last_login', 'date_joined')}),
     )
-    
+
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('phone_number1', 'password1', 'password2', 'first_name', 'last_name', 'dob', 'gender'),
+            'fields': ('phone_number1', 'phone_number2', 'password1', 'password2', 'first_name', 'last_name', 'dob', 'gender'),
         }),
     )
-    
+
     def get_full_name_display(self, obj):
         return obj.get_full_name() or obj.phone_number1
     get_full_name_display.short_description = 'الاسم الكامل'
@@ -31,11 +37,15 @@ class UserAdmin(BaseUserAdmin):
         return obj.date_joined
     get_date_joined.short_description = 'تاريخ الانضمام'
     get_date_joined.admin_order_field = 'date_joined'
-    
+
     def get_phone_number1(self, obj):
         return obj.phone_number1
     get_phone_number1.short_description = 'رقم الهاتف'
     get_phone_number1.admin_order_field = 'phone_number1'
+
+    @admin.display(description='رقم هاتف بديل', ordering='phone_number2')
+    def get_phone_number2(self, obj):
+        return obj.phone_number2
 
     def get_role(self, obj):
         return obj.get_role_display()

@@ -25,7 +25,6 @@ ARABIC_FIELD_LABELS = {
     'season': 'الموسم',
     'num_lectures': 'عدد المحاضرات',
     'capacity': 'السعة',
-    'enrolled_count': 'عدد المسجلين',
     'price': 'السعر',
     'for_adults': 'للبالغين',
     'min_age': 'الحد الأدنى للعمر',
@@ -144,20 +143,21 @@ class CapacityStatusFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
+        # Use _enrolled_count annotation
         if self.value() == 'full':
-            return queryset.filter(enrolled_count__gte=models.F('capacity'))
+            return queryset.filter(_enrolled_count__gte=models.F('capacity'))
         if self.value() == 'almost_full':
             return queryset.filter(
-                enrolled_count__gte=models.F('capacity') * 0.8,
-                enrolled_count__lt=models.F('capacity')
+                _enrolled_count__gte=models.F('capacity') * 0.8,
+                _enrolled_count__lt=models.F('capacity')
             )
         if self.value() == 'available':
             return queryset.filter(
-                enrolled_count__lt=models.F('capacity') * 0.8,
-                enrolled_count__gt=0
+                _enrolled_count__lt=models.F('capacity') * 0.8,
+                _enrolled_count__gt=0
             )
         if self.value() == 'empty':
-            return queryset.filter(enrolled_count=0)
+            return queryset.filter(_enrolled_count=0)
         return queryset
 
 
@@ -447,8 +447,8 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
             'description': _('حدد فترة الدورة وعدد المحاضرات المخطط لها، من الأفضل إدخال إما تاريخ النهاية أو عدد المحاضرات (أي واحد فقط منهما)  ')
         }),
         (_('السعة والتسجيل'), {
-            'fields': ('capacity', 'enrolled_count', 'price'),
-            'description': _('السعة الكلية وعدد المسجلين حالياً')
+            'fields': ('capacity', 'price'),
+            'description': _('السعة الكلية والسعر (عدد المسجلين يُحسب تلقائياً)')
         }),
         (_('الفئة العمرية'), {
             'fields': ('for_adults', 'min_age', 'max_age'),
@@ -460,6 +460,18 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
             'classes': ('collapse',),
         }),
     )
+
+    def get_queryset(self, request):
+        """Override to annotate enrolled_count from actual enrollments."""
+        qs = super().get_queryset(request)
+        # Annotate with actual active enrollment count (use different name to avoid property conflict)
+        qs = qs.annotate(
+            _enrolled_count=Count(
+                'enrollments',
+                filter=Q(enrollments__status='active')
+            )
+        )
+        return qs
 
     @admin.display(description=_('المدرس'), ordering='instructor__user__first_name')
     def get_instructor_link(self, obj):
@@ -495,7 +507,11 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
     def get_capacity_bar(self, obj):
         """Display capacity as a visual progress bar."""
         if obj.capacity and obj.capacity > 0:
-            percentage = min((obj.enrolled_count / obj.capacity) * 100, 100)
+            # Use annotated value if available, otherwise fall back to property
+            enrolled = getattr(obj, '_enrolled_count', None)
+            if enrolled is None:
+                enrolled = obj.enrolled_count
+            percentage = min((enrolled / obj.capacity) * 100, 100)
 
             if percentage >= 100:
                 color = '#e74c3c'
@@ -513,7 +529,7 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
                 '<div style="width: {}%; background: {}; padding: 2px 0; '
                 'text-align: center; color: black; font-size: 0.75em;">'
                 '{}/{}</div></div>',
-                status, percentage, color, obj.enrolled_count, obj.capacity
+                status, percentage, color, enrolled, obj.capacity
             )
         return '-'
 
@@ -1126,14 +1142,15 @@ class CoursesAdminSite(admin.AdminSite):
 
     def index(self, request, extra_context=None):
         """Add custom statistics to the admin index."""
+        from enrollments_payments.models.enrollment import Enrollment
         extra_context = extra_context or {}
 
         # Add quick statistics
         extra_context['active_courses'] = Course.objects.filter(
             is_active=True).count()
-        extra_context['total_students'] = Course.objects.aggregate(
-            total=models.Sum('enrolled_count')
-        )['total'] or 0
+        extra_context['total_students'] = Enrollment.objects.filter(
+            status='active'
+        ).count()
         extra_context['upcoming_lectures'] = Lecture.objects.filter(
             day__gte=timezone.now().date(),
             status='scheduled'
