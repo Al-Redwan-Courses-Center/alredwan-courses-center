@@ -1,7 +1,8 @@
+import { useFilterData } from "@/hooks/useFilterData";
 import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import { useSearchData } from "@/hooks/useSearchData";
 import { useSortData } from "@/hooks/useSortData";
-import { TableSortConfig } from "@/types";
+import { TableSortConfig } from "@/types/components";
 import { createContext, ReactNode } from "react";
 
 interface TableContext {
@@ -13,6 +14,7 @@ interface TableContext {
   nextPage: () => void;
   prevPage: () => void;
   setPage: (pageNum: number) => void;
+  filterConfig: any;
 }
 
 const initialContext: TableContext = {
@@ -24,6 +26,7 @@ const initialContext: TableContext = {
   nextPage: () => {},
   prevPage: () => {},
   setPage: () => {},
+  filterConfig: {},
 };
 
 export const TableContext = createContext<TableContext>(initialContext);
@@ -33,21 +36,22 @@ export default function Table<T>({
   gridLayout,
   data,
   sortConfig,
+  filterConfig,
   searchableValues,
   children,
 }: {
   gridLayout: string;
   data: T[];
   sortConfig: TableSortConfig<T>;
+  filterConfig: any;
   searchableValues: (keyof T)[];
   children: ReactNode;
 }) {
   const { mutateSearchParams, searchParams } = useMutateSearchParams();
 
-  const { searchedData } = useSearchData<T>(data, searchableValues);
-  console.log(searchedData);
-  const { sortedData } = useSortData<T>(searchedData, sortConfig);
-  console.log(sortedData);
+  const filteredData = useFilterData<T>(data, filterConfig);
+  const searchedData = useSearchData<T>(filteredData, searchableValues);
+  const sortedData = useSortData<T>(searchedData, sortConfig);
 
   const page = +(searchParams.get("page") || "1");
   const numPages = Math.ceil(searchedData.length / MAX_ITEMS_PER_PAGE);
@@ -79,6 +83,7 @@ export default function Table<T>({
     nextPage,
     prevPage,
     setPage,
+    filterConfig,
   };
 
   return <TableContext value={value}>{children}</TableContext>;

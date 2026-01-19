@@ -1,13 +1,35 @@
+import DefaultUser from "@/assets/images/default-user.svg";
+import { getUser } from "@/actions/auth";
+import LogoutButton from "@/components/auth/LogoutButton";
 import ClipboardIcon from "@/components/icons/ClipboardIcon";
 import PanelsIcon from "@/components/icons/PanelsIcon";
 import PersonIcon from "@/components/icons/PersonIcon";
-import Button from "@/components/ui/Button";
 import NavLink from "@/components/ui/NavLink";
+import Image from "next/image";
 
-export default function DashboardNavSidebar() {
+export default async function DashboardNavSidebar() {
+  const { image, first_name } = await getUser();
+
   return (
-    <div className="mt-4 flex flex-col items-center gap-16 rounded-tl-4xl bg-[#EAEDEA] p-13">
-      <div className="aspect-square h-auto w-46 rounded-full bg-gray-500"></div>
+    <div className="mt-4 flex flex-col items-center gap-16 rounded-tl-4xl p-13">
+      {!!image ? (
+        <div className="border-olive-300 relative aspect-square h-auto w-46 overflow-clip rounded-full border-4">
+          <Image
+            src={image}
+            alt={`صورة ${first_name}`}
+            fill
+            className="h-full object-cover"
+            draggable={false}
+          />
+        </div>
+      ) : (
+        <Image
+          src={DefaultUser}
+          alt="Default User Illustration"
+          className="border-olive-300 aspect-square h-auto w-46 rounded-full border-4 object-cover"
+          draggable={false}
+        />
+      )}
 
       <ul className="flex h-full w-full flex-col gap-10">
         <NavLink
@@ -38,13 +60,13 @@ export default function DashboardNavSidebar() {
           الملف الشخصي
         </NavLink>
 
-        <Button
+        <LogoutButton
           variant="primary"
           size="small"
           className="bg-olive-300 self-start"
         >
           تسجيل الخروج
-        </Button>
+        </LogoutButton>
       </ul>
     </div>
   );

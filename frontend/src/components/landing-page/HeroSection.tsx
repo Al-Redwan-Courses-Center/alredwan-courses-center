@@ -1,9 +1,13 @@
-import Image from "next/image";
+import { authConfig } from "@/app/api/auth/[...nextauth]/route";
 import HeroBG from "@/assets/hero-bg.svg";
-import Button from "@/components/ui/Button";
 import SectionDivider from "@/components/landing-page/SectionDivider";
+import Button from "@/components/ui/Button";
+import { getServerSession } from "next-auth";
+import Image from "next/image";
 
-export default function HeroSection() {
+export default async function HeroSection() {
+  const session = await getServerSession(authConfig);
+
   return (
     <section className="tablet:h-[60dvh] relative flex h-[calc(100dvh-6.5rem)] items-center justify-center bg-[linear-gradient(6deg,#D2DBC8_3.29%,#557767_188.07%)]">
       <Image
@@ -27,9 +31,15 @@ export default function HeroSection() {
             تصفح الدورات
           </Button>
 
-          <Button variant="secondary" size="medium" href="/signup">
-            سجل الآن
-          </Button>
+          {!!session?.user ? (
+            <Button variant="secondary" size="medium" href="/dashboard">
+              لوحة التحكم
+            </Button>
+          ) : (
+            <Button variant="secondary" size="medium" href="/signup">
+              سجل الآن
+            </Button>
+          )}
         </div>
       </div>
 

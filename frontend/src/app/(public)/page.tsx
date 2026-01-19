@@ -8,7 +8,7 @@ import StatisticsSection from "@/components/landing-page/StatisticsSection";
 import TestimonialsSection from "@/components/landing-page/TestimonialsSection";
 import WhyUsSection from "@/components/landing-page/WhyUsSection";
 
-export default function Home() {
+export default async function Home() {
   return (
     <main className="tablet:[&>section]:p-28 [&_h2>span]:text-beige-500 [&>section]:px-128 [&>section]:py-28">
       <HeroSection />

@@ -14,7 +14,7 @@ const navLinkStyles = cva("", {
       ),
 
       dashboard: cn(
-        "shadow-button-secondary inline-block px-0 pe-20 text-center font-bold text-gray-600 transition-colors",
+        "shadow-button-secondary inline-block rounded-2xl px-0 pe-20 text-center font-bold text-gray-600 transition-colors",
       ),
     },
 
@@ -77,7 +77,6 @@ export default function NavLink({
   children: ReactNode;
 }) {
   const pathname = usePathname();
-  console.log(pathname);
 
   return (
     <Link

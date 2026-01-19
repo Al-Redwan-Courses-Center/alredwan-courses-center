@@ -1,4 +1,5 @@
-import { Lecture, StatusMap } from "@/types";
+import { StatusMap } from "@/types/components";
+import { Lecture } from "@/types/entities";
 
 const headers = ["م", "المحاضرة", "الدورة", "البداية", "النهاية", "الحالة", ""];
 
@@ -34,6 +35,18 @@ const sortConfig = {
   },
 };
 
+const filterConfig = {
+  submitted: {
+    key: "status",
+    label: "مسجلة",
+  },
+
+  "not-submitted": {
+    key: "status",
+    label: "غير مسجلة",
+  },
+};
+
 const statusMap: StatusMap<Lecture> = {
   submitted: {
     label: "تم التسجيل",
@@ -47,6 +60,7 @@ const statusMap: StatusMap<Lecture> = {
 
 const lecturesTableConfig = {
   sortConfig,
+  filterConfig,
   statusMap,
 };
 

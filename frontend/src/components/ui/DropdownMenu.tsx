@@ -98,11 +98,6 @@ function DropdownMenuCheckboxItem({
       checked={checked}
       {...props}
     >
-      <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
-        <DropdownMenuPrimitive.ItemIndicator>
-          <CheckIcon className="size-4" />
-        </DropdownMenuPrimitive.ItemIndicator>
-      </span>
       {children}
     </DropdownMenuPrimitive.CheckboxItem>
   );
@@ -238,6 +233,10 @@ function DropdownMenuSubContent({
   );
 }
 
+const dropdownMenuContentStyles = cn(
+  "shadow-soft w-105 rounded-[2rem_0] bg-gray-50 text-[1.8rem]",
+);
+
 export {
   DropdownMenu,
   DropdownMenuPortal,
@@ -254,4 +253,5 @@ export {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
+  dropdownMenuContentStyles,
 };
