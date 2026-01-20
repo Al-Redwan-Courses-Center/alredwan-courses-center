@@ -32,25 +32,24 @@ const initialContext: TableContext = {
 export const TableContext = createContext<TableContext>(initialContext);
 const MAX_ITEMS_PER_PAGE = 6;
 
-export default function Table<T>({
+export default function Table<T extends Record<string, any>>({
   gridLayout,
   data,
   sortConfig,
   filterConfig,
-  searchableValues,
   children,
 }: {
   gridLayout: string;
   data: T[];
   sortConfig: TableSortConfig<T>;
   filterConfig: any;
-  searchableValues: (keyof T)[];
   children: ReactNode;
 }) {
   const { mutateSearchParams, searchParams } = useMutateSearchParams();
+  const searchableKeys = Object.keys(data[1]);
 
   const filteredData = useFilterData<T>(data, filterConfig);
-  const searchedData = useSearchData<T>(filteredData, searchableValues);
+  const searchedData = useSearchData<T>(filteredData, searchableKeys);
   const sortedData = useSortData<T>(searchedData, sortConfig);
 
   const page = +(searchParams.get("page") || "1");
@@ -61,17 +60,17 @@ export default function Table<T>({
   const nextPage = () => {
     if (page >= numPages) return;
 
-    mutateSearchParams("page", page + 1);
+    mutateSearchParams([{ key: "page", val: page + 1 }]);
   };
 
   const prevPage = () => {
     if (page <= 1) return;
 
-    mutateSearchParams("page", page - 1);
+    mutateSearchParams([{ key: "page", val: page - 1 }]);
   };
 
   const setPage = (pageNum: number) => {
-    mutateSearchParams("page", pageNum);
+    mutateSearchParams([{ key: "page", val: pageNum }]);
   };
 
   const value: TableContext = {

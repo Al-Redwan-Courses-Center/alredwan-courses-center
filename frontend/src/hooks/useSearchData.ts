@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
-export function useSearchData<T>(data: T[], searchableValues: (keyof T)[]) {
+export function useSearchData<T>(data: T[], searchableKeys: (keyof T)[]) {
   const searchParams = useSearchParams();
   const search = searchParams.get("search");
 
@@ -11,13 +11,13 @@ export function useSearchData<T>(data: T[], searchableValues: (keyof T)[]) {
     if (!search) return data;
 
     return data.filter((item) =>
-      searchableValues.some((value) =>
-        String(item[value] || "")
+      searchableKeys.some((key) =>
+        String(item[key] || "")
           .toLowerCase()
           .includes(search.toLowerCase()),
       ),
     );
-  }, [data, search, searchableValues]);
+  }, [data, search, searchableKeys]);
 
   return searchedData;
 }

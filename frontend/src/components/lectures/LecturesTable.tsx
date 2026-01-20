@@ -1,18 +1,17 @@
-"use client";
-
+import EditIcon from "@/components/icons/EditIcon";
+import InfoIcon from "@/components/icons/InfoIcon";
 import lecturesTableConfig from "@/components/lectures/lectures-table.config";
+import StatusBadge from "@/components/ui/StatusBadge";
 import Table from "@/components/ui/table/Table";
 import TableBody from "@/components/ui/table/TableBody";
 import TableCell from "@/components/ui/table/TableCell";
-import { TableOperations } from "@/components/ui/table/TableOperations";
+import TableFilter from "@/components/ui/table/TableFilter";
+import TableSearch from "@/components/ui/table/TableSearch";
 import { lectures } from "@/dev-data/lectures";
 import { cn, formatTime, toHindiDigits } from "@/lib/utils";
+import { Lecture } from "@/types/entities";
 import { TablePagination } from "../ui/table/TablePagination";
 import { TableHeader, TableRow } from "../ui/table/TableRow";
-import StatusBadge from "@/components/ui/StatusBadge";
-import InfoIcon from "@/components/icons/InfoIcon";
-import EditIcon from "@/components/icons/EditIcon";
-import { Lecture } from "@/types/entities";
 
 const { sortConfig, filterConfig, statusMap } = lecturesTableConfig;
 
@@ -22,12 +21,17 @@ export default function LecturesTable() {
       data={lectures}
       sortConfig={sortConfig}
       filterConfig={filterConfig}
-      searchableValues={Object.keys(lectures[1]) as (keyof Lecture)[]}
       gridLayout={cn(
         "grid-cols-[minmax(0,0.5fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)_minmax(0,0.5fr)]",
       )}
     >
-      <TableOperations />
+      <div className="relative z-100 mb-14 flex items-center gap-32">
+        <TableSearch />
+
+        <TableFilter />
+
+        <TableFilter />
+      </div>
 
       <TableHeader>
         <TableCell>م</TableCell>
