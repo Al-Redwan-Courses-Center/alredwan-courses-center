@@ -38,7 +38,7 @@ export default async function DashboardNavSidebar() {
           href="/dashboard/todays-schedule"
           icon={<PanelsIcon />}
         >
-          جميع الدورات
+          محاضرات اليوم
         </NavLink>
 
         <NavLink
@@ -47,7 +47,7 @@ export default async function DashboardNavSidebar() {
           href="/dashboard/my-courses"
           icon={<ClipboardIcon />}
         >
-          محاضرات اليوم
+          جميع الدورات
         </NavLink>
 
         <NavLink

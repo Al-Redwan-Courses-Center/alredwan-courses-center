@@ -5,6 +5,8 @@ import Logo from "@/assets/logo.svg";
 import { getServerSession } from "next-auth";
 import { authConfig } from "@/app/api/auth/[...nextauth]/route";
 import LogoutButton from "@/components/auth/LogoutButton";
+import LoginModal from "@/components/auth/LoginModal";
+import SignupModal from "@/components/auth/SignupModal";
 
 export default async function NavBar() {
   const session = await getServerSession(authConfig);
@@ -19,13 +21,8 @@ export default async function NavBar() {
         </div>
       ) : (
         <div className="tablet:hidden grid grid-cols-2 items-center gap-4">
-          <Button variant="primary" size="small" href="/login">
-            تسجيل دخول
-          </Button>
-
-          <Button variant="secondary" size="small" href="/signup">
-            إنشاء حساب
-          </Button>
+          <LoginModal />
+          <SignupModal />
         </div>
       )}
 

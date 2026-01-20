@@ -47,7 +47,7 @@ export default async function DashboardHeader() {
       </div>
 
       <NotificationsDrawer className="me-18">
-        <span className="text-right">إشعارات اليوم</span>
+        <span className="text-right">+1 إشعار</span>
       </NotificationsDrawer>
 
       <NavLink

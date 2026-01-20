@@ -66,8 +66,6 @@ services:
     depends_on:
       redwan-backend:
         condition: service_healthy
-    env_file:
-      - ./frontend.env
     ports:
       - "3000:3000"
 

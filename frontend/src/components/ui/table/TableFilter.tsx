@@ -22,8 +22,6 @@ export default function TableFilter() {
   const { searchParams, mutateSearchParams } = useMutateSearchParams();
   const filters = searchParams.get("filter")?.split(",") || [];
 
-  console.log(filters);
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -49,12 +47,14 @@ export default function TableFilter() {
             )}
             checked={filters.includes(key)}
             onClick={() =>
-              mutateSearchParams(
-                "filter",
-                filters.includes(key)
-                  ? filters.filter((filter) => filter !== key).join(",")
-                  : [...filters, key].join(","),
-              )
+              mutateSearchParams([
+                {
+                  key: "filter",
+                  val: filters.includes(key)
+                    ? filters.filter((filter) => filter !== key).join(",")
+                    : [...filters, key].join(","),
+                },
+              ])
             }
           >
             {(config as { key: string; label: string }).label}

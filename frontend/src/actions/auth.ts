@@ -23,7 +23,6 @@ export async function redirectAuthUser() {
   const session: (Session & UserEntity) | null =
     await getServerSession(authConfig);
 
-  console.log(session);
 
   const isAuth = !!session && !session.error;
 

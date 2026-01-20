@@ -1,6 +1,6 @@
-import Footer from "@/components/layout/Footer";
-import MobileNavBar from "@/components/layout/MobileNavBar";
-import NavBar from "@/components/layout/NavBar";
+import Footer from "@/components/layout/landing/Footer";
+import MobileNavBar from "@/components/layout/landing/MobileNavBar";
+import NavBar from "@/components/layout/landing/NavBar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

@@ -104,7 +104,7 @@ export default function SignupForm() {
   }, [identityTypeValue, setValue, clearErrors]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="mx-auto pt-20 pb-150">
+    <form onSubmit={handleSubmit(onSubmit)} className="mx-auto">
       <div className="mb-10 flex w-200 flex-col gap-20">
         {/* 
           MARK: FIRST NAME

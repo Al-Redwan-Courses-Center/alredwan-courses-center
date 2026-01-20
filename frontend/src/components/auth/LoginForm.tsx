@@ -5,8 +5,16 @@ import { signIn } from "next-auth/react";
 import Button from "@/components/ui/Button";
 import { LoginInputs } from "@/types/auth";
 import toast from "react-hot-toast";
+import { usePathname, useRouter } from "next/navigation";
 
-export default function LoginForm() {
+export default function LoginForm({
+  callbackUrl,
+}: {
+  callbackUrl?: string | null;
+}) {
+  const pathname = usePathname();
+  const router = useRouter();
+
   const { register, handleSubmit } = useForm<LoginInputs>({
     defaultValues: {
       phone_number1: "+201234567899",
@@ -20,7 +28,14 @@ export default function LoginForm() {
       ...credentials,
     });
 
-    if (res?.ok) return window.location.replace("/");
+    if (res?.ok) {
+      if (pathname === "/") {
+        toast.success("مرحباً!");
+        router.refresh();
+      } else window.location.replace(callbackUrl || "/");
+
+      return;
+    }
 
     toast.error(res?.error || "حدث خطأ أثناء تسجيل الدخول! حاول مرة أخرى!");
   };
@@ -28,7 +43,7 @@ export default function LoginForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col items-center justify-center gap-10 py-150 text-3xl [&>input]:bg-gray-300"
+      className="flex flex-col items-center justify-center gap-10 text-3xl [&>input]:bg-gray-300"
     >
       <label htmlFor="phone_number1">Phone Number</label>
       <input id="phone_number1" {...register("phone_number1")} />

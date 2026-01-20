@@ -25,7 +25,7 @@ function DropdownMenuTrigger({
   return (
     <DropdownMenuPrimitive.Trigger
       data-slot="dropdown-menu-trigger"
-      className="focus:outline-none"
+      className="*:focus:outline-none"
       {...props}
     />
   );
@@ -150,7 +150,7 @@ function DropdownMenuLabel({
       data-slot="dropdown-menu-label"
       data-inset={inset}
       className={cn(
-        "px-2 py-1.5 text-sm font-medium data-inset:pl-8",
+        "px-2 py-1.5 text-2xl font-medium data-inset:pl-8",
         className,
       )}
       {...props}

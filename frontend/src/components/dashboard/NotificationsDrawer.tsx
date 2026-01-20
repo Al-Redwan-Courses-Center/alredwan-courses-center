@@ -2,6 +2,7 @@ import NotificationWithBadgeIcon from "@/components/icons/NotificationWithBadgeI
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ export default function NotificationsDrawer({
       <DropdownMenuContent
         className={cn(baseStyles, "relative top-8 rounded-none border-none")}
       >
+        <DropdownMenuLabel>إشعارات اليوم</DropdownMenuLabel>
         {children}
       </DropdownMenuContent>
     </DropdownMenu>

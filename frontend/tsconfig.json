@@ -38,6 +38,7 @@
     ".next",
     "public/**/*.js",
     "**/*.spec.ts",
-    "**/*.test.ts"
+    "**/*.test.ts",
+    "**/shadcn*"
   ]
 }

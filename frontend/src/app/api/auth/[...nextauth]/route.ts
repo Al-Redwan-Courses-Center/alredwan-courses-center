@@ -96,7 +96,7 @@ export const authConfig: AuthOptions = {
   },
 
   pages: {
-    signIn: "/login",
+    signIn: "/?login=true",
   },
 };
 
