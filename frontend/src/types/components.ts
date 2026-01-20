@@ -3,7 +3,6 @@ import { StatusColors } from "@/components/ui/StatusBadge";
 //
 // MARK: TABLE
 //
-
 export interface TableSortConfig<T> {
   [key: string]: {
     sortFn: (a: T, b: T) => number;
@@ -11,9 +10,9 @@ export interface TableSortConfig<T> {
   };
 }
 
-export interface TableFilterConfig<T> {
+export interface TableFilterConfig {
   [key: string]: {
-    filterFn: (item: T) => boolean;
+    key: string;
     label: string;
   };
 }

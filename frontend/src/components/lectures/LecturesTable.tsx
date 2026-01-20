@@ -1,3 +1,6 @@
+// PASSING CONFIG FUNCTIONS TO THE TABLE COMPONENT (NON-SERIALIZABLE DATA WHILE SERVER -> CLIENT)
+"use client";
+
 import EditIcon from "@/components/icons/EditIcon";
 import InfoIcon from "@/components/icons/InfoIcon";
 import lecturesTableConfig from "@/components/lectures/lectures-table.config";
@@ -12,6 +15,7 @@ import { cn, formatTime, toHindiDigits } from "@/lib/utils";
 import { Lecture } from "@/types/entities";
 import { TablePagination } from "../ui/table/TablePagination";
 import { TableHeader, TableRow } from "../ui/table/TableRow";
+import TableSort from "@/components/ui/table/TableSort";
 
 const { sortConfig, filterConfig, statusMap } = lecturesTableConfig;
 
@@ -27,9 +31,7 @@ export default function LecturesTable() {
     >
       <div className="relative z-100 mb-14 flex items-center gap-32">
         <TableSearch />
-
-        <TableFilter />
-
+        <TableSort />
         <TableFilter />
       </div>
 

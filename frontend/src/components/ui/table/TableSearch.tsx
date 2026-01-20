@@ -1,3 +1,5 @@
+"use client";
+
 import SearchIcon from "@/components/icons/SearchIcon";
 import Input from "@/components/ui/Input";
 import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";

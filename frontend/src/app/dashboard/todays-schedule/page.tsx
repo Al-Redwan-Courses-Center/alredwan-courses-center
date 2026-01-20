@@ -1,6 +1,11 @@
 import { getUser } from "@/actions/auth";
 import LecturesTable from "@/components/lectures/LecturesTable";
+import { Metadata } from "next";
 import { Suspense } from "react";
+
+export const metadata: Metadata = {
+  title: "محاضرات اليوم",
+};
 
 export default async function Page() {
   const { first_name } = await getUser();

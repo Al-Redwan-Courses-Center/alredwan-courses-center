@@ -11,7 +11,7 @@ export default function TableCell({
   return (
     <div
       className={cn(
-        "content-center items-center p-10 has-[.status-badge]:py-0 nth-[1]:text-center nth-[n+4]:flex nth-[n+4]:justify-center",
+        "content-center items-center p-9 has-[.status-badge]:py-0 nth-[1]:text-center nth-[n+4]:flex nth-[n+4]:justify-center",
         className,
       )}
     >

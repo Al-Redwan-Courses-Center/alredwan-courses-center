@@ -1,4 +1,8 @@
-import { StatusMap } from "@/types/components";
+import {
+  StatusMap,
+  TableFilterConfig,
+  TableSortConfig,
+} from "@/types/components";
 import { Lecture } from "@/types/entities";
 
 const headers = ["م", "المحاضرة", "الدورة", "البداية", "النهاية", "الحالة", ""];
@@ -8,7 +12,7 @@ const statusWeights = {
   "not-submitted": 0,
 };
 
-const sortConfig = {
+const sortConfig: TableSortConfig<Lecture> = {
   lecture: {
     sortFn: (a: Lecture, b: Lecture) => a.title.localeCompare(b.title),
     label: headers[1],
@@ -35,7 +39,7 @@ const sortConfig = {
   },
 };
 
-const filterConfig = {
+const filterConfig: TableFilterConfig = {
   submitted: {
     key: "status",
     label: "مسجلة",

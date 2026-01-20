@@ -1,13 +1,17 @@
+"use client";
+
 import ArrowDownHead from "@/components/icons/ArrowDownHead";
 import SortArrow from "@/components/icons/SortArrow";
-import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
-import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu";
+} from "@/components/ui/DropdownMenu";
+import { TableContext } from "@/components/ui/table/Table";
+import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
+import { cn } from "@/lib/utils";
+import { useContext } from "react";
 
 const baseStyles = cn(
   "shadow-soft w-105 rounded-[2rem_0] bg-gray-50 text-[1.8rem]",
@@ -17,35 +21,16 @@ const dropdownItemStyles = cn(
   "[direction:rtl;] flex cursor-pointer justify-between px-10 text-[1.8rem] transition-all hover:bg-gray-400",
 );
 
-const sortOptions = [
-  {
-    label: "المحاضرة",
-    fieldName: "lecture",
-  },
-  {
-    label: "الدورة",
-    fieldName: "course",
-  },
-  {
-    label: "وقت البداية",
-    fieldName: "startTime",
-  },
-  {
-    label: "وقت النهاية",
-    fieldName: "endTime",
-  },
-  {
-    label: "الحالة",
-    fieldName: "status",
-  },
-];
-
 export default function TableSort() {
   const { searchParams, mutateSearchParams } = useMutateSearchParams();
-
   const currentSort = searchParams.get("sort-by");
-
   const [fieldName, direction] = currentSort?.split("-") || [];
+
+  const { sortConfig } = useContext(TableContext);
+  const sortOptions = Object.entries(sortConfig).map(([key, val]) => ({
+    label: val.label,
+    fieldName: key,
+  }));
 
   return (
     <DropdownMenu>

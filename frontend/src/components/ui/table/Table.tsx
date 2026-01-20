@@ -1,11 +1,13 @@
+"use client";
+
 import { useFilterData } from "@/hooks/useFilterData";
 import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import { useSearchData } from "@/hooks/useSearchData";
 import { useSortData } from "@/hooks/useSortData";
-import { TableSortConfig } from "@/types/components";
+import { TableFilterConfig, TableSortConfig } from "@/types/components";
 import { createContext, ReactNode } from "react";
 
-interface TableContext {
+interface TableContext<T> {
   columnSizing: string;
   data: any[];
   page: number;
@@ -14,10 +16,11 @@ interface TableContext {
   nextPage: () => void;
   prevPage: () => void;
   setPage: (pageNum: number) => void;
-  filterConfig: any;
+  filterConfig: TableFilterConfig;
+  sortConfig: TableSortConfig<T>;
 }
 
-const initialContext: TableContext = {
+const initialContext: TableContext<any> = {
   columnSizing: "",
   data: [],
   page: 1,
@@ -27,9 +30,10 @@ const initialContext: TableContext = {
   prevPage: () => {},
   setPage: () => {},
   filterConfig: {},
+  sortConfig: {},
 };
 
-export const TableContext = createContext<TableContext>(initialContext);
+export const TableContext = createContext<TableContext<any>>(initialContext);
 const MAX_ITEMS_PER_PAGE = 6;
 
 export default function Table<T extends Record<string, any>>({
@@ -42,7 +46,7 @@ export default function Table<T extends Record<string, any>>({
   gridLayout: string;
   data: T[];
   sortConfig: TableSortConfig<T>;
-  filterConfig: any;
+  filterConfig: TableFilterConfig;
   children: ReactNode;
 }) {
   const { mutateSearchParams, searchParams } = useMutateSearchParams();
@@ -73,7 +77,7 @@ export default function Table<T extends Record<string, any>>({
     mutateSearchParams([{ key: "page", val: pageNum }]);
   };
 
-  const value: TableContext = {
+  const value: TableContext<T> = {
     columnSizing: gridLayout,
     data: sortedData.slice(startIndex, endIndex),
     page,
@@ -83,6 +87,7 @@ export default function Table<T extends Record<string, any>>({
     prevPage,
     setPage,
     filterConfig,
+    sortConfig,
   };
 
   return <TableContext value={value}>{children}</TableContext>;

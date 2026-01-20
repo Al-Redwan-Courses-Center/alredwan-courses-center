@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 
 const baseStyles = cn(
-  "shadow-soft w-105 rounded-[2rem_0] bg-gray-50 text-[1.8rem] transition-colors hover:bg-gray-100",
+  "shadow-soft w-105 rounded-[2rem_0] bg-gray-50 text-[1.8rem] transition-colors",
 );
 
 export default function NotificationsDrawer({

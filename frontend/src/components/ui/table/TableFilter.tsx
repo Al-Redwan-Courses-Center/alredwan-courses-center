@@ -14,9 +14,6 @@ import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import { cn } from "@/lib/utils";
 import { useContext } from "react";
 
-// baseStyles,
-// "px-10 py-4 transition-colors hover:bg-gray-100"
-
 export default function TableFilter() {
   const { filterConfig } = useContext(TableContext);
   const { searchParams, mutateSearchParams } = useMutateSearchParams();
@@ -53,6 +50,10 @@ export default function TableFilter() {
                   val: filters.includes(key)
                     ? filters.filter((filter) => filter !== key).join(",")
                     : [...filters, key].join(","),
+                },
+                {
+                  key: "page",
+                  val: "",
                 },
               ])
             }
