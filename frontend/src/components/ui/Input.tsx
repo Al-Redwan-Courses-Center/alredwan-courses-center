@@ -8,20 +8,32 @@ const containerStyles = cn(
 
 interface BaseInput {
   placeholder?: string;
-  icon?: ReactNode;
+
+  button?: ReactNode;
   label?: string;
   inputStyles?: string;
-  fieldsetStyles?: string;
   type?: InputHTMLAttributes<HTMLInputElement>["type"];
 }
 
+interface FieldSetInput extends BaseInput {
+  icon?: never;
+  fieldsetStyles?: string;
+}
+
+interface MinimalInput extends BaseInput {
+  icon?: ReactNode;
+  fieldsetStyles?: never;
+}
+
 interface UncontrolledInput extends BaseInput {
+  icon?: ReactNode;
   onChange: ((e: ChangeEvent<HTMLInputElement>) => void) | null;
   value: string;
   registerReturn?: never;
 }
 
 interface ControlledInput extends BaseInput {
+  icon?: ReactNode;
   onChange?: never;
   value?: never;
   registerReturn: UseFormRegisterReturn;
@@ -30,6 +42,7 @@ interface ControlledInput extends BaseInput {
 export default function Input({
   label = "",
   icon = null,
+  button = null,
   placeholder = "",
   inputStyles = "",
   fieldsetStyles = "",
@@ -37,19 +50,32 @@ export default function Input({
   onChange = null,
   value,
   registerReturn,
-}: UncontrolledInput | ControlledInput) {
+}: (UncontrolledInput | ControlledInput) & (FieldSetInput | MinimalInput)) {
   if (label)
     return (
-      <fieldset className={cn(containerStyles, "pb-4", fieldsetStyles)}>
+      <fieldset
+        className={cn(
+          containerStyles,
+          "relative border-2 border-gray-950 pb-4",
+          fieldsetStyles,
+        )}
+      >
         <legend className="ms-5 px-3 text-2xl font-bold">{label}</legend>
         <input
           onChange={(e) => onChange?.(e)}
           value={value}
           {...registerReturn}
           placeholder={placeholder}
-          className={cn("w-full focus:outline-none", inputStyles)}
+          className={cn(
+            "w-full focus:outline-none",
+            inputStyles,
+            button && "pe-10",
+          )}
           type={type}
         />
+        <div className="absolute top-1/2 left-5 -translate-y-[50%]">
+          {button}
+        </div>
       </fieldset>
     );
 

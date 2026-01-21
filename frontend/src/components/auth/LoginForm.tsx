@@ -1,11 +1,15 @@
 "use client";
 
-import { SubmitHandler, useForm } from "react-hook-form";
-import { signIn } from "next-auth/react";
 import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 import { LoginInputs } from "@/types/auth";
-import toast from "react-hot-toast";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { signIn } from "next-auth/react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { SubmitHandler, useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 
 export default function LoginForm({
   callbackUrl,
@@ -14,13 +18,13 @@ export default function LoginForm({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-
   const { register, handleSubmit } = useForm<LoginInputs>({
     defaultValues: {
       phone_number1: "+201234567899",
       password: "Subnautica455",
     },
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit: SubmitHandler<LoginInputs> = async (credentials) => {
     const res = await signIn("credentials", {
@@ -43,17 +47,43 @@ export default function LoginForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col items-center justify-center gap-10 text-3xl [&>input]:bg-gray-300"
+      className="flex flex-col gap-20 text-3xl [&>input]:bg-gray-300"
     >
-      <label htmlFor="phone_number1">Phone Number</label>
-      <input id="phone_number1" {...register("phone_number1")} />
+      <div className="flex flex-col gap-10">
+        <Input
+          label="رقم الهاتف"
+          placeholder="+201234567890"
+          registerReturn={register("phone_number1")}
+        />
 
-      <label htmlFor="password">Password</label>
-      <input type="password" id="password" {...register("password")} />
+        <Input
+          type={showPassword ? "text" : "password"}
+          label="كلمة المرور"
+          button={
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="text-olive-500"
+            >
+              {showPassword ? <EyeIcon /> : <EyeOffIcon />}
+            </button>
+          }
+          registerReturn={register("password")}
+        />
+      </div>
 
-      <Button type="submit" variant="primary" onClick={() => {}}>
-        تسجيل الدخول
-      </Button>
+      <div className="flex flex-col gap-5">
+        <Button type="submit" variant="primary" onClick={() => {}}>
+          تسجيل الدخول
+        </Button>
+
+        <Link
+          href="#"
+          className="text-olive-900 hover:text-olive-300 self-center text-2xl font-bold underline transition-colors"
+        >
+          نسيت كلمة المرور؟
+        </Link>
+      </div>
     </form>
   );
 }

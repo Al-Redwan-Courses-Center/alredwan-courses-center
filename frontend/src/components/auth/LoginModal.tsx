@@ -5,11 +5,14 @@ import Button from "@/components/ui/Button";
 import {
   Modal,
   ModalContent,
+  ModalDescription,
   ModalTitle,
   ModalTrigger,
 } from "@/components/ui/Modal";
 import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
+import Image from "next/image";
 import { Suspense, useEffect, useState } from "react";
+import Logo from "@/assets/logo.svg";
 
 function PreLoginModal() {
   const { searchParams, mutateSearchParams } = useMutateSearchParams();
@@ -47,8 +50,25 @@ function PreLoginModal() {
         </Button>
       </ModalTrigger>
 
-      <ModalContent className="max-h-7/10 max-w-1/2">
-        <ModalTitle>تسجيل الدخول</ModalTitle>
+      <ModalContent className="max-h-7/10 max-w-1/4">
+        <ModalTitle>
+          <div className="flex flex-col items-start gap-10">
+            <Image
+              src={Logo}
+              alt="Logo Illustration"
+              className="h-auto w-30 self-center"
+              draggable={false}
+            />
+
+            <div className="flex flex-col gap-2 text-start">
+              <ModalDescription>
+                أهلاً بك في واحة الرضوان التعليمية
+              </ModalDescription>
+              <span>تسجيل الدخول</span>
+            </div>
+          </div>
+        </ModalTitle>
+
         <LoginForm callbackUrl={callbackUrl} />
       </ModalContent>
     </Modal>
