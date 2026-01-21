@@ -11,6 +11,11 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ('phone_number1', 'phone_number2', 'first_name', 'last_name', 'email', 'identity_number')
     ordering = ('-date_joined',)
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'مستخدم'
+        self.model._meta.verbose_name_plural = 'المستخدمون'
+    
     fieldsets = (
         ('معلومات أساسية', {'fields': ('phone_number1', 'phone_number2', 'email', 'password')}),
         ('المعلومات الشخصية', {'fields': ('first_name', 'last_name', 'dob', 'gender')}),
@@ -116,6 +121,11 @@ class StudentUserAdmin(admin.ModelAdmin):
     search_fields = ('unique_code', 'user__first_name', 'user__last_name', 'user__phone_number1')
     readonly_fields = ('unique_code',)
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'طالب'
+        self.model._meta.verbose_name_plural = 'الطلاب'
+    
     fieldsets = (
         ('معلومات الطالب', {'fields': ('user', 'unique_code', 'image')}),
     )
@@ -148,6 +158,11 @@ class InstructorAdmin(admin.ModelAdmin):
     list_display = ('get_full_name', 'get_type', 'get_monthly_salary', 'get_phone', 'get_joined_date')
     list_filter = ('type', 'joined_date')
     search_fields = ('user__first_name', 'user__last_name', 'user__phone_number1')
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'مدرس'
+        self.model._meta.verbose_name_plural = 'المدرسون'
     
     fieldsets = (
         ('معلومات المدرس', {'fields': ('user', 'type', 'bio', 'monthly_salary')}),
@@ -204,6 +219,11 @@ class SupervisorScheduleAdmin(admin.ModelAdmin):
     list_filter = ('day_of_week', 'instructor')
     search_fields = ('instructor__user__first_name', 'instructor__user__last_name')
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'جدول مشرف'
+        self.model._meta.verbose_name_plural = 'جداول المشرفين'
+    
     def get_instructor(self, obj):
         return obj.instructor
     get_instructor.short_description = 'المدرس'
@@ -256,6 +276,11 @@ class InstructorAttendanceAdmin(admin.ModelAdmin):
     list_filter = ('status', 'date', 'season', 'check_in_method')
     search_fields = ('instructor__user__first_name', 'instructor__user__last_name')
     date_hierarchy = 'date'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'حضور مدرس'
+        self.model._meta.verbose_name_plural = 'حضور المدرسين'
     
     fieldsets = (
         ('معلومات الحضور', {'fields': ('instructor', 'date', 'season', 'status')}),
@@ -335,6 +360,11 @@ class ParentAdmin(admin.ModelAdmin):
     list_display = ('get_full_name', 'get_phone', 'get_email', 'image')
     search_fields = ('user__first_name', 'user__last_name', 'user__phone_number1', 'user__email')
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'ولي أمر'
+        self.model._meta.verbose_name_plural = 'أولياء الأمور'
+    
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         if 'user' in form.base_fields:
@@ -362,6 +392,11 @@ class ChildAdmin(admin.ModelAdmin):
     list_filter = ('gender', 'created_at')
     search_fields = ('unique_code', 'first_name', 'last_name', 'phone')
     readonly_fields = ('unique_code', 'created_at', 'updated_at')
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'طفل'
+        self.model._meta.verbose_name_plural = 'الأطفال'
     
     fieldsets = (
         ('معلومات الطفل', {'fields': ('primary_parent', 'first_name', 'last_name', 'gender', 'dob')}),
@@ -435,6 +470,11 @@ class ChildParentsAdmin(admin.ModelAdmin):
     list_display = ('get_child', 'get_parent')
     search_fields = ('child__first_name', 'child__last_name', 'parent__user__first_name')
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'ربط طفل بولي أمر'
+        self.model._meta.verbose_name_plural = 'روابط الأطفال بأولياء الأمور'
+
     def get_child(self, obj):
         return obj.child
     get_child.short_description = 'الطفل'
@@ -460,6 +500,11 @@ class ParentLinkRequestAdmin(admin.ModelAdmin):
     list_filter = ('status', 'created_at')
     search_fields = ('child__first_name', 'requester__user__first_name', 'primary_parent__user__first_name')
     readonly_fields = ('created_at', 'updated_at')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'طلب ربط ولي أمر'
+        self.model._meta.verbose_name_plural = 'طلبات ربط أولياء الأمور'
 
     def get_child(self, obj):
         return obj.child

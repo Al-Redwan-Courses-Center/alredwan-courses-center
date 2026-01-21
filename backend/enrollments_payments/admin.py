@@ -11,6 +11,11 @@ class EnrollmentRequestAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
     readonly_fields = ('id', 'created_at', 'processed_at', 'expires_at')
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'طلب تسجيل'
+        self.model._meta.verbose_name_plural = 'طلبات التسجيل'
+    
     fieldsets = (
         ('معلومات الطلب', {'fields': ('course', 'parent', 'student', 'child')}),
         ('السعر وطريقة الدفع', {'fields': ('price', 'payment_method')}),
@@ -90,6 +95,11 @@ class EnrollmentAdmin(admin.ModelAdmin):
     date_hierarchy = 'enrolled_at'
     readonly_fields = ('id', 'enrolled_at', 'updated_at', 'get_amount_paid', 'get_remaining')
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'تسجيل'
+        self.model._meta.verbose_name_plural = 'التسجيلات'
+    
     fieldsets = (
         ('معلومات التسجيل', {'fields': ('course', 'student', 'child')}),
         ('الحالة', {'fields': ('status', 'enrolled_at', 'created_by')}),
@@ -155,6 +165,11 @@ class PaymentAdmin(admin.ModelAdmin):
     search_fields = ('payer_parent__user__first_name', 'payer_student__user__first_name', 'reference_number', 'notes')
     date_hierarchy = 'processed_at'
     readonly_fields = ('id', 'created_at', 'updated_at')
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'دفع'
+        self.model._meta.verbose_name_plural = 'المدفوعات'
     
     fieldsets = (
         ('معلومات الدفع', {'fields': ('enrollment', 'payer_parent', 'payer_student')}),
@@ -243,6 +258,11 @@ class RefundRequestAdmin(admin.ModelAdmin):
     search_fields = ('enrollment__course__name', 'reason', 'processed_note', 'requested_by_parent__user__first_name', 'requested_by_student__user__first_name')
     date_hierarchy = 'created_at'
     readonly_fields = ('id', 'created_at', 'processed_at')
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'طلب استرداد'
+        self.model._meta.verbose_name_plural = 'طلبات الاسترداد'
     
     fieldsets = (
         ('معلومات الطلب', {'fields': ('enrollment', 'requested_by_parent', 'requested_by_student')}),

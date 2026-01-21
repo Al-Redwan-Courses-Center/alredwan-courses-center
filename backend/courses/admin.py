@@ -10,6 +10,11 @@ class SeasonAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description')
     date_hierarchy = 'start_date'
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'موسم'
+        self.model._meta.verbose_name_plural = 'المواسم'
+    
     fieldsets = (
         ('معلومات الموسم', {'fields': ('name', 'season_type', 'description')}),
         ('التواريخ', {'fields': ('start_date', 'end_date', 'is_active')}),
@@ -45,6 +50,11 @@ class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'created_at')
     search_fields = ('name',)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'وسم'
+        self.model._meta.verbose_name_plural = 'الوسوم'
+
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         if 'name' in form.base_fields:
@@ -65,6 +75,11 @@ class CourseAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description', 'slug')
     date_hierarchy = 'start_date'
     filter_horizontal = ('tags',)
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'دورة'
+        self.model._meta.verbose_name_plural = 'الدورات'
     
     fieldsets = (
         ('معلومات الدورة', {'fields': ('name', 'description', 'instructor', 'season')}),
@@ -171,6 +186,11 @@ class CourseScheduleAdmin(admin.ModelAdmin):
     list_filter = ('weekday', 'course')
     search_fields = ('course__name',)
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'جدول دورة'
+        self.model._meta.verbose_name_plural = 'جداول الدورات'
+    
     def get_course(self, obj):
         return obj.course
     get_course.short_description = 'الدورة'
@@ -213,6 +233,11 @@ class LectureAdmin(admin.ModelAdmin):
     list_filter = ('status', 'attendance_taken', 'day', 'course', 'instructor')
     search_fields = ('title', 'course__name', 'instructor__user__first_name')
     date_hierarchy = 'day'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'محاضرة'
+        self.model._meta.verbose_name_plural = 'المحاضرات'
     
     fieldsets = (
         ('معلومات المحاضرة', {'fields': ('title', 'course', 'lecture_number', 'instructor')}),
@@ -304,6 +329,11 @@ class ExamAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description', 'course__name')
     date_hierarchy = 'scheduled_at'
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'امتحان'
+        self.model._meta.verbose_name_plural = 'الامتحانات'
+    
     fieldsets = (
         ('معلومات الامتحان', {'fields': ('name', 'exam_type', 'description')}),
         ('الدورة والمدرس', {'fields': ('course', 'instructor')}),
@@ -374,6 +404,11 @@ class ExamResultAdmin(admin.ModelAdmin):
     search_fields = ('exam__name', 'student__user__first_name', 'child__first_name', 'notes')
     date_hierarchy = 'entered_at'
     readonly_fields = ('percentage', 'created_at', 'updated_at')
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'نتيجة امتحان'
+        self.model._meta.verbose_name_plural = 'نتائج الامتحانات'
     
     fieldsets = (
         ('معلومات النتيجة', {'fields': ('exam', 'student', 'child')}),

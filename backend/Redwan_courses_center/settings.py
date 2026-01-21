@@ -41,7 +41,6 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["127.0.0.1", "localhos
 # Application definition
 
 INSTALLED_APPS = [
-    'simpleui',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -186,22 +185,4 @@ CHANNEL_LAYERS = {
             "hosts": [("redis", 6379)],  # in Docker
         },
     },
-}
-
-# ============================================
-# Django Simple UI Configuration
-# ============================================
-
-# تفعيل اللغة العربية
-SIMPLEUI_DEFAULT_THEME = 'admin.lte.css'
-# SIMPLEUI_LOGO = '/static/logo.png'  # Commented out to avoid 404 errors
-# SIMPLEUI_HOME_PAGE = '/admin/'  # Commented out to prevent iframe recursion
-SIMPLEUI_HOME_TITLE = 'مركز الرضوان للدورات'
-SIMPLEUI_HOME_ICON = 'fa fa-graduation-cap'
-SIMPLEUI_INDEX = ''  # Disable custom home page to prevent iframe loop
-
-# إعدادات الواجهة - عرض جميع النماذج بشكل بسيط
-SIMPLEUI_CONFIG = {
-    'system_keep': True,  # Keep default Django admin groups
-    'dynamic': True,  # Enable dynamic menu
 }

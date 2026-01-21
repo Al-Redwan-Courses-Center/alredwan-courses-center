@@ -9,6 +9,11 @@ class AttendanceDeviceAdmin(admin.ModelAdmin):
     list_filter = ('is_active',)
     search_fields = ('device_id', 'name', 'location')
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'جهاز حضور'
+        self.model._meta.verbose_name_plural = 'أجهزة الحضور'
+    
     fieldsets = (
         ('معلومات الجهاز', {'fields': ('device_id', 'name', 'location', 'is_active')}),
     )
@@ -58,6 +63,11 @@ class LectureAttendanceAdmin(admin.ModelAdmin):
     search_fields = ('lecture__title', 'student__user__first_name', 'child__first_name', 'notes')
     date_hierarchy = 'marked_at'
     readonly_fields = ('created_at', 'updated_at')
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'حضور محاضرة'
+        self.model._meta.verbose_name_plural = 'حضور المحاضرات'
     
     fieldsets = (
         ('معلومات الحضور', {'fields': ('lecture', 'student', 'child')}),
@@ -137,6 +147,11 @@ class StudentInstructorRatingAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
     readonly_fields = ('created_at', 'updated_at')
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'تقييم طالب لمدرس'
+        self.model._meta.verbose_name_plural = 'تقييمات الطلاب للمدرسين'
+    
     fieldsets = (
         ('معلومات التقييم', {'fields': ('student', 'instructor', 'course')}),
         ('التقييم', {'fields': ('rating', 'feedback')}),
@@ -198,6 +213,11 @@ class ParentInstructorRatingAdmin(admin.ModelAdmin):
     search_fields = ('parent__user__first_name', 'instructor__user__first_name', 'feedback')
     date_hierarchy = 'created_at'
     readonly_fields = ('created_at', 'updated_at')
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model._meta.verbose_name = 'تقييم ولي أمر لمدرس'
+        self.model._meta.verbose_name_plural = 'تقييمات أولياء الأمور للمدرسين'
     
     fieldsets = (
         ('معلومات التقييم', {'fields': ('parent', 'instructor', 'course')}),
