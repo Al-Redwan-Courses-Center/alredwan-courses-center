@@ -3,19 +3,19 @@
 
 import EditIcon from "@/components/icons/EditIcon";
 import InfoIcon from "@/components/icons/InfoIcon";
-import lecturesTableConfig from "@/components/lectures/lectures-table.config";
+import lecturesTableConfig from "@/components/lectures/lecture-table.config";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Table from "@/components/ui/table/Table";
 import TableBody from "@/components/ui/table/TableBody";
 import TableCell from "@/components/ui/table/TableCell";
 import TableFilter from "@/components/ui/table/TableFilter";
 import TableSearch from "@/components/ui/table/TableSearch";
+import TableSort from "@/components/ui/table/TableSort";
 import { lectures } from "@/dev-data/lectures";
 import { cn, formatTime, toHindiDigits } from "@/lib/utils";
 import { Lecture } from "@/types/entities";
 import { TablePagination } from "../ui/table/TablePagination";
 import { TableHeader, TableRow } from "../ui/table/TableRow";
-import TableSort from "@/components/ui/table/TableSort";
 
 const { sortConfig, filterConfig, statusMap } = lecturesTableConfig;
 

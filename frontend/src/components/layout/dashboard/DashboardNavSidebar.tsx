@@ -11,7 +11,7 @@ export default async function DashboardNavSidebar() {
   const { image, first_name } = await getUser();
 
   return (
-    <div className="mt-4 flex flex-col items-center gap-16 rounded-tl-4xl p-13">
+    <div className="mt-4 flex flex-col items-center gap-16 rounded-tl-4xl bg-[#EAEDEA] p-13">
       {!!image ? (
         <div className="border-olive-300 relative aspect-square h-auto w-46 overflow-clip rounded-full border-4">
           <Image

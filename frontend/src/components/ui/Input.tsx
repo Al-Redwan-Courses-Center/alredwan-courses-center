@@ -54,11 +54,7 @@ export default function Input({
   if (label)
     return (
       <fieldset
-        className={cn(
-          containerStyles,
-          "relative border-2 border-gray-950 pb-4",
-          fieldsetStyles,
-        )}
+        className={cn(containerStyles, "relative pb-4", fieldsetStyles)}
       >
         <legend className="ms-5 px-3 text-2xl font-bold">{label}</legend>
         <input

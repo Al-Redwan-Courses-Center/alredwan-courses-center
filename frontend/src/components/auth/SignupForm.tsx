@@ -416,7 +416,7 @@ export default function SignupForm() {
         */}
         <div className={cn(inputWrapperStyles)}>
           <Input
-            label="الموقع (رابط خرائط جووجل) (اختياري)"
+            label="الموقع (رابط خرائط جوجل) (اختياري)"
             placeholder="https://maps.app.goo.gl/xyzabcedfg"
             registerReturn={register("location", {
               pattern: {

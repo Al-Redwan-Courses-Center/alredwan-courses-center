@@ -7,7 +7,9 @@ export default function Layout({ children }: { children: ReactNode }) {
     <div className="grid h-screen grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
       <DashboardHeader />
       <DashboardNavSidebar />
-      {children}
+      <div className="relative bg-[linear-gradient(179deg,#FFF_0.75%,#93A494_480.3%)] px-16 pt-15">
+        {children}
+      </div>
     </div>
   );
 }

@@ -77,8 +77,10 @@ export const authConfig: AuthOptions = {
           return { ...token, error: "TokenRefreshmentError" };
         }
       }
+
       return token;
     },
+
     async session({ session, token }) {
       const {
         sub,
