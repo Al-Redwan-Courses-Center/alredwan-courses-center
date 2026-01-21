@@ -26,9 +26,17 @@ class CustomUserAdmin(UserAdmin):
     )
     
     add_fieldsets = (
-        (None, {
+        ('معلومات أساسية (مطلوبة)', {
             'classes': ('wide',),
-            'fields': ('phone_number1', 'password1', 'password2', 'first_name', 'last_name', 'dob', 'role'),
+            'fields': ('phone_number1', 'password1', 'password2', 'first_name', 'last_name', 'dob', 'gender', 'role'),
+        }),
+        ('معلومات إضافية (اختيارية)', {
+            'classes': ('wide', 'collapse'),
+            'fields': ('phone_number2', 'email', 'identity_number', 'identity_type', 'address', 'location'),
+        }),
+        ('الأذونات', {
+            'classes': ('wide', 'collapse'),
+            'fields': ('is_verified', 'is_active', 'is_staff', 'is_superuser'),
         }),
     )
 
