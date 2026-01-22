@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
-import { TableContext } from "@/components/ui/table/Table";
+import { DataViewContext } from "@/components/ui/data-view/DataView";
 import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import { cn } from "@/lib/utils";
 import { useContext } from "react";
@@ -21,12 +21,12 @@ const dropdownItemStyles = cn(
   "[direction:rtl;] flex cursor-pointer justify-between px-10 text-[1.8rem] transition-all hover:bg-gray-400",
 );
 
-export default function TableSort() {
+export default function DataViewSort() {
   const { searchParams, mutateSearchParams } = useMutateSearchParams();
   const currentSort = searchParams.get("sort-by");
   const [fieldName, direction] = currentSort?.split("-") || [];
 
-  const { sortConfig } = useContext(TableContext);
+  const { sortConfig } = useContext(DataViewContext);
   const sortOptions = Object.entries(sortConfig).map(([key, val]) => ({
     label: val.label,
     fieldName: key,

@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
+//       "https://d2pi0n2fm836iz.cloudfront.net/435672/0125202313192463d12c5c84b80.jpg",
 
 const nextConfig: NextConfig = {
-  // https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed&gender=male
   images: {
     remotePatterns: [
       {
@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
         hostname: "mockmind-api.uifaces.co",
         port: "",
         pathname: "/content/human/**",
+      },
+      {
+        protocol: "https",
+        hostname: "d2pi0n2fm836iz.cloudfront.net",
+        port: "",
+        pathname: "/435672/**",
       },
     ],
   },

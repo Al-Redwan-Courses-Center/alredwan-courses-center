@@ -4,11 +4,19 @@ import { useFilterData } from "@/hooks/useFilterData";
 import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import { useSearchData } from "@/hooks/useSearchData";
 import { useSortData } from "@/hooks/useSortData";
-import { TableFilterConfig, TableSortConfig } from "@/types/components";
-import { createContext, ReactNode } from "react";
+import { DataViewFilterConfig, DataViewSortConfig } from "@/types/components";
+import {
+  createContext,
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useState,
+} from "react";
 
-interface TableContext<T> {
+interface DataViewContext<T> {
   columnSizing: string;
+  layout: "table" | "cards";
+  setLayout: Dispatch<SetStateAction<"table" | "cards">>;
   data: any[];
   page: number;
   numPages: number;
@@ -16,12 +24,14 @@ interface TableContext<T> {
   nextPage: () => void;
   prevPage: () => void;
   setPage: (pageNum: number) => void;
-  filterConfig: TableFilterConfig;
-  sortConfig: TableSortConfig<T>;
+  filterConfig: DataViewFilterConfig;
+  sortConfig: DataViewSortConfig<T>;
 }
 
-const initialContext: TableContext<any> = {
+const initialContext: DataViewContext<any> = {
   columnSizing: "",
+  layout: "table",
+  setLayout: () => {},
   data: [],
   page: 1,
   numPages: 10,
@@ -33,22 +43,26 @@ const initialContext: TableContext<any> = {
   sortConfig: {},
 };
 
-export const TableContext = createContext<TableContext<any>>(initialContext);
+export const DataViewContext =
+  createContext<DataViewContext<any>>(initialContext);
 const MAX_ITEMS_PER_PAGE = 6;
 
-export default function Table<T extends Record<string, any>>({
+export default function DataView<T extends Record<string, any>>({
   gridLayout,
   data,
+  maxItemsPerPage = MAX_ITEMS_PER_PAGE,
   sortConfig,
   filterConfig,
   children,
 }: {
   gridLayout: string;
   data: T[];
-  sortConfig: TableSortConfig<T>;
-  filterConfig: TableFilterConfig;
+  maxItemsPerPage?: number;
+  sortConfig: DataViewSortConfig<T>;
+  filterConfig: DataViewFilterConfig;
   children: ReactNode;
 }) {
+  const [layout, setLayout] = useState<DataViewContext<T>["layout"]>("table");
   const { mutateSearchParams, searchParams } = useMutateSearchParams();
   const searchableKeys = Object.keys(data[1]);
 
@@ -56,10 +70,12 @@ export default function Table<T extends Record<string, any>>({
   const searchedData = useSearchData<T>(filteredData, searchableKeys);
   const sortedData = useSortData<T>(searchedData, sortConfig);
 
+  if (layout === "cards") maxItemsPerPage = 8;
+
   const page = +(searchParams.get("page") || "1");
-  const numPages = Math.ceil(searchedData.length / MAX_ITEMS_PER_PAGE);
-  const startIndex = (page - 1) * MAX_ITEMS_PER_PAGE;
-  const endIndex = startIndex + MAX_ITEMS_PER_PAGE;
+  const numPages = Math.ceil(searchedData.length / maxItemsPerPage);
+  const startIndex = (page - 1) * maxItemsPerPage;
+  const endIndex = startIndex + maxItemsPerPage;
 
   const nextPage = () => {
     if (page >= numPages) return;
@@ -77,12 +93,14 @@ export default function Table<T extends Record<string, any>>({
     mutateSearchParams([{ key: "page", val: pageNum }]);
   };
 
-  const value: TableContext<T> = {
+  const value: DataViewContext<T> = {
     columnSizing: gridLayout,
+    layout,
+    setLayout,
     data: sortedData.slice(startIndex, endIndex),
     page,
     numPages,
-    maxItemsPerPage: MAX_ITEMS_PER_PAGE,
+    maxItemsPerPage,
     nextPage,
     prevPage,
     setPage,
@@ -90,5 +108,5 @@ export default function Table<T extends Record<string, any>>({
     sortConfig,
   };
 
-  return <TableContext value={value}>{children}</TableContext>;
+  return <DataViewContext value={value}>{children}</DataViewContext>;
 }

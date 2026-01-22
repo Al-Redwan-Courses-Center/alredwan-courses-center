@@ -9,13 +9,13 @@ import {
   dropdownMenuContentStyles,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
-import { TableContext } from "@/components/ui/table/Table";
+import { DataViewContext } from "@/components/ui/data-view/DataView";
 import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import { cn } from "@/lib/utils";
 import { useContext } from "react";
 
-export default function TableFilter() {
-  const { filterConfig } = useContext(TableContext);
+export default function DataViewFilter() {
+  const { filterConfig } = useContext(DataViewContext);
   const { searchParams, mutateSearchParams } = useMutateSearchParams();
   const filters = searchParams.get("filter")?.split(",") || [];
 

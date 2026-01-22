@@ -1,7 +1,7 @@
 import {
   StatusMap,
-  TableFilterConfig,
-  TableSortConfig,
+  DataViewFilterConfig,
+  DataViewSortConfig,
 } from "@/types/components";
 import { Lecture } from "@/types/entities";
 
@@ -12,7 +12,7 @@ const statusWeights = {
   "not-submitted": 0,
 };
 
-const sortConfig: TableSortConfig<Lecture> = {
+const sortConfig: DataViewSortConfig<Lecture> = {
   lecture: {
     sortFn: (a: Lecture, b: Lecture) => a.title.localeCompare(b.title),
     label: headers[1],
@@ -39,7 +39,7 @@ const sortConfig: TableSortConfig<Lecture> = {
   },
 };
 
-const filterConfig: TableFilterConfig = {
+const filterConfig: DataViewFilterConfig = {
   submitted: {
     key: "status",
     label: "مسجلة",

@@ -2,7 +2,7 @@
 
 import ArrowLeft from "@/components/icons/ArrowLeft";
 import ArrowRight from "@/components/icons/ArrowRight";
-import { TableContext } from "@/components/ui/table/Table";
+import { DataViewContext } from "@/components/ui/data-view/DataView";
 import { cn, toHindiDigits } from "@/lib/utils";
 import { useContext } from "react";
 
@@ -10,9 +10,9 @@ const paginationBtnStyles = cn(
   "text-olive-400 h-auto w-10 disabled:pointer-events-none disabled:text-gray-600",
 );
 
-export function TablePagination() {
+export function DataViewPagination() {
   const { numPages, page, nextPage, prevPage, setPage } =
-    useContext(TableContext);
+    useContext(DataViewContext);
 
   if (numPages <= 0) return null;
 

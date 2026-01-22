@@ -6,7 +6,7 @@ import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import { cn, debounceFn } from "@/lib/utils";
 import { useMemo, useState } from "react";
 
-export default function TableSearch() {
+export default function DataViewSearch() {
   const { searchParams, mutateSearchParams } = useMutateSearchParams();
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get("search") || "",

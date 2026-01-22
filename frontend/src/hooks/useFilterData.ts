@@ -1,10 +1,13 @@
 "use client";
 
-import { TableFilterConfig } from "@/types/components";
+import { DataViewFilterConfig } from "@/types/components";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
-export function useFilterData<T>(data: T[], filterConfig: TableFilterConfig) {
+export function useFilterData<T>(
+  data: T[],
+  filterConfig: DataViewFilterConfig,
+) {
   const searchParams = useSearchParams();
 
   const filteredData = useMemo(() => {

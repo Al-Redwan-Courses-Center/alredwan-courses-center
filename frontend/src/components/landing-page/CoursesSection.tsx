@@ -1,4 +1,4 @@
-import CoursesList from "@/components/courses/CoursesList";
+import PublicCoursesList from "@/components/courses/PublicCoursesList";
 import Button from "@/components/ui/Button";
 
 export default function CoursesSection() {
@@ -15,7 +15,7 @@ export default function CoursesSection() {
         </p>
       </div>
 
-      <CoursesList />
+      <PublicCoursesList />
 
       <Button variant="primary" href="/courses" className="self-start">
         تصفح الدورات

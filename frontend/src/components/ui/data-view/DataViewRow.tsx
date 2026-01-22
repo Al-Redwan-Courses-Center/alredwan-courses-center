@@ -1,6 +1,6 @@
 "use client";
 
-import { TableContext } from "@/components/ui/table/Table";
+import { DataViewContext } from "@/components/ui/data-view/DataView";
 import { cn, cva } from "@/lib/utils";
 import { ReactNode, useContext } from "react";
 
@@ -19,14 +19,16 @@ const rowStyles = cva(
   },
 );
 
-export function TableRow({
+export function DataViewRow({
+  className,
   index,
   children,
 }: {
+  className?: string;
   index: number;
   children: ReactNode;
 }) {
-  const { columnSizing } = useContext(TableContext);
+  const { columnSizing } = useContext(DataViewContext);
 
   return (
     <div
@@ -41,6 +43,7 @@ export function TableRow({
                 : "alternate"
               : "header",
         }),
+        className,
       )}
     >
       {children}
@@ -48,6 +51,20 @@ export function TableRow({
   );
 }
 
-export function TableHeader({ children }: { children: ReactNode }) {
-  return <TableRow index={-1}>{children}</TableRow>;
+export function DataViewHeader({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  const { layout } = useContext(DataViewContext);
+
+  if (layout === "cards") return null;
+
+  return (
+    <DataViewRow className={className} index={-1}>
+      {children}
+    </DataViewRow>
+  );
 }

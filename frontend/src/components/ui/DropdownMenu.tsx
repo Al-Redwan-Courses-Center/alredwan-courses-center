@@ -25,7 +25,7 @@ function DropdownMenuTrigger({
   return (
     <DropdownMenuPrimitive.Trigger
       data-slot="dropdown-menu-trigger"
-      className="**:focus-within:outline-none **:focus:outline-none"
+      className="z-100 **:focus-within:outline-none **:focus:outline-none"
       {...props}
     />
   );

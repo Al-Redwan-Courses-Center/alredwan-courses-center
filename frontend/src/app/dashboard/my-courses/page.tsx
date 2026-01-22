@@ -1,5 +1,5 @@
 import { getUser } from "@/actions/auth";
-import CourseTable from "@/components/courses/CourseTable";
+import CoursesTable from "@/components/courses/CoursesTable";
 import { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -11,14 +11,16 @@ export default async function Page() {
   const { first_name } = await getUser();
 
   return (
-    <>
-      <h1 className="text-olive-700 font-medad mb-14 text-6xl">
+    <div className="flex h-full max-h-73/100 flex-col pt-15">
+      <h1 className="text-olive-700 font-medad mb-14 ps-16 text-6xl">
         السلام عليكم يا أخ {first_name}
       </h1>
 
-      <Suspense fallback={null}>
-        <CourseTable />
-      </Suspense>
-    </>
+      <div className="max-h-full w-full">
+        <Suspense fallback={null}>
+          <CoursesTable />
+        </Suspense>
+      </div>
+    </div>
   );
 }

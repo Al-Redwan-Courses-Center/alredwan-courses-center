@@ -1,10 +1,10 @@
 "use client";
 
-import { TableSortConfig } from "@/types/components";
+import { DataViewSortConfig } from "@/types/components";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
-export function useSortData<T>(data: T[], sortConfig: TableSortConfig<T>) {
+export function useSortData<T>(data: T[], sortConfig: DataViewSortConfig<T>) {
   const searchParams = useSearchParams();
   const sortBy = searchParams.get("sort-by");
 

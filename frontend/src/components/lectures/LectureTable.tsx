@@ -5,23 +5,23 @@ import EditIcon from "@/components/icons/EditIcon";
 import InfoIcon from "@/components/icons/InfoIcon";
 import lecturesTableConfig from "@/components/lectures/lecture-table.config";
 import StatusBadge from "@/components/ui/StatusBadge";
-import Table from "@/components/ui/table/Table";
-import TableBody from "@/components/ui/table/TableBody";
-import TableCell from "@/components/ui/table/TableCell";
-import TableFilter from "@/components/ui/table/TableFilter";
-import TableSearch from "@/components/ui/table/TableSearch";
-import TableSort from "@/components/ui/table/TableSort";
+import DataView from "@/components/ui/data-view/DataView";
+import DataViewBody from "@/components/ui/data-view/DataViewBody";
+import DataViewCell from "@/components/ui/data-view/DataViewCell";
+import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
+import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
+import DataViewSort from "@/components/ui/data-view/DataViewSort";
 import { lectures } from "@/dev-data/lectures";
 import { cn, formatTime, toHindiDigits } from "@/lib/utils";
 import { Lecture } from "@/types/entities";
-import { TablePagination } from "../ui/table/TablePagination";
-import { TableHeader, TableRow } from "../ui/table/TableRow";
+import { DataViewPagination } from "../ui/data-view/DataViewPagination";
+import { DataViewHeader, DataViewRow } from "../ui/data-view/DataViewRow";
 
 const { sortConfig, filterConfig, statusMap } = lecturesTableConfig;
 
 export default function LecturesTable() {
   return (
-    <Table
+    <DataView
       data={lectures}
       sortConfig={sortConfig}
       filterConfig={filterConfig}
@@ -30,58 +30,62 @@ export default function LecturesTable() {
       )}
     >
       <div className="relative z-100 mb-14 flex items-center gap-32">
-        <TableSearch />
-        <TableSort />
-        <TableFilter />
+        <DataViewSearch />
+        <DataViewSort />
+        <DataViewFilter />
       </div>
 
-      <TableHeader>
-        <TableCell>م</TableCell>
-        <TableCell>المحاضرة</TableCell>
-        <TableCell>الدورة</TableCell>
-        <TableCell>البداية</TableCell>
-        <TableCell>النهاية</TableCell>
-        <TableCell>الحالة</TableCell>
-        <TableCell></TableCell>
-      </TableHeader>
+      <DataViewHeader>
+        <DataViewCell>م</DataViewCell>
+        <DataViewCell>المحاضرة</DataViewCell>
+        <DataViewCell>الدورة</DataViewCell>
+        <DataViewCell>البداية</DataViewCell>
+        <DataViewCell>النهاية</DataViewCell>
+        <DataViewCell>الحالة</DataViewCell>
+        <DataViewCell></DataViewCell>
+      </DataViewHeader>
 
-      <TableBody
-        render={(lecture: Lecture, i: number) => {
-          const { label, color } = statusMap[lecture.status];
+      <DataViewBody
+        render={{
+          table: (lecture: Lecture, i: number) => {
+            const { label, color } = statusMap[lecture.status];
 
-          return (
-            <TableRow key={lecture.id} index={i}>
-              <TableCell className="font-bold">
-                {toHindiDigits(lecture.id)}
-              </TableCell>
-              <TableCell>{lecture.title}</TableCell>
-              <TableCell>{lecture.courseName}</TableCell>
-              <TableCell className="font-bold">
-                {formatTime(lecture.startTime)}
-              </TableCell>
-              <TableCell className="font-bold">
-                {formatTime(lecture.endTime)}
-              </TableCell>
-              <TableCell>
-                <StatusBadge color={color}>{label}</StatusBadge>
-              </TableCell>
-              <TableCell>
-                <div className="[&>button]:text-olive-300 [&>button]:hover:text-olive-700 flex items-center justify-center gap-6 [&>button]:transition-colors">
-                  <button>
-                    <EditIcon />
-                  </button>
+            return (
+              <DataViewRow key={lecture.id} index={i}>
+                <DataViewCell className="font-bold">
+                  {toHindiDigits(lecture.id)}
+                </DataViewCell>
+                <DataViewCell>{lecture.title}</DataViewCell>
+                <DataViewCell>{lecture.courseName}</DataViewCell>
+                <DataViewCell className="font-bold">
+                  {formatTime(lecture.startTime)}
+                </DataViewCell>
+                <DataViewCell className="font-bold">
+                  {formatTime(lecture.endTime)}
+                </DataViewCell>
+                <DataViewCell>
+                  <StatusBadge color={color}>{label}</StatusBadge>
+                </DataViewCell>
+                <DataViewCell>
+                  <div className="[&>button]:text-olive-300 [&>button]:hover:text-olive-700 flex items-center justify-center gap-6 [&>button]:transition-colors">
+                    <button>
+                      <EditIcon />
+                    </button>
 
-                  <button>
-                    <InfoIcon />
-                  </button>
-                </div>
-              </TableCell>
-            </TableRow>
-          );
+                    <button>
+                      <InfoIcon />
+                    </button>
+                  </div>
+                </DataViewCell>
+              </DataViewRow>
+            );
+          },
+
+          cards: () => null,
         }}
       />
 
-      <TablePagination />
-    </Table>
+      <DataViewPagination />
+    </DataView>
   );
 }

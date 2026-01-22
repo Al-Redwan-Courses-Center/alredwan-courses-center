@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 
-export default function TableCell({
+export default function DataViewCell({
   className = "",
   children = null,
 }: {
