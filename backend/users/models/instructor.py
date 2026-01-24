@@ -71,16 +71,6 @@ class Instructor(models.Model):
         verbose_name_plural = _("المعلمون")
 
 
-class Weekday(models.IntegerChoices):
-    SATURDAY = 0, _("Saturday")
-    SUNDAY = 1, _("Sunday")
-    MONDAY = 2, _("Monday")
-    TUESDAY = 3, _("Tuesday")
-    WEDNESDAY = 4, _("Wednesday")
-    THURSDAY = 5, _("Thursday")
-    FRIDAY = 6, _("Friday")
-
-
 '''
     @classmethod
     def generate_for_season(cls, season):

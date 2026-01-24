@@ -21,6 +21,7 @@ class SeasonChoices(models.TextChoices):
     SCHOOL = 'school',      _('School')
     RAMADAN = 'ramadan',     _('Ramadan')
     EID = 'eid',         _('Eid')
+    MID_YEAR = 'mid_year',    _('Mid-year camp')
     OTHER = 'other',       _('Other')
 
 
