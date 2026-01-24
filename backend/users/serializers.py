@@ -3,6 +3,8 @@
 Custom serializers for user registration and management.
 These serializers ensure security by controlling which fields can be set via API.
 """
+import phonenumbers
+from django.utils.translation import gettext_lazy as _
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 from .models import CustomUser
@@ -11,12 +13,12 @@ from .models import CustomUser
 class CustomUserCreateSerializer(UserCreateSerializer):
     """
     Serializer for user registration.
-    
+
     Security: Only allows safe fields to be set during registration.
     Dangerous fields (is_staff, is_superuser, is_active, role) are excluded
     to prevent privilege escalation attacks.
     """
-    
+
     class Meta(UserCreateSerializer.Meta):
         model = CustomUser
         fields = (
@@ -37,23 +39,27 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         )
         # These fields cannot be set by the user during registration
         read_only_fields = ('id',)
-    
+
     def validate_phone_number1(self, value):
-        """Ensure phone number is in E.164 format."""
-        if not value.startswith('+20') or not value[1:].isdigit():
-            raise serializers.ValidationError(
-                "Phone number must be in E.164 format (e.g., +201234567890)"
-            )
-        return value
+        """
+        Validate and normalize a phone number to E.164 international format.
+        """
+        try:
+            parsed = phonenumbers.parse(value, None)
+            if not phonenumbers.is_valid_number(parsed):
+                raise serializers.ValidationError(_("Invalid phone number"))
+            return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+        except phonenumbers.NumberParseException:
+            raise serializers.ValidationError(_("Invalid phone number format"))
 
 
 class CustomUserSerializer(UserSerializer):
     """
     Serializer for retrieving and updating user profile.
-    
+
     Security: Prevents users from modifying sensitive fields.
     """
-    
+
     class Meta(UserSerializer.Meta):
         model = CustomUser
         fields = (
