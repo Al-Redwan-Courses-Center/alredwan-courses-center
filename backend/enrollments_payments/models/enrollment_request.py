@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -144,37 +144,42 @@ class EnrollmentRequest(models.Model):
 
     # link paid amount enrollment request price
     def approve(self, processed_by_user, paid_amount=None, payment_method=None, payment_notes=None):
-        """Approve the enrollment request and create an Enrollment."""
+        """Approve the enrollment request and create an Enrollment.
+
+        This method is atomic - if payment creation fails, the enrollment
+        creation will be rolled back.
+        """
         if self.status != EnrollmentRequestStatus.PENDING:
             raise ValidationError("Only pending requests may be approved.")
 
         from .enrollment import Enrollment, EnrollmentStatus
 
-        enrollment = Enrollment.objects.create(
-            course=self.course,
-            student=self.student,
-            child=self.child,
-            enrolled_at=timezone.now(),
-            status=EnrollmentStatus.ACTIVE,
-            created_by=processed_by_user
-        )
-        if paid_amount:
-            from .payment import Payment
-            Payment.objects.create(
-                enrollment=enrollment,
-                payer_parent=self.parent if self.parent else None,
-                payer_student=self.student if self.student else None,
-                amount=paid_amount,
-                method=payment_method if payment_method else "cash",
-                status="paid",
-                processed_by=processed_by_user,
-                processed_at=timezone.now(),
-                notes=payment_notes
+        with transaction.atomic():
+            enrollment = Enrollment.objects.create(
+                course=self.course,
+                student=self.student,
+                child=self.child,
+                enrolled_at=timezone.now(),
+                status=EnrollmentStatus.ACTIVE,
+                created_by=processed_by_user
             )
-        self.status = EnrollmentRequestStatus.ACCEPTED
-        self.processed_by = processed_by_user
-        self.processed_at = timezone.now()
-        self.save(update_fields=["status", "processed_by", "processed_at"])
+            if paid_amount:
+                from .payment import Payment
+                Payment.objects.create(
+                    enrollment=enrollment,
+                    payer_parent=self.parent if self.parent else None,
+                    payer_student=self.student if self.student else None,
+                    amount=paid_amount,
+                    method=payment_method if payment_method else "cash",
+                    status="paid",
+                    processed_by=processed_by_user,
+                    processed_at=timezone.now(),
+                    notes=payment_notes
+                )
+            self.status = EnrollmentRequestStatus.ACCEPTED
+            self.processed_by = processed_by_user
+            self.processed_at = timezone.now()
+            self.save(update_fields=["status", "processed_by", "processed_at"])
 
         return enrollment
 

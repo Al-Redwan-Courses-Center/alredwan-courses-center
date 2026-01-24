@@ -8,6 +8,7 @@ from django.db.models import Q, F
 class EnrollmentStatus(models.TextChoices):
     """Enumeration for enrollment status choices."""
     ACTIVE = 'active', 'Active'  # Current enrollment in progress
+    SUSPENDED = 'suspended', 'Suspended'  # Enrollment temporarily paused
     COMPLETED = 'completed', 'Completed'  # Enrollment finished successfully
     DROPPED = 'dropped', 'Dropped'  # Enrollment cancelled or dropped
     REFUNDED = 'refunded', 'Refunded'  # Enrollment refunded
@@ -33,6 +34,8 @@ class Enrollment(models.Model):
                                    on_delete=models.SET_NULL, related_name="created_enrollments")
 
     updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    dropped_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         """Meta class for Enrollment model."""
@@ -90,14 +93,13 @@ class Enrollment(models.Model):
         """
         if self.status == EnrollmentStatus.REFUNDED:
             return
-        self.status = EnrollmentStatus.REFUNDED
-        self.save(update_fields=["status", "updated_at"])
+        self.update_status(EnrollmentStatus.REFUNDED)
 
     def update_status(self, new_status):
         """Update enrollment status with timestamp management."""
         valid_transitions = {
-            EnrollmentStatus.ACTIVE: [EnrollmentStatus.COMPLETED, EnrollmentStatus.DROPPED, EnrollmentStatus.SUSPENDED],
-            EnrollmentStatus.SUSPENDED: [EnrollmentStatus.ACTIVE, EnrollmentStatus.DROPPED],
+            EnrollmentStatus.ACTIVE: [EnrollmentStatus.COMPLETED, EnrollmentStatus.DROPPED, EnrollmentStatus.SUSPENDED, EnrollmentStatus.REFUNDED],
+            EnrollmentStatus.SUSPENDED: [EnrollmentStatus.ACTIVE, EnrollmentStatus.DROPPED, EnrollmentStatus.REFUNDED],
             EnrollmentStatus.COMPLETED: [],
             EnrollmentStatus.DROPPED: [],
             EnrollmentStatus.REFUNDED: [],
