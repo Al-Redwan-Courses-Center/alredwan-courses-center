@@ -6,9 +6,8 @@ from django.db import transaction
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone
-from django.conf import settings
 
-from .models import CourseSchedule, Course, Lecture, Weekday
+from .models import CourseSchedule, Course, Lecture
 
 
 def _system_weekday_to_python(system_weekday: int) -> int:
@@ -188,4 +187,3 @@ def create_lecture_attendance_on_lecture_create(sender, instance, created, **kwa
                     student=enrollment.student
                 )
  """
-
