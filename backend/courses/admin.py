@@ -6,7 +6,7 @@ from django.db.models import Count, Avg, Q, F
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta
-from .models import Season, Tag, Course, CourseSchedule, Lecture, Exam, ExamResult
+from .models import Season, Tag, Course, CourseSchedule, Lecture, Exam, ExamResult, LandingPageCourse, LandingPageInstructor
 
 
 # =============================================================================
@@ -323,6 +323,219 @@ class ExamResultInline(admin.TabularInline):
 # =============================================================================
 # Model Admin Classes
 # =============================================================================
+
+@admin.register(LandingPageCourse)
+class LandingPageCourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+    """Admin configuration for Landing Page Featured Courses."""
+
+    select_related_fields = ['course', 'course__instructor', 'course__instructor__user', 'course__season']
+
+    list_display = (
+        'get_order_badge', 'get_course_link', 'get_instructor_name',
+        'get_season', 'get_price_display', 'get_enrollment_status', 'created_at'
+    )
+    list_filter = ('course__season', 'course__instructor', 'course__is_active')
+    search_fields = ('course__name', 'course__instructor__user__first_name', 'course__instructor__user__last_name')
+    autocomplete_fields = ['course']
+    list_per_page = 25
+    ordering = ('-order', '-created_at')
+    list_editable = ('order',) if False else ()  # Can enable for quick reordering
+
+    fieldsets = (
+        (_('كورس الصفحة الرئيسية'), {
+            'fields': ('course', 'order'),
+            'description': _('اختر الكورس وحدد ترتيب ظهوره (الأرقام الأعلى تظهر أولاً)')
+        }),
+    )
+
+    @admin.display(description=_('الترتيب'), ordering='order')
+    def get_order_badge(self, obj):
+        """Display order as a prominent badge."""
+        return format_html(
+            '<span style="background: #3498db; color: white; padding: 5px 12px; '
+            'border-radius: 15px; font-size: 1.1em; font-weight: bold;">{}</span>',
+            obj.order
+        )
+
+    @admin.display(description=_('الكورس'), ordering='course__name')
+    def get_course_link(self, obj):
+        """Display course as a clickable link with icon."""
+        if obj.course:
+            url = reverse('admin:courses_course_change', args=[obj.course.pk])
+            status_icon = '🟢' if obj.course.is_active else '🔴'
+            return format_html(
+                '<a href="{}" style="color: #2980b9; text-decoration: none;">'
+                '{} <strong>{}</strong></a>',
+                url, status_icon, obj.course.name
+            )
+        return '-'
+
+    @admin.display(description=_('المعلم'))
+    def get_instructor_name(self, obj):
+        """Display instructor name."""
+        if obj.course and obj.course.instructor:
+            return format_html('👨‍🏫 {}', obj.course.instructor.user.get_full_name())
+        return '-'
+
+    @admin.display(description=_('الموسم'))
+    def get_season(self, obj):
+        """Display season name."""
+        if obj.course and obj.course.season:
+            return obj.course.season.name
+        return '-'
+
+    @admin.display(description=_('السعر'), ordering='course__price')
+    def get_price_display(self, obj):
+        """Display price with currency."""
+        if obj.course and obj.course.price:
+            return format_html(
+                '<span style="color: #27ae60; font-weight: bold;">{} ج.م</span>',
+                obj.course.price
+            )
+        return format_html('<span style="color: #27ae60;">مجاني</span>')
+
+    @admin.display(description=_('حالة التسجيل'))
+    def get_enrollment_status(self, obj):
+        """Display enrollment status with capacity bar."""
+        if obj.course:
+            course = obj.course
+            enrolled = course.enrolled_count
+            capacity = course.capacity
+            
+            if capacity and capacity > 0:
+                percentage = min((enrolled / capacity) * 100, 100)
+                
+                if percentage >= 100:
+                    color = '#e74c3c'
+                    status = 'ممتلئ'
+                elif percentage >= 80:
+                    color = '#f39c12'
+                    status = 'شبه ممتلئ'
+                else:
+                    color = '#27ae60'
+                    status = 'متاح'
+                
+                return format_html(
+                    '<div style="width: 80px; background: #ecf0f1; border-radius: 4px; '
+                    'overflow: hidden;" title="{}">'
+                    '<div style="width: {}%; background: {}; padding: 2px 0; '
+                    'text-align: center; color: white; font-size: 0.75em; font-weight: bold;">'
+                    '{}/{}</div></div>',
+                    status, percentage, color, enrolled, capacity
+                )
+        return '-'
+
+    def get_queryset(self, request):
+        """Optimize queryset with related objects."""
+        qs = super().get_queryset(request)
+        return qs.select_related(
+            'course', 'course__instructor', 'course__instructor__user', 'course__season'
+        )
+
+
+@admin.register(LandingPageInstructor)
+class LandingPageInstructorAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+    """Admin configuration for Landing Page Featured Instructors."""
+
+    select_related_fields = ['instructor', 'instructor__user']
+
+    list_display = (
+        'get_order_badge', 'get_instructor_link', 'get_instructor_type',
+        'get_courses_count', 'get_bio_preview', 'created_at'
+    )
+    list_filter = ('instructor__type',)
+    search_fields = (
+        'instructor__user__first_name', 'instructor__user__last_name',
+        'instructor__user__email', 'instructor__bio'
+    )
+    autocomplete_fields = ['instructor']
+    list_per_page = 25
+    ordering = ('-order', '-created_at')
+
+    fieldsets = (
+        (_('معلم الصفحة الرئيسية'), {
+            'fields': ('instructor', 'order'),
+            'description': _('اختر المعلم وحدد ترتيب ظهوره (الأرقام الأعلى تظهر أولاً)')
+        }),
+    )
+
+    @admin.display(description=_('الترتيب'), ordering='order')
+    def get_order_badge(self, obj):
+        """Display order as a prominent badge."""
+        return format_html(
+            '<span style="background: #9b59b6; color: white; padding: 5px 12px; '
+            'border-radius: 15px; font-size: 1.1em; font-weight: bold;">{}</span>',
+            obj.order
+        )
+
+    @admin.display(description=_('المعلم'), ordering='instructor__user__first_name')
+    def get_instructor_link(self, obj):
+        """Display instructor as a clickable link with avatar icon."""
+        if obj.instructor:
+            url = reverse('admin:users_instructor_change', args=[obj.instructor.pk])
+            full_name = obj.instructor.user.get_full_name()
+            return format_html(
+                '<a href="{}" style="color: #2980b9; text-decoration: none;">'
+                '👨‍🏫 <strong>{}</strong></a>',
+                url, full_name
+            )
+        return '-'
+
+    @admin.display(description=_('النوع'), ordering='instructor__type')
+    def get_instructor_type(self, obj):
+        """Display instructor type as a badge."""
+        if obj.instructor:
+            type_config = {
+                'supervisor': ('🔵', '#3498db', obj.instructor.get_type_display()),
+                'normal': ('🟢', '#27ae60', obj.instructor.get_type_display()),
+            }
+            
+            icon, color, label = type_config.get(
+                obj.instructor.type, ('⚪', '#95a5a6', obj.instructor.get_type_display())
+            )
+            
+            return format_html(
+                '<span style="background: {}; color: white; padding: 2px 8px; '
+                'border-radius: 10px; font-size: 0.85em;">{} {}</span>',
+                color, icon, label
+            )
+        return '-'
+
+    @admin.display(description=_('عدد الكورسات'))
+    def get_courses_count(self, obj):
+        """Display number of courses taught by this instructor."""
+        if obj.instructor:
+            count = getattr(obj.instructor, 'courses_count', obj.instructor.courses.filter(is_active=True).count())
+            if count > 0:
+                return format_html(
+                    '<span style="background: #3498db; color: white; padding: 2px 8px; '
+                    'border-radius: 10px;">{}</span>',
+                    count
+                )
+            return format_html('<span style="color: #95a5a6;">0</span>')
+        return '-'
+
+    @admin.display(description=_('نبذة'))
+    def get_bio_preview(self, obj):
+        """Display a preview of instructor bio."""
+        if obj.instructor and obj.instructor.bio:
+            bio = obj.instructor.bio
+            preview = bio[:50] + '...' if len(bio) > 50 else bio
+            return format_html(
+                '<span style="color: #7f8c8d; font-size: 0.9em;" title="{}">{}</span>',
+                bio, preview
+            )
+        return format_html('<span style="color: #bdc3c7;">لا توجد نبذة</span>')
+
+    def get_queryset(self, request):
+        """Optimize queryset and annotate with courses count."""
+        qs = super().get_queryset(request)
+        qs = qs.annotate(
+            courses_count=Count('instructor__courses', filter=Q(instructor__courses__is_active=True))
+        )
+        return qs
+
+
 @admin.register(Season)
 class SeasonAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
     """Admin configuration for Season model."""
