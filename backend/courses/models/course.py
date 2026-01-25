@@ -172,20 +172,55 @@ class Course(models.Model):
         return (system_weekday + 5) % 7
 
     def is_participant_eligible(self, participant) -> bool:
-        """Check if a participant (StudentUser or Child) is eligible for this course."""
+        """Check if a participant (StudentUser or Child) is eligible for this course.
+        
+        Args:
+            participant: Either a StudentUser or Child instance
+            
+        Returns:
+            bool: True if participant is eligible, False otherwise
+        """
         if not participant:
             return False
 
-        age = participant.user.get_age_on_date(self.start_date)
-        if age is None:
-            return False
-        if self.for_adults and age < 15:
-            return False
-        if not self.for_adults and age > 15:
-            return False
-        if participant.user and participant.user.role != "student":
-            return False
-        return True
+        # Check if participant is a Child (has no .user attribute)
+        # or a StudentUser (has .user attribute)
+        from parents.models import Child
+        
+        if isinstance(participant, Child):
+            # Child has get_age_on_date directly
+            age = participant.get_age_on_date(self.start_date)
+            if age is None:
+                return False
+            # Children are typically not adults
+            if self.for_adults:
+                return False
+            # Check age bounds if specified
+            if self.min_age and age < self.min_age:
+                return False
+            if self.max_age and age > self.max_age:
+                return False
+            return True
+        else:
+            # StudentUser - has .user attribute
+            if not hasattr(participant, 'user') or not participant.user:
+                return False
+            age = participant.user.get_age_on_date(self.start_date)
+            if age is None:
+                return False
+            # Check for_adults constraint
+            if self.for_adults and age < 15:
+                return False
+            if not self.for_adults and age > 15:
+                return False
+            # Check age bounds if specified
+            if self.min_age and age < self.min_age:
+                return False
+            if self.max_age and age > self.max_age:
+                return False
+            if participant.user.role != "student":
+                return False
+            return True
 
     def generate_lectures(self):
         ''' Generate lectures based on course schedules

@@ -115,19 +115,29 @@ class EnrollmentRequest(models.Model):
 
     def clean(self):
         '''Custom validation logic for EnrollmentRequest model.'''
+        # Auto-set parent from child's primary_parent if child is provided without parent
+        if self.child and not self.parent:
+            self.parent = self.child.primary_parent
+        
+        # Clear parent/child if student is selected (mutual exclusivity)
+        if self.student:
+            self.parent = None
+            self.child = None
+        
         # Parent + child OR student only
         if not ((self.parent and self.child and not self.student) or
                 (self.student and not self.parent and not self.child)):
             raise ValidationError(
-                "Select either a parent+child OR a student alone.")
+                _("اختر إما (طفل) أو (طالب) فقط. / Select either a child OR a student alone."))
 
         if self.parent and self.child:
             if not (self.child.primary_parent_id == self.parent.id or self.child.extra_parents.filter(parent=self.parent).exists()):
                 raise ValidationError(
-                    "The provided parent is not linked to the chosen child.")
+                    _("ولي الأمر المحدد غير مرتبط بالطفل المختار. / The provided parent is not linked to the chosen child."))
+        
         # expires_at must be future if provided
         if self.expires_at and self.expires_at <= timezone.now():
-            raise ValidationError("Expiration time must be in the future.")
+            raise ValidationError(_("تاريخ الانتهاء يجب أن يكون في المستقبل. / Expiration time must be in the future."))
 
     def save(self, *args, **kwargs):
         '''Override save to set default values and validate.'''  # a payer may make a partial payment, yet be accepted in a course.
@@ -151,8 +161,8 @@ class EnrollmentRequest(models.Model):
         This method is atomic - if payment creation fails, the enrollment
         creation will be rolled back.
         """
-        if self.status != EnrollmentRequestStatus.PENDING:
-            raise ValidationError("Only pending requests may be approved.")
+        if self.status != EnrollmentRequestStatus.PENDING and self.status != EnrollmentRequestStatus.PROCESSING:
+            raise ValidationError("Only pending or processing requests may be approved.")
 
         from .enrollment import Enrollment, EnrollmentStatus
 
@@ -187,16 +197,16 @@ class EnrollmentRequest(models.Model):
 
     def reject(self, processed_by_user, reason=None):
         """Reject the enrollment request."""
-        if self.status != EnrollmentRequestStatus.PENDING:
-            raise ValidationError("Only pending requests may be rejected.")
+        if self.status not in [EnrollmentRequestStatus.PENDING, EnrollmentRequestStatus.PROCESSING]:
+            raise ValidationError(_("يمكن رفض الطلبات المعلقة أو قيد المعالجة فقط. / Only pending or processing requests may be rejected."))
 
         self.status = EnrollmentRequestStatus.REJECTED
         self.processed_by = processed_by_user
         self.processed_at = timezone.now()
         if reason:
-            self.note = (self.note or "") + f"\n[REJECTION REASON] {reason}"
+            self.notes = (self.notes or "") + f"\n[سبب الرفض] {reason}"
         self.save(update_fields=[
-                  "status", "processed_by", "processed_at", "note"])
+                  "status", "processed_by", "processed_at", "notes"])
 
     def __str__(self):
         participant = self.student or self.child or 'Unknown'
