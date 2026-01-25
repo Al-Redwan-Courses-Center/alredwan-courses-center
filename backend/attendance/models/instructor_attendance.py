@@ -17,17 +17,16 @@ class SupervisorSchedule(models.Model):
         related_name="attendance_supervisor_schedules",
         verbose_name=_("المعلم/المشرف")
     )
-    day_of_week = models.PositiveSmallIntegerField(choices=Weekday.choices)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    day_of_week = models.PositiveSmallIntegerField(choices=Weekday.choices, verbose_name=_("يوم الأسبوع"))
+    start_time = models.TimeField(verbose_name=_("وقت البدء"))
+    end_time = models.TimeField(verbose_name=_("وقت الانتهاء"))
 
-    grace_period_minutes = models.PositiveIntegerField(default=20)
-    auto_absent_after_minutes = models.PositiveIntegerField(default=60)
-
+    grace_period_minutes = models.PositiveIntegerField(default=20, verbose_name=_("دقائق فترة السماح"))
+    auto_absent_after_minutes = models.PositiveIntegerField(default=60, verbose_name=_("دقائق الغياب التلقائي"))
     class Meta:
         unique_together = ("instructor", "day_of_week")
-        verbose_name = "instructor Schedule"
-        verbose_name_plural = "instructor Schedules"
+        verbose_name = "سجل حضور مدرس/مشرف"
+        verbose_name_plural = "سجلات حضور المدرسين/المشرفين"
 
     def clean(self):
         """Ensure that end_time is after start_time."""
@@ -41,12 +40,11 @@ class SupervisorSchedule(models.Model):
 
 
 class AttendanceStatus(models.TextChoices):
-    PENDING = "pending", _("Pending")
-    PRESENT = "present", _("Present")
-    ABSENT = "absent", _("Absent")
-    LATE = "late", _("Late")
-    NOT_STARTED = 'not_started', _('Not Started')
-
+    PENDING = "pending", _("منتظر")
+    PRESENT = "present", _("حاضر")
+    ABSENT = "absent", _("غائب")
+    LATE = "late", _("متأخر")
+    NOT_STARTED = 'not_started', _('لم يبدأ')
 
 class InstructorAttendance(models.Model):
     """Track attendance and rating of instructors (check-in/check-out)."""
@@ -55,18 +53,19 @@ class InstructorAttendance(models.Model):
         Instructor, on_delete=models.CASCADE, related_name="attendance_records",
         verbose_name=_("المعلم/المشرف")
     )
-    date = models.DateField(default=timezone.localdate)
-    check_in_time = models.DateTimeField(null=True, blank=True)
-    check_out_time = models.DateTimeField(null=True, blank=True)
+    date = models.DateField(default=timezone.localdate, verbose_name=_("التاريخ"))
+    check_in_time = models.DateTimeField(null=True, blank=True, verbose_name=_("وقت تسجيل الدخول"))
+    check_out_time = models.DateTimeField(null=True, blank=True, verbose_name=_("وقت تسجيل الخروج"))
 
     check_in_method = models.CharField(
-        max_length=20, null=True, blank=True
+        max_length=20, null=True, blank=True, verbose_name=_("طريقة تسجيل الدخول")
     )  # fingerprint, RFID, admin
 
     status = models.CharField(
         max_length=20,
         choices=AttendanceStatus.choices,
-        default=AttendanceStatus.NOT_STARTED
+        default=AttendanceStatus.NOT_STARTED,
+        verbose_name=_("الحالة")
     )
     schedule = models.ForeignKey(
         SupervisorSchedule,
@@ -182,14 +181,26 @@ class InstructorAttendance(models.Model):
         self.save()
 
     @classmethod
-    def generate_for_date_range(cls, start_date, end_date):
+    def generate_for_date_range(cls, start_date, end_date, season=None):
         """
         Generate attendance records for:
         - Supervisors based on their weekly schedules
         - Instructors assigned to lectures within the date range
+        
+        Args:
+            start_date: Start date for the range
+            end_date: End date for the range
+            season: Optional Season instance. If not provided, uses the active season.
         """
         from datetime import timedelta
-        from courses.models import Lecture
+        from courses.models import Lecture, Season as SeasonModel
+
+        # Get the active season if not provided
+        if season is None:
+            season = SeasonModel.objects.filter(is_active=True).first()
+            if season is None:
+                # No active season found, cannot create attendance records
+                return 0
 
         created_count = 0
         current_date = start_date
@@ -204,20 +215,22 @@ class InstructorAttendance(models.Model):
                     date=current_date,
                     defaults={
                         "schedule": schedule,
-                        "status": AttendanceStatus.NOT_STARTED
+                        "status": AttendanceStatus.NOT_STARTED,
+                        "season": season
                     }
                 )
                 if created:
                     created_count += 1
 
             # Normal instructors: Assign based on lectures that date
-            for lecture in Lecture.objects.filter(start_time__date=current_date):
+            for lecture in Lecture.objects.filter(day=current_date):
                 obj, created = cls.objects.get_or_create(
                     instructor=lecture.instructor,
                     date=current_date,
                     defaults={
                         "lecture": lecture,
-                        "status": AttendanceStatus.NOT_STARTED
+                        "status": AttendanceStatus.NOT_STARTED,
+                        "season": season
                     }
                 )
                 if created:
