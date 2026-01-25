@@ -71,7 +71,7 @@ class EnrollmentRequest(models.Model):
 
     class Meta:
         verbose_name = 'طلب إلتحاق'
-        verbose_name_plural = 'طلبات الإلنحاق'
+        verbose_name_plural = 'طلبات الإلتحاق'
 
         indexes = [
             models.Index(fields=["course"], name="er_course_idx"),

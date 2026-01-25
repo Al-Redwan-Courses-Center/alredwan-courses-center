@@ -64,7 +64,12 @@ class Instructor(models.Model):
         default=InstructorType.NORMAL,
         verbose_name=_("نوع المعلم"),
     )
-
+    tags = models.ManyToManyField(
+        "courses.Tag",
+        related_name="instructors",
+        blank=True,
+        verbose_name=_("الفئات"),
+    )
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.get_type_display()})"
 
