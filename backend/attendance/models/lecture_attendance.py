@@ -20,16 +20,19 @@ class LectureAttendance(models.Model):
     present = models.BooleanField(null=True, default=None)
     # rating required at submit time (1.00 - 10.00). We enforce rating presence at API level,
     # and add a DB-level check that rating is present if present is not null.
-    rating = models.DecimalField(max_digits=4, decimal_places=2, null=True, default=None,
-                                 validators=[
-                                     MinValueValidator(1.00),
-                                     MaxValueValidator(10.00),
-                                 ])
+    rating = models.PositiveSmallIntegerField(
+        verbose_name="التقييم",
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        null=True,
+        blank=True,
+        default=5
+    )
     notes = models.TextField(null=True, blank=True)
     marked_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
                                   null=True, blank=True, related_name='marked_lecture_attendances')
     marked_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

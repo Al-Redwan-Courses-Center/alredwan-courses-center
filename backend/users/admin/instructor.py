@@ -9,7 +9,7 @@ class InstructorAdmin(admin.ModelAdmin):
     list_filter = ('type', 'joined_date')
     search_fields = ('user__first_name', 'user__last_name',
                      'user__phone_number1')
-
+    list_select_related = ('user',)
     fieldsets = (
         ('معلومات المدرس', {
          'fields': ('user', 'type', 'bio', 'monthly_salary')}),

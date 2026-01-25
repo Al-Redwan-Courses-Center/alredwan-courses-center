@@ -81,13 +81,15 @@ class CustomUser(AbstractUser):
     first_name = models.CharField(max_length=128)  # 1st and 2nd names
     last_name = models.CharField(max_length=128)  # 3rd and 4th names
 
-    date_joined = models.DateTimeField(default=timezone.now)
+    date_joined = models.DateTimeField(
+        default=timezone.now, verbose_name=_("تاريخ الانضمام"))
     dob = models.DateField(_("date of birth"))
 
     # Phone and admin verification status
-    is_verified = models.BooleanField(default=False)
+    is_verified = models.BooleanField(
+        default=False, verbose_name=_("تم التحقق"))
     identity_number = models.CharField(
-        _("Government ID / Passport"), max_length=30, null=True, unique=True)
+        _("Government ID / Passport"), max_length=30, null=True, blank=True, unique=True)
     identity_type = models.CharField(
         max_length=20,
         choices=[("nid", "بطاقة وطنية"),
@@ -98,6 +100,7 @@ class CustomUser(AbstractUser):
     gender = models.CharField(
         max_length=10,
         choices=[("male", "ذكر"), ("female", "أنثى")],
+        verbose_name=_("النوع")
     )
 
     address = models.TextField(null=True, blank=True)
@@ -112,6 +115,7 @@ class CustomUser(AbstractUser):
             ("admin", "مدير"),
         ],
         default="student",
+        verbose_name=_("الدور")
     )
 
     # Authentication settings
@@ -130,6 +134,12 @@ class CustomUser(AbstractUser):
             raise ValidationError(
                 _("Primary and alternative phone numbers must be different.")
             )
+
+    def save(self, *args, **kwargs):
+        """Convert empty identity_number to None to maintain unique constraint."""
+        if self.identity_number == '':
+            self.identity_number = None
+        super().save(*args, **kwargs)
 
     class Meta:
         indexes = [

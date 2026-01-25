@@ -19,7 +19,7 @@ class Enrollment(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     course = models.ForeignKey(
-        'courses.Course', on_delete=models.CASCADE, related_name='enrollments')
+        'courses.Course', verbose_name="الدورة", on_delete=models.CASCADE, related_name='enrollments')
     student = models.ForeignKey(
         'users.StudentUser', null=True, blank=True, on_delete=models.CASCADE, related_name='enrollments')
     child = models.ForeignKey('parents.Child', null=True, blank=True,

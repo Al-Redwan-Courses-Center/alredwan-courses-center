@@ -49,7 +49,8 @@ class Season(models.Model):
     end_date = models.DateField(null=True, blank=True)
     description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     # we could cache number of lectures and enrolled students
@@ -81,7 +82,8 @@ class Tag(models.Model):
     """
 
     name = models.CharField(max_length=50)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
 
     class Meta:
         ordering = ['name']
@@ -112,18 +114,21 @@ class Course(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
     is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     season = models.ForeignKey('courses.Season', on_delete=models.SET_NULL, null=True, blank=True,
-                               related_name="courses")
+                               related_name="courses", verbose_name=_("الموسم"))
     instructor = models.ForeignKey('users.Instructor', on_delete=models.SET_NULL, null=True, blank=True,
-                                   related_name="courses")
+                                   related_name="courses", verbose_name=_("المعلم"))
     tags = models.ManyToManyField(
-        'courses.Tag', related_name="courses", blank=True)
-    for_adults = models.BooleanField(default=True)
-    min_age = models.PositiveSmallIntegerField(null=True, blank=True)
-    max_age = models.PositiveSmallIntegerField(null=True, blank=True)
+        'courses.Tag', related_name="courses", blank=True, verbose_name=_("الفئات"))
+    for_adults = models.BooleanField(default=True, verbose_name=_("للبالغين"))
+    min_age = models.PositiveSmallIntegerField(
+        null=True, blank=True, verbose_name=_("الحد الأدنى للعمر"))
+    max_age = models.PositiveSmallIntegerField(
+        null=True, blank=True, verbose_name=_("الحد الأقصى للعمر"))
 
     slug = models.SlugField(max_length=150, blank=True, null=True)
 
@@ -288,8 +293,9 @@ class CourseSchedule(models.Model):
     """
 
     course = models.ForeignKey(
-        'courses.Course', on_delete=models.CASCADE, related_name='schedules')
-    weekday = models.PositiveSmallIntegerField(choices=Weekday.choices)
+        'courses.Course', verbose_name="الدورة", on_delete=models.CASCADE, related_name='schedules')
+    weekday = models.PositiveSmallIntegerField(
+        choices=Weekday.choices, verbose_name=_("يوم الأسبوع"))
     start_time = models.TimeField()
     end_time = models.TimeField()
 

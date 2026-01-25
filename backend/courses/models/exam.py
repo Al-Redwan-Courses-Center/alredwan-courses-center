@@ -24,7 +24,8 @@ class Exam(models.Model):
     scheduled_at = models.DateTimeField()
     total_marks = models.DecimalField(max_digits=5, decimal_places=2)
     description = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     exam_type = models.CharField(
@@ -32,7 +33,7 @@ class Exam(models.Model):
     )
 
     course = models.ForeignKey(
-        'courses.Course', on_delete=models.CASCADE, related_name="exams")
+        'courses.Course', verbose_name="الدورة", on_delete=models.CASCADE, related_name="exams")
     instructor = models.ForeignKey('users.Instructor', on_delete=models.SET_NULL, null=True, blank=True,
                                    related_name="exams")
 
@@ -73,7 +74,8 @@ class ExamResult(models.Model):
     passed = models.BooleanField(default=True)
     notes = models.TextField(null=True, blank=True)
     entered_at = models.DateTimeField(default=timezone.now)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     # If we keep both child and student, enforce XOR (exactly one is set).

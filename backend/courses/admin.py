@@ -283,6 +283,9 @@ class LectureInline(admin.TabularInline):
     verbose_name = _('محاضرة')
     verbose_name_plural = _('آخر المحاضرات')
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('instructor', 'instructor__user')
+
 
 class ExamInline(admin.TabularInline):
     """Inline admin for course exams."""
@@ -294,6 +297,9 @@ class ExamInline(admin.TabularInline):
 
     verbose_name = _('امتحان')
     verbose_name_plural = _('امتحانات الدورة')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('instructor', 'instructor__user')
 
 
 class ExamResultInline(admin.TabularInline):
@@ -307,6 +313,11 @@ class ExamResultInline(admin.TabularInline):
 
     verbose_name = _('نتيجة')
     verbose_name_plural = _('نتائج الامتحان')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'student', 'student__user', 'child', 'entered_by'
+        )
 
 
 # =============================================================================
@@ -922,12 +933,9 @@ class ExamAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
     @admin.display(description=_('النتائج'))
     def get_results_summary(self, obj):
         """Display results summary."""
-        results_count = getattr(obj, 'results_count', obj.results.count())
+        results_count = getattr(obj, 'results_count', 0)
         if results_count > 0:
-            avg = getattr(obj, 'results_avg', None)
-            if avg is None:
-                avg = obj.results.aggregate(Avg('percentage'))[
-                    'percentage__avg']
+            avg = getattr(obj, 'results_avg', 0) or 0
 
             return format_html(
                 '<span title="عدد النتائج: {}">'
@@ -935,7 +943,7 @@ class ExamAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
                 'border-radius: 10px; margin-left: 5px;">{}</span>'
                 '<span style="color: #27ae60; font-size: 0.9em;"> ~{:.0f}%</span>'
                 '</span>',
-                results_count, results_count, avg or 0
+                results_count, results_count, avg
             )
         return format_html('<span style="color: #bdc3c7;">لا توجد نتائج</span>')
 

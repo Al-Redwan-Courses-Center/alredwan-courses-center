@@ -47,7 +47,8 @@ class Payment(models.Model):
 
     notes = models.TextField(null=True, blank=True)
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     processed_by = models.ForeignKey(
@@ -191,7 +192,8 @@ class RefundRequest(models.Model):
     status = models.CharField(
         max_length=20, choices=RefundStatus.choices, default=RefundStatus.REQUESTED)
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     processed_by = models.ForeignKey(
         "users.CustomUser", null=True, blank=True, on_delete=models.SET_NULL, related_name="processed_refunds")
     processed_at = models.DateTimeField(null=True, blank=True)

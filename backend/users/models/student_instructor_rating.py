@@ -9,16 +9,16 @@ class StudentInstructorRating(models.Model):
     student = models.ForeignKey('users.StudentUser', on_delete=models.CASCADE,
                                 related_name='instructor_ratings')
     instructor = models.ForeignKey('users.Instructor', on_delete=models.CASCADE,
-                                   related_name='student_ratings')
-    course = models.ForeignKey('courses.Course', on_delete=models.CASCADE,
+                                   related_name='student_ratings', verbose_name="المعلم")
+    course = models.ForeignKey('courses.Course', verbose_name="الدورة", on_delete=models.CASCADE,
                                related_name='student_instructor_ratings')
-    rating = models.DecimalField(max_digits=4, decimal_places=2,
-                                 validators=[
-                                     MinValueValidator(1.00),
-                                     MaxValueValidator(10.00)
-                                 ])  # 1.00 to 10.00
+    rating = models.PositiveSmallIntegerField(
+        verbose_name="التقييم",
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+    )
     feedback = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -48,16 +48,16 @@ class ParentInstructorRating(models.Model):
     parent = models.ForeignKey('parents.Parent', on_delete=models.CASCADE,
                                related_name='instructor_ratings')
     instructor = models.ForeignKey('users.Instructor', on_delete=models.CASCADE,
-                                   related_name='parent_ratings')
-    course = models.ForeignKey('courses.Course', on_delete=models.CASCADE,
+                                   related_name='parent_ratings', verbose_name="المعلم")
+    course = models.ForeignKey('courses.Course', verbose_name="الدورة", on_delete=models.CASCADE,
                                related_name='parent_instructor_ratings')
-    rating = models.DecimalField(max_digits=4, decimal_places=2,
-                                 validators=[
-                                     MinValueValidator(1.00),
-                                     MaxValueValidator(10.00)
-                                 ])  # 1.00 to 10.00
+    rating = models.PositiveSmallIntegerField(
+        verbose_name="التقييم",
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+    )
     feedback = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -86,15 +86,15 @@ class StudentCourseRating(models.Model):
 
     student = models.ForeignKey('users.StudentUser', on_delete=models.CASCADE,
                                 related_name='course_ratings')
-    course = models.ForeignKey('courses.Course', on_delete=models.CASCADE,
+    course = models.ForeignKey('courses.Course', verbose_name="الدورة", on_delete=models.CASCADE,
                                related_name='student_ratings')
-    rating = models.DecimalField(max_digits=4, decimal_places=2,
-                                 validators=[
-                                     MinValueValidator(1.00),
-                                     MaxValueValidator(10.00)
-                                 ])  # 1.00 to 10.00
+    rating = models.PositiveSmallIntegerField(
+        verbose_name="التقييم",
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+    )
     feedback = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -125,15 +125,15 @@ class ParentCourseRating(models.Model):
 
     parent = models.ForeignKey('parents.Parent', on_delete=models.CASCADE,
                                related_name='course_ratings')
-    course = models.ForeignKey('courses.Course', on_delete=models.CASCADE,
+    course = models.ForeignKey('courses.Course', verbose_name="الدورة", on_delete=models.CASCADE,
                                related_name='parent_ratings')
-    rating = models.DecimalField(max_digits=4, decimal_places=2,
-                                 validators=[
-                                     MinValueValidator(1.00),
-                                     MaxValueValidator(10.00)
-                                 ])  # 1.00 to 10.00
+    rating = models.PositiveSmallIntegerField(
+        verbose_name="التقييم",
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+    )
     feedback = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

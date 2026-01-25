@@ -37,7 +37,8 @@ class EnrollmentRequest(models.Model):
     """Model representing an enrollment request."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    course = models.ForeignKey('courses.Course', on_delete=models.CASCADE)
+    course = models.ForeignKey(
+        'courses.Course', verbose_name="الدورة", on_delete=models.CASCADE)
 
     parent = models.ForeignKey(
         'parents.Parent', null=True, blank=True, on_delete=models.CASCADE)
@@ -54,7 +55,8 @@ class EnrollmentRequest(models.Model):
     status = models.CharField(max_length=20, choices=EnrollmentRequestStatus.choices,
                               default=EnrollmentRequestStatus.PENDING)
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     processed_at = models.DateTimeField(null=True, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True)
 

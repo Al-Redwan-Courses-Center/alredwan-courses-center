@@ -14,6 +14,7 @@ class StudentInstructorRatingAdmin(admin.ModelAdmin):
     list_filter = ('rating', 'course', 'instructor', 'created_at')
     search_fields = ('student__user__first_name',
                      'instructor__user__first_name', 'feedback')
+    autocomplete_fields = ['student', 'instructor', 'course']
     date_hierarchy = 'created_at'
     list_select_related = ('student', 'student__user',
                            'instructor', 'instructor__user', 'course')
@@ -84,6 +85,7 @@ class ParentInstructorRatingAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
     list_select_related = ('parent', 'parent__user',
                            'instructor', 'instructor__user', 'course')
+    autocomplete_fields = ['parent', 'instructor', 'course']
 
     fieldsets = (
         ('معلومات التقييم', {'fields': ('parent', 'instructor', 'course')}),
@@ -142,7 +144,7 @@ class StudentCourseRatingAdmin(admin.ModelAdmin):
     search_fields = ('student__user__first_name', 'course__name', 'feedback')
     date_hierarchy = 'created_at'
     list_select_related = ('student', 'student__user', 'course')
-
+    autocomplete_fields = ['student', 'course']
     fieldsets = (
         ('معلومات التقييم', {'fields': ('student', 'course')}),
         ('التقييم', {'fields': ('rating', 'feedback')}),
@@ -192,7 +194,7 @@ class ParentCourseRatingAdmin(admin.ModelAdmin):
     search_fields = ('parent__user__first_name', 'course__name', 'feedback')
     date_hierarchy = 'created_at'
     list_select_related = ('parent', 'parent__user', 'course')
-
+    autocomplete_fields = ['parent', 'course']
     fieldsets = (
         ('معلومات التقييم', {'fields': ('parent', 'course')}),
         ('التقييم', {'fields': ('rating', 'feedback')}),

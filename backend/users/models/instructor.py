@@ -55,16 +55,18 @@ class Instructor(models.Model):
         blank=True,
         null=True,
     )
-    joined_date = models.DateField(auto_now_add=True)
+    joined_date = models.DateField(
+        auto_now_add=True, verbose_name=_("تاريخ الانضمام"))
 
     type = models.CharField(
         max_length=20,
         choices=InstructorType.choices,
         default=InstructorType.NORMAL,
+        verbose_name=_("نوع المعلم"),
     )
 
     def __str__(self):
-        return f"{self.user.get_full_name()} ({self.type})"
+        return f"{self.user.get_full_name()} ({self.get_type_display()})"
 
     class Meta:
         verbose_name = _("معلم")

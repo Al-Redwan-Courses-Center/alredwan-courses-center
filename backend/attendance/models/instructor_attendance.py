@@ -14,7 +14,8 @@ class SupervisorSchedule(models.Model):
     instructor = models.ForeignKey(
         Instructor,
         on_delete=models.CASCADE,
-        related_name="attendance_supervisor_schedules"
+        related_name="attendance_supervisor_schedules",
+        verbose_name=_("المعلم/المشرف")
     )
     day_of_week = models.PositiveSmallIntegerField(choices=Weekday.choices)
     start_time = models.TimeField()
@@ -51,7 +52,8 @@ class InstructorAttendance(models.Model):
     """Track attendance and rating of instructors (check-in/check-out)."""
 
     instructor = models.ForeignKey(
-        Instructor, on_delete=models.CASCADE, related_name="attendance_records"
+        Instructor, on_delete=models.CASCADE, related_name="attendance_records",
+        verbose_name=_("المعلم/المشرف")
     )
     date = models.DateField(default=timezone.localdate)
     check_in_time = models.DateTimeField(null=True, blank=True)
@@ -72,7 +74,7 @@ class InstructorAttendance(models.Model):
         null=True,
         blank=True,
         related_name="attendances",
-        help_text=_("Linked schedule if this instructor is a supervisor."),
+        help_text=_("يوم جدول زمني مرتبط إذا كان هذا المدرب مشرفًا."),
     )
     lecture = models.ForeignKey(
         Lecture, on_delete=models.SET_NULL,
@@ -87,13 +89,14 @@ class InstructorAttendance(models.Model):
         "courses.Season",
         on_delete=models.CASCADE,
         related_name="instructor_attendance",
+        verbose_name=_("الموسم")
     )
     rating = models.PositiveSmallIntegerField(
+        verbose_name="التقييم",
         validators=[MinValueValidator(1), MaxValueValidator(10)],
         null=True,
         blank=True,
-        help_text=_("Rating of the instructor for the day (1-10)."),
-        default=8
+        default=0
     )
 
     rated_by = models.ForeignKey(
@@ -102,7 +105,7 @@ class InstructorAttendance(models.Model):
         null=True,
         blank=True,
         related_name="given_instructor_ratings",
-        help_text=_("The admin who rated or updated this attendance."),
+        help_text=_("المشرف الذي قام بتقييم هذا المعلم."),
     )
     notes = models.TextField(blank=True, null=True)
 

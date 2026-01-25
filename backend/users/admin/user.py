@@ -8,7 +8,7 @@ class UserAdmin(BaseUserAdmin):
     list_display = ('get_full_name_display', 'get_phone_number1', 'get_phone_number2', 'get_role',
                     'get_gender', 'get_date_joined', 'get_is_verified', 'get_is_active')
     list_filter = ('role', 'is_verified', 'is_active',
-                   'gender', 'identity_type', 'date_joined')
+                   'gender', 'date_joined')
     search_fields = ('phone_number1', 'first_name',
                      'last_name', 'email', 'identity_number')
     ordering = ('-date_joined',)

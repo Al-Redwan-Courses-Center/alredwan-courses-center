@@ -69,7 +69,8 @@ class Child(ImageOptimizationMixin, models.Model):
     )
     """nid_number = models.CharField(
         _("National ID number"), max_length=15, unique=True) """
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     def generate_unique_code(self):
@@ -189,7 +190,8 @@ class ParentLinkRequest(models.Model):
     status = models.CharField(
         max_length=10, choices=status_choices, default='pending')
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     def approve(self):

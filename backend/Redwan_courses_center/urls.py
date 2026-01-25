@@ -22,7 +22,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 
-admin.site.site_header = "لوحة إدارة كورسات واحة الرضوان"
+admin.site.site_header = "لوحة إدارة واحة الرضوان"
 admin.site.site_title = "واحة الرضوان"
 admin.site.index_title = "الصفحة الرئيسية"
 urlpatterns = [
