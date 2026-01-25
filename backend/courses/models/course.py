@@ -17,12 +17,12 @@ from django.db.models import Count, Q
 
 class SeasonChoices(models.TextChoices):
     """Enumeration for season_type status choices."""
-    SUMMER_CAMP = 'summer_camp', _('Summer camp')
-    SCHOOL = 'school',      _('School')
-    RAMADAN = 'ramadan',     _('Ramadan')
-    EID = 'eid',         _('Eid')
-    MID_YEAR = 'mid_year',    _('Mid-year camp')
-    OTHER = 'other',       _('Other')
+    SUMMER_CAMP = 'summer_camp', _('معسكر صيفي')
+    SCHOOL = 'school',      _('مدرسة')
+    RAMADAN = 'ramadan',     _('رمضان')
+    EID = 'eid',         _('عيد')
+    MID_YEAR = 'mid_year',    _('معسكر منتصف السنة')
+    OTHER = 'other',       _('أخرى')
 
 
 class Weekday(models.IntegerChoices):
@@ -42,13 +42,13 @@ class Season(models.Model):
     """
 
     # consider adding a celery task to deactivate old seasons and activate new ones based on dates
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128, verbose_name=_("اسم الموسم"))
     season_type = models.CharField(
-        max_length=32, choices=SeasonChoices.choices)
-    start_date = models.DateField()
-    end_date = models.DateField(null=True, blank=True)
-    description = models.TextField(blank=True, null=True)
-    is_active = models.BooleanField(default=False)
+        max_length=32, choices=SeasonChoices.choices, verbose_name=_("نوع الموسم"))
+    start_date = models.DateField(verbose_name=_("تاريخ البدء"))
+    end_date = models.DateField(null=True, blank=True, verbose_name=_("تاريخ الانتهاء"))
+    description = models.TextField(blank=True, null=True, verbose_name=_("الوصف"))
+    is_active = models.BooleanField(default=False, verbose_name=_("نشط"))
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
@@ -81,9 +81,9 @@ class Tag(models.Model):
     Tags model
     """
 
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True, verbose_name=_("اسم الفئة"))
     created_at = models.DateTimeField(
-        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
+        auto_now_add=True, verbose_name=_("تاريخ الإنشاء"))
 
     class Meta:
         ordering = ['name']
@@ -104,7 +104,7 @@ class Course(models.Model):
     name = models.CharField(max_length=128)
     description = models.TextField(blank=True)
 
-    start_date = models.DateField()
+    start_date = models.DateField(verbose_name=_("تاريخ البدء"))
     # optional if you later drive off schedules/lectures
     end_date = models.DateField(null=True, blank=True)
 
