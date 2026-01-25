@@ -34,8 +34,6 @@ class Parent(ImageOptimizationMixin, models.Model):
     image = models.ImageField(
         upload_to=parent_upload_path,
         validators=[validate_image_size],
-        default='defaults/user_default.png',
-        blank=True,
         null=True,
     )
 
