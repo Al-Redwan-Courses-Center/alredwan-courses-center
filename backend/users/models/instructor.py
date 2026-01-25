@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from core.utils.image_utils import validate_image_size
+from core.utils.image_utils import validate_image_size, CloudinaryImageMixin
 
 from courses.models.lecture import Lecture
 from .user import CustomUser
@@ -15,16 +15,16 @@ Module for Instructor model that represents an instructor user profile
 
 
 def nid_upload_path(instance, filename):
-    """Generate file path for uploading NID images of an instructor."""
-    return f"instructors/{instance.user.id}/nid/{filename}"
+    """Generate file path for uploading NID images to Cloudinary."""
+    return f"redwan/instructors/{instance.user.id}/nid/{filename}"
 
 
 def instructor_upload_path(instance, filename):
-    """Generate file path for uploading profile images of an instructor."""
-    return f"instructors/{instance.id}/{filename}"
+    """Generate file path for uploading profile images to Cloudinary."""
+    return f"redwan/instructors/{instance.user.id}/profile/{filename}"
 
 
-class Instructor(models.Model):
+class Instructor(CloudinaryImageMixin, models.Model):
     '''
     Instructor model that represents an instructor or supervisor user
     '''

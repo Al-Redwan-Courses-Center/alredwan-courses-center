@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'djoser',
     'django_crontab',
     'channels',
+    'cloudinary_storage',
+    'cloudinary',
     "users",
     "parents",
     "attendance",
@@ -265,3 +267,23 @@ DJOSER = {
     # Hide sensitive user IDs from non-admin users
     'HIDE_USERS': True,
 }
+
+
+# ============================
+# CLOUDINARY CONFIGURATION
+# ============================
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+    'SECURE': True,  # Use HTTPS
+}
+
+# Use Cloudinary for media files
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Image upload settings
+MAX_IMAGE_SIZE_MB = int(os.environ.get('MAX_IMAGE_SIZE_MB', 5))  # 5MB default
+IMAGE_COMPRESSION_QUALITY = int(os.environ.get('IMAGE_COMPRESSION_QUALITY', 80))  # 80% default
+IMAGE_MAX_WIDTH = int(os.environ.get('IMAGE_MAX_WIDTH', 1920))
+IMAGE_MAX_HEIGHT = int(os.environ.get('IMAGE_MAX_HEIGHT', 1920))

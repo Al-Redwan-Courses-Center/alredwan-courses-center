@@ -3,7 +3,7 @@
 Module for Student model that represents a student user
 '''
 from django.db import models
-from core.utils.image_utils import validate_image_size, ImageOptimizationMixin
+from core.utils.image_utils import validate_image_size, CloudinaryImageMixin
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from .user import CustomUser
@@ -12,10 +12,11 @@ import string
 
 
 def student_upload_path(instance, filename):
-    return f"students/{instance.id}/{filename}"
+    """Upload path organized by student ID in Cloudinary."""
+    return f"redwan/students/{instance.user.id}/{filename}"
 
 
-class StudentUser(ImageOptimizationMixin, models.Model):
+class StudentUser(CloudinaryImageMixin, models.Model):
     '''
     Student model that represents a student user
     '''

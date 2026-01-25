@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 
 from users.models.user import CustomUser
-from core.utils.image_utils import ImageOptimizationMixin, validate_image_size
+from core.utils.image_utils import CloudinaryImageMixin, validate_image_size
 
 from phonenumbers import parse, is_valid_number, format_number, PhoneNumberFormat
 import random
@@ -17,14 +17,16 @@ Module for Parent model that represents a parent user
 
 
 def parent_upload_path(instance, filename):
-    return f"parents/{instance.id}/{filename}"
+    """Upload path organized by parent ID in Cloudinary."""
+    return f"redwan/parents/{instance.user.id}/{filename}"
 
 
 def child_upload_path(instance, filename):
-    return f"children/{instance.id}/{filename}"
+    """Upload path organized by child ID in Cloudinary."""
+    return f"redwan/children/{instance.id}/{filename}"
 
 
-class Parent(ImageOptimizationMixin, models.Model):
+class Parent(CloudinaryImageMixin, models.Model):
     '''
     Parent model that represents a parent user
     '''
@@ -45,7 +47,7 @@ class Parent(ImageOptimizationMixin, models.Model):
     def __str__(self):
         return self.user.get_full_name()
 
-class Child(ImageOptimizationMixin, models.Model):
+class Child(CloudinaryImageMixin, models.Model):
     '''
     Child model that represents a child user associated with a parent
     '''
