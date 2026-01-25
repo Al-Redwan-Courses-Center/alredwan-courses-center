@@ -67,7 +67,8 @@ class Child(ImageOptimizationMixin, models.Model):
 
     gender = models.CharField(
         max_length=10,
-        choices=[("boy", "Boy"), ("girl", "Girl")],
+        choices=[("boy", "ولد"), ("girl", "بنت")],
+       verbose_name=_("الجنس")
     )
     """nid_number = models.CharField(
         _("National ID number"), max_length=15, unique=True) """

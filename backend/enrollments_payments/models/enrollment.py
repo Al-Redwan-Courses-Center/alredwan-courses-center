@@ -7,12 +7,11 @@ from django.db.models import Q, F
 
 class EnrollmentStatus(models.TextChoices):
     """Enumeration for enrollment status choices."""
-    ACTIVE = 'active', 'Active'  # Current enrollment in progress
-    SUSPENDED = 'suspended', 'Suspended'  # Enrollment temporarily paused
-    COMPLETED = 'completed', 'Completed'  # Enrollment finished successfully
-    DROPPED = 'dropped', 'Dropped'  # Enrollment cancelled or dropped
-    REFUNDED = 'refunded', 'Refunded'  # Enrollment refunded
-
+    ACTIVE = 'active', 'نشط'  # Current enrollment in progress
+    SUSPENDED = 'suspended', 'معلق'  # Enrollment temporarily paused
+    COMPLETED = 'completed', 'مكتمل'  # Enrollment finished successfully
+    DROPPED = 'dropped', 'ملغى'  # Enrollment cancelled or dropped
+    REFUNDED = 'refunded', 'مسترد'  # Enrollment refunded
 
 class Enrollment(models.Model):
     """Model representing an active enrollment."""
