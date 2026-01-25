@@ -145,3 +145,4 @@ docker-compose.local.yml
 
 
 static/
+*/migrations/*
