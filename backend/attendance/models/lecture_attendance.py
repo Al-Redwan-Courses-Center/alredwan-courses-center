@@ -5,12 +5,13 @@ from django.db.models import Q
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+
 class LectureAttendance(models.Model):
     """Model representing attendance records for a lecture."""
 
     lecture = models.ForeignKey(
         'courses.Lecture', on_delete=models.CASCADE, related_name='lecture_attendances')
-    child = models.ForeignKey('users.Child', null=True, blank=True,
+    child = models.ForeignKey('parents.Child', null=True, blank=True,
                               on_delete=models.CASCADE, related_name='lecture_attendances')
     student = models.ForeignKey('users.StudentUser', null=True, blank=True,
                                 on_delete=models.CASCADE, related_name='lecture_attendances')
@@ -19,16 +20,19 @@ class LectureAttendance(models.Model):
     present = models.BooleanField(null=True, default=None)
     # rating required at submit time (1.00 - 10.00). We enforce rating presence at API level,
     # and add a DB-level check that rating is present if present is not null.
-    rating = models.DecimalField(max_digits=4, decimal_places=2, null=True, default=None,
-                                 validators=[
-                                    MinValueValidator(1.00),
-                                    MaxValueValidator(10.00),
-                                 ])
+    rating = models.PositiveSmallIntegerField(
+        verbose_name="التقييم",
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        null=True,
+        blank=True,
+        default=5
+    )
     notes = models.TextField(null=True, blank=True)
     marked_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
                                   null=True, blank=True, related_name='marked_lecture_attendances')
     marked_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -61,8 +65,8 @@ class LectureAttendance(models.Model):
             models.Index(fields=['child'], name='attendance_child_index'),
             models.Index(fields=['student'], name='attendance_student_index'),
         ]
-        verbose_name = 'Lecture Attendance'
-        verbose_name_plural = 'Lecture Attendances'
+        verbose_name = 'سجل حضور'
+        verbose_name_plural = 'سجلات حضور الطلاب والأطفال'
 
     def __str__(self):
         participant = self.child.first_name if self.child else (

@@ -8,6 +8,7 @@ from django.db.models import Q, F
 class EnrollmentStatus(models.TextChoices):
     """Enumeration for enrollment status choices."""
     ACTIVE = 'active', 'Active'  # Current enrollment in progress
+    SUSPENDED = 'suspended', 'Suspended'  # Enrollment temporarily paused
     COMPLETED = 'completed', 'Completed'  # Enrollment finished successfully
     DROPPED = 'dropped', 'Dropped'  # Enrollment cancelled or dropped
     REFUNDED = 'refunded', 'Refunded'  # Enrollment refunded
@@ -18,10 +19,10 @@ class Enrollment(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     course = models.ForeignKey(
-        'courses.Course', on_delete=models.CASCADE, related_name='enrollments')
+        'courses.Course', verbose_name="الدورة", on_delete=models.CASCADE, related_name='enrollments')
     student = models.ForeignKey(
         'users.StudentUser', null=True, blank=True, on_delete=models.CASCADE, related_name='enrollments')
-    child = models.ForeignKey('users.Child', null=True, blank=True,
+    child = models.ForeignKey('parents.Child', null=True, blank=True,
                               on_delete=models.CASCADE, related_name='enrollments')
 
     enrolled_at = models.DateTimeField(default=timezone.now, db_index=True)
@@ -33,9 +34,13 @@ class Enrollment(models.Model):
                                    on_delete=models.SET_NULL, related_name="created_enrollments")
 
     updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    dropped_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         """Meta class for Enrollment model."""
+        verbose_name = 'إلتحاق'
+        verbose_name_plural = 'الإلتحاقات'
         constraints = [
             models.CheckConstraint(
                 check=Q(child__isnull=False, student__isnull=True) | Q(
@@ -62,6 +67,10 @@ class Enrollment(models.Model):
             raise ValidationError(
                 "Must specify exactly one of child or student.")
 
+        if (self.get_participant() is not None and
+                self.course.is_participant_eligible(self.get_participant()) is False):
+            raise ValidationError("هذا المستخدم ليس طالبًا")
+
     def get_payments(self):
         """Return queryset of payments for this enrollment (payments app)."""
         from .payment import Payment
@@ -84,14 +93,13 @@ class Enrollment(models.Model):
         """
         if self.status == EnrollmentStatus.REFUNDED:
             return
-        self.status = EnrollmentStatus.REFUNDED
-        self.save(update_fields=["status", "updated_at"])
+        self.update_status(EnrollmentStatus.REFUNDED)
 
     def update_status(self, new_status):
         """Update enrollment status with timestamp management."""
         valid_transitions = {
-            EnrollmentStatus.ACTIVE: [EnrollmentStatus.COMPLETED, EnrollmentStatus.DROPPED, EnrollmentStatus.SUSPENDED],
-            EnrollmentStatus.SUSPENDED: [EnrollmentStatus.ACTIVE, EnrollmentStatus.DROPPED],
+            EnrollmentStatus.ACTIVE: [EnrollmentStatus.COMPLETED, EnrollmentStatus.DROPPED, EnrollmentStatus.SUSPENDED, EnrollmentStatus.REFUNDED],
+            EnrollmentStatus.SUSPENDED: [EnrollmentStatus.ACTIVE, EnrollmentStatus.DROPPED, EnrollmentStatus.REFUNDED],
             EnrollmentStatus.COMPLETED: [],
             EnrollmentStatus.DROPPED: [],
             EnrollmentStatus.REFUNDED: [],

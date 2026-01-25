@@ -142,3 +142,7 @@ GitHub.sublime-settings
 .dockerignore
 Dockerfile.dev
 docker-compose.local.yml
+
+
+static/
+*/migrations/*

@@ -28,12 +28,13 @@ DEBUG = DEBUG = bool(os.environ.get("DEBUG", default=0))
 
 
 # ALLOWED_HOSTS = []
-ALLOWED_HOSTS =  os.environ.get("DJANGO_ALLOWED_HOSTS","127.0.0.1").split(",")
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    # "simpleui",  # MUST be first
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,9 +42,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "debug_toolbar",
+    'rest_framework',
+    'djoser',
     'django_crontab',
     'channels',
     "users",
+    "parents",
     "attendance",
     "core",
     "courses",
@@ -53,6 +57,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    # 'django.middleware.locale.LocaleMiddleware',  # ← ADD THIS
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -60,6 +65,17 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
+
+
+def show_toolbar(request):
+    return True
+
+
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK": show_toolbar,
+    "IS_RUNNING_TESTS": False,  # Allow tests to run with debug toolbar installed
+}
+
 
 ROOT_URLCONF = 'Redwan_courses_center.urls'
 
@@ -87,15 +103,15 @@ ASGI_APPLICATION = "core.asgi.application"
 
 DATABASES = {
     'default': {
-         'ENGINE': 'django.db.backends.{}'.format(
-             os.getenv('DATABASE_ENGINE', 'sqlite3')
-         ),
-         'NAME': os.getenv('DATABASE_NAME', 'polls'),
-         'USER': os.getenv('DATABASE_USERNAME', 'myprojectuser'),
-         'PASSWORD': os.getenv('DATABASE_PASSWORD', 'password'),
-         'HOST': os.getenv('DATABASE_HOST', '127.0.0.1'),
-         'PORT': os.getenv('DATABASE_PORT', 5432),
-     }
+        'ENGINE': 'django.db.backends.{}'.format(
+            os.getenv('DATABASE_ENGINE', 'sqlite3')
+        ),
+        'NAME': os.getenv('DATABASE_NAME', 'polls'),
+        'USER': os.getenv('DATABASE_USERNAME', 'myprojectuser'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'password'),
+        'HOST': os.getenv('DATABASE_HOST', '127.0.0.1'),
+        'PORT': os.getenv('DATABASE_PORT', 5432),
+    }
 }
 INTERNAL_IPS = [
     # ...
@@ -127,22 +143,63 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "ar"
+
+LANGUAGES = [
+    ("ar", "العربية"),
+    ("en", "English"),
+]
+LANGUAGE_BIDI = True
+USE_I18N = True
+USE_L10N = True
+USE_TZ = True
 
 TIME_ZONE = "Africa/Cairo"
-
-USE_I18N = True
-
-USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+""" # Specify simpleui's default theme, specify a filename, and the relative path is read from simpleui's theme directory
+SIMPLEUI_DEFAULT_THEME = 'admin.lte.css'
+SIMPLEUI_HOME_TITLE = 'My Home Title'
+SIMPLEUI_CONFIG = {
+    "system_keep": False,
+    "rtl": True,
+    # Branding
+    
+    "system_name": "لوحة إدارة واحة الرضوان",
+    "system_title": "Redwan Courses Center",
+    "system_icon": "fas fa-chalkboard-teacher",
+
+    # Welcome text
+    "welcome_sign": "مرحبًا بك في لوحة الإدارة",
+
+    # Copyright
+    "copyright": "Redwan Courses Center © 2025",
+
+    # Whether to enable animations
+    "animation": True,
+
+    # Show language switcher
+    "language": True,
+
+    # Default home page
+    "home_page": "/Al-Redwan-superadmin-dashboard/",
+
+    # Disable UI builder for production stability
+    "dynamic": False,
+}
+
+SIMPLEUI_ICON = {
+    'System_Manage': 'fab fa-apple',
+    'Employeee_Manage': 'fas fa-user-tie'
+} """
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -165,4 +222,46 @@ CHANNEL_LAYERS = {
             "hosts": [("redis", 6379)],  # in Docker
         },
     },
+}
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('JWT',),
+}
+
+
+# Djoser configuration for phone number authentication
+DJOSER = {
+    # Use phone_number1 as the login field
+    'LOGIN_FIELD': 'phone_number1',
+
+    # Require re_password on registration
+    'USER_CREATE_PASSWORD_RETYPE': True,
+
+    # Require current password and retype on password change
+    'SET_PASSWORD_RETYPE': True,
+
+    # Custom serializers - IMPORTANT for security!
+    # Prevents users from setting is_staff, is_superuser, role via API
+    'SERIALIZERS': {
+        'user_create': 'users.serializers.CustomUserCreateSerializer',
+        'user': 'users.serializers.CustomUserSerializer',
+        'current_user': 'users.serializers.CustomUserSerializer',
+    },
+
+    # Permissions
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.IsAuthenticated'],
+        'user_list': ['rest_framework.permissions.IsAdminUser'],
+    },
+
+    # Hide sensitive user IDs from non-admin users
+    'HIDE_USERS': True,
 }

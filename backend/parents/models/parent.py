@@ -2,9 +2,9 @@
 from django.db import models
 from django.forms import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
-
-from .user import CustomUser
+from users.models.user import CustomUser
 from core.utils.image_utils import ImageOptimizationMixin, validate_image_size
 
 from phonenumbers import parse, is_valid_number, format_number, PhoneNumberFormat
@@ -34,15 +34,13 @@ class Parent(ImageOptimizationMixin, models.Model):
     image = models.ImageField(
         upload_to=parent_upload_path,
         validators=[validate_image_size],
-        default='defaults/user_default.png',
-        blank=True,
         null=True,
     )
 
     class Meta:
         """Meta options for the Parent model."""
-        verbose_name = "Parent"
-        verbose_name_plural = "Parents"
+        verbose_name = _("ولي أمر")
+        verbose_name_plural = _("أولياء الأمور")
 
 
 class Child(ImageOptimizationMixin, models.Model):
@@ -71,7 +69,8 @@ class Child(ImageOptimizationMixin, models.Model):
     )
     """nid_number = models.CharField(
         _("National ID number"), max_length=15, unique=True) """
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     def generate_unique_code(self):
@@ -79,6 +78,15 @@ class Child(ImageOptimizationMixin, models.Model):
         gender_char = self.gender[0].upper() if self.gender else "U"
         digits = ''.join(random.choices(string.digits, k=5))
         return f"{gender_char}{digits}"
+
+    def get_age_on_date(self, date=timezone.now().date()):
+        """Calculate age of the user on a given date."""
+        if not self.dob:
+            return None
+        born = self.dob
+        age = date.year - born.year - \
+            ((date.month, date.day) < (born.month, born.day))
+        return age
 
     def save(self, *args, **kwargs):
         """Override save method to set unique_code if not already set."""
@@ -112,8 +120,8 @@ class Child(ImageOptimizationMixin, models.Model):
 
     class Meta:
         """Meta options for the Child model."""
-        verbose_name = "Child"
-        verbose_name_plural = "Children"
+        verbose_name = _("طفل")
+        verbose_name_plural = _("الأطفال")
 
         indexes = [
             models.Index(fields=['unique_code']),
@@ -141,8 +149,8 @@ class ChildParents(models.Model):
 
     class Meta:
         """Meta options for the ChildParents model."""
-        verbose_name = "Child-Parent Association"
-        verbose_name_plural = "Child-Parent Associations"
+        verbose_name = _("رابط طفل بولي أمر")
+        verbose_name_plural = _("روابط الأطفال بأولياء الأمور")
         unique_together = ('child', 'parent')
 
     def save(self, *args, **kwargs):
@@ -182,7 +190,8 @@ class ParentLinkRequest(models.Model):
     status = models.CharField(
         max_length=10, choices=status_choices, default='pending')
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     def approve(self):
@@ -204,6 +213,8 @@ class ParentLinkRequest(models.Model):
 
     class Meta:
         unique_together = ('child', 'requester', 'primary_parent')
+        verbose_name = _("طلب ربط ولي أمر بطفل")
+        verbose_name_plural = _("طلبات ربط أولياء أمور ثانويين بأطفال")
     '''
     🧠 Workflow Example
 

@@ -10,3 +10,8 @@ class AttendanceCronLog(models.Model):
 
     def __str__(self):
         return f"{self.job_name} at {self.timestamp}"
+
+    class Meta:
+        verbose_name = 'سجل إنشاء مهام حضور'
+        verbose_name_plural = 'سجلات مهام إنشاء الحضور الأوتوماتيكية'
+        ordering = ['-timestamp']

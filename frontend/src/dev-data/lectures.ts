@@ -1,0 +1,130 @@
+import { Lecture } from "@/types/entities";
+
+const getTodayAt = (hours: number, minutes: number = 0) => {
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+};
+
+export const lectures: Lecture[] = [
+  {
+    id: 1,
+    title: "مقدمة في البرمجة",
+    courseName: "أساسيات علوم الحاسب",
+    startTime: getTodayAt(8, 0),
+    endTime: getTodayAt(10, 0),
+    status: "submitted",
+  },
+  {
+    id: 2,
+    title: "تفاضل وتكامل 1",
+    courseName: "الرياضيات الهندسية",
+    startTime: getTodayAt(8, 30),
+    endTime: getTodayAt(10, 30),
+    status: "submitted",
+  },
+  {
+    id: 3,
+    title: "قواعد البيانات العلائقية",
+    courseName: "نظم قواعد البيانات",
+    startTime: getTodayAt(10, 0),
+    endTime: getTodayAt(12, 0),
+    status: "not-submitted",
+  },
+  {
+    id: 4,
+    title: "تصميم واجهات المستخدم",
+    courseName: "تصميم الويب",
+    startTime: getTodayAt(10, 30),
+    endTime: getTodayAt(12, 30),
+    status: "not-submitted",
+  },
+  {
+    id: 5,
+    title: "الخوارزميات وهياكل البيانات",
+    courseName: "علوم الحاسب المتقدمة",
+    startTime: getTodayAt(12, 0),
+    endTime: getTodayAt(14, 0),
+    status: "not-submitted",
+  },
+  {
+    id: 6,
+    title: "الشبكات اللاسلكية",
+    courseName: "شبكات الحاسب",
+    startTime: getTodayAt(12, 30),
+    endTime: getTodayAt(14, 30),
+    status: "not-submitted",
+  },
+  {
+    id: 7,
+    title: "مبادئ الذكاء الاصطناعي",
+    courseName: "الذكاء الاصطناعي",
+    startTime: getTodayAt(14, 0),
+    endTime: getTodayAt(16, 0),
+    status: "not-submitted",
+  },
+  {
+    id: 8,
+    title: "برمجة تطبيقات الجوال",
+    courseName: "تطوير التطبيقات",
+    startTime: getTodayAt(14, 30),
+    endTime: getTodayAt(16, 30),
+    status: "submitted",
+  },
+  {
+    id: 9,
+    title: "أمن المعلومات",
+    courseName: "الأمن السيبراني",
+    startTime: getTodayAt(16, 0),
+    endTime: getTodayAt(18, 0),
+    status: "not-submitted",
+  },
+  {
+    id: 10,
+    title: "إدارة المشاريع البرمجية",
+    courseName: "هندسة البرمجيات",
+    startTime: getTodayAt(16, 30),
+    endTime: getTodayAt(18, 30),
+    status: "not-submitted",
+  },
+  {
+    id: 11,
+    title: "تحليل النظم",
+    courseName: "نظم المعلومات",
+    startTime: getTodayAt(18, 0),
+    endTime: getTodayAt(20, 0),
+    status: "not-submitted",
+  },
+  {
+    id: 12,
+    title: "التسويق الرقمي",
+    courseName: "التسويق",
+    startTime: getTodayAt(18, 30),
+    endTime: getTodayAt(20, 30),
+    status: "not-submitted",
+  },
+  {
+    id: 13,
+    title: "لغة إنجليزية مستوى 3",
+    courseName: "اللغات",
+    startTime: getTodayAt(20, 0),
+    endTime: getTodayAt(22, 0),
+    status: "not-submitted",
+  },
+  {
+    id: 14,
+    title: "مقدمة في الفيزياء",
+    courseName: "العلوم الأساسية",
+    startTime: getTodayAt(9, 0),
+    endTime: getTodayAt(11, 0),
+    status: "submitted",
+  },
+  {
+    id: 15,
+    title: "ورشة عمل: القيادة",
+    courseName: "تطوير المهارات الشخصية",
+    startTime: getTodayAt(15, 0),
+    endTime: getTodayAt(17, 0),
+    status: "not-submitted",
+  },
+];

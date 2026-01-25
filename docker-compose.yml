@@ -1,0 +1,76 @@
+services:
+  redwan-db:
+    image: postgres:17
+    container_name: redwan-db
+    env_file:
+      - ./db.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U redwan_courses_center_dev -d redwan_courses_center_dev_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: redwan-pgadmin
+    depends_on:
+      redwan-db:
+        condition: service_healthy
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  redwan-backend:
+    build: ./backend
+    container_name: redwan-backend
+    depends_on:
+      redwan-db:
+        condition: service_healthy
+    env_file:
+      - ./backend.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python3 -c ''import urllib.request; import sys; sys.exit(0) if urllib.request.urlopen("http://localhost:8000/health/").getcode() == 200 else sys.exit(1)''',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redwan-frontend:
+    develop:
+      watch:
+        - path: ./frontend
+          action: sync
+          target: /app
+    stdin_open: true
+    tty: true
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    container_name: redwan-frontend
+    depends_on:
+      redwan-backend:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
+  pgadmin_data:

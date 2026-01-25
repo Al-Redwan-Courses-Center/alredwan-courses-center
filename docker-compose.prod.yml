@@ -1,0 +1,14 @@
+# docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
+
+services:
+  redwan-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: final
+    container_name: redwan-frontend
+    depends_on:
+      redwan-backend:
+        condition: service_healthy
+    ports:
+      - "3000:3000"

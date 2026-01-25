@@ -37,6 +37,11 @@ class CustomUserManager(BaseUserManager):
             raise ValueError(_("The phone number must be set"))
         phone_number1 = self.normalize_phone(phone_number1)
 
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        extra_fields.setdefault('role', 'student')
+
         user = self.model(phone_number1=phone_number1, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -66,32 +71,36 @@ class CustomUser(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     phone_number1 = models.CharField(
-        _("WhatsApp phone number"), max_length=15, unique=True
+        _("رقم الواتس آب"), max_length=15, unique=True
     )
     phone_number2 = models.CharField(
-        _("Alternative phone number"), max_length=15, null=True, blank=True
+        _("رقم هاتف بديل"), max_length=15, null=True, blank=True
     )
 
     email = models.EmailField(unique=True, null=True, blank=True)
     first_name = models.CharField(max_length=128)  # 1st and 2nd names
     last_name = models.CharField(max_length=128)  # 3rd and 4th names
 
-    date_joined = models.DateTimeField(default=timezone.now)
+    date_joined = models.DateTimeField(
+        default=timezone.now, verbose_name=_("تاريخ الانضمام"))
     dob = models.DateField(_("date of birth"))
 
     # Phone and admin verification status
-    is_verified = models.BooleanField(default=False)
+    is_verified = models.BooleanField(
+        default=False, verbose_name=_("تم التحقق"))
     identity_number = models.CharField(
-        _("Government ID / Passport"), max_length=30, null=True, unique=True)
+        _("Government ID / Passport"), max_length=30, null=True, blank=True, unique=True)
     identity_type = models.CharField(
         max_length=20,
-        choices=[("nid", "National ID"), ("passport",
-                                          "Passport"), ("other", "Other")],
+        choices=[("nid", "بطاقة وطنية"),
+                 ("passport", "جواز سفر"), ("other", "أخرى")],
         default="nid",
+        null=True
     )
     gender = models.CharField(
         max_length=10,
-        choices=[("male", "Male"), ("female", "Female")],
+        choices=[("male", "ذكر"), ("female", "أنثى")],
+        verbose_name=_("النوع")
     )
 
     address = models.TextField(null=True, blank=True)
@@ -99,19 +108,20 @@ class CustomUser(AbstractUser):
     role = models.CharField(
         max_length=20,
         choices=[
-            ("student", "Student"),
-            ("instructor", "Instructor"),
-            ("supervisor", "Supervisor"),
-            ("parent", "Parent"),
-            ("admin", "Admin"),
+            ("student", "طالب"),
+            ("instructor", "مدرس"),
+            ("supervisor", "مشرف"),
+            ("parent", "ولي أمر"),
+            ("admin", "مدير"),
         ],
         default="student",
+        verbose_name=_("الدور")
     )
 
     # Authentication settings
     username = None
     USERNAME_FIELD = "phone_number1"
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ["dob", "first_name", "last_name"]
 
     objects = CustomUserManager()
 
@@ -125,9 +135,24 @@ class CustomUser(AbstractUser):
                 _("Primary and alternative phone numbers must be different.")
             )
 
+    def save(self, *args, **kwargs):
+        """Convert empty identity_number to None to maintain unique constraint."""
+        if self.identity_number == '':
+            self.identity_number = None
+        super().save(*args, **kwargs)
+
     class Meta:
         indexes = [
             models.Index(fields=["phone_number1"]),
         ]
-        verbose_name = _("User")
-        verbose_name_plural = _("Users")
+        verbose_name = _("مستخدم")
+        verbose_name_plural = _("جميع المستخدمين")
+
+    def get_age_on_date(self, date=timezone.now().date()):
+        """Calculate age of the user on a given date."""
+        if not self.dob:
+            return None
+        born = self.dob
+        age = date.year - born.year - \
+            ((date.month, date.day) < (born.month, born.day))
+        return age

@@ -3,4 +3,4 @@
 from .attendance_cron_log import *
 from .device import *
 from .lecture_attendance import *
-from .student_instructor_rating import *
+from .instructor_attendance import *

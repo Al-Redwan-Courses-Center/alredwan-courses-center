@@ -6,6 +6,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.utils.text import slugify
+from django.db.models import Count, Q
 # Create your models here.
 
 
@@ -19,6 +21,7 @@ class SeasonChoices(models.TextChoices):
     SCHOOL = 'school',      _('School')
     RAMADAN = 'ramadan',     _('Ramadan')
     EID = 'eid',         _('Eid')
+    MID_YEAR = 'mid_year',    _('Mid-year camp')
     OTHER = 'other',       _('Other')
 
 
@@ -46,7 +49,8 @@ class Season(models.Model):
     end_date = models.DateField(null=True, blank=True)
     description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     # we could cache number of lectures and enrolled students
@@ -57,6 +61,8 @@ class Season(models.Model):
             models.Index(fields=['end_date'],   name='season_end_date_idx'),
         ]
         ordering = ['-start_date', 'name']
+        verbose_name = _("موسم")
+        verbose_name_plural = _("المواسم")
 
     def clean(self):
         # end_date is optional. If provided, it must be >= start_date.
@@ -76,10 +82,13 @@ class Tag(models.Model):
     """
 
     name = models.CharField(max_length=50)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
 
     class Meta:
         ordering = ['name']
+        verbose_name = _("فئة كورس/مدرس")
+        verbose_name_plural = _("فئات الكورسات/المدرسين")
 
     def __str__(self):
         return self.name
@@ -103,21 +112,23 @@ class Course(models.Model):
     num_lectures = models.IntegerField(null=True, blank=True)
     capacity = models.IntegerField(validators=[MinValueValidator(1)])
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    enrolled_count = models.IntegerField(
-        default=0, validators=[MinValueValidator(0)])
+
     is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     season = models.ForeignKey('courses.Season', on_delete=models.SET_NULL, null=True, blank=True,
-                               related_name="courses")
+                               related_name="courses", verbose_name=_("الموسم"))
     instructor = models.ForeignKey('users.Instructor', on_delete=models.SET_NULL, null=True, blank=True,
-                                   related_name="courses")
+                                   related_name="courses", verbose_name=_("المعلم"))
     tags = models.ManyToManyField(
-        'courses.Tag', related_name="courses", blank=True)
-    for_adults = models.BooleanField(default=True)
-    min_age = models.PositiveSmallIntegerField(null=True, blank=True)
-    max_age = models.PositiveSmallIntegerField(null=True, blank=True)
+        'courses.Tag', related_name="courses", blank=True, verbose_name=_("الفئات"))
+    for_adults = models.BooleanField(default=True, verbose_name=_("للبالغين"))
+    min_age = models.PositiveSmallIntegerField(
+        null=True, blank=True, verbose_name=_("الحد الأدنى للعمر"))
+    max_age = models.PositiveSmallIntegerField(
+        null=True, blank=True, verbose_name=_("الحد الأقصى للعمر"))
 
     slug = models.SlugField(max_length=150, blank=True, null=True)
 
@@ -128,6 +139,8 @@ class Course(models.Model):
             models.Index(fields=['start_date'], name='course_start_date_idx'),
         ]
         ordering = ['-start_date', 'name']
+        verbose_name = _("كورس")
+        verbose_name_plural = _("الكورسات")
 
     def clean(self):
         '''Validate the course before saving'''
@@ -140,6 +153,7 @@ class Course(models.Model):
             raise ValidationError(
                 _("Either 'end_date' or 'num_lectures' must be provided."))
 
+        # 1 only of them
         # If bound to a season, the course window should be inside season (if season has an end)
         if self.season:
             if self.start_date < self.season.start_date:
@@ -149,9 +163,29 @@ class Course(models.Model):
                 raise ValidationError(
                     _("Course end date cannot be after its season end date."))
 
-        # enrolled_count cannot exceed capacity
-        if self.enrolled_count and self.enrolled_count > self.capacity:
-            raise ValidationError(_("Enrolled count cannot exceed capacity."))
+    @staticmethod
+    def _system_weekday_to_python(system_weekday: int) -> int:
+        """
+        Convert Weekday enum (Sat=0..Fri=6) to Python's weekday() format
+        where Monday=0..Sunday=6.
+        """
+        return (system_weekday + 5) % 7
+
+    def is_participant_eligible(self, participant) -> bool:
+        """Check if a participant (StudentUser or Child) is eligible for this course."""
+        if not participant:
+            return False
+
+        age = participant.user.get_age_on_date(self.start_date)
+        if age is None:
+            return False
+        if self.for_adults and age < 15:
+            return False
+        if not self.for_adults and age > 15:
+            return False
+        if participant.user and participant.user.role != "student":
+            return False
+        return True
 
     def generate_lectures(self):
         ''' Generate lectures based on course schedules
@@ -161,24 +195,31 @@ class Course(models.Model):
         course_start_date = self.start_date
         course_end_date = self.end_date if self.end_date else None
         course_number_of_lectures = self.num_lectures if self.num_lectures else None
-        created_at, updated_at = self.created_at, self.updated_at
+
+        schedules = list(self.schedules.all())
+        if not schedules:
+            return
+
+        # Use a single timestamp for all lectures created in this batch
+        now = timezone.now()
+        lectures_to_create = []
+
         if course_end_date and not course_number_of_lectures:
             count = 0
             current_date = course_start_date
-            schedules = self.schedules.all()
             while current_date <= course_end_date:
                 for schedule in schedules:
-                    if current_date.weekday() == schedule.weekday:
-                        Lecture.objects.create(
+                    python_weekday = self._system_weekday_to_python(
+                        schedule.weekday)
+                    if current_date.weekday() == python_weekday:
+                        lectures_to_create.append(Lecture(
                             course=self,
                             day=current_date,
                             start_time=schedule.start_time,
                             end_time=schedule.end_time,
                             lecture_number=count + 1,
                             instructor=self.instructor,
-                            created_at=created_at,
-                            updated_at=updated_at,
-                        )
+                        ))
                         count += 1
                 current_date += timedelta(days=1)
             self.num_lectures = count
@@ -186,27 +227,64 @@ class Course(models.Model):
             count = 0
             current_date = course_start_date
             end_date = None
-            schedules = self.schedules.all()
             while count < course_number_of_lectures:
                 for schedule in schedules:
-                    if current_date.weekday() == schedule.weekday and count < course_number_of_lectures:
-                        Lecture.objects.create(
+                    python_weekday = self._system_weekday_to_python(
+                        schedule.weekday)
+                    if current_date.weekday() == python_weekday and count < course_number_of_lectures:
+                        lectures_to_create.append(Lecture(
                             course=self,
                             day=current_date,
                             start_time=schedule.start_time,
                             end_time=schedule.end_time,
                             lecture_number=count + 1,
                             instructor=self.instructor,
-                            created_at=created_at,
-                            updated_at=updated_at,
-                        )
+                        ))
                         end_date = current_date
                         count += 1
                 current_date += timedelta(days=1)
             self.end_date = end_date
 
+        # Bulk create lectures for better performance
+        if lectures_to_create:
+            Lecture.objects.bulk_create(lectures_to_create)
+            # Update timestamps to be identical for all lectures in this batch
+            lecture_ids = [lec.pk for lec in lectures_to_create]
+            Lecture.objects.filter(pk__in=lecture_ids).update(
+                created_at=now, updated_at=now)
+
+        # Save the updated course fields (num_lectures or end_date)
+        self.save(update_fields=['num_lectures', 'end_date', 'updated_at'])
+
+    def save(self, *args, **kwargs):
+        '''Override save to auto-generate slug if not provided.'''
+        if not self.slug:
+            self.slug = slugify(self.name, allow_unicode=True)
+            # Ensure slug uniqueness
+            original_slug = self.slug
+            counter = 1
+            while Course.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
+                self.slug = f"{original_slug}-{counter}"
+                counter += 1
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.name}"
+
+    @property
+    def enrolled_count(self):
+        """Return count of active enrollments for this course."""
+        return self.enrollments.filter(status='active').count()
+
+    @property
+    def available_spots(self):
+        """Return number of available spots in the course."""
+        return max(0, self.capacity - self.enrolled_count)
+
+    @property
+    def is_full(self):
+        """Check if the course has reached capacity."""
+        return self.enrolled_count >= self.capacity
 
 
 class CourseSchedule(models.Model):
@@ -215,8 +293,9 @@ class CourseSchedule(models.Model):
     """
 
     course = models.ForeignKey(
-        'courses.Course', on_delete=models.CASCADE, related_name='schedules')
-    weekday = models.PositiveSmallIntegerField(choices=Weekday.choices)
+        'courses.Course', verbose_name="الدورة", on_delete=models.CASCADE, related_name='schedules')
+    weekday = models.PositiveSmallIntegerField(
+        choices=Weekday.choices, verbose_name=_("يوم الأسبوع"))
     start_time = models.TimeField()
     end_time = models.TimeField()
 
@@ -230,6 +309,8 @@ class CourseSchedule(models.Model):
             models.Index(fields=['course'], name='course_schedule_course_idx'),
         ]
         ordering = ['course', 'weekday', 'start_time']
+        verbose_name = _("ميعاد كورس")
+        verbose_name_plural = _("مواعيد الكورسات")
 
     def __str__(self):
         return f"{self.course} — {self.get_weekday_display()} {self.start_time}-{self.end_time}"

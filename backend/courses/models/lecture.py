@@ -4,13 +4,14 @@ import datetime
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 
 class LectureStatus(models.TextChoices):
     """Enumeration for lecture status choices."""
-    SCHEDULED = 'scheduled', 'Scheduled'
-    COMPLETED = 'completed', 'Completed'
-    CANCELLED = 'cancelled', 'Cancelled'
+    SCHEDULED = 'scheduled', _('Scheduled')
+    COMPLETED = 'completed', _('Completed')
+    CANCELLED = 'cancelled', _('Cancelled')
 
 
 class Lecture(models.Model):
@@ -18,19 +19,22 @@ class Lecture(models.Model):
 
     title = models.CharField(max_length=255, blank=True)
     course = models.ForeignKey(
-        'courses.Course', on_delete=models.CASCADE, related_name='lectures')
-    day = models.DateField()  # date of lecture (local date in Africa/Cairo)
+        'courses.Course', verbose_name="الدورة", on_delete=models.CASCADE, related_name='lectures')
+    # date of lecture (local date in Africa/Cairo)
+    day = models.DateField(verbose_name=_("تاريخ المحاضرة"))
     start_time = models.TimeField(null=True, blank=True)
     end_time = models.TimeField(null=True, blank=True)
     lecture_number = models.PositiveIntegerField()
     instructor = models.ForeignKey('users.Instructor', null=True, blank=True,
-                                   on_delete=models.SET_NULL, related_name='lectures')
+                                   on_delete=models.SET_NULL, related_name='lectures', verbose_name=_("المعلم"))
     status = models.CharField(
-        max_length=10, choices=LectureStatus.choices, default=LectureStatus.SCHEDULED)
-    created_at = models.DateTimeField(auto_now_add=True)
+        max_length=10, choices=LectureStatus.choices, default=LectureStatus.SCHEDULED, verbose_name=_("حالة المحاضرة"))
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
-    attendance_taken = models.BooleanField(default=False)
+    attendance_taken = models.BooleanField(
+        default=False, verbose_name=_("هل تم أخذ الحضور"))
 
     class Meta:
         constraints = [
@@ -43,8 +47,8 @@ class Lecture(models.Model):
             models.Index(fields=['course', 'lecture_number'],
                          name='lecture_course_lecture_index')
         ]
-        verbose_name = 'Lecture'
-        verbose_name_plural = 'Lectures'
+        verbose_name = _("محاضرة")
+        verbose_name_plural = _("المحاضرات")
 
     def __str__(self):
         return f"{self.title or f'Lecture {self.lecture_number}'} — {self.course} @ {self.day}"

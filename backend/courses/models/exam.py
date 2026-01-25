@@ -8,11 +8,11 @@ from django.utils import timezone
 
 class ExamChoices(models.TextChoices):
     """Enumeration for exam_type status choices."""
-    QUIZ = 'quiz', _('Quiz')
-    MIDTERM = 'midterm', _('Midterm')
-    FINAL = 'final', _('Final')
-    ASSIGNMENT = 'assignment', _('Assignment')
-    OTHER = 'other', _('Other')
+    QUIZ = 'quiz', _('امتحان صغير')
+    MIDTERM = 'midterm', _('امتحان نصفي')
+    FINAL = 'final', _('امتحان نهائي')
+    ASSIGNMENT = 'assignment', _('واجب')
+    OTHER = 'other', _('أخرى')
 
 
 class Exam(models.Model):
@@ -24,7 +24,8 @@ class Exam(models.Model):
     scheduled_at = models.DateTimeField()
     total_marks = models.DecimalField(max_digits=5, decimal_places=2)
     description = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     exam_type = models.CharField(
@@ -32,7 +33,7 @@ class Exam(models.Model):
     )
 
     course = models.ForeignKey(
-        'courses.Course', on_delete=models.CASCADE, related_name="exams")
+        'courses.Course', verbose_name="الدورة", on_delete=models.CASCADE, related_name="exams")
     instructor = models.ForeignKey('users.Instructor', on_delete=models.SET_NULL, null=True, blank=True,
                                    related_name="exams")
 
@@ -43,6 +44,8 @@ class Exam(models.Model):
                          name='exam_scheduled_at_idx'),
         ]
         ordering = ['-scheduled_at']
+        verbose_name = _("امتحان")
+        verbose_name_plural = _("الامتحانات")
 
     def clean(self):
         '''Validate the exam before saving'''
@@ -71,7 +74,8 @@ class ExamResult(models.Model):
     passed = models.BooleanField(default=True)
     notes = models.TextField(null=True, blank=True)
     entered_at = models.DateTimeField(default=timezone.now)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
 
     # If we keep both child and student, enforce XOR (exactly one is set).
@@ -79,7 +83,7 @@ class ExamResult(models.Model):
         'courses.Exam', on_delete=models.CASCADE, related_name="results")
     student = models.ForeignKey('users.StudentUser', on_delete=models.CASCADE, null=True, blank=True,
                                 related_name="exam_results")
-    child = models.ForeignKey('users.Child', on_delete=models.CASCADE, null=True, blank=True,
+    child = models.ForeignKey('parents.Child', on_delete=models.CASCADE, null=True, blank=True,
                               related_name="exam_results")
     entered_by = models.ForeignKey('users.CustomUser', on_delete=models.SET_NULL, null=True, blank=True,
                                    related_name='entered_exam_results')
@@ -99,6 +103,8 @@ class ExamResult(models.Model):
             models.Index(fields=['child'], name='exam_result_child_idx'),
         ]
         ordering = ['-entered_at']
+        verbose_name = _("نتيجة امتحان")
+        verbose_name_plural = _("نتائج الامتحانات")
 
     def clean(self):
         '''Validate the exam result before saving'''

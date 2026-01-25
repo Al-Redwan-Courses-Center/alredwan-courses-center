@@ -1,383 +1,435 @@
-# Back-end of the onsite web application of Redwan Courses Center
+# Redwan Courses Center – Backend
 
+Backend system for **Redwan Courses Center** (واحة الرضوان), built with **Django 5**, **Django REST Framework**, **JWT authentication (Djoser)**, **PostgreSQL**, **Docker**, and **Channels**.
 
-## Don't forget to use: `pip3 install -r requirements.txt` to install the required packages, and `pip3 freeze > requirements.txt` to update the requirements file.
+This project is **Docker-first**. All development and management commands must be executed inside Docker containers.
 
-## Don't Migrate until all the models are ready.
+---
+
+## Table of Contents
+
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure-high-level)
+- [Data Models Overview](#data-models-overview)
+- [Environment Variables](#environment-variables)
+- [Running the Project](#running-the-project-team-standard)
+- [Django Commands Policy](#-important-django-commands-policy-read-this)
+- [Admin Panel](#admin-panel)
+- [Authentication (Djoser + JWT)](#authentication-djoser--jwt)
+- [WebSocket Endpoints](#websocket-endpoints)
+- [Cron Jobs](#cron-jobs)
+- [Testing](#testing)
+- [Redis & Channels](#redis--channels)
+- [Common Issues](#common-issues)
+- [Team Rules](#team-rules-non-negotiable)
+
+---
+
+## Tech Stack
+
+- Python 3.14
+- Django 5.2
+- Django REST Framework
+- Djoser (JWT Authentication)
+- PostgreSQL 17
+- Docker & Docker Compose
+- Channels + Redis
+- Timezone: `Africa/Cairo`
+- Primary Language: Arabic (`ar`)
+
+---
+
+## Project Structure (High Level)
+
+```
+.
+├── Redwan_courses_center/   # Project settings & URLs
+├── users/                   # Custom user model & roles (Student, Parent, Instructor)
+├── courses/                 # Seasons, Courses, Lectures, Exams, Tags
+├── attendance/              # Lecture attendance, Ratings, Devices, Cron logs
+├── enrollments_payments/    # Enrollments, Payments, Refund requests
+├── core/                    # Shared utilities & ASGI configuration
+├── static/                  # Collected static files
+├── media/                   # User-uploaded files
+├── docker-compose.yml
+├── Dockerfile
+├── docker-entrypoint.sh
+├── requirements.txt
+├── manage.py
+└── README.md
+```
+
+---
+
+## Data Models Overview
+
+### Users App (`users/`)
+
+| Model | Description |
+|-------|-------------|
+| `CustomUser` | Base user model with phone number authentication (E.164 format). Fields: `phone_number1` (primary), `phone_number2`, `email`, `dob`, `gender`, `identity_number`, `role`, `is_verified` |
+| `StudentUser` | Student profile linked to CustomUser |
+| `Parent` | Parent profile for managing children |
+| `Instructor` | Instructor profile with teaching capabilities |
+
+**Note:** Authentication uses `phone_number1` as the unique identifier (not email/username).
+
+### Courses App (`courses/`)
+
+| Model | Description |
+|-------|-------------|
+| `Season` | Academic periods (Summer Camp, School, Ramadan, Eid, Other). Has `is_active` flag |
+| `Course` | Course with name, description, dates, price, linked to Season and Instructor |
+| `Lecture` | Individual lecture with date, time, status (Scheduled/Completed/Cancelled), `attendance_taken` flag |
+| `Exam` | Exam linked to a course |
+| `Tag` | Tags for categorizing courses |
+
+**Weekday Choices:** Saturday=0 through Friday=6
+
+### Attendance App (`attendance/`)
+
+| Model | Description |
+|-------|-------------|
+| `LectureAttendance` | Attendance record per student/child per lecture. Includes `present`, `rating` (1.00-10.00), `notes`, `marked_by`, `marked_at` |
+| `StudentInstructorRating` | Rating of instructors by students |
+| `Device` | Registered devices for attendance |
+| `AttendanceCronLog` | Logs for cron job executions |
+
+**Business Rules:**
+- Exactly one of `child` or `student` must be set per attendance record
+- Rating is required when marking attendance (`present` is set)
+- Rating range: 1.00 - 10.00
+
+### Enrollments & Payments App (`enrollments_payments/`)
+
+| Model | Description |
+|-------|-------------|
+| `EnrollmentRequest` | Pending enrollment requests |
+| `Enrollment` | Active enrollment linking student/child to course. Status: Active, Completed, Dropped, Refunded |
+| `Payment` | Payment records for enrollments |
+| `RefundRequest` | Refund request management |
+
+**Business Rules:**
+- Exactly one of `child` or `student` per enrollment
+- Unique constraint: one enrollment per course per participant
+
+---
+
+## Environment Variables
+
+Create a `.env` file in the backend or project root (same level as `docker-compose.yml`) with the following content (replace values as needed or ask the team lead):
+
+```env
+DJANGO_SECRET_KEY=your-secret-key
+DEBUG=1
+DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost
+
+DATABASE_ENGINE=postgresql
+DATABASE_NAME=redwan_db
+DATABASE_USERNAME=redwan_user
+DATABASE_PASSWORD=strongpassword
+DATABASE_HOST=db
+DATABASE_PORT=5432
+```
+
+⚠️ `DJANGO_SECRET_KEY` **must not be empty** or Django will fail to start.
+
+---
+
+## Running the Project (Team Standard)
+
+### 1️⃣ Build and start containers
 
 ```bash
-docker build --tag django-backend .
-docker run -d -p 8000:8000 django-backend
+docker compose up --build
 ```
-[cleaning docker images](https://www.hostinger.com/tutorials/docker-cheat-sheet?utm_campaign=Generic-Tutorials-DSA-t5|NT:Se|Lang:EN|LO:AE-Tier1&utm_medium=ppc&gad_source=1&gad_campaignid=20502237566&gclid=Cj0KCQiAgP_JBhD-ARIsANpEMxznXJ5bAcKd-_eF-YhtUQnvlhHGiLgR7e5qqycL2vQqgGrUr1MJmQIaAn3-EALw_wcB)
 
-Stop all running containers:
+This will:
+
+* Start PostgreSQL
+* Apply migrations
+* Collect static files
+* Run Django development server on `http://localhost:8000`
+
+---
+
+## 🚨 Important: Django Commands Policy (READ THIS)
+
+This project is **Docker-only**.
+
+### ❌ Do NOT run Django commands on your local machine:
+
 ```bash
-docker stop $(docker ps -q)
-docker rm $(docker ps -a -q --filter "status=exited")
-docker image prune -a
-docker rmi -f $(docker images -a -q)
+python3 manage.py makemigrations
 ```
 
-Example Workflow
+### ✅ Always run Django commands inside the container:
 
 ```bash
-
-# Start your containers (if they're not already running):
-docker compose up -d  # Starts the services in detached mode
-
-# Run makemigrations:
-
-docker compose exec app python3 manage.py makemigrations
-
-
-#Apply migrations:
-
-docker compose exec app python3 manage.py migrate
-
-# Create a superuser (optional):
-docker compose exec app python3 manage.py createsuperuser
+docker compose exec django-web-app python3 manage.py makemigrations
+docker compose exec django-web-app python3 manage.py migrate
+docker compose exec django-web-app python3 manage.py createsuperuser
+docker compose exec django-web-app python3 manage.py shell
 ```
 
+### Optional (Recommended Alias)
 
+Add this to your shell config:
 
-## Installation
-* ### 1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/eyadfattah23/critics-spot.git
-   cd critics-spot
-   ```
-
-* ### 2. **install python3 and pip3 if not already installed**:
-    ```bash
-    sudo apt install -y software-properties-common
-    sudo add-apt-repository -y ppa:deadsnakes/ppa
-    sudo apt update
-    sudo apt install -y python3.10 python3.10-venv python3.10-dev
-
-    python3 --version
-    ```
-* ### 3. **install and setup postgresql-14 if not already installed**:
-    ```bash
-    sudo apt update
-    wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-    echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/postgresql-pgdg.list > /dev/null
-    sudo apt update
-    sudo apt install postgresql-14
-    sudo apt install postgresql postgresql-contrib
-    sudo service postgresql start
-    ```
-* ### 4. **prepare the databases**:
-    ```bash
-    ./database_creation.sh
-    ```
-    **if `FATAL: Peer authentication failed for user "postgres"` arises refer to this [link](https://stackoverflow.com/questions/18664074/getting-error-peer-authentication-failed-for-user-postgres-when-trying-to-ge) and [this one](https://stackoverflow.com/questions/18664074/getting-error-peer-authentication-failed-for-user-postgres-when-trying-to-ge)**
-
-* ### 5. **Set up a virtual environment**:
-   ```bash
-   apt install python3-venv
-   python3.10 -m venv venv
-   source venv/bin/activate
-   ```
-
-* ### 6. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-* ### 7. **migrate the tables**:
-   ```bash
-   python3.10 manage.py makemigrations
-   python3.10 manage.py migrate
-   ```
-   if any error is encountered delete all migrations using the following command:
-   `find . -path "*/migrations/*.py" ! -path "./.env/*" ! -name "__init__.py" -delete`.
-
-   [then migrate the tables again.](#7-migrate-the-tables)
-
-* ### 8. **Create a superuser**:
-    ```bash
-        python manage.py createsuperuser
-    ```
-and enter your credentials for this superuser/admin account.
-* ### 9. **Start the development server**:
-   ```bash
-   python3.10 manage.py runserver;
-   ```
-
-
-
-later:
-
-Add a boolean is_phone_verified.
-
-Add a verification code model linked to CustomUser.
-
-Use a library like django-phonenumber-field
-
-Add a signal to notify the primary parent when a new link request is made.
-
-
-
-Tests / checklist
-Create a course and schedule several lectures (past, today, future).
-
-Create an enrollment for a child:
-
-Enrollment created before a future lecture → attendance rows created for that lecture.
-
-Enrollment created within 5 minutes to lecture end (simulate by setting lecture.start_dt <= now) → no attendance created.
-
-Attempt to submit attendance for a future lecture → API returns 403.
-
-Submit attendance for today's lecture:
-
-Missing rating → API returns 400.
-
-All present/rating provided → creates/updates LectureAttendance rows and sets lecture.attendance_taken = True.
-
-Try to delete a lecture with attendance_taken = True → fails with ValidationError.
-
-Delete enrollment → verify future LectureAttendance rows deleted; past rows stay.
-
-Attempt to resubmit attendance after 25 hours → only admin allowed.
-
-Test UniqueConstraint behavior: creating two LectureAttendance rows for same (lecture, child) should fail.
----
-
-
-Backend enforcement helpers and submission workflow
-```py
-def submit_attendance(request, lecture_id):
-    user = request.user
-    lecture = Lecture.objects.select_for_update().get(pk=lecture_id)
-
-    # 1) permission: only instructor of the lecture or admin
-    if not user.is_admin and lecture.instructor and lecture.instructor.user != user:
-        return 403
-
-    # 2) allow marking only if LectureAttendance.can_mark_now(lecture) OR user.is_admin
-    if not user.is_admin and not LectureAttendance.can_mark_now(lecture):
-        return 403 (explain allowed window)
-
-    payload = request.data  # either manual list or batch tokens
-
-    # 3) resolve participants -> list of (attendance_obj, present, rating, notes)
-    # for batch tokens: resolve by parsing token -> find child/student -> find attendance row for lecture
-    # if attendance row missing (participant not enrolled) include in `not_enrolled` list and skip or signal to admin
-
-    # 4) Validate: EVERY targeted participant must have present in {True, False}. Also rating must be provided.
-    for row in rows:
-        if row.present is None:
-            return 400 "All participants must have attendance value"
-        if row.rating is None:
-            return 400 "Rating required for each participant"
-
-    # 5) Atomic write
-    with transaction.atomic():
-        for row in rows:
-            att = row.attendance_obj
-            att.present = row.present
-            att.rating = Decimal(row.rating)
-            att.notes = row.notes
-            att.marked_by = user
-            att.marked_at = timezone.now()
-            att.save()
-
-        lecture.attendance_taken = True
-        lecture.save()
-
-        # create audit log entry
-
-    # 6) return response with created/updated counts and not_enrolled list
-```
-Absolutely! Let’s break down a **Docker Compose file** (`docker-compose.yml`) and understand every section step by step. I'll cover the purpose of each directive and explain how you can create and customize a Docker Compose setup for your project.
-
----
-
-### 1. **File Structure**
-
-A Docker Compose file is written in **YAML** format and is typically named `docker-compose.yml`. This file defines the configuration of multi-container Docker applications, specifying services, networks, and volumes. Each section plays a crucial role in how the containers will be built and interact.
-
-### Basic Structure of a `docker-compose.yml` File:
-
-```yaml
-version: '3.8'  # Specify the version of the Compose file format
-
-services:
-  <service_name>:  # Each service represents a container in your app
-    <key-value>  # Specific configurations for that service
-
-volumes:
-  <volume_name>:  # Define volumes to persist data
-
-networks:
-  <network_name>:  # Define networks for communication between containers
+```bash
+alias dj="docker compose exec django-web-app python3 manage.py"
 ```
 
-Let’s go over each of these components.
+Then use:
 
----
-
-### 2. **`version` Directive**
-
-The `version` defines the version of the Docker Compose file format. It tells Docker how to interpret the rest of the file. The most commonly used version today is `3.8`, but you might see `3.7`, `3.9`, or even `2` depending on the features you need.
-
-* `version: '3.8'` — This uses the Compose file format version 3.8, which is compatible with Docker 18.06.0+.
-
-### 3. **`services` Section**
-
-This is where you define your containers (services) and their configurations. A **service** represents a container or a group of containers running a specific part of your application (e.g., Django, PostgreSQL).
-
-#### Example with Django and PostgreSQL:
-
-```yaml
-services:
-  web:
-    image: python:3.14-slim  # Docker image to use (Python with Slim variant)
-    container_name: django_app  # Optional name for the container
-    command: python manage.py runserver 0.0.0.0:8000  # Command to run inside the container
-    volumes:
-      - .:/app  # Mount your local project directory into the container
-    working_dir: /app  # Working directory inside the container
-    ports:
-      - "8000:8000"  # Map port 8000 on the host to port 8000 on the container
-    environment:
-      - DEBUG=True  # Set environment variables inside the container
-    depends_on:
-      - db  # This service depends on the database service
-
-  db:
-    image: postgres:13  # Docker image to use for PostgreSQL
-    container_name: postgres_db  # Optional name for the container
-    environment:
-      POSTGRES_USER: user  # Set the PostgreSQL username
-      POSTGRES_PASSWORD: password  # Set the PostgreSQL password
-      POSTGRES_DB: django_db  # Set the name of the database
-    volumes:
-      - postgres_data:/var/lib/postgresql/data  # Persist data across container restarts
-    ports:
-      - "5432:5432"  # Map port 5432 for PostgreSQL access
-```
-
-#### Explanation of the Service Configuration:
-
-* **`web`** (Django service):
-
-  * **`image`**: Specifies the Docker image for the container. Here, `python:3.14-slim` is used, which is a slim version of Python. You can replace this with any other Python image (or custom-built image).
-  * **`container_name`**: Sets a custom name for the container. If omitted, Docker generates one automatically.
-  * **`command`**: Defines the command that will be run when the container starts. In this case, it starts the Django development server (`python manage.py runserver`).
-  * **`volumes`**: Mounts the current directory (`.`) from your local machine to `/app` inside the container. This makes your local project files available in the container for development.
-  * **`working_dir`**: Specifies the working directory where commands will be executed inside the container (in this case, `/app`).
-  * **`ports`**: Maps port `8000` on the host machine to port `8000` on the container. This allows you to access the Django app via `localhost:8000` in your browser.
-  * **`environment`**: Sets environment variables that will be available inside the container (like `DEBUG=True` for Django).
-  * **`depends_on`**: Specifies that this service depends on the `db` service (PostgreSQL). Docker Compose will ensure the `db` container starts before `web` starts.
-
-* **`db`** (PostgreSQL service):
-
-  * **`image`**: Specifies the Docker image for the PostgreSQL database. Here we are using the official `postgres:13` image.
-  * **`container_name`**: Sets a custom name for the PostgreSQL container.
-  * **`environment`**: Defines environment variables like `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` for the PostgreSQL database credentials and database name.
-  * **`volumes`**: Mounts a named volume (`postgres_data`) to `/var/lib/postgresql/data` inside the container. This ensures your PostgreSQL data persists even if the container is removed.
-  * **`ports`**: Exposes port `5432` on the host machine, allowing access to the database outside the container.
-
----
-
-### 4. **`volumes` Section**
-
-Docker volumes are used to persist data on the host machine so that it can be reused across container restarts or removals.
-
-```yaml
-volumes:
-  postgres_data:
-    driver: local  # Default driver
-```
-
-* **`postgres_data`** is a named volume that is used by the `db` service to persist PostgreSQL data.
-* Volumes are automatically created when the Compose file is first run. If you use `volumes` in your services, Docker Compose will ensure they are created and used correctly.
-
----
-
-### 5. **`networks` Section (Optional)**
-
-By default, Docker Compose creates a **default network** for communication between containers, so you don’t always need to specify networks. However, if you want more control over the networks, you can define them.
-
-```yaml
-networks:
-  my_network:
-    driver: bridge
-```
-
-* **`my_network`**: Defines a custom network that containers can connect to. This is optional if you want more control over communication between services.
-* **`driver: bridge`**: Specifies the network driver. The `bridge` driver is the default and allows containers to communicate with each other.
-
----
-
-### Example of a Complete `docker-compose.yml` File
-
-```yaml
-version: '3.8'
-
-services:
-  web:
-    image: python:3.14-slim
-    container_name: django_app
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/app
-    working_dir: /app
-    ports:
-      - "8000:8000"
-    environment:
-      - DEBUG=True
-    depends_on:
-      - db
-
-  db:
-    image: postgres:13
-    container_name: postgres_db
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: django_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
-volumes:
-  postgres_data:
-    driver: local
+```bash
+dj makemigrations
+dj migrate
+dj createsuperuser
 ```
 
 ---
 
-### Running Your Docker Compose Setup
+## Admin Panel
 
-Once you have the `docker-compose.yml` file ready, here are the steps to run your setup:
+Admin panel is available at:
 
-1. **Build and start the containers**:
+```
+http://localhost:8000/Al-Redwan-superadmin-dashboard/
+```
 
-   ```bash
-   docker-compose up --build
-   ```
-
-   * The `--build` flag ensures Docker rebuilds the images (if needed).
-
-2. **Stop the containers**:
-
-   ```bash
-   docker-compose down
-   ```
-
-   This will stop and remove the containers, but the volumes will persist (your PostgreSQL data won’t be lost).
-
-3. **Access the Django app**: Open `http://localhost:8000` in your browser to see the Django app running.
+Admin branding is customized in `urls.py`.
 
 ---
 
-### Conclusion
+## Authentication (Djoser + JWT)
 
-This breakdown covers the essential components of a `docker-compose.yml` file and explains the configuration options available for Docker Compose. You can customize this file further based on your needs, like adding more services, configuring additional networks, or adding other environment variables for production environments.
+Authentication is handled using **Djoser** with **JWT**.
 
-Let me know if you have any specific parts you'd like more detail on!
+### Base Auth URL
+
+```
+/auth/
+```
+
+### Main Endpoints
+
+| Purpose         | Method | Endpoint                    |
+| --------------- | ------ | --------------------------- |
+| Register        | POST   | `/auth/users/`              |
+| Login (JWT)     | POST   | `/auth/jwt/create/`         |
+| Refresh token   | POST   | `/auth/jwt/refresh/`        |
+| Verify token    | POST   | `/auth/jwt/verify/`         |
+| Get profile     | GET    | `/auth/users/me/`           |
+| Change password | POST   | `/auth/users/set_password/` |
+
+📌 **Frontend developers should rely on these endpoints only.(for now)**
+
+---
+
+## WebSocket Endpoints
+
+Real-time communication is handled via Django Channels.
+
+### Attendance Updates
+
+| Endpoint | Description |
+|----------|-------------|
+| `ws://localhost:8000/ws/attendance/` | Real-time attendance updates for instructors |
+
+**Usage:**
+```javascript
+const socket = new WebSocket('ws://localhost:8000/ws/attendance/');
+
+socket.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    console.log('Attendance update:', data);
+};
+```
+
+**Events Received:**
+- `attendance_update` — Sent when attendance is marked for a lecture
+
+---
+
+## Testing
+
+Run tests inside the Docker container:
+
+```bash
+# Run all tests
+dj test
+
+# Run tests for a specific app
+dj test users
+dj test courses
+dj test attendance
+dj test enrollments_payments
+
+# Run with verbosity
+dj test -v 2
+
+# Run a specific test case
+dj test users.tests.TestCustomUser
+```
+
+---
+
+## Where Auth Docs Live (For Frontend Team)
+
+All authentication endpoints are documented in this README under **Authentication (Djoser + JWT)**.
+
+📚 **Detailed API documentation:** [`docs/authentication.md`](docs/authentication.md)
+
+The detailed docs include:
+- Complete request/response examples
+- JavaScript/Axios code samples
+- Token management best practices
+- Error handling guide
+
+---
+
+## Database Migrations
+
+Migrations are already included in the repository.
+
+For new changes:
+
+```bash
+dj makemigrations
+dj migrate
+```
+
+---
+
+## Cron Jobs
+
+Configured using `django-crontab`:
+
+| Schedule | Job | Description |
+|----------|-----|-------------|
+| Every Sunday at 00:05 AM | `generate_instructor_attendance_weekly` | Generates weekly instructor attendance records |
+| Daily at 11:59 PM | `mark_absent_daily` | Marks students as absent if attendance not taken |
+
+Cron jobs are defined in `settings.py` under `CRONJOBS`.
+
+**Managing Cron Jobs:**
+
+```bash
+# Add cron jobs to the system
+dj crontab add
+
+# Show current cron jobs
+dj crontab show
+
+# Remove all cron jobs
+dj crontab remove
+```
+
+---
+
+## Redis & Channels
+
+- **Channels** is configured with `core.asgi.application`
+- **Redis** backend is configured for channel layers (host: `redis`, port: `6379`)
+- WebSocket consumers are in `attendance/consumers.py`
+
+**Channel Layer Configuration:**
+```python
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
+```
+
+---
+
+## Common Issues
+
+### ❌ `django.core.exceptions.ImproperlyConfigured: SECRET_KEY must not be empty`
+
+✔ Solution:
+
+* Ensure `.env` exists
+* Ensure `DJANGO_SECRET_KEY` is set
+* Restart containers
+* Run migrations again BUT inside Docker container
+
+---
+
+## Team Rules (Non-Negotiable)
+
+* Docker is the single source of truth
+* No local Python execution
+* No direct DB schema changes
+* All migrations committed (Abo Al-layl request)
+* API is the contract with frontend
+
+---
+
+## Contributing Guidelines
+
+### Branch Naming Convention
+
+```
+feature/<ticket-id>-<short-description>
+bugfix/<ticket-id>-<short-description>
+hotfix/<ticket-id>-<short-description>
+```
+
+### Code Style
+
+- Follow PEP 8 for Python code
+- Use meaningful variable and function names
+- Add docstrings to all models, views, and functions
+- Keep functions small and focused
+
+### Pull Request Checklist
+
+- [ ] Tests pass (`dj test`)
+- [ ] Migrations are included (if model changes)
+- [ ] No `print()` statements left in code
+- [ ] Docstrings added for new code
+- [ ] README updated (if needed)
+
+---
+
+## Useful Commands Reference
+
+```bash
+# Start containers
+docker compose up --build
+
+# Stop containers
+docker compose down
+
+# View logs
+docker compose logs -f django-web-app
+
+# Django shell
+dj shell
+
+# Create superuser
+dj createsuperuser
+
+# Make migrations
+dj makemigrations
+
+# Apply migrations
+dj migrate
+
+# Collect static files
+dj collectstatic
+
+# Run tests
+dj test
+
+# Check for issues
+dj check
+```
+
+---

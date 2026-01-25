@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -14,46 +14,49 @@ import uuid
 
 class EnrollmentRequestStatus(models.TextChoices):
     """Enumeration for enrollment request status choices."""
-    PENDING = "pending", "Pending"
-    PROCESSING = "processing", "Processing"
-    REJECTED = "rejected", "Rejected"
+    PENDING = "pending", _("معلق")
+    PROCESSING = "processing", _("قيد المعالجة")
+    REJECTED = "rejected", _("مرفوض")
     # accepted but not necessarily paid (we'll treat accept==create enrollment)
-    ACCEPTED = "accepted", "Accepted"
-    EXPIRED = "expired", "Expired"
+    ACCEPTED = "accepted", _("مقبول")
+    EXPIRED = "expired", _("منتهي الصلاحية")
 
 
 class PaymentMethod(models.TextChoices):
     """Enumeration for payment method choices."""
-    CASH = 'cash', _('Cash')
-    CARD = 'card', _('Card')
-    BANK_TRANSFER = 'bank_transfer', _('Bank Transfer')
-    INSTAPAY = 'instapay', _('Instapay')
+    CASH = 'cash', _('نقدًا')
+    CARD = 'card', _('بطاقة')
+    BANK_TRANSFER = 'bank_transfer', _('تحويل بنكي')
+    INSTAPAY = 'instapay', _('إنستاباي')
     VODAFONE_CASH = 'vodafone_cash', _(
-        'Vodafone Cash')
-    OTHER = 'other', _('Other')
+        'فودافون كاش')
+    OTHER = 'other', _('طريقة أخرى')
 
 
 class EnrollmentRequest(models.Model):
     """Model representing an enrollment request."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    course = models.ForeignKey('courses.Course', on_delete=models.CASCADE)
+    course = models.ForeignKey(
+        'courses.Course', verbose_name="الدورة", on_delete=models.CASCADE)
 
     parent = models.ForeignKey(
-        'users.Parent', null=True, blank=True, on_delete=models.CASCADE)
+        'parents.Parent', null=True, blank=True, on_delete=models.CASCADE)
     student = models.ForeignKey(
         'users.StudentUser', null=True, blank=True, on_delete=models.CASCADE)
-    child = models.ForeignKey('users.Child', null=True,
+    child = models.ForeignKey('parents.Child', null=True,
                               blank=True, on_delete=models.CASCADE)
 
     # ALLOW null before save() sets it
     price = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True)  # parent may choose to pay a partial amount then pay the rest later
+        # parent may choose to pay a partial amount then pay the rest later
+        max_digits=10, decimal_places=2, null=True, blank=True)
 
     status = models.CharField(max_length=20, choices=EnrollmentRequestStatus.choices,
                               default=EnrollmentRequestStatus.PENDING)
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     processed_at = models.DateTimeField(null=True, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True)
 
@@ -67,6 +70,8 @@ class EnrollmentRequest(models.Model):
                                      on_delete=models.SET_NULL, related_name="processed_enrollment_requests")
 
     class Meta:
+        verbose_name = 'طلب إلتحاق'
+        verbose_name_plural = 'طلبات الإلنحاق'
 
         indexes = [
             models.Index(fields=["course"], name="er_course_idx"),
@@ -139,38 +144,44 @@ class EnrollmentRequest(models.Model):
         """Return the participant of the enrollment request, either a child or a student."""
         return self.child or self.student
 
+    # link paid amount enrollment request price
     def approve(self, processed_by_user, paid_amount=None, payment_method=None, payment_notes=None):
-        """Approve the enrollment request and create an Enrollment."""
+        """Approve the enrollment request and create an Enrollment.
+
+        This method is atomic - if payment creation fails, the enrollment
+        creation will be rolled back.
+        """
         if self.status != EnrollmentRequestStatus.PENDING:
             raise ValidationError("Only pending requests may be approved.")
 
         from .enrollment import Enrollment, EnrollmentStatus
 
-        enrollment = Enrollment.objects.create(
-            course=self.course,
-            student=self.student,
-            child=self.child,
-            enrolled_at=timezone.now(),
-            status=EnrollmentStatus.ACTIVE,
-            created_by=processed_by_user
-        )
-        if paid_amount:
-            from .payment import Payment
-            Payment.objects.create(
-                enrollment=enrollment,
-                payer_parent=self.parent if self.parent else None,
-                payer_student=self.student if self.student else None,
-                amount=paid_amount,
-                method=payment_method if payment_method else "cash",
-                status="paid",
-                processed_by=processed_by_user,
-                processed_at=timezone.now(),
-                notes=payment_notes
+        with transaction.atomic():
+            enrollment = Enrollment.objects.create(
+                course=self.course,
+                student=self.student,
+                child=self.child,
+                enrolled_at=timezone.now(),
+                status=EnrollmentStatus.ACTIVE,
+                created_by=processed_by_user
             )
-        self.status = EnrollmentRequestStatus.ACCEPTED
-        self.processed_by = processed_by_user
-        self.processed_at = timezone.now()
-        self.save(update_fields=["status", "processed_by", "processed_at"])
+            if paid_amount:
+                from .payment import Payment
+                Payment.objects.create(
+                    enrollment=enrollment,
+                    payer_parent=self.parent if self.parent else None,
+                    payer_student=self.student if self.student else None,
+                    amount=paid_amount,
+                    method=payment_method if payment_method else "cash",
+                    status="paid",
+                    processed_by=processed_by_user,
+                    processed_at=timezone.now(),
+                    notes=payment_notes
+                )
+            self.status = EnrollmentRequestStatus.ACCEPTED
+            self.processed_by = processed_by_user
+            self.processed_at = timezone.now()
+            self.save(update_fields=["status", "processed_by", "processed_at"])
 
         return enrollment
 
