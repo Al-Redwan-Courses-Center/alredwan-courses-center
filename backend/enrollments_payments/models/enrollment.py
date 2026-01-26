@@ -58,6 +58,7 @@ class Enrollment(models.Model):
             models.Index(fields=['student'], name='enrollment_student_index'),
             models.Index(fields=['child'], name='enrollment_child_index'),
         ]
+        ordering = ['-enrolled_at']
 
     def clean(self):
         """Validate enrollment constraints."""
@@ -66,9 +67,9 @@ class Enrollment(models.Model):
             raise ValidationError(
                 "Must specify exactly one of child or student.")
 
-        if (self.get_participant() is not None and
+        """ if (self.get_participant() is not None and
                 self.course.is_participant_eligible(self.get_participant()) is False):
-            raise ValidationError("هذا المستخدم ليس طالبًا")
+            raise ValidationError("هذا المستخدم ليس طالبًا") """
 
     def get_payments(self):
         """Return queryset of payments for this enrollment (payments app)."""

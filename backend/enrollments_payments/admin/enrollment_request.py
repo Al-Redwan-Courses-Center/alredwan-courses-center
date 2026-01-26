@@ -92,8 +92,8 @@ class ParticipantTypeFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
-            ('student', _('👤 طالب')),
-            ('child', _('👶 طفل')),
+            ('student', _('🧑‍🎓 طالب')),
+            ('child', _('👦 طفل')),
         )
 
     def queryset(self, request, queryset):
@@ -109,27 +109,39 @@ class ParticipantTypeFilter(admin.SimpleListFilter):
 # =============================================================================
 @admin.action(description=_('✅ قبول الطلبات المحددة'))
 def approve_selected(modeladmin, request, queryset):
-    """Approve selected pending or processing enrollment requests."""
+    """Approve selected pending or processing enrollment requests.
+    
+    Handles partial payments: if enrollment_request.price < course.price,
+    the payment will be recorded as partial with remaining amount tracked.
+    """
     approvable = queryset.filter(status__in=[
         EnrollmentRequestStatus.PENDING,
         EnrollmentRequestStatus.PROCESSING
     ])
     approved_count = 0
+    partial_count = 0
     errors = []
     
     for enrollment_request in approvable:
         try:
             enrollment_request.approve(processed_by_user=request.user)
             approved_count += 1
+            
+            # Track if this was a partial payment
+            if (enrollment_request.price is not None and 
+                enrollment_request.course.price and 
+                enrollment_request.price < enrollment_request.course.price):
+                partial_count += 1
+                
         except Exception as e:
             errors.append(f"{enrollment_request.get_participant()}: {str(e)}")
     
     if approved_count:
-        modeladmin.message_user(
-            request,
-            _(f'تم قبول {approved_count} طلب بنجاح'),
-            level=messages.SUCCESS
-        )
+        msg = _(f'تم قبول {approved_count} طلب بنجاح')
+        if partial_count:
+            msg += _(f' ({partial_count} منها دفعات جزئية)')
+        modeladmin.message_user(request, msg, level=messages.SUCCESS)
+    
     if errors:
         modeladmin.message_user(
             request,
@@ -267,7 +279,7 @@ class EnrollmentRequestAdmin(admin.ModelAdmin):
                 (_('الدفع (اختياري)'), {
                     'fields': ('price', 'payment_method'),
                     'classes': ('collapse',),
-                    'description': _('السعر يتم تعيينه تلقائياً من سعر الدورة إذا لم يُحدد')
+                    'description': _('المبلغ يتم تعيينه تلقائياً من سعر الدورة إذا لم يُحدد')
                 }),
                 (_('ملاحظات (اختياري)'), {
                     'fields': ('notes',),
@@ -348,14 +360,14 @@ class EnrollmentRequestAdmin(admin.ModelAdmin):
             name = obj.student.user.get_full_name() if obj.student.user else str(obj.student)
             return format_html(
                 '<span style="color: #2980b9;" title="طالب">'
-                '👤 <strong>{}</strong></span>',
+                '🧑‍🎓 <strong>{}</strong></span>',
                 name
             )
         elif obj.child:
             parent_name = obj.parent.user.get_full_name() if obj.parent and obj.parent.user else ''
             return format_html(
                 '<span style="color: #9b59b6;" title="طفل - ولي الأمر: {}">'
-                '👶 <strong>{}</strong></span>',
+                '👦 <strong>{}</strong></span>',
                 parent_name, obj.child
             )
         return '-'
@@ -372,7 +384,7 @@ class EnrollmentRequestAdmin(admin.ModelAdmin):
             )
         return '-'
     
-    @admin.display(description=_('السعر'), ordering='price')
+    @admin.display(description=_('المبلغ'), ordering='price')
     def get_price_display(self, obj):
         """Display price with currency and comparison to course price."""
         if obj.price is not None:
@@ -534,7 +546,7 @@ class EnrollmentRequestAdmin(admin.ModelAdmin):
         if obj.student:
             user = obj.student.user
             return format_html(
-                '<div style="padding: 10px; background: #ecf0f1; border-radius: 5px;">'
+                '<div style="padding: 10px; background: #264b5d; border-radius: 5px;">'
                 '<strong>👤 طالب:</strong> {}<br>'
                 '<strong>📧 البريد:</strong> {}<br>'
                 '<strong>📱 الهاتف:</strong> {}'
@@ -546,14 +558,14 @@ class EnrollmentRequestAdmin(admin.ModelAdmin):
         elif obj.child and obj.parent:
             parent_user = obj.parent.user
             return format_html(
-                '<div style="padding: 10px; background: #ecf0f1; border-radius: 5px;">'
-                '<strong>👶 الطفل:</strong> {}<br>'
+                '<div style="padding: 10px; background: #264b5d; border-radius: 5px;">'
+                '<strong>👦 الطفل:</strong> {}<br>'
                 '<strong>👨‍👩‍👧 ولي الأمر:</strong> {}<br>'
                 '<strong>📱 هاتف ولي الأمر:</strong> {}'
                 '</div>',
                 obj.child,
                 parent_user.get_full_name() if parent_user else '-',
-                getattr(parent_user, 'phone', '-') if parent_user else '-'
+                getattr(parent_user, 'phone_number1', '-') if parent_user else '-'
             )
         return '-'
     
@@ -562,7 +574,7 @@ class EnrollmentRequestAdmin(admin.ModelAdmin):
         """Display detailed course info in edit form."""
         if obj.course:
             return format_html(
-                '<div style="padding: 10px; background: #ecf0f1; border-radius: 5px;">'
+                '<div style="padding: 10px; background: #264b5d; border-radius: 5px;">'
                 '<strong>📚 الدورة:</strong> {}<br>'
                 '<strong>👨‍🏫 المدرس:</strong> {}<br>'
                 '<strong>💰 السعر الأصلي:</strong> {} ج.م<br>'
@@ -588,7 +600,7 @@ class EnrollmentRequestAdmin(admin.ModelAdmin):
             'parent': 'ولي الأمر',
             'student': 'الطالب',
             'child': 'الطفل',
-            'price': 'السعر',
+            'price': 'المبلغ',
             'payment_method': 'طريقة الدفع',
             'status': 'الحالة',
             'notes': 'ملاحظات',

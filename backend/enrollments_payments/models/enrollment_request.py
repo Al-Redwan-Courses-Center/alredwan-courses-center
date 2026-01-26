@@ -160,6 +160,14 @@ class EnrollmentRequest(models.Model):
 
         This method is atomic - if payment creation fails, the enrollment
         creation will be rolled back.
+        
+        Payment amount logic:
+        1. If paid_amount is explicitly provided, use it
+        2. Otherwise, if self.price is set (partial/custom payment), use self.price
+        3. Otherwise, use the full course price
+        
+        This allows for partial payments where the remaining amount can be
+        collected later via additional Payment records.
         """
         if self.status != EnrollmentRequestStatus.PENDING and self.status != EnrollmentRequestStatus.PROCESSING:
             raise ValidationError("Only pending or processing requests may be approved.")
@@ -175,19 +183,39 @@ class EnrollmentRequest(models.Model):
                 status=EnrollmentStatus.ACTIVE,
                 created_by=processed_by_user
             )
-            if paid_amount:
-                from .payment import Payment
-                Payment.objects.create(
-                    enrollment=enrollment,
-                    payer_parent=self.parent if self.parent else None,
-                    payer_student=self.student if self.student else None,
-                    amount=paid_amount,
-                    method=payment_method if payment_method else "cash",
-                    status="paid",
-                    processed_by=processed_by_user,
-                    processed_at=timezone.now(),
-                    notes=payment_notes
-                )
+            
+            # Determine the payment amount:
+            # Priority: paid_amount param > enrollment_request.price > course.price
+            if paid_amount is not None:
+                final_amount = paid_amount
+            elif self.price is not None:
+                final_amount = self.price
+            else:
+                final_amount = self.course.price
+            
+            # Determine payment method
+            final_method = payment_method if payment_method else (self.payment_method or "cash")
+            
+            # Build payment notes to track partial payments
+            final_notes = payment_notes or ""
+            if self.price is not None and self.course.price and self.price < self.course.price:
+                remaining = float(self.course.price) - float(self.price)
+                partial_note = f"[دفعة جزئية] المبلغ المدفوع: {self.price} ج.م | المتبقي: {remaining} ج.م"
+                final_notes = f"{partial_note}\n{final_notes}".strip() if final_notes else partial_note
+            
+            from .payment import Payment
+            Payment.objects.create(
+                enrollment=enrollment,
+                payer_parent=self.parent if self.parent else None,
+                payer_student=self.student if self.student else None,
+                amount=final_amount,
+                method=final_method,
+                status="paid",
+                processed_by=processed_by_user,
+                processed_at=timezone.now(),
+                notes=final_notes if final_notes else None
+            )
+            
             self.status = EnrollmentRequestStatus.ACCEPTED
             self.processed_by = processed_by_user
             self.processed_at = timezone.now()
