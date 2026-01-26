@@ -183,7 +183,7 @@ curl -X GET "http://localhost:8000/api/courses/quran-memorization-beginner/"
 ### 3. Get Landing Page Featured Courses
 Get courses featured on the landing page, ordered by display priority.
 
-**Endpoint:** `GET /api/courses/landing/`
+**Endpoint:** `GET /api/courses/landingpagecourses/`
 
 **Authentication:** Not required (Public)
 
@@ -191,7 +191,7 @@ Get courses featured on the landing page, ordered by display priority.
 
 **Example Request:**
 ```bash
-curl -X GET "http://localhost:8000/api/courses/landing/"
+curl -X GET "http://localhost:8000/api/courses/landingpagecourses/"
 ```
 
 **Example Response:**
@@ -309,7 +309,7 @@ Get instructors featured on the landing page, ordered by display priority.
 
 **Example Request:**
 ```bash
-curl -X GET "http://localhost:8000/api/users/instructors/landing/"
+curl -X GET "http://localhost:8000/api/users/landingpageinstructors/"
 ```
 
 **Example Response:**
@@ -535,7 +535,7 @@ curl -X GET "http://localhost:8000/api/courses/?instructor=3"
 ### Example 5: Get Featured Content for Landing Page
 ```bash
 # Get featured courses
-curl -X GET "http://localhost:8000/api/courses/landing/"
+curl -X GET "http://localhost:8000/api/courses/landingpagecourses/"
 
 # Get featured instructors
 curl -X GET "http://localhost:8000/api/users/instructors/landing/"
@@ -568,7 +568,7 @@ async function getCourseById(id) {
 
 // Get landing page featured courses
 async function getLandingPageCourses() {
-  const response = await fetch('http://localhost:8000/api/courses/landing/');
+  const response = await fetch('http://localhost:8000/api/courses/landingpagecourses/');
   const featuredCourses = await response.json();
   return featuredCourses;
 }
