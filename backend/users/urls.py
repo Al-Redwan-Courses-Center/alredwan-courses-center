@@ -6,5 +6,5 @@ from .views import LandingPageInstructorListView
 app_name = 'users'
 
 urlpatterns = [
-    path('instructors/landing/', LandingPageInstructorListView.as_view(), name='landing-instructor-list'),
+    path('landingpageinstructors/', LandingPageInstructorListView.as_view(), name='landing-instructor-list'),
 ]

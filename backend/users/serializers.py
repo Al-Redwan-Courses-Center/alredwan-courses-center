@@ -7,7 +7,7 @@ import phonenumbers
 from django.utils.translation import gettext_lazy as _
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
-from .models import CustomUser
+from .models import CustomUser, Instructor, LandingPageInstructor
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -86,3 +86,43 @@ class CustomUserSerializer(UserSerializer):
             'is_verified',    # Only admins can verify users
             'date_joined',
         )
+
+class InstructorSerializer(serializers.ModelSerializer):
+    """Serializer for Instructor model"""
+    name = serializers.CharField(source='user.get_full_name', read_only=True)
+    
+    class Meta:
+        model = Instructor
+        fields = ['id', 'name']
+
+
+class LandingPageInstructorDetailSerializer(serializers.ModelSerializer):
+    """Serializer for detailed instructor info on landing page"""
+    name = serializers.CharField(source='user.get_full_name', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+    phone = serializers.CharField(source='user.phone_number1', read_only=True)
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    image_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Instructor
+        fields = ['id', 'name', 'email', 'phone', 'bio', 'type', 'type_display', 'image_url', 'joined_date']
+    
+    def get_image_url(self, obj):
+        """Get the full URL for the instructor's image"""
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
+
+
+class LandingPageInstructorSerializer(serializers.ModelSerializer):
+    """Serializer for landing page featured instructors"""
+    instructor = LandingPageInstructorDetailSerializer(read_only=True)
+    
+    class Meta:
+        model = LandingPageInstructor
+        fields = ['id', 'instructor', 'order', 'created_at']
+

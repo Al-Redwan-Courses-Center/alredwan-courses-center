@@ -7,3 +7,4 @@ from .student_instructor_rating import (
     StudentCourseRatingAdmin,
     ParentCourseRatingAdmin
 )
+from .landing_page_instructor import LandingPageInstructorAdmin

@@ -4,13 +4,14 @@ from django.shortcuts import render
 from rest_framework import generics, filters
 from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Course, LandingPageCourse, LandingPageInstructor
+from .models import Course, LandingPageCourse
+from users.models import LandingPageInstructor
 from .serializers import (
     CourseListSerializer, 
     CourseDetailSerializer,
     LandingPageCourseSerializer,
-    LandingPageInstructorSerializer
 )
+from users.serializers import LandingPageInstructorSerializer
 
 
 class CourseListView(generics.ListAPIView):
@@ -54,7 +55,7 @@ class CourseDetailView(generics.RetrieveAPIView):
 class LandingPageCourseListView(generics.ListAPIView):
     """
     API endpoint for listing featured courses on landing page
-    GET /api/landingpagecourses/
+    GET /api/courses/landingpagecourses/
     Returns courses ordered by their display order
     """
     queryset = LandingPageCourse.objects.select_related(

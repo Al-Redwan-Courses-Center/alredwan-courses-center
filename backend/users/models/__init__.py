@@ -11,3 +11,4 @@ from .student_instructor_rating import (
     StudentCourseRating,
     ParentCourseRating
 )
+from .landingPageInstructor import LandingPageInstructor
