@@ -59,6 +59,7 @@ MAX_IMAGE_SIZE_MB=5
 IMAGE_COMPRESSION_QUALITY=80
 IMAGE_MAX_WIDTH=1920
 IMAGE_MAX_HEIGHT=1920
+TARGET_IMAGE_SIZE_KB=500  # Target file size in kilobytes (default: 500KB)
 ```
 
 ### 3. Install Dependencies
@@ -88,8 +89,9 @@ When an image is uploaded, the system automatically:
 2. **Compresses** the image to JPEG format
 3. **Resizes** if larger than max dimensions (maintains aspect ratio)
 4. **Optimizes** quality to 80% (configurable)
-5. **Uploads** to Cloudinary with organized path
-6. **Returns** CDN URL for fast delivery
+5. **Applies aggressive compression** to meet the target size of 500KB (configurable)
+6. **Uploads** to Cloudinary with organized path
+7. **Returns** CDN URL for fast delivery
 
 ### File Size Limits
 
@@ -102,6 +104,7 @@ When an image is uploaded, the system automatically:
 - **Quality**: 80% (configurable via `IMAGE_COMPRESSION_QUALITY`)
 - **Max Width**: 1920px (configurable via `IMAGE_MAX_WIDTH`)
 - **Max Height**: 1920px (configurable via `IMAGE_MAX_HEIGHT`)
+- **Target Size**: 500KB (configurable via `TARGET_IMAGE_SIZE_KB`)
 - **Format**: Converts to JPEG for optimal compression
 
 ## 🔧 Usage in Models
@@ -188,6 +191,7 @@ https://res.cloudinary.com/{cloud_name}/image/upload/w_auto,dpr_auto/{public_id}
 | `IMAGE_COMPRESSION_QUALITY` | 80 | JPEG quality (1-100) |
 | `IMAGE_MAX_WIDTH` | 1920 | Maximum width in pixels |
 | `IMAGE_MAX_HEIGHT` | 1920 | Maximum height in pixels |
+| `TARGET_IMAGE_SIZE_KB` | 500 | Target file size in kilobytes |
 
 ## 🐛 Troubleshooting
 
@@ -207,6 +211,7 @@ https://res.cloudinary.com/{cloud_name}/image/upload/w_auto,dpr_auto/{public_id}
 
 - Increase `IMAGE_COMPRESSION_QUALITY` (default: 80)
 - Increase `IMAGE_MAX_WIDTH` and `IMAGE_MAX_HEIGHT`
+- Adjust `TARGET_IMAGE_SIZE_KB` for less aggressive compression
 
 ## 📚 Additional Resources
 

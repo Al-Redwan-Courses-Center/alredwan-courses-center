@@ -41,26 +41,29 @@ def validate_image_format(image):
         raise ValidationError("Invalid image file.")
 
 
-def compress_and_optimize_image(image_file, quality=None, max_width=None, max_height=None):
+def compress_and_optimize_image(image_file, quality=None, max_width=None, max_height=None, target_size_kb=None):
     """
-    Compress and optimize an image before uploading.
+    Compress and optimize an image before uploading to achieve kilobyte file sizes.
     
     Args:
         image_file: Django UploadedFile object
-        quality: JPEG quality (1-100), defaults to settings.IMAGE_COMPRESSION_QUALITY
+        quality: Initial JPEG quality (1-100), defaults to settings.IMAGE_COMPRESSION_QUALITY
         max_width: Maximum width in pixels, defaults to settings.IMAGE_MAX_WIDTH
         max_height: Maximum height in pixels, defaults to settings.IMAGE_MAX_HEIGHT
+        target_size_kb: Target file size in KB, defaults to settings.TARGET_IMAGE_SIZE_KB (if set)
     
     Returns:
-        InMemoryUploadedFile: Optimized image file
+        InMemoryUploadedFile: Optimized image file compressed to kilobytes
     """
     quality = quality or settings.IMAGE_COMPRESSION_QUALITY
     max_width = max_width or settings.IMAGE_MAX_WIDTH
     max_height = max_height or settings.IMAGE_MAX_HEIGHT
+    target_size_kb = target_size_kb or getattr(settings, 'TARGET_IMAGE_SIZE_KB', 500)  # Default 500KB
     
     try:
         # Open the image
         img = Image.open(image_file)
+        original_format = img.format
         
         # Convert RGBA/P to RGB for JPEG
         if img.mode in ('RGBA', 'P', 'LA'):
@@ -76,10 +79,32 @@ def compress_and_optimize_image(image_file, quality=None, max_width=None, max_he
         # Resize if needed (maintaining aspect ratio)
         img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
         
-        # Save to BytesIO
+        # Iterative compression to reach target size
+        current_quality = quality
         output = BytesIO()
-        img.save(output, format='JPEG', quality=quality, optimize=True)
+        
+        # First attempt with initial quality
+        img.save(output, format='JPEG', quality=current_quality, optimize=True)
+        
+        # If file is still too large, reduce quality iteratively
+        attempts = 0
+        max_attempts = 10
+        
+        while output.tell() > target_size_kb * 1024 and current_quality > 20 and attempts < max_attempts:
+            output = BytesIO()
+            current_quality -= 10
+            
+            # If quality gets too low, try reducing dimensions
+            if current_quality <= 30:
+                scale_factor = 0.9
+                new_size = (int(img.width * scale_factor), int(img.height * scale_factor))
+                img = img.resize(new_size, Image.Resampling.LANCZOS)
+            
+            img.save(output, format='JPEG', quality=max(current_quality, 20), optimize=True)
+            attempts += 1
+        
         output.seek(0)
+        final_size_kb = output.tell() / 1024
         
         # Create InMemoryUploadedFile
         return InMemoryUploadedFile(
