@@ -120,12 +120,6 @@ class InstructorAttendance(models.Model):
         help_text=_("تاريخ ووقت إضافة/تحديث التقييم")
     )
     
-    feedback = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("ملاحظات التقييم")
-    )
-    
     notes = models.TextField(
         blank=True,
         null=True,
@@ -148,24 +142,26 @@ class InstructorAttendance(models.Model):
 
     def clean(self):
         """Validate rating based on attendance status."""
-        # If absent or not started, rating should be null
-        if self.status in [AttendanceStatus.ABSENT, AttendanceStatus.NOT_STARTED]:
-            if self.rating is not None and self.rating != 0:
+        # If absent, not started, or pending, rating MUST be null
+        if self.status in [AttendanceStatus.ABSENT, AttendanceStatus.NOT_STARTED, AttendanceStatus.PENDING]:
+            if self.rating is not None:
                 raise ValidationError({
-                    'rating': _("لا يمكن تقييم المعلم الغائب أو الذي لم يبدأ.")
+                    'rating': _("لا يمكن تقييم المعلم الغائب أو الذي لم يبدأ. يجب أن يكون التقييم فارغاً.")
                 })
         
-        # If rating is provided, it must be between 1 and 10 (except 0 for no rating yet)
-        if self.rating is not None and self.rating > 0:
-            if self.rating < 1 or self.rating > 10:
-                raise ValidationError({
-                    'rating': _("التقييم يجب أن يكون بين 1.00 و 10.00")
-                })
-            # If rating is provided, rated_by should also be provided
-            if not self.rated_by:
-                raise ValidationError({
-                    'rated_by': _("يجب تحديد المقيّم عند إضافة التقييم.")
-                })
+        # If present or late, rating can be None (not rated), 0 (attended but not rated), or 1-10
+        elif self.status in [AttendanceStatus.PRESENT, AttendanceStatus.LATE]:
+            # If rating is provided and not 0, it must be between 1 and 10
+            if self.rating is not None and self.rating > 0:
+                if self.rating < 1 or self.rating > 10:
+                    raise ValidationError({
+                        'rating': _("التقييم يجب أن يكون بين 1.00 و 10.00")
+                    })
+                # If rating is provided (not 0), rated_by should also be provided
+                if not self.rated_by:
+                    raise ValidationError({
+                        'rated_by': _("يجب تحديد المقيّم عند إضافة التقييم.")
+                    })
 
     def save(self, *args, **kwargs):
         """Override save to automatically set rating based on attendance status."""
@@ -241,7 +237,7 @@ class InstructorAttendance(models.Model):
         self.rated_at = None
         self.save()
 
-    def add_rating(self, value: float, admin_user: CustomUser, feedback: str = None):
+    def add_rating(self, value: float, admin_user: CustomUser, notes: str = None):
         """
         Add or update rating for an instructor who attended.
         Can only rate instructors who are present or late.
@@ -250,7 +246,7 @@ class InstructorAttendance(models.Model):
         Args:
             value: Rating value between 1.00 and 10.00
             admin_user: The admin user adding the rating
-            feedback: Optional feedback/comments about the rating
+            notes: Optional notes/comments about the rating
         
         Raises:
             ValidationError: If trying to rate absent instructor or invalid rating
@@ -273,17 +269,10 @@ class InstructorAttendance(models.Model):
         self.rating = value
         self.rated_by = admin_user
         self.rated_at = timezone.now()
-        self.feedback = feedback
+        self.notes = notes
         
         self.save()
         return self
-
-    def rate(self, value: float, admin_user: CustomUser, notes: str = None):
-        """
-        Legacy method for backward compatibility.
-        Use add_rating() instead.
-        """
-        return self.add_rating(value, admin_user, notes)
 
     @classmethod
     def generate_for_date_range(cls, start_date, end_date):
