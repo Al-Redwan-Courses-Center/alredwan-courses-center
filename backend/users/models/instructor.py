@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
+from cloudinary.models import CloudinaryField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from core.utils.image_utils import validate_image_size
 
 from courses.models.lecture import Lecture
 from .user import CustomUser
@@ -12,16 +12,6 @@ from .user import CustomUser
 '''
 Module for Instructor model that represents an instructor user profile
 '''
-
-
-def nid_upload_path(instance, filename):
-    """Generate file path for uploading NID images of an instructor."""
-    return f"instructors/{instance.user.id}/nid/{filename}"
-
-
-def instructor_upload_path(instance, filename):
-    """Generate file path for uploading profile images of an instructor."""
-    return f"instructors/{instance.id}/{filename}"
 
 
 class Instructor(models.Model):
@@ -37,23 +27,45 @@ class Instructor(models.Model):
     bio = models.TextField(null=True, blank=True)
     monthly_salary = models.DecimalField(max_digits=10, decimal_places=2)
 
-    nid_front = models.ImageField(
-        upload_to=nid_upload_path,
-        validators=[validate_image_size],
+    # NID images - higher quality for document readability
+    nid_front = CloudinaryField(
+        'nid_front',
         blank=True,
         null=True,
+        folder='instructors/nid',
+        transformation={
+            'width': 1200,
+            'crop': 'limit',
+            'quality': 'auto:good',  # Higher quality for documents
+            'fetch_format': 'auto',
+        },
     )
-    nid_back = models.ImageField(
-        upload_to=nid_upload_path,
-        validators=[validate_image_size],
+    nid_back = CloudinaryField(
+        'nid_back',
         blank=True,
         null=True,
+        folder='instructors/nid',
+        transformation={
+            'width': 1200,
+            'crop': 'limit',
+            'quality': 'auto:good',
+            'fetch_format': 'auto',
+        },
     )
-    image = models.ImageField(
-        upload_to=instructor_upload_path,
-        validators=[validate_image_size],
+    # Profile image - face-focused cropping
+    image = CloudinaryField(
+        'instructor_image',
         blank=True,
         null=True,
+        folder='instructors/profiles',
+        transformation={
+            'width': 400,
+            'height': 400,
+            'crop': 'thumb',
+            'gravity': 'face',  # Auto-detect and focus on face
+            'quality': 'auto:good',
+            'fetch_format': 'auto',
+        },
     )
     joined_date = models.DateField(
         auto_now_add=True, verbose_name=_("تاريخ الانضمام"))
