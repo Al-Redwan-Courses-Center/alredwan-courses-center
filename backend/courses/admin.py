@@ -504,7 +504,7 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
 
     fieldsets = (
         (_('معلومات الدورة الأساسية'), {
-            'fields': ('name', 'slug', 'description'),
+            'fields': ('name', 'slug', 'description', 'image'),
             'description': _('المعلومات الأساسية للدورة')
         }),
         (_('المدرس والموسم'), {

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 ''' Models for Course app'''
 from datetime import timedelta
+from cloudinary.models import CloudinaryField
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -8,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.utils.text import slugify
 from django.db.models import Count, Q
+
 # Create your models here.
 
 
@@ -95,7 +97,6 @@ class Tag(models.Model):
 
 # Model Course
 
-
 class Course(models.Model):
     """
     Course model
@@ -103,7 +104,21 @@ class Course(models.Model):
 
     name = models.CharField(max_length=128)
     description = models.TextField(blank=True)
-
+    # Cloudinary image with automatic optimization:
+    # - folder: organizes images in 'courses/' folder
+    # - transformation: resizes to max 800px width, auto quality, auto format (webp/avif)
+    image = CloudinaryField(
+        'صورة الكورس', 
+        blank=True, 
+        null=True,
+        folder='courses',
+        transformation={
+            'width': 800,
+            'crop': 'limit',  # Only downscale, never upscale
+            'quality': 'auto:good',  # Automatic quality optimization
+            'fetch_format': 'auto',  # Auto-select best format (webp, avif, etc.)
+        },
+    )
     start_date = models.DateField(verbose_name=_("تاريخ البدء"))
     # optional if you later drive off schedules/lectures
     end_date = models.DateField(null=True, blank=True)
