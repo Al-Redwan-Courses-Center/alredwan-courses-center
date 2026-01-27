@@ -21,7 +21,8 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 IGNORE_DIR_NAMES = {
-    'rdvenv', 'venv', 'env', '.git', 'node_modules', 'static', 'media', '__pycache__'
+    'rdvenv', 'venv', '.venv', 'env', '.git', 'node_modules', 'static', 'media', '__pycache__',
+    'site-packages', 'lib', 'lib64',  # Skip virtualenv internals
 }
 
 
