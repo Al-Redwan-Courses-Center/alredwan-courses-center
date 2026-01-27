@@ -3,8 +3,6 @@ from cloudinary.models import CloudinaryField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
 
 from courses.models.lecture import Lecture
 from .user import CustomUser
