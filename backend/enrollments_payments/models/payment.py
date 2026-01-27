@@ -160,10 +160,9 @@ class Payment(models.Model):
 
     def __str__(self):
         """String representation of the Payment."""
-        payer = (self.payer_parent.first_name if self.payer_parent else (
-            self.payer_student.first_name if self.payer_student else 'Unknown'))
-        target = self.pending_enrollment or getattr(
-            self, 'enrollment', None) or 'Unknown'
+        payer = (self.payer_parent.user.first_name if self.payer_parent else (
+            self.payer_student.user.first_name if self.payer_student else 'Unknown'))
+        target = getattr(self, 'enrollment', None) or 'Unknown'
         return f"Payment of {self.amount} by {payer} for {target}"
 
 

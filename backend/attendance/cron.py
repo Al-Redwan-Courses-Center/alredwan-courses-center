@@ -2,7 +2,7 @@
 
 """Cron jobs for Attendances"""
 from django.utils import timezone
-from users.models.instructor import InstructorAttendance
+from .models.instructor_attendance import InstructorAttendance
 from .models.attendance_cron_log import AttendanceCronLog
 
 

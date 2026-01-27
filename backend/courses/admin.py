@@ -29,7 +29,7 @@ ARABIC_FIELD_LABELS = {
     'for_adults': 'للبالغين',
     'min_age': 'الحد الأدنى للعمر',
     'max_age': 'الحد الأقصى للعمر',
-    'tags': 'الوسوم',
+    'tags': 'الفئات',
     'slug': 'الرابط المختصر',
     'course': 'الدورة',
     'weekday': 'اليوم',
@@ -483,10 +483,16 @@ class SeasonAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
             '<span style="color: #e74c3c;">🔴 غير نشط</span>'
         )
 
-    @admin.display(description=_('عدد الدورات'))
+    @admin.display(description=_('عدد الدورات'), ordering='courses_count')
     def get_courses_count(self, obj):
-        """Display the number of courses in this season."""
-        count = getattr(obj, 'courses_count', obj.courses.count())
+        """Display the number of courses in this season.
+        
+        Uses annotated 'courses_count' from get_queryset to avoid N+1 queries.
+        Falls back to direct count only when annotation is missing (e.g., detail view).
+        """
+        count = getattr(obj, 'courses_count', None)
+        if count is None:
+            count = obj.courses.count()
         return format_html(
             '<span style="background: #3498db; color: white; padding: 2px 8px; '
             'border-radius: 10px;">{}</span>',
@@ -498,19 +504,53 @@ class SeasonAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
         return qs.annotate(courses_count=Count('courses'))
 
 
+class TagCourseInline(admin.TabularInline):
+    """Inline to show courses that have this tag."""
+    model = Course.tags.through
+    extra = 0
+    verbose_name = _('دورة')
+    verbose_name_plural = _('الدورات المرتبطة')
+    autocomplete_fields = ['course']
+    classes = ['collapse']
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'course', 'course__instructor', 'course__instructor__user', 'course__season'
+        )
+
+
+class TagInstructorInline(admin.TabularInline):
+    """Inline to show instructors associated with this tag."""
+    from users.models import Instructor
+    model = Instructor.tags.through
+    extra = 0
+    verbose_name = _('مدرس')
+    verbose_name_plural = _('المدرسون المرتبطون')
+    classes = ['collapse']
+    autocomplete_fields = ['instructor']
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'instructor', 'instructor__user'
+        )
+
+
 @admin.register(Tag)
 class TagAdmin(ArabicLabelsMixin, admin.ModelAdmin):
     """Admin configuration for Tag model."""
 
-    list_display = ('name', 'get_courses_count', 'created_at')
+    list_display = ('name', 'get_courses_count', 'get_instructors_count', 'created_at')
     search_fields = ('name',)
     list_per_page = 50
     ordering = ('name',)
-
-    @admin.display(description=_('عدد الدورات'))
+    inlines = [TagCourseInline, TagInstructorInline]
+    prefetch_related_fields = ['courses', 'courses__instructor', 'courses__instructor__user']
+    @admin.display(description=_('عدد الدورات'), ordering='courses_count')
     def get_courses_count(self, obj):
         """Display number of courses using this tag."""
-        count = getattr(obj, 'courses_count', obj.courses.count())
+        count = getattr(obj, 'courses_count', None)
+        if count is None:
+            count = obj.courses.count()
         if count > 0:
             return format_html(
                 '<span style="background: #9b59b6; color: white; padding: 2px 8px; '
@@ -519,9 +559,26 @@ class TagAdmin(ArabicLabelsMixin, admin.ModelAdmin):
             )
         return format_html('<span style="color: #95a5a6;">0</span>')
 
+    @admin.display(description=_('عدد المدرسين'), ordering='instructors_count')
+    def get_instructors_count(self, obj):
+        """Display number of unique instructors teaching courses with this tag."""
+        count = getattr(obj, 'instructors_count', None)
+        if count is None:
+            count = obj.courses.values('instructor').distinct().count()
+        if count > 0:
+            return format_html(
+                '<span style="background: #3498db; color: white; padding: 2px 8px; '
+                'border-radius: 10px;">👨‍🏫 {}</span>',
+                count
+            )
+        return format_html('<span style="color: #95a5a6;">0</span>')
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.annotate(courses_count=Count('courses'))
+        return qs.annotate(
+            courses_count=Count('courses', distinct=True),
+            instructors_count=Count('instructors', distinct=True)
+        )
 
 
 @admin.register(Course)
@@ -557,7 +614,7 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
 
     fieldsets = (
         (_('معلومات الدورة الأساسية'), {
-            'fields': ('name', 'slug', 'description'),
+            'fields': ('name', 'slug', 'description', 'image'),
             'description': _('المعلومات الأساسية للدورة')
         }),
         (_('المدرس والموسم'), {
@@ -805,7 +862,7 @@ class LectureAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
     save_on_top = True
     actions = [mark_lectures_completed,
                mark_lectures_cancelled, reschedule_next_week]
-
+    list_select_related = ('course', 'instructor', 'course__season', 'instructor__user', 'course__instructor__user', 'course__instructor')
     fieldsets = (
         (_('معلومات المحاضرة'), {
             'fields': ('title', 'course', 'lecture_number'),
@@ -1287,8 +1344,8 @@ admin.site.enable_nav_sidebar = True
 # Ensure proper ordering in admin sidebar
 Season._meta.verbose_name = _('موسم')
 Season._meta.verbose_name_plural = _('المواسم')
-Tag._meta.verbose_name = _('وسم')
-Tag._meta.verbose_name_plural = _('الوسوم')
+Tag._meta.verbose_name = _('فئة')
+Tag._meta.verbose_name_plural = _('الفئات')
 Course._meta.verbose_name = _('دورة')
 Course._meta.verbose_name_plural = _('الدورات')
 CourseSchedule._meta.verbose_name = _('جدول دورة')

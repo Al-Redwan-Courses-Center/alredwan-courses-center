@@ -2,7 +2,7 @@
 
 Backend system for **Redwan Courses Center** (واحة الرضوان), built with **Django 5**, **Django REST Framework**, **JWT authentication (Djoser)**, **PostgreSQL**, **Docker**, and **Channels**.
 
-This project is **Docker-first**. All development and management commands must be executed inside Docker containers.
+This project supports both **local development** and **Docker deployment**. Migrations must be created locally and committed to git.
 
 ---
 
@@ -10,10 +10,11 @@ This project is **Docker-first**. All development and management commands must b
 
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure-high-level)
+- [Quick Start (Local Development)](#-quick-start-local-development)
+- [Running with Docker](#-running-with-docker)
+- [Migration Workflow](#-migration-workflow)
 - [Data Models Overview](#data-models-overview)
 - [Environment Variables](#environment-variables)
-- [Running the Project](#running-the-project-team-standard)
-- [Django Commands Policy](#-important-django-commands-policy-read-this)
 - [Admin Panel](#admin-panel)
 - [Authentication (Djoser + JWT)](#authentication-djoser--jwt)
 - [WebSocket Endpoints](#websocket-endpoints)
@@ -42,7 +43,15 @@ This project is **Docker-first**. All development and management commands must b
 ## Project Structure (High Level)
 
 ```
-.
+backend/
+├── .env                     # Environment variables (git-ignored)
+├── .env.local               # Template for local development
+├── .env.example             # Template for Docker
+├── .venv/                   # Virtual environment (git-ignored)
+├── manage.py
+├── requirements.txt
+├── scripts/
+│   └── delete_migrations.py # Utility to clean migrations
 ├── Redwan_courses_center/   # Project settings & URLs
 ├── users/                   # Custom user model & roles (Student, Parent, Instructor)
 ├── courses/                 # Seasons, Courses, Lectures, Exams, Tags
@@ -54,9 +63,157 @@ This project is **Docker-first**. All development and management commands must b
 ├── docker-compose.yml
 ├── Dockerfile
 ├── docker-entrypoint.sh
-├── requirements.txt
-├── manage.py
 └── README.md
+```
+
+---
+
+## 🚀 Quick Start (Local Development)
+
+### 1. Setup Virtual Environment
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# or: .venv\Scripts\activate  # Windows
+pip install -r requirements.txt
+```
+
+### 2. Environment Setup
+
+```bash
+# For local development (connecting to local PostgreSQL):
+cp .env.local .env
+# DATABASE_HOST should be 'localhost' for local dev
+
+# For Docker development:
+# Keep DATABASE_HOST=db in .env
+```
+
+### 3. Run Commands Locally
+
+```bash
+# Always use the venv python:
+.venv/bin/python manage.py <command>
+
+# Or activate first:
+source .venv/bin/activate
+python manage.py <command>
+```
+
+### 4. Start Development Server
+
+```bash
+# Make sure PostgreSQL is running (locally or via Docker)
+python manage.py migrate
+python manage.py runserver
+```
+
+---
+
+## 🐳 Running with Docker
+
+### Start All Services
+
+```bash
+docker compose up --build
+```
+
+This will:
+* Start PostgreSQL
+* Apply migrations automatically
+* Collect static files
+* Run Django development server on `http://localhost:8000`
+
+### Docker Commands
+
+```bash
+# Start in background:
+docker-compose up -d
+
+# View logs:
+docker-compose logs -f backend
+
+# Run Django commands in container:
+docker-compose exec backend python manage.py <command>
+
+# Reset everything (WARNING: deletes data):
+docker-compose down -v
+docker-compose up --build
+```
+
+### Docker vs Local Development
+
+| Task | Local | Docker |
+|------|-------|--------|
+| `makemigrations` | ✅ **Yes (required)** | ❌ Never |
+| `migrate` | ✅ Yes | ✅ Auto (entrypoint) |
+| `runserver` | ✅ Yes | ✅ Auto (entrypoint) |
+| `createsuperuser` | ✅ Yes | ✅ `docker-compose exec backend python manage.py createsuperuser` |
+| `test` | ✅ Yes | ✅ Yes |
+
+---
+
+## 📦 Migration Workflow
+
+### ⚠️ IMPORTANT RULES
+
+1. **NEVER run `makemigrations` inside Docker** — only locally
+2. **ALWAYS commit migration files to git** — they are source code
+3. **Run `makemigrations` BEFORE pushing** your branch
+
+### Creating Migrations
+
+```bash
+cd backend
+source .venv/bin/activate
+
+# Check what migrations would be created:
+python manage.py makemigrations --dry-run
+
+# Create migrations:
+python manage.py makemigrations
+
+# Review the generated files, then commit:
+git add */migrations/*.py
+git commit -m "Add migration for <description>"
+```
+
+### Applying Migrations
+
+```bash
+# Locally:
+python manage.py migrate
+
+# In Docker (automatic via entrypoint):
+docker-compose up
+```
+
+### Handling Merge Conflicts in Migrations
+
+When merging branches with conflicting migrations:
+
+```bash
+# Option 1: Auto-merge (if Django can resolve it)
+python manage.py makemigrations --merge
+
+# Option 2: Nuclear reset (development only!)
+# WARNING: This deletes ALL data!
+python scripts/delete_migrations.py --dry-run  # preview
+python scripts/delete_migrations.py --yes      # delete
+python manage.py makemigrations
+python manage.py migrate --fake-initial  # or drop DB and migrate fresh
+```
+
+### Checking Migration Status
+
+```bash
+# Show all migrations and their status:
+python manage.py showmigrations
+
+# Show SQL that would be run:
+python manage.py sqlmigrate <app_name> <migration_number>
 ```
 
 ---
@@ -134,59 +291,7 @@ DATABASE_PORT=5432
 
 ⚠️ `DJANGO_SECRET_KEY` **must not be empty** or Django will fail to start.
 
----
-
-## Running the Project (Team Standard)
-
-### 1️⃣ Build and start containers
-
-```bash
-docker compose up --build
-```
-
-This will:
-
-* Start PostgreSQL
-* Apply migrations
-* Collect static files
-* Run Django development server on `http://localhost:8000`
-
----
-
-## 🚨 Important: Django Commands Policy (READ THIS)
-
-This project is **Docker-only**.
-
-### ❌ Do NOT run Django commands on your local machine:
-
-```bash
-python3 manage.py makemigrations
-```
-
-### ✅ Always run Django commands inside the container:
-
-```bash
-docker compose exec django-web-app python3 manage.py makemigrations
-docker compose exec django-web-app python3 manage.py migrate
-docker compose exec django-web-app python3 manage.py createsuperuser
-docker compose exec django-web-app python3 manage.py shell
-```
-
-### Optional (Recommended Alias)
-
-Add this to your shell config:
-
-```bash
-alias dj="docker compose exec django-web-app python3 manage.py"
-```
-
-Then use:
-
-```bash
-dj makemigrations
-dj migrate
-dj createsuperuser
-```
+**Note:** The project uses `python-decouple` to load environment variables. It automatically reads from `.env` file for local development, or from system environment variables in Docker.
 
 ---
 
@@ -289,19 +394,6 @@ The detailed docs include:
 
 ---
 
-## Database Migrations
-
-Migrations are already included in the repository.
-
-For new changes:
-
-```bash
-dj makemigrations
-dj migrate
-```
-
----
-
 ## Cron Jobs
 
 Configured using `django-crontab`:
@@ -350,24 +442,60 @@ CHANNEL_LAYERS = {
 
 ## Common Issues
 
-### ❌ `django.core.exceptions.ImproperlyConfigured: SECRET_KEY must not be empty`
+### ❌ `SECRET_KEY setting must not be empty`
 
-✔ Solution:
+✔ Solutions:
+- Make sure `.env` file exists in `backend/` directory
+- Check that `DJANGO_SECRET_KEY` is set in `.env`
+- Restart containers / re-run command
 
-* Ensure `.env` exists
-* Ensure `DJANGO_SECRET_KEY` is set
-* Restart containers
-* Run migrations again BUT inside Docker container
+### ❌ `could not translate host name "db"`
+
+✔ Solutions:
+- You're running locally but `.env` has `DATABASE_HOST=db`
+- Change to `DATABASE_HOST=localhost` for local development
+- Or start PostgreSQL via Docker: `docker-compose up db`
+
+### ❌ Migration conflicts after git merge
+
+✔ Solutions:
+```bash
+# Try auto-merge first:
+python manage.py makemigrations --merge
+
+# If that fails, discuss with team about which migrations to keep
+```
+
+### ❌ "No changes detected" but model changed
+
+✔ Solutions:
+```bash
+# Specify the app explicitly:
+python manage.py makemigrations <app_name>
+
+# Check if app is in INSTALLED_APPS in settings.py
+```
 
 ---
 
 ## Team Rules (Non-Negotiable)
 
-* Docker is the single source of truth
-* No local Python execution
+* **Migrations are created locally, never in Docker**
+* All migration files must be committed to git
 * No direct DB schema changes
-* All migrations committed (Abo Al-layl request)
+* Docker is for running/testing, not for creating migrations
 * API is the contract with frontend
+
+---
+
+## 👥 Team Checklist Before PR
+
+- [ ] Created migrations locally (`python manage.py makemigrations`)
+- [ ] Tested migrations apply cleanly (`python manage.py migrate`)
+- [ ] Committed migration files to git
+- [ ] Did NOT modify migrations created by others (unless merging)
+- [ ] Ran `python manage.py check` with no errors
+- [ ] Tests pass (`python manage.py test`)
 
 ---
 
@@ -400,36 +528,67 @@ hotfix/<ticket-id>-<short-description>
 
 ## Useful Commands Reference
 
+### Local Development
 ```bash
-# Start containers
-docker compose up --build
+# Activate virtual environment
+source .venv/bin/activate
 
-# Stop containers
-docker compose down
-
-# View logs
-docker compose logs -f django-web-app
-
-# Django shell
-dj shell
-
-# Create superuser
-dj createsuperuser
-
-# Make migrations
-dj makemigrations
+# Create migrations (LOCAL ONLY)
+python manage.py makemigrations
 
 # Apply migrations
-dj migrate
+python manage.py migrate
 
-# Collect static files
-dj collectstatic
+# Run development server
+python manage.py runserver
+
+# Create superuser
+python manage.py createsuperuser
 
 # Run tests
-dj test
+python manage.py test
 
 # Check for issues
-dj check
+python manage.py check
+
+# Django shell
+python manage.py shell
+```
+
+### Docker Commands
+```bash
+# Start containers
+docker-compose up --build
+
+# Start in background
+docker-compose up -d
+
+# Stop containers
+docker-compose down
+
+# View logs
+docker-compose logs -f backend
+
+# Run command in container
+docker-compose exec backend python manage.py <command>
+
+# Reset everything (deletes data)
+docker-compose down -v
+```
+
+### Migration Utilities
+```bash
+# Preview migrations to delete
+python scripts/delete_migrations.py --dry-run
+
+# Delete all migrations (use with caution!)
+python scripts/delete_migrations.py --yes
+
+# Show migration status
+python manage.py showmigrations
+
+# Merge conflicting migrations
+python manage.py makemigrations --merge
 ```
 
 ---
