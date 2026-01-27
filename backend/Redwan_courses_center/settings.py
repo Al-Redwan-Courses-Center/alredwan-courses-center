@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'djoser',
     'django_crontab',
     'channels',
+        'cloudinary_storage',
+    'cloudinary',
     "users",
     "parents",
     "attendance",
@@ -64,6 +66,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    #white noise middleware
+    # 'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 
@@ -164,6 +168,16 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Cloudinary Configuration
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
+
+# Use Cloudinary for media storage
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 """ # Specify simpleui's default theme, specify a filename, and the relative path is read from simpleui's theme directory
 SIMPLEUI_DEFAULT_THEME = 'admin.lte.css'
