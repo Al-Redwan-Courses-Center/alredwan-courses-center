@@ -90,12 +90,16 @@ class InstructorAttendance(models.Model):
         related_name="instructor_attendance",
         verbose_name=_("الموسم")
     )
-    rating = models.PositiveSmallIntegerField(
-        verbose_name="التقييم",
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
+    
+    # Rating: null if absent/not_started, 0 if attended (default), then admin can update
+    rating = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        verbose_name=_("التقييم (1.00 - 10.00)"),
+        validators=[MinValueValidator(0.00), MaxValueValidator(10.00)],
         null=True,
         blank=True,
-        default=0
+        help_text=_("null للغائب، 0 للحاضر بدون تقييم، 1-10 للتقييم الفعلي")
     )
 
     rated_by = models.ForeignKey(
@@ -104,9 +108,22 @@ class InstructorAttendance(models.Model):
         null=True,
         blank=True,
         related_name="given_instructor_ratings",
-        help_text=_("المشرف الذي قام بتقييم هذا المعلم."),
+        verbose_name=_("تم التقييم بواسطة"),
+        help_text=_("المشرف/الأدمن الذي قام بتقييم هذا المعلم."),
     )
-    notes = models.TextField(blank=True, null=True)
+    
+    rated_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("وقت التقييم"),
+        help_text=_("تاريخ ووقت إضافة/تحديث التقييم")
+    )
+    
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name=_("ملاحظات عامة")
+    )
 
     class Meta:
         verbose_name = _("سجل حضور معلم/مشرف")
@@ -115,10 +132,53 @@ class InstructorAttendance(models.Model):
         indexes = [
             models.Index(fields=["instructor", "date"]),
             models.Index(fields=["season"]),
+            models.Index(fields=["rated_by"]),
         ]
 
     def __str__(self):
-        return f"{self.instructor} - {self.rating}/10 on {self.date}"
+        rating_display = f"{self.rating}/10" if self.rating is not None else "لم يتم التقييم"
+        return f"{self.instructor} - {rating_display} on {self.date}"
+
+    def clean(self):
+        """Validate rating based on attendance status."""
+        # If absent, not started, or pending, rating MUST be null
+        if self.status in [AttendanceStatus.ABSENT, AttendanceStatus.NOT_STARTED, AttendanceStatus.PENDING]:
+            if self.rating is not None:
+                raise ValidationError({
+                    'rating': _("لا يمكن تقييم المعلم الغائب أو الذي لم يبدأ. يجب أن يكون التقييم فارغاً.")
+                })
+        
+        # If present or late, rating can be None (not rated), 0 (attended but not rated), or 1-10
+        elif self.status in [AttendanceStatus.PRESENT, AttendanceStatus.LATE]:
+            # If rating is provided and not 0, it must be between 1 and 10
+            if self.rating is not None and self.rating > 0:
+                if self.rating < 1 or self.rating > 10:
+                    raise ValidationError({
+                        'rating': _("التقييم يجب أن يكون بين 1.00 و 10.00")
+                    })
+                # If rating is provided (not 0), rated_by should also be provided
+                if not self.rated_by:
+                    raise ValidationError({
+                        'rated_by': _("يجب تحديد المقيّم عند إضافة التقييم.")
+                    })
+
+    def save(self, *args, **kwargs):
+        """Override save to automatically set rating based on attendance status."""
+        # Ensure date is date only (no time component)
+        if isinstance(self.date, timezone.datetime):
+            self.date = self.date.date()
+        
+        # Auto-set rating based on status
+        if self.status in [AttendanceStatus.ABSENT, AttendanceStatus.NOT_STARTED, AttendanceStatus.PENDING]:
+            # If absent or not started, rating should be null
+            if self.rating == 0:
+                self.rating = None
+        elif self.status in [AttendanceStatus.PRESENT, AttendanceStatus.LATE]:
+            # If present or late, and rating is null, set it to 0 (not rated yet)
+            if self.rating is None:
+                self.rating = 0.00
+        
+        super().save(*args, **kwargs)
 
     def broadcast_update(self):
         channel_layer = get_channel_layer()
@@ -155,6 +215,9 @@ class InstructorAttendance(models.Model):
         else:
             # If no schedule linked → treat as present by default
             self.status = AttendanceStatus.PRESENT
+        
+        # Set rating to 0 when instructor attends (not rated yet)
+        self.rating = 0.00
 
         self.save()
         self.broadcast_update()
@@ -167,18 +230,48 @@ class InstructorAttendance(models.Model):
     def mark_absent(self):
         """Mark the instructor as absent for the day."""
         self.status = AttendanceStatus.ABSENT
+        # Set rating to null for absent instructors
+        self.rating = None
+        self.rated_by = None
+        self.rated_at = None
         self.save()
 
-    def rate(self, value: int, admin_user: CustomUser, notes: str = None):
+    def add_rating(self, value: float, admin_user: CustomUser, notes: str = None):
         """
-        Rate the instructor (only once per day by one admin).
-        If another admin tries, only update is allowed depending on role/permissions.
+        Add or update rating for an instructor who attended.
+        Can only rate instructors who are present or late.
+        Admin can update rating multiple times (last one wins).
+        
+        Args:
+            value: Rating value between 1.00 and 10.00
+            admin_user: The admin user adding the rating
+            notes: Optional notes/comments about the rating
+        
+        Raises:
+            ValidationError: If trying to rate absent instructor or invalid rating
         """
+        # Validate that instructor attended
+        if self.status in [AttendanceStatus.ABSENT, AttendanceStatus.NOT_STARTED, AttendanceStatus.PENDING]:
+            raise ValidationError(
+                _("لا يمكن تقييم المعلم الذي لم يحضر. الحالة الحالية: {}").format(
+                    self.get_status_display()
+                )
+            )
+        
+        # Validate rating range
+        if value < 1.00 or value > 10.00:
+            raise ValidationError(
+                _("التقييم يجب أن يكون بين 1.00 و 10.00")
+            )
+        
+        # Update rating fields
         self.rating = value
         self.rated_by = admin_user
+        self.rated_at = timezone.now()
         self.notes = notes
-
+        
         self.save()
+        return self
 
     @classmethod
     def generate_for_date_range(cls, start_date, end_date, season=None):
