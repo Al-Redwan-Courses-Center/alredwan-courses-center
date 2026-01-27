@@ -52,6 +52,7 @@ ARABIC_FIELD_LABELS = {
     'notes': 'ملاحظات',
     'entered_by': 'تم الإدخال بواسطة',
     'entered_at': 'تاريخ الإدخال',
+    'image': 'الصورة'
 }
 
 # Status colors for visual indicators
@@ -504,7 +505,7 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
 
     fieldsets = (
         (_('معلومات الدورة الأساسية'), {
-            'fields': ('name', 'slug', 'description'),
+            'fields': ('name', 'slug', 'description', 'image'),
             'description': _('المعلومات الأساسية للدورة')
         }),
         (_('المدرس والموسم'), {
@@ -521,7 +522,7 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
         (_('الفئة العمرية'), {
             'fields': ('for_adults', 'min_age', 'max_age'),
             'classes': ('collapse',),
-            'description': _('حدد الفئة العمرية المستهدفة')
+            'description': _('حدد الفئة العمرية المستهدفة ')
         }),
         (_('إعدادات إضافية'), {
             'fields': ('tags', 'is_active'),
@@ -1229,7 +1230,6 @@ class CoursesAdminSite(admin.AdminSite):
 # =============================================================================
 
 # Quick search across all models
-admin.site.enable_nav_sidebar = True
 
 # Ensure proper ordering in admin sidebar
 Season._meta.verbose_name = _('موسم')

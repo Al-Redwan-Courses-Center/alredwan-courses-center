@@ -25,6 +25,8 @@ from django.conf.urls.static import static
 admin.site.site_header = "لوحة إدارة واحة الرضوان"
 admin.site.site_title = "واحة الرضوان"
 admin.site.index_title = "الصفحة الرئيسية"
+admin.site.enable_nav_sidebar = True
+
 urlpatterns = [
     path('Al-Redwan-superadmin-dashboard/', admin.site.urls),
     path('health/', health_check, name='health_check'),

@@ -279,8 +279,21 @@ CLOUDINARY_STORAGE = {
     'SECURE': True,  # Use HTTPS
 }
 
-# Use Cloudinary for media files
+""" # Use Cloudinary for media files
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+ """
+
+# Use Cloudinary for media files (Django 4.2+ STORAGES setting)
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+
 
 # Image upload settings
 MAX_IMAGE_SIZE_MB = int(os.environ.get('MAX_IMAGE_SIZE_MB', 5))  # 5MB default
