@@ -126,3 +126,57 @@ class LandingPageInstructorSerializer(serializers.ModelSerializer):
         model = LandingPageInstructor
         fields = ['id', 'instructor', 'order', 'created_at']
 
+
+class InstructorListSerializer(serializers.ModelSerializer):
+    """Serializer for listing instructors"""
+    name = serializers.CharField(source='user.get_full_name', read_only=True)
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    image_url = serializers.SerializerMethodField()
+    tags = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Instructor
+        fields = ['id', 'name', 'bio', 'type', 'type_display', 'image_url', 'joined_date', 'tags']
+    
+    def get_image_url(self, obj):
+        """Get the full URL for the instructor's image"""
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
+    
+    def get_tags(self, obj):
+        """Get tags for the instructor"""
+        from courses.serializers import TagSerializer
+        return TagSerializer(obj.tags.all(), many=True).data
+
+
+class InstructorDetailSerializer(serializers.ModelSerializer):
+    """Serializer for detailed instructor view"""
+    name = serializers.CharField(source='user.get_full_name', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+    phone = serializers.CharField(source='user.phone_number1', read_only=True)
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    image_url = serializers.SerializerMethodField()
+    tags = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Instructor
+        fields = ['id', 'name', 'email', 'phone', 'bio', 'type', 'type_display', 'image_url', 'joined_date', 'tags']
+    
+    def get_image_url(self, obj):
+        """Get the full URL for the instructor's image"""
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
+    
+    def get_tags(self, obj):
+        """Get tags for the instructor"""
+        from courses.serializers import TagSerializer
+        return TagSerializer(obj.tags.all(), many=True).data
+
