@@ -7,6 +7,6 @@ app_name = 'users'
 
 urlpatterns = [
     path('instructors/', InstructorListView.as_view(), name='instructor-list'),
-    path('instructor/<int:pk>/', InstructorDetailView.as_view(), name='instructor-detail'),
+    path('instructors/<int:pk>/', InstructorDetailView.as_view(), name='instructor-detail'),
     path('landingpageinstructors/', LandingPageInstructorListView.as_view(), name='landing-instructor-list'),
 ]

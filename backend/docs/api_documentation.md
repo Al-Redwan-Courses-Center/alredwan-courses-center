@@ -437,7 +437,7 @@ curl -X GET "http://localhost:8000/api/users/instructors/?type=supervisor&orderi
 ### 6. Get Instructor by ID
 Retrieve detailed information about a specific instructor.
 
-**Endpoint:** `GET /api/users/instructor/{id}/`
+**Endpoint:** `GET /api/users/instructors/{id}/`
 
 **Authentication:** Not required (Public)
 
