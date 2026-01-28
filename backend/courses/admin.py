@@ -328,18 +328,21 @@ class ExamResultInline(admin.TabularInline):
 class LandingPageCourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
     """Admin configuration for Landing Page Featured Courses."""
 
-    select_related_fields = ['course', 'course__instructor', 'course__instructor__user', 'course__season']
+    select_related_fields = ['course', 'course__instructor',
+                             'course__instructor__user', 'course__season']
 
     list_display = (
         'get_order_badge', 'get_course_link', 'get_instructor_name',
         'get_season', 'get_price_display', 'get_enrollment_status', 'created_at'
     )
     list_filter = ('course__season', 'course__instructor', 'course__is_active')
-    search_fields = ('course__name', 'course__instructor__user__first_name', 'course__instructor__user__last_name')
+    search_fields = ('course__name', 'course__instructor__user__first_name',
+                     'course__instructor__user__last_name')
     autocomplete_fields = ['course']
     list_per_page = 25
     ordering = ('-order', '-created_at')
-    list_editable = ('order',) if False else ()  # Can enable for quick reordering
+    # Can enable for quick reordering
+    list_editable = ('order',) if False else ()
 
     fieldsets = (
         (_('كورس الصفحة الرئيسية'), {
@@ -401,10 +404,10 @@ class LandingPageCourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.Mo
             course = obj.course
             enrolled = course.enrolled_count
             capacity = course.capacity
-            
+
             if capacity and capacity > 0:
                 percentage = min((enrolled / capacity) * 100, 100)
-                
+
                 if percentage >= 100:
                     color = '#e74c3c'
                     status = 'ممتلئ'
@@ -414,7 +417,7 @@ class LandingPageCourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.Mo
                 else:
                     color = '#27ae60'
                     status = 'متاح'
-                
+
                 return format_html(
                     '<div style="width: 80px; background: #ecf0f1; border-radius: 4px; '
                     'overflow: hidden;" title="{}">'
@@ -532,7 +535,7 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
     prefetch_related_fields = ['tags']
 
     list_display = (
-        'name', 'get_instructor_link', 'get_season', 'get_date_range',
+        'name', 'instructor', 'get_season', 'get_date_range',
         'get_capacity_bar', 'get_price_display', 'get_active_status'
     )
     list_filter = (
@@ -594,9 +597,9 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
         )
         return qs
 
-    @admin.display(description=_('المدرس'), ordering='instructor__user__first_name')
+    """ @admin.display(description=_('المدرس'), ordering='instructor__user__first_name')
     def get_instructor_link(self, obj):
-        """Display instructor as a clickable link."""
+        '''Display instructor as a clickable link.'''
         if obj.instructor:
             url = reverse('admin:users_instructor_change',
                           args=[obj.instructor.pk])
@@ -605,7 +608,7 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
                 '👨‍🏫 {}</a>',
                 url, obj.instructor
             )
-        return '-'
+        return '-' """
 
     def get_season(self, obj):
         return obj.season
