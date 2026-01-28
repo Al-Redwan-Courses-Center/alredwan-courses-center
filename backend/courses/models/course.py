@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 ''' Models for Course app'''
 from datetime import timedelta
+from cloudinary.models import CloudinaryField
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -8,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.utils.text import slugify
 from django.db.models import Count, Q
+
 # Create your models here.
 
 
@@ -17,12 +19,12 @@ from django.db.models import Count, Q
 
 class SeasonChoices(models.TextChoices):
     """Enumeration for season_type status choices."""
-    SUMMER_CAMP = 'summer_camp', _('Summer camp')
-    SCHOOL = 'school',      _('School')
-    RAMADAN = 'ramadan',     _('Ramadan')
-    EID = 'eid',         _('Eid')
-    MID_YEAR = 'mid_year',    _('Mid-year camp')
-    OTHER = 'other',       _('Other')
+    SUMMER_CAMP = 'summer_camp', _('معسكر صيفي')
+    SCHOOL = 'school',      _('مدرسة')
+    RAMADAN = 'ramadan',     _('رمضان')
+    EID = 'eid',         _('عيد')
+    MID_YEAR = 'mid_year',    _('معسكر منتصف السنة')
+    OTHER = 'other',       _('أخرى')
 
 
 class Weekday(models.IntegerChoices):
@@ -42,13 +44,13 @@ class Season(models.Model):
     """
 
     # consider adding a celery task to deactivate old seasons and activate new ones based on dates
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128, verbose_name=_("اسم الموسم"))
     season_type = models.CharField(
-        max_length=32, choices=SeasonChoices.choices)
-    start_date = models.DateField()
-    end_date = models.DateField(null=True, blank=True)
-    description = models.TextField(blank=True, null=True)
-    is_active = models.BooleanField(default=False)
+        max_length=32, choices=SeasonChoices.choices, verbose_name=_("نوع الموسم"))
+    start_date = models.DateField(verbose_name=_("تاريخ البدء"))
+    end_date = models.DateField(null=True, blank=True, verbose_name=_("تاريخ الانتهاء"))
+    description = models.TextField(blank=True, null=True, verbose_name=_("الوصف"))
+    is_active = models.BooleanField(default=False, verbose_name=_("نشط"))
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
@@ -81,9 +83,9 @@ class Tag(models.Model):
     Tags model
     """
 
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True, verbose_name=_("اسم الفئة"))
     created_at = models.DateTimeField(
-        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
+        auto_now_add=True, verbose_name=_("تاريخ الإنشاء"))
 
     class Meta:
         ordering = ['name']
@@ -95,7 +97,6 @@ class Tag(models.Model):
 
 # Model Course
 
-
 class Course(models.Model):
     """
     Course model
@@ -103,8 +104,22 @@ class Course(models.Model):
 
     name = models.CharField(max_length=128)
     description = models.TextField(blank=True)
-
-    start_date = models.DateField()
+    # Cloudinary image with automatic optimization:
+    # - folder: organizes images in 'courses/' folder
+    # - transformation: resizes to max 800px width, auto quality, auto format (webp/avif)
+    image = CloudinaryField(
+        'صورة الكورس', 
+        blank=True, 
+        null=True,
+        folder='courses',
+        transformation={
+            'width': 800,
+            'crop': 'limit',  # Only downscale, never upscale
+            'quality': 'auto:good',  # Automatic quality optimization
+            'fetch_format': 'auto',  # Auto-select best format (webp, avif, etc.)
+        },
+    )
+    start_date = models.DateField(verbose_name=_("تاريخ البدء"))
     # optional if you later drive off schedules/lectures
     end_date = models.DateField(null=True, blank=True)
 
@@ -172,20 +187,55 @@ class Course(models.Model):
         return (system_weekday + 5) % 7
 
     def is_participant_eligible(self, participant) -> bool:
-        """Check if a participant (StudentUser or Child) is eligible for this course."""
+        """Check if a participant (StudentUser or Child) is eligible for this course.
+        
+        Args:
+            participant: Either a StudentUser or Child instance
+            
+        Returns:
+            bool: True if participant is eligible, False otherwise
+        """
         if not participant:
             return False
 
-        age = participant.user.get_age_on_date(self.start_date)
-        if age is None:
-            return False
-        if self.for_adults and age < 15:
-            return False
-        if not self.for_adults and age > 15:
-            return False
-        if participant.user and participant.user.role != "student":
-            return False
-        return True
+        # Check if participant is a Child (has no .user attribute)
+        # or a StudentUser (has .user attribute)
+        from parents.models import Child
+        
+        if isinstance(participant, Child):
+            # Child has get_age_on_date directly
+            age = participant.get_age_on_date(self.start_date)
+            if age is None:
+                return False
+            # Children are typically not adults
+            if self.for_adults:
+                return False
+            # Check age bounds if specified
+            if self.min_age and age < self.min_age:
+                return False
+            if self.max_age and age > self.max_age:
+                return False
+            return True
+        else:
+            # StudentUser - has .user attribute
+            if not hasattr(participant, 'user') or not participant.user:
+                return False
+            age = participant.user.get_age_on_date(self.start_date)
+            if age is None:
+                return False
+            # Check for_adults constraint
+            if self.for_adults and age < 15:
+                return False
+            if not self.for_adults and age > 15:
+                return False
+            # Check age bounds if specified
+            if self.min_age and age < self.min_age:
+                return False
+            if self.max_age and age > self.max_age:
+                return False
+            if participant.user.role != "student":
+                return False
+            return True
 
     def generate_lectures(self):
         ''' Generate lectures based on course schedules

@@ -7,7 +7,7 @@ class ParentAdmin(admin.ModelAdmin):
     list_display = ('get_full_name', 'get_phone', 'get_email', 'image')
     search_fields = ('user__first_name', 'user__last_name',
                      'user__phone_number1', 'user__email')
-
+    autocomplete_fields = ('user',)
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         if 'user' in form.base_fields:

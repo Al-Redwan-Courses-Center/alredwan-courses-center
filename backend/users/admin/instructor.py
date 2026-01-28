@@ -1,21 +1,90 @@
 from django.contrib import admin
+from django.utils.html import format_html
+from django.db.models import Count
 from ..models.instructor import Instructor
+from attendance.models import SupervisorSchedule, InstructorAttendance
+from courses.models import Lecture
+
+
+class SupervisorScheduleInline(admin.TabularInline):
+    model = SupervisorSchedule
+    extra = 0
+    classes = ('collapse',)
+    verbose_name = 'جدول المشرف'
+    verbose_name_plural = 'جداول المشرف'
+    fields = ('day_of_week', 'start_time', 'end_time', 'grace_period_minutes', 'auto_absent_after_minutes')
+
+
+class InstructorAttendanceInline(admin.TabularInline):
+    model = InstructorAttendance
+    extra = 0
+    classes = ('collapse',)
+    verbose_name = 'سجل حضور'
+    verbose_name_plural = 'سجلات الحضور'
+    fields = ('date', 'status', 'check_in_time', 'check_out_time', 'rating', 'season')
+    readonly_fields = ('date', 'check_in_time', 'check_out_time', 'season')
+    ordering = ('-date',)
+    max_num = 20  # Limit to recent records for performance
+
+
+class LectureInline(admin.TabularInline):
+    model = Lecture
+    extra = 0
+    classes = ('collapse',)
+    verbose_name = 'محاضرة'
+    verbose_name_plural = 'المحاضرات'
+    fields = ('course', 'day', 'start_time', 'end_time', 'lecture_number', 'status')
+    readonly_fields = ('course', 'day', 'lecture_number')
+    ordering = ('-day',)
+    max_num = 20  # Limit for performance
+
+    def has_add_permission(self, request, obj=None):
+        return False  # Lectures are managed through courses
 
 
 @admin.register(Instructor)
 class InstructorAdmin(admin.ModelAdmin):
     list_display = ('get_full_name', 'get_type',
-                    'get_monthly_salary', 'get_phone', 'get_joined_date')
-    list_filter = ('type', 'joined_date')
+                    'get_monthly_salary', 'get_phone', 'get_tags_display', 'get_joined_date')
+    list_filter = ('type', 'tags', 'joined_date')
     search_fields = ('user__first_name', 'user__last_name',
                      'user__phone_number1')
     list_select_related = ('user',)
+    prefetch_related = ('tags',)
+    filter_horizontal = ('tags',)
+    inlines = [SupervisorScheduleInline, InstructorAttendanceInline, LectureInline]
     fieldsets = (
         ('معلومات المدرس', {
          'fields': ('user', 'type', 'bio', 'monthly_salary')}),
-        ('الصور', {'fields': ('image', 'nid_front', 'nid_back')}),
+        ('الفئات', {'fields': ('tags',)}),
+        ('الصور', {'fields': ('image', 'nid_front', 'nid_back'),
+                   'classes': ('collapse',)}),
     )
+    autocomplete_fields = ('user',)
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.prefetch_related('tags').annotate(tags_count=Count('tags'))
+
+    def get_tags_display(self, obj):
+        """Display tags as colored badges."""
+        tags = obj.tags.all()
+        if tags:
+            badges = ''.join([
+                format_html(
+                    '<span style="background: #9b59b6; color: white; padding: 2px 6px; '
+                    'border-radius: 8px; margin: 1px; display: inline-block; font-size: 0.85em;">{}</span>',
+                    tag.name
+                ) for tag in tags[:3]  # Show max 3 tags
+            ])
+            if len(tags) > 3:
+                badges += format_html(
+                    '<span style="color: #7f8c8d; font-size: 0.85em;"> +{}</span>',
+                    len(tags) - 3
+                )
+            return format_html(badges)
+        return format_html('<span style="color: #95a5a6;">-</span>')
+    get_tags_display.short_description = 'الفئات'
     def get_type(self, obj):
         return obj.get_type_display()
     get_type.short_description = 'النوع'

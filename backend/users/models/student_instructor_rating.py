@@ -41,7 +41,8 @@ class StudentInstructorRating(models.Model):
         verbose_name = 'تقييم طالب لمدرس'
         verbose_name_plural = 'تقييمات الطلاب للمدرسين'
 
-
+    def __str__(self):
+        return "تقييم الطالب \"{}\" للمدرس \"{}\"".format(self.student.user.get_full_name(), self.instructor.user.get_full_name())
 class ParentInstructorRating(models.Model):
     """Model representing ratings given by parents to instructors."""
 
@@ -79,7 +80,8 @@ class ParentInstructorRating(models.Model):
 
         verbose_name = 'تقييم ولي أمر لمدرس'
         verbose_name_plural = 'تقييمات أولياء الأمور للمدرسين'
-
+    def __str__(self):
+        return "تقييم ولي الأمر \"{}\" للمدرس \"{}\"".format(self.parent.user.get_full_name(), self.instructor.user.get_full_name())
 
 class StudentCourseRating(models.Model):
     """Model representing ratings given by students to courses."""
@@ -119,7 +121,8 @@ class StudentCourseRating(models.Model):
         verbose_name = 'تقييم طالب لكورس'
         verbose_name_plural = 'تقييمات الطلاب للكورسات'
 
-
+    def __str__(self):
+        return "تقييم الطالب \"{}\" للكورس \"{}\"".format(self.student.user.get_full_name(), self.course.name)
 class ParentCourseRating(models.Model):
     """Model representing ratings given by parents to courses."""
 
@@ -156,3 +159,5 @@ class ParentCourseRating(models.Model):
 
         verbose_name = 'تقييم ولي أمر لكورس'
         verbose_name_plural = 'تقييمات أولياء الأمور للكورسات'
+    def __str__(self):
+        return "تقييم ولي الأمر \"{}\" للكورس \"{}\"".format(self.parent.user.get_full_name(), self.course.name)

@@ -9,9 +9,9 @@ from django.utils.translation import gettext_lazy as _
 
 class LectureStatus(models.TextChoices):
     """Enumeration for lecture status choices."""
-    SCHEDULED = 'scheduled', _('Scheduled')
-    COMPLETED = 'completed', _('Completed')
-    CANCELLED = 'cancelled', _('Cancelled')
+    SCHEDULED = 'scheduled', _('مجدولة')
+    COMPLETED = 'completed', _('مكتملة')
+    CANCELLED = 'cancelled', _('ملغاة')
 
 
 class Lecture(models.Model):
@@ -22,9 +22,9 @@ class Lecture(models.Model):
         'courses.Course', verbose_name="الدورة", on_delete=models.CASCADE, related_name='lectures')
     # date of lecture (local date in Africa/Cairo)
     day = models.DateField(verbose_name=_("تاريخ المحاضرة"))
-    start_time = models.TimeField(null=True, blank=True)
-    end_time = models.TimeField(null=True, blank=True)
-    lecture_number = models.PositiveIntegerField()
+    start_time = models.TimeField(null=True, blank=True, verbose_name=_("وقت البدء"))
+    end_time = models.TimeField(null=True, blank=True, verbose_name=_("وقت الانتهاء"))
+    lecture_number = models.PositiveIntegerField(verbose_name=_("رقم المحاضرة"))
     instructor = models.ForeignKey('users.Instructor', null=True, blank=True,
                                    on_delete=models.SET_NULL, related_name='lectures', verbose_name=_("المعلم"))
     status = models.CharField(
@@ -51,18 +51,17 @@ class Lecture(models.Model):
         verbose_name_plural = _("المحاضرات")
 
     def __str__(self):
-        return f"{self.title or f'Lecture {self.lecture_number}'} — {self.course} @ {self.day}"
+        return f"{self.title or f'محاضرة {self.lecture_number}'} — {self.course} @ {self.day}"
 
     def clean(self):
         """Validate lecture scheduling and time coherence."""
         # Validate lecture_number
         if self.lecture_number <= 0:
-            raise ValidationError("Lecture number must be a positive integer.")
+            raise ValidationError(_("رقم المحاضرة يجب أن يكون عددًا صحيحًا موجبًا."))
 
         # Validate times
         if self.start_time and self.end_time and self.start_time >= self.end_time:
-            raise ValidationError("Start time must be before end time.")
-
+            raise ValidationError(_("وقت البداية يجب أن يكون قبل وقت النهاية."))
         # For scheduled lectures, prevent scheduling in the past
         if self.status == LectureStatus.SCHEDULED:
             # combine day + start_time into datetime if start_time exists, else compare dates

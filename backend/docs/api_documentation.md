@@ -368,6 +368,116 @@ curl -X GET "http://localhost:8000/api/users/landingpageinstructors/"
 
 ---
 
+### 5. List All Instructors
+Get a list of all instructors.
+
+**Endpoint:** `GET /api/users/instructors/`
+
+**Authentication:** Not required (Public)
+
+**Query Parameters:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `type` | string | Filter by instructor type (supervisor/normal) | `?type=supervisor` |
+| `search` | string | Search in instructor name and bio | `?search=ahmed` |
+| `ordering` | string | Order results by field | `?ordering=-joined_date` |
+
+**Ordering Options:**
+- `joined_date` / `-joined_date` (ascending/descending)
+- `user__first_name` / `-user__first_name`
+- `user__last_name` / `-user__last_name`
+
+**Example Request:**
+```bash
+curl -X GET "http://localhost:8000/api/users/instructors/?type=supervisor&ordering=-joined_date"
+```
+
+**Example Response:**
+```json
+[
+  {
+    "id": 2,
+    "name": "Sheikh Ibrahim Ali",
+    "bio": "Sheikh Ibrahim has over 15 years of experience teaching Quran and Tajweed. He holds an Ijazah in Quranic recitation and has memorized the entire Quran. He specializes in teaching advanced Tajweed rules and helping students perfect their recitation.",
+    "type": "normal",
+    "type_display": "عادي / خارجي",
+    "image_url": "http://localhost:8000/media/instructors/2/profile.jpg",
+    "joined_date": "2024-09-01",
+    "tags": [
+      {
+        "id": 1,
+        "name": "Quran"
+      },
+      {
+        "id": 3,
+        "name": "Tajweed"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Fatima Hassan",
+    "bio": "Sister Fatima is passionate about teaching Islamic studies to children. She has a degree in Islamic Education and has been teaching for 8 years. She creates engaging and fun learning experiences for young students.",
+    "type": "supervisor",
+    "type_display": "مشرف",
+    "image_url": "http://localhost:8000/media/instructors/4/profile.jpg",
+    "joined_date": "2023-02-15",
+    "tags": [
+      {
+        "id": 4,
+        "name": "Islamic Studies"
+      }
+    ]
+  }
+]
+```
+
+---
+
+### 6. Get Instructor by ID
+Retrieve detailed information about a specific instructor.
+
+**Endpoint:** `GET /api/users/instructors/{id}/`
+
+**Authentication:** Not required (Public)
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | integer | Instructor ID |
+
+**Example Request:**
+```bash
+curl -X GET "http://localhost:8000/api/users/instructor/2/"
+```
+
+**Example Response:**
+```json
+{
+  "id": 2,
+  "name": "Sheikh Ibrahim Ali",
+  "email": "ibrahim.ali@alredwan.com",
+  "phone": "+201234567890",
+  "bio": "Sheikh Ibrahim has over 15 years of experience teaching Quran and Tajweed. He holds an Ijazah in Quranic recitation and has memorized the entire Quran. He specializes in teaching advanced Tajweed rules and helping students perfect their recitation.",
+  "type": "normal",
+  "type_display": "عادي / خارجي",
+  "image_url": "http://localhost:8000/media/instructors/2/profile.jpg",
+  "joined_date": "2024-09-01",
+  "tags": [
+    {
+      "id": 1,
+      "name": "Quran"
+    },
+    {
+      "id": 3,
+      "name": "Tajweed"
+    }
+  ]
+}
+```
+
+---
+
 ## Response Format
 
 ### Success Response

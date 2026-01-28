@@ -167,23 +167,3 @@ def on_schedule_deleted(sender, instance: CourseSchedule, **kwargs):
     """
     course = instance.course
     _regenerate_future_lectures_for_course(course)
-
-
-""" @receiver(post_save, sender=Lecture)
-def create_lecture_attendance_on_lecture_create(sender, instance, created, **kwargs):
-    ''' Create lecture attendance records when a new lecture is created '''
-    if created:
-        lecture = instance
-        enrollments = lecture.course.enrollments.all()
-        for enrollment in enrollments:
-            if enrollment.child:
-                LectureAttendance.objects.create(
-                    lecture=lecture,
-                    child=enrollment.child
-                )
-            elif enrollment.student:
-                LectureAttendance.objects.create(
-                    lecture=lecture,
-                    student=enrollment.student
-                )
- """

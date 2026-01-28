@@ -13,9 +13,10 @@ class StudentUserAdmin(admin.ModelAdmin):
     readonly_fields = ('unique_code',)
     list_select_related = ('user',)
     fieldsets = (
-        ('معلومات الطالب', {'fields': ('user', 'unique_code', 'image')}),
+        ('معلومات الطالب', {'fields': ('user', 'image')}),
     )
-
+    autocomplete_fields = ('user',)
+    list_select_related = ('user',)
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         if 'user' in form.base_fields:

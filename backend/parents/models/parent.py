@@ -42,6 +42,8 @@ class Parent(ImageOptimizationMixin, models.Model):
         verbose_name = _("ولي أمر")
         verbose_name_plural = _("أولياء الأمور")
 
+    def __str__(self):
+        return self.user.get_full_name()
 
 class Child(ImageOptimizationMixin, models.Model):
     '''
@@ -54,18 +56,19 @@ class Child(ImageOptimizationMixin, models.Model):
     last_name = models.CharField(max_length=128)
 
     phone = models.CharField(
-        _("phone number"), max_length=11, null=True, blank=True)
+        _("phone number"), max_length=13, null=True, blank=True)
     dob = models.DateField(_("date of birth"))
     unique_code = models.CharField(max_length=6, unique=True, editable=False)
     image = models.ImageField(
         upload_to=child_upload_path,
         validators=[validate_image_size],
-        null=True, blank=True, default='defaults/user_default.png'
+        null=True, blank=True
     )
 
     gender = models.CharField(
         max_length=10,
-        choices=[("boy", "Boy"), ("girl", "Girl")],
+        choices=[("boy", "ولد"), ("girl", "بنت")],
+       verbose_name=_("الجنس")
     )
     """nid_number = models.CharField(
         _("National ID number"), max_length=15, unique=True) """
@@ -100,7 +103,7 @@ class Child(ImageOptimizationMixin, models.Model):
 
     def __str__(self):
         """String representation of the Child."""
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name} ({self.unique_code})"
 
     def clean(self):
         if self.extra_parents.count() >= 2:
