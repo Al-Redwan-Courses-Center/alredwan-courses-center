@@ -100,3 +100,21 @@ class TagInstructorInline(admin.TabularInline):
         return super().get_queryset(request).select_related(
             'instructor', 'instructor__user'
         )
+
+
+class CourseEnrollmentInline(admin.TabularInline):
+    """Inline to show enrollments for a course."""
+    from enrollments_payments.models import Enrollment
+    model = Enrollment
+    extra = 0
+    fields = ('student', 'child', 'status', 'enrolled_at')
+    readonly_fields = ('enrolled_at',)
+    autocomplete_fields = ['student']
+    raw_id_fields = ['child']
+    verbose_name = _('تسجيل')
+    verbose_name_plural = _('التسجيلات للدورة')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'student', 'student__user', 'child'
+        )
