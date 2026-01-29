@@ -4,8 +4,10 @@ from django.utils import timezone
 from django.db.models import Count, Sum, Q
 from django.urls import reverse
 from django.contrib import messages
+from django.http import HttpResponse
 
 from ..models import Parent, Child, ChildParents, ParentLinkRequest
+from ..utils.card_generator import generate_children_pdf, generate_card_image_bytes
 
 
 # =============================================================================
@@ -590,7 +592,8 @@ class ChildAdmin(admin.ModelAdmin):
     get_summary_card.short_description = 'ملخص'
 
     # Actions
-    actions = ['export_children_info']
+    actions = ['export_children_info',
+               'download_id_cards_pdf', 'download_single_card_image']
 
     @admin.action(description="📋 تصدير معلومات الأطفال المحددين")
     def export_children_info(self, request, queryset):
@@ -601,6 +604,86 @@ class ChildAdmin(admin.ModelAdmin):
             f"تم تحديد {count} طفل. (يمكن تنفيذ التصدير لاحقاً)",
             messages.INFO
         )
+
+    @admin.action(description="🪪 تحميل بطاقات الهوية (PDF)")
+    def download_id_cards_pdf(self, request, queryset):
+        """Download ID cards for selected children as PDF."""
+        children = list(queryset.select_related(
+            'primary_parent', 'primary_parent__user'))
+
+        if not children:
+            self.message_user(
+                request, "لم يتم تحديد أي أطفال", messages.WARNING)
+            return
+
+        try:
+            # Generate PDF with all selected children
+            pdf_buffer = generate_children_pdf(children)
+
+            # Create response
+            response = HttpResponse(
+                pdf_buffer.getvalue(),
+                content_type='application/pdf'
+            )
+
+            # Set filename
+            if len(children) == 1:
+                filename = f"بطاقة_{children[0].first_name}_{children[0].unique_code}.pdf"
+            else:
+                filename = f"بطاقات_الأطفال_{len(children)}.pdf"
+
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+            self.message_user(
+                request,
+                f"✓ تم تحميل بطاقات {len(children)} طفل بنجاح",
+                messages.SUCCESS
+            )
+
+            return response
+
+        except Exception as e:
+            self.message_user(
+                request,
+                f"⚠ حدث خطأ أثناء إنشاء البطاقات: {str(e)}",
+                messages.ERROR
+            )
+
+    @admin.action(description="🖼️ تحميل بطاقة واحدة (صورة PNG)")
+    def download_single_card_image(self, request, queryset):
+        """Download a single child's ID card as PNG image."""
+        if queryset.count() != 1:
+            self.message_user(
+                request,
+                "⚠ يرجى تحديد طفل واحد فقط لتحميل الصورة",
+                messages.WARNING
+            )
+            return
+
+        child = queryset.select_related(
+            'primary_parent', 'primary_parent__user').first()
+
+        try:
+            # Generate card image
+            img_buffer = generate_card_image_bytes(child, format='PNG')
+
+            # Create response
+            response = HttpResponse(
+                img_buffer.getvalue(),
+                content_type='image/png'
+            )
+
+            filename = f"بطاقة_{child.first_name}_{child.unique_code}.png"
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+            return response
+
+        except Exception as e:
+            self.message_user(
+                request,
+                f"⚠ حدث خطأ أثناء إنشاء البطاقة: {str(e)}",
+                messages.ERROR
+            )
 
 
 @admin.register(ChildParents)

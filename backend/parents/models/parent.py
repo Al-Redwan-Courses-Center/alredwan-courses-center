@@ -122,9 +122,6 @@ class Child(ImageOptimizationMixin, models.Model):
                 self.phone = format_number(parsed, PhoneNumberFormat.E164)
             except Exception:
                 raise ValidationError(_("Invalid phone number format"))
-        if self.unique_code:
-            raise ValidationError(
-                _("Unique code is auto-generated and cannot be set manually."))
 
     class Meta:
         """Meta options for the Child model."""
