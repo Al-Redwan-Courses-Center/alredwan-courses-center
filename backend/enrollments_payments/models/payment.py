@@ -37,15 +37,16 @@ class Payment(models.Model):
     payer_student = models.ForeignKey(
         'users.StudentUser', null=True, blank=True, on_delete=models.SET_NULL, related_name='payments')
 
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(
+        max_digits=10, decimal_places=2, verbose_name=("المبلغ"))
 
     method = models.CharField(
-        max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH)
+        max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH, verbose_name=("طريقة الدفع"))
 
     status = models.CharField(
-        max_length=10, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
+        max_length=10, choices=PaymentStatus.choices, default=PaymentStatus.PENDING, verbose_name=("حالة الدفع"))
 
-    notes = models.TextField(null=True, blank=True)
+    notes = models.TextField(null=True, blank=True, verbose_name=("ملاحظات"))
 
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name=("تاريخ الإنشاء"))

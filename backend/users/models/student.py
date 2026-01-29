@@ -20,13 +20,16 @@ class StudentUser(ImageOptimizationMixin, models.Model):
     Student model that represents a student user
     '''
     user = models.OneToOneField(
-        CustomUser, on_delete=models.CASCADE, related_name='student_profile')
-    unique_code = models.CharField(max_length=6, unique=True, editable=False)
+        CustomUser, on_delete=models.CASCADE, related_name='student_profile', verbose_name=_("المستخدم"))
+    unique_code = models.CharField(
+        max_length=6, unique=True, editable=False, verbose_name=_("كود الطالب"))
 
     image = models.ImageField(
         upload_to=student_upload_path,
         validators=[validate_image_size],
-        null=True
+        null=True,
+        blank=True,
+        verbose_name=_("الصورة الشخصية")
     )
 
     def generate_unique_code(self):
