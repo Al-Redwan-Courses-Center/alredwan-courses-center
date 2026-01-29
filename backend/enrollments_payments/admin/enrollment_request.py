@@ -553,7 +553,7 @@ class EnrollmentRequestAdmin(admin.ModelAdmin):
                 '</div>',
                 user.get_full_name() if user else '-',
                 user.email if user else '-',
-                getattr(user, 'phone', '-') if user else '-'
+                getattr(user, 'phone_number1', '-') if user else '-'
             )
         elif obj.child and obj.parent:
             parent_user = obj.parent.user
