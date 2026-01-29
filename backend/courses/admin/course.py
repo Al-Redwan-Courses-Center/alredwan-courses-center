@@ -12,7 +12,7 @@ from courses.models import Course
 from .base import ArabicLabelsMixin, OptimizedQuerysetMixin
 from .filters import ActiveStatusFilter, CapacityStatusFilter, DateRangeFilter
 from .actions import activate_selected, deactivate_selected, duplicate_selected
-from .inlines import CourseScheduleInline, LectureInline, ExamInline
+from .inlines import CourseScheduleInline, LectureInline, ExamInline, CourseEnrollmentInline
 
 
 @admin.register(Course)
@@ -44,7 +44,7 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
     actions = [activate_selected, deactivate_selected, duplicate_selected]
 
     # Inlines for related models
-    inlines = [CourseScheduleInline, LectureInline, ExamInline]
+    inlines = [CourseScheduleInline, LectureInline, CourseEnrollmentInline]
 
     fieldsets = (
         (_('معلومات الدورة الأساسية'), {
