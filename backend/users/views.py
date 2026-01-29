@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Views for Users app"""
 from rest_framework import generics, filters
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Instructor, LandingPageInstructor
 from .serializers import InstructorListSerializer, InstructorDetailSerializer, LandingPageInstructorSerializer
@@ -28,9 +28,9 @@ class InstructorListView(generics.ListAPIView):
     GET /api/users/instructors/
     """
     serializer_class = InstructorListSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['type']
+    filterset_fields = ['type', 'tags']
     search_fields = ['user__first_name', 'user__last_name', 'bio']
     ordering_fields = ['joined_date', 'user__first_name', 'user__last_name']
     ordering = ['-joined_date']
