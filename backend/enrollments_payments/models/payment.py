@@ -163,7 +163,7 @@ class Payment(models.Model):
         payer = (self.payer_parent.user.first_name if self.payer_parent else (
             self.payer_student.user.first_name if self.payer_student else 'Unknown'))
         target = getattr(self, 'enrollment', None) or 'Unknown'
-        return f"Payment of {self.amount} by {payer} for {target}"
+        return f"سجل دفع {self.amount} لـ {payer} على {target}"
 
 
 class RefundRequest(models.Model):
