@@ -18,6 +18,8 @@ class CustomUserCreateSerializer(UserCreateSerializer):
     Dangerous fields (is_staff, is_superuser, is_active, role) are excluded
     to prevent privilege escalation attacks.
     """
+    # Explicitly declare fields that aren't in REQUIRED_FIELDS to ensure they're writable
+    gender = serializers.ChoiceField(choices=[("male", "ذكر"), ("female", "أنثى")])
 
     class Meta(UserCreateSerializer.Meta):
         model = CustomUser
