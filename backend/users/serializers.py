@@ -21,6 +21,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
     # Explicitly declare fields that aren't in REQUIRED_FIELDS to ensure they're writable
     gender = serializers.ChoiceField(
         choices=[("male", "ذكر"), ("female", "أنثى")])
+    role = serializers.CharField(max_length=20)
 
     class Meta(UserCreateSerializer.Meta):
         model = CustomUser
@@ -54,6 +55,15 @@ class CustomUserCreateSerializer(UserCreateSerializer):
             return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
         except phonenumbers.NumberParseException:
             raise serializers.ValidationError(_("Invalid phone number format"))
+
+    def validate_role(self, value):
+        """
+        Prevent setting role via registration.
+        """
+        if not value in ['student', 'parent']:
+            raise serializers.ValidationError(
+                _("Cannot assign admin or instructor role via registration"))
+        return value
 
 
 class CustomUserSerializer(UserSerializer):
