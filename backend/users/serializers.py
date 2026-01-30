@@ -19,7 +19,8 @@ class CustomUserCreateSerializer(UserCreateSerializer):
     to prevent privilege escalation attacks.
     """
     # Explicitly declare fields that aren't in REQUIRED_FIELDS to ensure they're writable
-    gender = serializers.ChoiceField(choices=[("male", "ذكر"), ("female", "أنثى")])
+    gender = serializers.ChoiceField(
+        choices=[("male", "ذكر"), ("female", "أنثى")])
 
     class Meta(UserCreateSerializer.Meta):
         model = CustomUser
@@ -89,10 +90,11 @@ class CustomUserSerializer(UserSerializer):
             'date_joined',
         )
 
+
 class InstructorSerializer(serializers.ModelSerializer):
     """Serializer for Instructor model"""
     name = serializers.CharField(source='user.get_full_name', read_only=True)
-    
+
     class Meta:
         model = Instructor
         fields = ['id', 'name']
@@ -103,13 +105,15 @@ class LandingPageInstructorDetailSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='user.get_full_name', read_only=True)
     email = serializers.CharField(source='user.email', read_only=True)
     phone = serializers.CharField(source='user.phone_number1', read_only=True)
-    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    type_display = serializers.CharField(
+        source='get_type_display', read_only=True)
     image_url = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Instructor
-        fields = ['id', 'name', 'email', 'phone', 'bio', 'type', 'type_display', 'image_url', 'joined_date']
-    
+        fields = ['id', 'name', 'email', 'phone', 'bio',
+                  'type', 'type_display', 'image_url', 'joined_date']
+
     def get_image_url(self, obj):
         """Get the full URL for the instructor's image"""
         if obj.image:
@@ -123,7 +127,7 @@ class LandingPageInstructorDetailSerializer(serializers.ModelSerializer):
 class LandingPageInstructorSerializer(serializers.ModelSerializer):
     """Serializer for landing page featured instructors"""
     instructor = LandingPageInstructorDetailSerializer(read_only=True)
-    
+
     class Meta:
         model = LandingPageInstructor
         fields = ['id', 'instructor', 'order', 'created_at']
@@ -132,14 +136,16 @@ class LandingPageInstructorSerializer(serializers.ModelSerializer):
 class InstructorListSerializer(serializers.ModelSerializer):
     """Serializer for listing instructors"""
     name = serializers.CharField(source='user.get_full_name', read_only=True)
-    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    type_display = serializers.CharField(
+        source='get_type_display', read_only=True)
     image_url = serializers.SerializerMethodField()
     tags = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Instructor
-        fields = ['id', 'name', 'bio', 'type', 'type_display', 'image_url', 'joined_date', 'tags']
-    
+        fields = ['id', 'name', 'bio', 'type', 'type_display',
+                  'image_url', 'joined_date', 'tags']
+
     def get_image_url(self, obj):
         """Get the full URL for the instructor's image"""
         if obj.image:
@@ -148,7 +154,7 @@ class InstructorListSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.image.url)
             return obj.image.url
         return None
-    
+
     def get_tags(self, obj):
         """Get tags for the instructor"""
         from courses.serializers import TagSerializer
@@ -160,14 +166,16 @@ class InstructorDetailSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='user.get_full_name', read_only=True)
     email = serializers.CharField(source='user.email', read_only=True)
     phone = serializers.CharField(source='user.phone_number1', read_only=True)
-    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    type_display = serializers.CharField(
+        source='get_type_display', read_only=True)
     image_url = serializers.SerializerMethodField()
     tags = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Instructor
-        fields = ['id', 'name', 'email', 'phone', 'bio', 'type', 'type_display', 'image_url', 'joined_date', 'tags']
-    
+        fields = ['id', 'name', 'email', 'phone', 'bio', 'type',
+                  'type_display', 'image_url', 'joined_date', 'tags']
+
     def get_image_url(self, obj):
         """Get the full URL for the instructor's image"""
         if obj.image:
@@ -176,9 +184,8 @@ class InstructorDetailSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.image.url)
             return obj.image.url
         return None
-    
+
     def get_tags(self, obj):
         """Get tags for the instructor"""
         from courses.serializers import TagSerializer
         return TagSerializer(obj.tags.all(), many=True).data
-
