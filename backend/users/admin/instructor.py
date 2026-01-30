@@ -20,11 +20,20 @@ class InstructorAttendanceInline(admin.TabularInline):
     extra = 0
     classes = ('collapse',)
     verbose_name = 'سجل حضور'
-    verbose_name_plural = 'سجلات الحضور'
+    verbose_name_plural = 'سجلات الحضور (آخر 10 سجلات)'
     fields = ('date', 'status', 'check_in_time', 'check_out_time', 'rating', 'season')
     readonly_fields = ('date', 'check_in_time', 'check_out_time', 'season')
     ordering = ('-date',)
-    max_num = 20  # Limit to recent records for performance
+    max_num = 0  # Prevent adding new records here
+    can_delete = False
+    show_change_link = True
+
+    def get_queryset(self, request):
+        """Limit to last 10 records to prevent TooManyFieldsSent error."""
+        qs = super().get_queryset(request)
+        # Get PKs of last 10 records, then filter by those PKs
+        pks = list(qs.order_by('-date').values_list('pk', flat=True)[:10])
+        return qs.filter(pk__in=pks)
 
 
 class LectureInline(admin.TabularInline):
@@ -32,11 +41,20 @@ class LectureInline(admin.TabularInline):
     extra = 0
     classes = ('collapse',)
     verbose_name = 'محاضرة'
-    verbose_name_plural = 'المحاضرات'
+    verbose_name_plural = 'المحاضرات (آخر 10 محاضرات)'
     fields = ('course', 'day', 'start_time', 'end_time', 'lecture_number', 'status')
-    readonly_fields = ('course', 'day', 'lecture_number')
+    readonly_fields = ('course', 'day', 'lecture_number', 'start_time', 'end_time', 'status')
     ordering = ('-day',)
-    max_num = 20  # Limit for performance
+    max_num = 0
+    can_delete = False
+    show_change_link = True
+
+    def get_queryset(self, request):
+        """Limit to last 10 records to prevent TooManyFieldsSent error."""
+        qs = super().get_queryset(request)
+        # Get PKs of last 10 records, then filter by those PKs
+        pks = list(qs.order_by('-day').values_list('pk', flat=True)[:10])
+        return qs.filter(pk__in=pks)
 
     def has_add_permission(self, request, obj=None):
         return False  # Lectures are managed through courses

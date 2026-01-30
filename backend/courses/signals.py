@@ -169,21 +169,36 @@ def on_schedule_deleted(sender, instance: CourseSchedule, **kwargs):
     _regenerate_future_lectures_for_course(course)
 
 
-""" @receiver(post_save, sender=Lecture)
-def create_lecture_attendance_on_lecture_create(sender, instance, created, **kwargs):
-    ''' Create lecture attendance records when a new lecture is created '''
+@receiver(post_save, sender=Lecture)
+def on_lecture_status_changed(sender, instance: Lecture, created, **kwargs):
+    """
+    When a lecture status changes to COMPLETED:
+    - Check if all course lectures are completed
+    - If so, mark all active enrollments for that course as completed
+
+    This provides real-time enrollment completion when the last lecture finishes.
+    """
     if created:
-        lecture = instance
-        enrollments = lecture.course.enrollments.all()
-        for enrollment in enrollments:
-            if enrollment.child:
-                LectureAttendance.objects.create(
-                    lecture=lecture,
-                    child=enrollment.child
-                )
-            elif enrollment.student:
-                LectureAttendance.objects.create(
-                    lecture=lecture,
-                    student=enrollment.student
-                )
- """
+        return  # Skip newly created lectures
+
+    from .models.lecture import LectureStatus
+
+    # Only trigger when lecture is marked as completed
+    if instance.status != LectureStatus.COMPLETED:
+        return
+
+    # Check if course should trigger enrollment completion
+    course = instance.course
+
+    # Only check if course has a defined num_lectures
+    if not course.num_lectures:
+        return
+
+    # Count completed lectures
+    completed_count = course.lectures.filter(
+        status=LectureStatus.COMPLETED).count()
+
+    # If all expected lectures are completed, mark enrollments as completed
+    if completed_count >= course.num_lectures:
+        from enrollments_payments.cron import check_and_complete_course_enrollments
+        check_and_complete_course_enrollments(course.id)

@@ -30,11 +30,12 @@ class Parent(ImageOptimizationMixin, models.Model):
     '''
 
     user = models.OneToOneField(
-        CustomUser, on_delete=models.CASCADE, related_name='parent_profile')
+        CustomUser, on_delete=models.CASCADE, related_name='parent_profile', verbose_name=_("المستخدم"))
     image = models.ImageField(
         upload_to=parent_upload_path,
         validators=[validate_image_size],
         null=True,
+        blank=True
     )
 
     class Meta:
@@ -45,30 +46,34 @@ class Parent(ImageOptimizationMixin, models.Model):
     def __str__(self):
         return self.user.get_full_name()
 
+
 class Child(ImageOptimizationMixin, models.Model):
     '''
     Child model that represents a child user associated with a parent
     '''
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     primary_parent = models.ForeignKey(
-        Parent, on_delete=models.PROTECT, related_name='primary_children')
-    first_name = models.CharField(max_length=128)
-    last_name = models.CharField(max_length=128)
+        Parent, on_delete=models.PROTECT, related_name='primary_children', verbose_name=_("الولي الأساسي"))
+    first_name = models.CharField(
+        max_length=128, verbose_name=_("الاسم الأول والثاني"))
+    last_name = models.CharField(
+        max_length=128, verbose_name=_("الاسم الثالث والرابع"))
 
     phone = models.CharField(
-        _("phone number"), max_length=13, null=True, blank=True)
-    dob = models.DateField(_("date of birth"))
-    unique_code = models.CharField(max_length=6, unique=True, editable=False)
+        _("رقم الهاتف"), max_length=13, null=True, blank=True)
+    dob = models.DateField(_("تاريخ الميلاد"))
+    unique_code = models.CharField(
+        max_length=6, unique=True, editable=False, verbose_name=_("كود الطفل"))
     image = models.ImageField(
         upload_to=child_upload_path,
         validators=[validate_image_size],
-        null=True, blank=True
+        null=True, blank=True, verbose_name=_("الصورة الشخصية")
     )
 
     gender = models.CharField(
         max_length=10,
         choices=[("boy", "ولد"), ("girl", "بنت")],
-       verbose_name=_("الجنس")
+        verbose_name=_("الجنس")
     )
     """nid_number = models.CharField(
         _("National ID number"), max_length=15, unique=True) """
@@ -117,9 +122,6 @@ class Child(ImageOptimizationMixin, models.Model):
                 self.phone = format_number(parsed, PhoneNumberFormat.E164)
             except Exception:
                 raise ValidationError(_("Invalid phone number format"))
-        if self.unique_code:
-            raise ValidationError(
-                _("Unique code is auto-generated and cannot be set manually."))
 
     class Meta:
         """Meta options for the Child model."""
