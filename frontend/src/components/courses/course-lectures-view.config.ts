@@ -5,7 +5,15 @@ import {
 } from "@/types/components";
 import { Lecture } from "@/types/entities";
 
-const headers = ["م", "المحاضرة", "الدورة", "البداية", "النهاية", "الحالة", ""];
+const headers = [
+  "م",
+  "المحاضرة",
+  "التاريخ",
+  "البداية",
+  "النهاية",
+  "الحالة",
+  "",
+];
 
 const statusWeights = {
   submitted: 1,
@@ -17,19 +25,20 @@ const sortConfig: DataViewSortConfig<Lecture> = {
     sortFn: (a: Lecture, b: Lecture) => a.title.localeCompare(b.title),
     label: headers[1],
   },
-  course: {
+  date: {
     sortFn: (a: Lecture, b: Lecture) =>
-      a.courseName.localeCompare(b.courseName),
+      new Date(a.start_time || "").getTime() -
+      new Date(b.start_time || "").getTime(),
     label: headers[2],
   },
   startTime: {
     sortFn: (a: Lecture, b: Lecture) =>
-      a.startTime.getTime() - b.startTime.getTime(),
+      (a.startTime?.getTime() || 0) - (b.startTime?.getTime() || 0),
     label: headers[3],
   },
   endTime: {
     sortFn: (a: Lecture, b: Lecture) =>
-      a.endTime.getTime() - b.endTime.getTime(),
+      (a.endTime?.getTime() || 0) - (b.endTime?.getTime() || 0),
     label: headers[4],
   },
   status: {
@@ -62,10 +71,10 @@ const statusMap: StatusMap<Lecture> = {
   },
 };
 
-const lecturesTableConfig = {
+const courseLecturesViewConfig = {
   sortConfig,
   filterConfig,
   statusMap,
 };
 
-export default lecturesTableConfig;
+export default courseLecturesViewConfig;

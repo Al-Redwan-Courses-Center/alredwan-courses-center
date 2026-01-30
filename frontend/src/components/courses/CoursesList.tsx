@@ -1,6 +1,6 @@
 "use client";
 
-import CoursesTable from "@/components/courses/CoursesTable";
+import CoursesView from "@/components/courses/CoursesView";
 
 export default function CoursesList() {
   return;

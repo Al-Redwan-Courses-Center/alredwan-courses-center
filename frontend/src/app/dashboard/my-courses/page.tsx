@@ -1,5 +1,5 @@
 import { getUser } from "@/actions/auth";
-import CoursesTable from "@/components/courses/CoursesTable";
+import CoursesView from "@/components/courses/CoursesView";
 import { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -18,7 +18,7 @@ export default async function Page() {
 
       <div className="max-h-full w-full">
         <Suspense fallback={null}>
-          <CoursesTable />
+          <CoursesView />
         </Suspense>
       </div>
     </div>

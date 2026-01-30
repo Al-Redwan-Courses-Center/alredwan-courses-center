@@ -85,7 +85,7 @@ export default function CourseCard({
       <Button
         variant="primary"
         size="small"
-        href={`/courses/${course.id}`}
+        href={`/dashboard/my-courses/${course.id}`}
         className={cn(
           "relative mx-10 mb-10 max-w-35 px-6 text-[1.125rem]",
           index % 2 === 0 ? "justify-self-end" : "justify-self-start",

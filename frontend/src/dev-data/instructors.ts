@@ -1,3 +1,6 @@
+import db from "@/dev-data/mock_db.json";
+import { delay } from "@/lib/utils";
+
 export const publicInstructors = [
   {
     id: 1,
@@ -32,3 +35,11 @@ export const publicInstructors = [
 ];
 
 export type PublicInstructor = (typeof publicInstructors)[number];
+
+export async function getInstructor(id: number) {
+  await delay(2000);
+
+  const instructor = db.instructors.find((i) => i.id === id);
+
+  return instructor;
+}

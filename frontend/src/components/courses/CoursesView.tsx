@@ -16,8 +16,9 @@ import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
 import { Course, MOCK_COURSES } from "@/dev-data/courses";
 import { cn, toHindiDigits } from "@/lib/utils";
+import Link from "next/link";
 
-export default function CoursesTable() {
+export default function CoursesView() {
   return (
     <DataView<Course>
       data={MOCK_COURSES}
@@ -33,7 +34,7 @@ export default function CoursesTable() {
       sortConfig={{
         test: {
           label: "Abc",
-          sortFn: (a: Course, b: Course) => 1,
+          sortFn: () => 1,
         },
       }}
     >
@@ -66,10 +67,13 @@ export default function CoursesTable() {
                 {item.end_date ? item.end_date : "غير محدد"}
               </DataViewCell>
               <DataViewCell>
-                <div className="[&>button]:text-olive-300 [&>button]:hover:text-olive-700 flex items-center justify-center gap-6 [&>button]:transition-colors">
-                  <button>
+                <div className="flex items-center justify-center gap-6">
+                  <Link
+                    href={`/dashboard/my-courses/${item.id}`}
+                    className="text-olive-300 hover:text-olive-700 transition-colors"
+                  >
                     <InfoIcon />
-                  </button>
+                  </Link>
                 </div>
               </DataViewCell>
             </DataViewRow>

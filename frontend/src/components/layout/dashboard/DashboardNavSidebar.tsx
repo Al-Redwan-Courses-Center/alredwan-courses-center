@@ -12,6 +12,11 @@ export default async function DashboardNavSidebar() {
 
   return (
     <div className="mt-4 flex flex-col items-center gap-16 rounded-tl-4xl bg-[#EAEDEA] p-13">
+      {/* 
+      //
+      // MARK: Image
+      //
+      */}
       {!!image ? (
         <div className="border-olive-300 relative aspect-square h-auto w-46 overflow-clip rounded-full border-4">
           <Image
@@ -31,6 +36,11 @@ export default async function DashboardNavSidebar() {
         />
       )}
 
+      {/* 
+      //
+      // MARK: NavLinks
+      //
+      */}
       <ul className="flex h-full w-full flex-col gap-10">
         <NavLink
           variant="dashboard"
@@ -41,14 +51,44 @@ export default async function DashboardNavSidebar() {
           محاضرات اليوم
         </NavLink>
 
-        <NavLink
-          variant="dashboard"
-          size="medium"
-          href="/dashboard/my-courses"
-          icon={<ClipboardIcon />}
-        >
-          جميع الدورات
-        </NavLink>
+        <div>
+          <NavLink
+            variant="dashboard"
+            size="medium"
+            href="/dashboard/my-courses"
+            icon={<ClipboardIcon />}
+          >
+            جميع الدورات
+          </NavLink>
+
+          {true && (
+            <ul className="flex list-disc flex-col items-start ps-5">
+              <NavLink
+                variant="dashboard"
+                size="medium"
+                href="/dashboard/my-courses"
+              >
+                المحاضرات
+              </NavLink>
+
+              <NavLink
+                variant="dashboard"
+                size="medium"
+                href="/dashboard/my-courses"
+              >
+                تفاصيل الدورة
+              </NavLink>
+
+              <NavLink
+                variant="dashboard"
+                size="medium"
+                href="/dashboard/my-courses"
+              >
+                الحجوزات
+              </NavLink>
+            </ul>
+          )}
+        </div>
 
         <NavLink
           variant="dashboard"

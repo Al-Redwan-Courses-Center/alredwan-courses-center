@@ -117,7 +117,7 @@ export const MOCK_SEASONS: Season[] = [
     season_type: "summer_camp",
     start_date: "2025-06-01",
     end_date: "2025-08-31",
-    description: "Intensive summer courses.",
+    description: "دورات صيفية مكثفة.",
     is_active: true,
   },
   {
@@ -131,17 +131,17 @@ export const MOCK_SEASONS: Season[] = [
 ];
 
 export const MOCK_TAGS: Tag[] = [
-  { id: 1, name: "Programming" },
-  { id: 2, name: "Mathematics" },
-  { id: 3, name: "Physics" },
-  { id: 4, name: "Languages" },
+  { id: 1, name: "البرمجة" },
+  { id: 2, name: "الرياضيات" },
+  { id: 3, name: "الفيزياء" },
+  { id: 4, name: "اللغات" },
 ];
 
 export const MOCK_USER_INSTRUCTOR_1: User = {
   id: "u1-uuid-1234",
   phone_number1: "+201000000001",
-  first_name: "Ahmed",
-  last_name: "Ali",
+  first_name: "أحمد",
+  last_name: "علي",
   dob: "1985-05-15",
   is_verified: true,
   gender: "male",
@@ -155,14 +155,14 @@ export const MOCK_INSTRUCTOR_1: Instructor = {
   monthly_salary: 5000.0,
   joined_date: "2020-01-01",
   type: "normal",
-  bio: "Expert in Computer Science and Mathematics with 10 years of experience.",
+  bio: "خبير في علوم الحاسب والرياضيات بخبرة تزيد عن 10 سنوات.",
 };
 
 export const MOCK_USER_INSTRUCTOR_2: User = {
   id: "u2-uuid-5678",
   phone_number1: "+201000000002",
-  first_name: "Sara",
-  last_name: "Mohamed",
+  first_name: "سارة",
+  last_name: "محمد",
   dob: "1990-08-20",
   is_verified: true,
   gender: "female",
@@ -176,14 +176,14 @@ export const MOCK_INSTRUCTOR_2: Instructor = {
   monthly_salary: 6000.0,
   joined_date: "2021-03-15",
   type: "supervisor",
-  bio: "Specialist in Physics and Chemistry.",
+  bio: "متخصصة في الفيزياء والكيمياء.",
 };
 
 export const MOCK_COURSES: Course[] = [
   {
     id: 1,
-    name: "Introduction to Python",
-    description: "Learn the basics of Python programming language.",
+    name: "مقدمة في بايثون",
+    description: "تعلم أساسيات لغة البرمجة بايثون.",
     start_date: "2025-06-05",
     end_date: "2025-07-05",
     num_lectures: 10,
@@ -202,8 +202,8 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 2,
-    name: "Advanced Physics",
-    description: "Deep dive into mechanics and thermodynamics.",
+    name: "فيزياء متقدمة",
+    description: "تعمق في الميكانيكا والديناميكا الحرارية.",
     start_date: "2025-06-10",
     end_date: "2025-08-10",
     num_lectures: 16,
@@ -222,8 +222,8 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 3,
-    name: "Advanced Physics",
-    description: "Deep dive into mechanics and thermodynamics.",
+    name: "فيزياء متقدمة",
+    description: "تعمق في الميكانيكا والديناميكا الحرارية.",
     start_date: "2025-06-10",
     end_date: "2025-08-10",
     num_lectures: 16,
@@ -242,8 +242,8 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 4,
-    name: "Advanced Physics",
-    description: "Deep dive into mechanics and thermodynamics.",
+    name: "فيزياء متقدمة",
+    description: "تعمق في الميكانيكا والديناميكا الحرارية.",
     start_date: "2025-06-10",
     end_date: "2025-08-10",
     num_lectures: 16,
@@ -262,8 +262,8 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 5,
-    name: "Advanced Physics",
-    description: "Deep dive into mechanics and thermodynamics.",
+    name: "فيزياء متقدمة",
+    description: "تعمق في الميكانيكا والديناميكا الحرارية.",
     start_date: "2025-06-10",
     end_date: "2025-08-10",
     num_lectures: 16,
@@ -282,8 +282,8 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 6,
-    name: "Advanced Physics",
-    description: "Deep dive into mechanics and thermodynamics.",
+    name: "فيزياء متقدمة",
+    description: "تعمق في الميكانيكا والديناميكا الحرارية.",
     start_date: "2025-06-10",
     end_date: "2025-08-10",
     num_lectures: 16,
@@ -302,8 +302,8 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 7,
-    name: "Advanced Physics",
-    description: "Deep dive into mechanics and thermodynamics.",
+    name: "فيزياء متقدمة",
+    description: "تعمق في الميكانيكا والديناميكا الحرارية.",
     start_date: "2025-06-10",
     end_date: "2025-08-10",
     num_lectures: 16,
@@ -322,8 +322,8 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 8,
-    name: "Advanced Physics",
-    description: "Deep dive into mechanics and thermodynamics.",
+    name: "فيزياء متقدمة",
+    description: "تعمق في الميكانيكا والديناميكا الحرارية.",
     start_date: "2025-06-10",
     end_date: "2025-08-10",
     num_lectures: 16,
@@ -342,8 +342,8 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 9,
-    name: "Advanced Physics",
-    description: "Deep dive into mechanics and thermodynamics.",
+    name: "فيزياء متقدمة",
+    description: "تعمق في الميكانيكا والديناميكا الحرارية.",
     start_date: "2025-06-10",
     end_date: "2025-08-10",
     num_lectures: 16,
@@ -362,8 +362,8 @@ export const MOCK_COURSES: Course[] = [
   },
   {
     id: 10,
-    name: "Advanced Physics",
-    description: "Deep dive into mechanics and thermodynamics.",
+    name: "فيزياء متقدمة",
+    description: "تعمق في الميكانيكا والديناميكا الحرارية.",
     start_date: "2025-06-10",
     end_date: "2025-08-10",
     num_lectures: 16,
@@ -386,7 +386,7 @@ export const MOCK_LECTURES: Lecture[] = [
   // Lectures for Course 1 (Python)
   {
     id: 1,
-    title: "Python Setup & Basics",
+    title: "تثبيت بايثون والأساسيات",
     course: MOCK_COURSES[0],
     day: "2025-06-05",
     start_time: "10:00:00",
@@ -398,7 +398,7 @@ export const MOCK_LECTURES: Lecture[] = [
   },
   {
     id: 2,
-    title: "Variables and Data Types",
+    title: "المتغيرات وأنواع البيانات",
     course: MOCK_COURSES[0],
     day: "2025-06-08",
     start_time: "10:00:00",
@@ -410,7 +410,7 @@ export const MOCK_LECTURES: Lecture[] = [
   },
   {
     id: 3,
-    title: "Control Flow (If/Else)",
+    title: "جمل التحكم الشرطية (If/Else)",
     course: MOCK_COURSES[0],
     day: "2025-06-12",
     start_time: "10:00:00",
@@ -422,7 +422,7 @@ export const MOCK_LECTURES: Lecture[] = [
   },
   {
     id: 4,
-    title: "Loops (For/While)",
+    title: "الحلقات التكرارية (For/While)",
     course: MOCK_COURSES[0],
     day: "2025-06-15",
     start_time: "10:00:00",
@@ -436,7 +436,7 @@ export const MOCK_LECTURES: Lecture[] = [
   // Lectures for Course 2 (Physics)
   {
     id: 5,
-    title: "Introduction to Mechanics",
+    title: "مقدمة في الميكانيكا",
     course: MOCK_COURSES[1],
     day: "2025-06-10",
     start_time: "14:00:00",
@@ -448,7 +448,7 @@ export const MOCK_LECTURES: Lecture[] = [
   },
   {
     id: 6,
-    title: "Newton's Laws",
+    title: "قوانين نيوتن",
     course: MOCK_COURSES[1],
     day: "2025-06-14",
     start_time: "14:00:00",

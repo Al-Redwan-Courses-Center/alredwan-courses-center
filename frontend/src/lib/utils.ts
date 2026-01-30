@@ -27,7 +27,11 @@ export function toHindiDigits(num: number | string): string {
     .replace(/[0-9]/g, (digit) => westernToHindi[digit] || digit);
 }
 
-export function formatTime(date: Date) {
+export function formatTime(dateStr: string | Date | undefined) {
+  if (!dateStr) return dateStr;
+
+  const date = dateStr instanceof Date ? dateStr : new Date(dateStr);
+
   return date
     .toLocaleTimeString("ar-EG", {
       hour: "2-digit",
@@ -45,4 +49,8 @@ export function debounceFn(fn: (...args: any[]) => any, delay: number) {
     clearTimeout(timerId);
     timerId = setTimeout(() => fn(...args), delay);
   };
+}
+
+export function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

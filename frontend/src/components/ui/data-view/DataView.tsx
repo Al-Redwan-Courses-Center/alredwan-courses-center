@@ -64,7 +64,8 @@ export default function DataView<T extends Record<string, any>>({
 }) {
   const [layout, setLayout] = useState<DataViewContext<T>["layout"]>("table");
   const { mutateSearchParams, searchParams } = useMutateSearchParams();
-  const searchableKeys = Object.keys(data[1]);
+
+  const searchableKeys = Object.keys(data[0]);
 
   const filteredData = useFilterData<T>(data, filterConfig);
   const searchedData = useSearchData<T>(filteredData, searchableKeys);
