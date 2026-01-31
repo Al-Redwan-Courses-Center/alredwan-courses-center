@@ -64,31 +64,7 @@ class StudentUser(ImageOptimizationMixin, models.Model):
             font = ImageFont.load_default()
             small_font = ImageFont.load_default()
 
-        # Left side: photo and text
-        photo_size = 150
-        if self.image:
-            try:
-                # Download photo
-                response = requests.get(self.image.url)
-                photo = Image.open(io.BytesIO(response.content))
-                photo = photo.resize((photo_size, photo_size))
-                card.paste(photo, (20, 20))
-            except:
-                # Placeholder
-                placeholder_text = get_display(reshape("صورة"))
-                draw.rectangle([20, 20, 20+photo_size, 20+photo_size], fill='gray')
-                draw.text((20 + photo_size//2 - 30, 20 + photo_size//2 - 10), placeholder_text, fill='white', font=font)
-
-        # Text next to photo
-        text_x = 20 + photo_size + 20
-        name_text = get_display(reshape(f"الاسم: {self.user.first_name} {self.user.last_name}"))
-        dob_text = get_display(reshape(f"تاريخ الميلاد: {self.user.dob.strftime('%d/%m/%Y') if self.user.dob else 'غير محدد'}"))
-        code_text = get_display(reshape(f"الكود: {self.unique_code}"))
-        draw.text((text_x, 20), name_text, fill='black', font=font)
-        draw.text((text_x, 50), dob_text, fill='black', font=font)
-        draw.text((text_x, 80), code_text, fill='black', font=font)
-
-        # Right side: QR code
+        # Left side: QR code
         qr_size = 150
         data = {
             "code": self.unique_code,
@@ -103,7 +79,46 @@ class StudentUser(ImageOptimizationMixin, models.Model):
         qr.make(fit=True)
         qr_img = qr.make_image(fill='black', back_color='white')
         qr_img = qr_img.resize((qr_size, qr_size))
-        card.paste(qr_img, (width - qr_size - 20, height - qr_size - 20))
+        card.paste(qr_img, (20, height - qr_size - 20))
+
+        # Photo next to QR
+        photo_x = 20 + qr_size + 10  # 180
+        photo_size = 150
+        if self.image:
+            try:
+                # Download photo
+                response = requests.get(self.image.url)
+                photo = Image.open(io.BytesIO(response.content))
+                photo = photo.resize((photo_size, photo_size))
+                card.paste(photo, (photo_x, 20))
+            except:
+                # Placeholder
+                placeholder_text = get_display(reshape("صورة"))
+                draw.rectangle([photo_x, 20, photo_x + photo_size, 20 + photo_size], fill='gray')
+                draw.text((photo_x + photo_size//2 - 30, 20 + photo_size//2 - 10), placeholder_text, fill='white', font=font)
+
+        # Text to the right of photo, aligned to the right edge
+        margin_right = 20
+        name_text = get_display(reshape(f"الاسم: {self.user.first_name} {self.user.last_name}"))
+        dob_text = get_display(reshape(f"تاريخ الميلاد: {self.user.dob.strftime('%d/%m/%Y') if self.user.dob else 'غير محدد'}"))
+        code_text = get_display(reshape(f"الكود: {self.unique_code}"))
+        
+        # Calculate positions for right alignment
+        name_bbox = draw.textbbox((0, 0), name_text, font=font)
+        name_width = name_bbox[2] - name_bbox[0]
+        name_x = width - margin_right - name_width
+        
+        dob_bbox = draw.textbbox((0, 0), dob_text, font=font)
+        dob_width = dob_bbox[2] - dob_bbox[0]
+        dob_x = width - margin_right - dob_width
+        
+        code_bbox = draw.textbbox((0, 0), code_text, font=font)
+        code_width = code_bbox[2] - code_bbox[0]
+        code_x = width - margin_right - code_width
+        
+        draw.text((name_x, 20), name_text, fill='black', font=font)
+        draw.text((dob_x, 50), dob_text, fill='black', font=font)
+        draw.text((code_x, 80), code_text, fill='black', font=font)
 
         # Save to buffer
         buffer = io.BytesIO()
