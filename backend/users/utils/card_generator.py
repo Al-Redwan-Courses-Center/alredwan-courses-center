@@ -1,5 +1,5 @@
-def generate_card_image_bytes(child, format='PNG'):
-    """Generate card image bytes for a child."""
+def generate_card_image_bytes(student, format='PNG'):
+    """Generate card image bytes for a student."""
     from PIL import Image, ImageDraw, ImageFont
     import qrcode
     import io
@@ -19,9 +19,9 @@ def generate_card_image_bytes(child, format='PNG'):
 
     # Left side: photo and text
     photo_size = 150
-    if child.image:
+    if student.image:
         try:
-            response = requests.get(child.image.url)
+            response = requests.get(student.image.url)
             photo = Image.open(io.BytesIO(response.content))
             photo = photo.resize((photo_size, photo_size))
             card.paste(photo, (20, 20))
@@ -31,16 +31,16 @@ def generate_card_image_bytes(child, format='PNG'):
 
     # Text next to photo
     text_x = 20 + photo_size + 20
-    draw.text((text_x, 20), f"Name: {child.first_name} {child.last_name}", fill='black', font=font)
-    draw.text((text_x, 50), f"DOB: {child.dob.strftime('%d/%m/%Y') if child.dob else 'N/A'}", fill='black', font=font)
-    draw.text((text_x, 80), f"Code: {child.unique_code}", fill='black', font=font)
+    draw.text((text_x, 20), f"Name: {student.user.first_name} {student.user.last_name}", fill='black', font=font)
+    draw.text((text_x, 50), f"DOB: {student.user.date_of_birth.strftime('%d/%m/%Y') if student.user.date_of_birth else 'N/A'}", fill='black', font=font)
+    draw.text((text_x, 80), f"Code: {student.unique_code}", fill='black', font=font)
 
     # Right side: QR code
     qr_size = 150
     data = {
-        "code": child.unique_code,
-        "name": f"{child.first_name} {child.last_name}",
-        "dob": child.dob.isoformat() if child.dob else None
+        "code": student.unique_code,
+        "name": f"{student.user.first_name} {student.user.last_name}",
+        "dob": student.user.date_of_birth.isoformat() if student.user.date_of_birth else None
     }
     import json
     qr_data = json.dumps(data, ensure_ascii=False)
@@ -59,8 +59,8 @@ def generate_card_image_bytes(child, format='PNG'):
     return buffer
 
 
-def generate_children_pdf(children):
-    """Generate PDF with cards for multiple children."""
+def generate_students_pdf(students):
+    """Generate PDF with cards for multiple students."""
     from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import letter
     from reportlab.lib.utils import ImageReader
@@ -73,13 +73,13 @@ def generate_children_pdf(children):
     card_height = height / cards_per_page
     y_position = height
 
-    for i, child in enumerate(children):
+    for i, student in enumerate(students):
         if i % cards_per_page == 0 and i > 0:
             c.showPage()
             y_position = height
 
         # Generate card image
-        img_buffer = generate_card_image_bytes(child)
+        img_buffer = generate_card_image_bytes(student)
         img = ImageReader(img_buffer)
 
         # Draw card

@@ -423,14 +423,14 @@ class ChildAdmin(admin.ModelAdmin):
     list_display = (
         'get_unique_code_badge', 'get_full_name', 'get_gender_badge',
         'get_age_display', 'get_primary_parent_link', 'get_enrollments_badge',
-        'get_phone_display'
+        'get_phone_display', 'image'
     )
     list_filter = ('gender', ChildAgeFilter,
                    HasEnrollmentsFilter, 'created_at')
     search_fields = ('unique_code', 'first_name', 'last_name',
                      'phone', 'primary_parent__user__phone_number1')
     readonly_fields = ('unique_code', 'created_at',
-                       'updated_at', 'get_age_display', 'get_summary_card')
+                       'updated_at', 'get_age_display', 'get_summary_card', 'card_image')
     autocomplete_fields = ('primary_parent',)
     date_hierarchy = 'created_at'
     list_per_page = 25
@@ -447,7 +447,7 @@ class ChildAdmin(admin.ModelAdmin):
             'fields': ('phone', 'unique_code')
         }),
         ('الصورة', {
-            'fields': ('image',),
+            'fields': ('image', 'card_image'),
             'classes': ('collapse',),
         }),
         ('التواريخ', {
