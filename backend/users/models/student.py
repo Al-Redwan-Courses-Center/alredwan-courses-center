@@ -48,6 +48,8 @@ class StudentUser(ImageOptimizationMixin, models.Model):
         import qrcode
         import io
         import requests
+        from arabic_reshaper import reshape
+        from bidi.algorithm import get_display
 
         # Card size: 600x300
         width, height = 600, 300
@@ -73,14 +75,18 @@ class StudentUser(ImageOptimizationMixin, models.Model):
                 card.paste(photo, (20, 20))
             except:
                 # Placeholder
+                placeholder_text = get_display(reshape("صورة"))
                 draw.rectangle([20, 20, 20+photo_size, 20+photo_size], fill='gray')
-                draw.text((20 + photo_size//2 - 30, 20 + photo_size//2 - 10), "Photo", fill='white', font=font)
+                draw.text((20 + photo_size//2 - 30, 20 + photo_size//2 - 10), placeholder_text, fill='white', font=font)
 
         # Text next to photo
         text_x = 20 + photo_size + 20
-        draw.text((text_x, 20), f"Name: {self.user.first_name} {self.user.last_name}", fill='black', font=font)
-        draw.text((text_x, 50), f"DOB: {self.user.dob.strftime('%d/%m/%Y') if self.user.dob else 'N/A'}", fill='black', font=font)
-        draw.text((text_x, 80), f"Code: {self.unique_code}", fill='black', font=font)
+        name_text = get_display(reshape(f"الاسم: {self.user.first_name} {self.user.last_name}"))
+        dob_text = get_display(reshape(f"تاريخ الميلاد: {self.user.dob.strftime('%d/%m/%Y') if self.user.dob else 'غير محدد'}"))
+        code_text = get_display(reshape(f"الكود: {self.unique_code}"))
+        draw.text((text_x, 20), name_text, fill='black', font=font)
+        draw.text((text_x, 50), dob_text, fill='black', font=font)
+        draw.text((text_x, 80), code_text, fill='black', font=font)
 
         # Right side: QR code
         qr_size = 150
