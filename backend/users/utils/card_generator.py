@@ -18,9 +18,10 @@ def generate_students_pdf(students):
             c.showPage()
             y_position = height
 
-        # Use existing card image
-        if student.card_image:
-            img = ImageReader(student.card_image.url)
+        # Generate card image on the fly
+        try:
+            card_buffer = student.generate_card_image_buffer()
+            img = ImageReader(card_buffer)
             img_width, img_height = img.getSize()
             target_width = width - 100
             target_height = card_height - 100
@@ -32,6 +33,10 @@ def generate_students_pdf(students):
             # Draw card
             c.drawImage(img, x, y, new_width, new_height)
             y_position -= card_height
+        except Exception as e:
+            # If generation fails, skip this student
+            print(f"Failed to generate card for student {student.unique_code}: {e}")
+            continue
 
     c.save()
     buffer.seek(0)

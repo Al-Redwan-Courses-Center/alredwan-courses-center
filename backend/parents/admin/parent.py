@@ -593,7 +593,8 @@ class ChildAdmin(admin.ModelAdmin):
 
     # Actions
     actions = ['export_children_info',
-               'download_id_cards_pdf']
+               'download_id_cards_pdf',
+               'download_single_card_image']
 
     @admin.action(description="📋 تصدير معلومات الأطفال المحددين")
     def export_children_info(self, request, queryset):
@@ -604,6 +605,45 @@ class ChildAdmin(admin.ModelAdmin):
             f"تم تحديد {count} طفل. (يمكن تنفيذ التصدير لاحقاً)",
             messages.INFO
         )
+
+    @admin.action(description="🖼️ تحميل صورة بطاقة واحدة")
+    def download_single_card_image(self, request, queryset):
+        """Download card image for a single selected child."""
+        if queryset.count() != 1:
+            self.message_user(
+                request, "يرجى تحديد طفل واحد فقط", messages.WARNING)
+            return
+
+        child = queryset.first()
+
+        try:
+            # Generate card image buffer
+            image_buffer = child.generate_card_image_buffer()
+
+            # Create response
+            response = HttpResponse(
+                image_buffer.getvalue(),
+                content_type='image/png'
+            )
+
+            # Set filename
+            filename = f"بطاقة_{child.first_name}_{child.unique_code}.png"
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+            self.message_user(
+                request,
+                f"✓ تم تحميل بطاقة {child.first_name} بنجاح",
+                messages.SUCCESS
+            )
+
+            return response
+
+        except Exception as e:
+            self.message_user(
+                request,
+                f"⚠ حدث خطأ أثناء إنشاء البطاقة: {str(e)}",
+                messages.ERROR
+            )
 
     @admin.action(description="🪪 تحميل بطاقات الهوية (PDF)")
     def download_id_cards_pdf(self, request, queryset):

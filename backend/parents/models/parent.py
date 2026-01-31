@@ -65,8 +65,6 @@ class Child(ImageOptimizationMixin, models.Model):
     dob = models.DateField(_("تاريخ الميلاد"))
     unique_code = models.CharField(
         max_length=6, unique=True, editable=False, verbose_name=_("كود الطفل"))
-    card_image = CloudinaryField(
-        null=True, blank=True, verbose_name=_("صورة البطاقة"))
     image = models.ImageField(
         upload_to=child_upload_path,
         validators=[validate_image_size],
@@ -90,8 +88,8 @@ class Child(ImageOptimizationMixin, models.Model):
         digits = ''.join(random.choices(string.digits, k=5))
         return f"{gender_char}{digits}"
 
-    def generate_card_image(self):
-        """Generate the full card image for the child."""
+    def generate_card_image_buffer(self):
+        """Generate the full card image for the child and return buffer."""
         from PIL import Image, ImageDraw, ImageFont
         import qrcode
         import io
@@ -172,9 +170,12 @@ class Child(ImageOptimizationMixin, models.Model):
         buffer = io.BytesIO()
         card.save(buffer, format="PNG")
         buffer.seek(0)
+        return buffer
 
-        # Upload to Cloudinary
+    def generate_card_image(self):
+        """Generate the full card image for the child."""
         from cloudinary import uploader
+        buffer = self.generate_card_image_buffer()
         result = uploader.upload(buffer, folder="child_cards")
         self.card_image = result['public_id']
 
@@ -196,10 +197,6 @@ class Child(ImageOptimizationMixin, models.Model):
                 code = self.generate_unique_code()
             self.unique_code = code
         super().save(*args, **kwargs)
-        # Generate card after save to ensure image is uploaded
-        if not self.card_image or self._state.adding:
-            self.generate_card_image()
-            self.save(update_fields=['card_image'])
 
     def __str__(self):
         """String representation of the Child."""

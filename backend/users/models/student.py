@@ -25,8 +25,6 @@ class StudentUser(ImageOptimizationMixin, models.Model):
         CustomUser, on_delete=models.CASCADE, related_name='student_profile', verbose_name=_("المستخدم"))
     unique_code = models.CharField(
         max_length=6, unique=True, editable=False, verbose_name=_("كود الطالب"))
-    card_image = CloudinaryField(
-        null=True, blank=True, verbose_name=_("صورة البطاقة"))
 
     image = models.ImageField(
         upload_to=student_upload_path,
@@ -42,8 +40,8 @@ class StudentUser(ImageOptimizationMixin, models.Model):
         digits = ''.join(random.choices(string.digits, k=5))
         return f"{gender_char}{digits}"
 
-    def generate_card_image(self):
-        """Generate the full card image for the student."""
+    def generate_card_image_buffer(self):
+        """Generate the full card image for the student and return buffer."""
         from PIL import Image, ImageDraw, ImageFont
         import qrcode
         import io
@@ -124,10 +122,7 @@ class StudentUser(ImageOptimizationMixin, models.Model):
         buffer = io.BytesIO()
         card.save(buffer, format="PNG")
         buffer.seek(0)
-
-        # Upload to Cloudinary
-        result = uploader.upload(buffer, folder="student_cards")
-        self.card_image = result['public_id']
+        return buffer
 
     def save(self, *args, **kwargs):
         """Override save method to set unique_code if not already set."""
@@ -137,10 +132,6 @@ class StudentUser(ImageOptimizationMixin, models.Model):
                 code = self.generate_unique_code()
             self.unique_code = code
         super().save(*args, **kwargs)
-        # Generate card after save to ensure image is uploaded
-        if not self.card_image or self._state.adding:
-            self.generate_card_image()
-            self.save(update_fields=['card_image'])
 
     def __str__(self):
         """String representation of the StudentUser."""
