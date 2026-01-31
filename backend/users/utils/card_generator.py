@@ -21,8 +21,16 @@ def generate_students_pdf(students):
         # Use existing card image
         if student.card_image:
             img = ImageReader(student.card_image.url)
+            img_width, img_height = img.getSize()
+            target_width = width - 100
+            target_height = card_height - 100
+            scale = min(target_width / img_width, target_height / img_height)
+            new_width = img_width * scale
+            new_height = img_height * scale
+            x = 50 + (target_width - new_width) / 2
+            y = y_position - card_height + 50 + (target_height - new_height) / 2
             # Draw card
-            c.drawImage(img, 50, y_position - card_height + 50, width - 100, card_height - 100)
+            c.drawImage(img, x, y, new_width, new_height)
             y_position -= card_height
 
     c.save()
