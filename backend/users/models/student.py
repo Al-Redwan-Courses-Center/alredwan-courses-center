@@ -10,6 +10,7 @@ from .user import CustomUser
 import random
 import string
 from cloudinary.models import CloudinaryField
+from cloudinary import uploader
 
 
 def student_upload_path(instance, filename):
@@ -103,7 +104,9 @@ class StudentUser(ImageOptimizationMixin, models.Model):
         card.save(buffer, format="PNG")
         buffer.seek(0)
 
-        self.card_image = buffer
+        # Upload to Cloudinary
+        result = uploader.upload(buffer, folder="student_cards")
+        self.card_image = result['public_id']
 
     def save(self, *args, **kwargs):
         """Override save method to set unique_code if not already set."""
