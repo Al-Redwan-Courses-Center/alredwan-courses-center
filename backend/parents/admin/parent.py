@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 
 from ..models import Parent, Child, ChildParents, ParentLinkRequest
-from ..utils.card_generator import generate_children_pdf, generate_card_image_bytes
+from ..utils.card_generator import generate_children_pdf
 
 
 # =============================================================================
@@ -430,7 +430,7 @@ class ChildAdmin(admin.ModelAdmin):
     search_fields = ('unique_code', 'first_name', 'last_name',
                      'phone', 'primary_parent__user__phone_number1')
     readonly_fields = ('unique_code', 'created_at',
-                       'updated_at', 'get_age_display', 'get_summary_card', 'card_image')
+                       'updated_at', 'get_age_display', 'get_summary_card')
     autocomplete_fields = ('primary_parent',)
     date_hierarchy = 'created_at'
     list_per_page = 25
@@ -447,7 +447,7 @@ class ChildAdmin(admin.ModelAdmin):
             'fields': ('phone', 'unique_code')
         }),
         ('الصورة', {
-            'fields': ('image', 'card_image'),
+            'fields': ('image',),
             'classes': ('collapse',),
         }),
         ('التواريخ', {
@@ -593,7 +593,7 @@ class ChildAdmin(admin.ModelAdmin):
 
     # Actions
     actions = ['export_children_info',
-               'download_id_cards_pdf', 'download_single_card_image']
+               'download_id_cards_pdf']
 
     @admin.action(description="📋 تصدير معلومات الأطفال المحددين")
     def export_children_info(self, request, queryset):
@@ -646,42 +646,6 @@ class ChildAdmin(admin.ModelAdmin):
             self.message_user(
                 request,
                 f"⚠ حدث خطأ أثناء إنشاء البطاقات: {str(e)}",
-                messages.ERROR
-            )
-
-    @admin.action(description="🖼️ تحميل بطاقة واحدة (صورة PNG)")
-    def download_single_card_image(self, request, queryset):
-        """Download a single child's ID card as PNG image."""
-        if queryset.count() != 1:
-            self.message_user(
-                request,
-                "⚠ يرجى تحديد طفل واحد فقط لتحميل الصورة",
-                messages.WARNING
-            )
-            return
-
-        child = queryset.select_related(
-            'primary_parent', 'primary_parent__user').first()
-
-        try:
-            # Generate card image
-            img_buffer = generate_card_image_bytes(child, format='PNG')
-
-            # Create response
-            response = HttpResponse(
-                img_buffer.getvalue(),
-                content_type='image/png'
-            )
-
-            filename = f"بطاقة_{child.first_name}_{child.unique_code}.png"
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-            return response
-
-        except Exception as e:
-            self.message_user(
-                request,
-                f"⚠ حدث خطأ أثناء إنشاء البطاقة: {str(e)}",
                 messages.ERROR
             )
 

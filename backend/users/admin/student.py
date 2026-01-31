@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 
 from ..models.student import StudentUser
-from ..utils.card_generator import generate_students_pdf, generate_card_image_bytes
+from ..utils.card_generator import generate_students_pdf
 
 
 @admin.register(StudentUser)
@@ -13,10 +13,10 @@ class StudentUserAdmin(admin.ModelAdmin):
     list_filter = ('user__gender', 'user__is_verified')
     search_fields = ('unique_code', 'user__first_name',
                      'user__last_name', 'user__phone_number1')
-    readonly_fields = ('unique_code', 'card_image')
+    readonly_fields = ('unique_code',)
     list_select_related = ('user',)
     fieldsets = (
-        ('معلومات الطالب', {'fields': ('user', 'image', 'card_image')}),
+        ('معلومات الطالب', {'fields': ('user', 'image')}),
     )
     autocomplete_fields = ('user',)
     list_select_related = ('user',)
@@ -28,8 +28,6 @@ class StudentUserAdmin(admin.ModelAdmin):
             form.base_fields['unique_code'].label = 'الكود الفريد'
         if 'image' in form.base_fields:
             form.base_fields['image'].label = 'الصورة'
-        if 'card_image' in form.base_fields:
-            form.base_fields['card_image'].label = 'صورة البطاقة'
         return form
 
     def get_full_name(self, obj):
@@ -46,7 +44,7 @@ class StudentUserAdmin(admin.ModelAdmin):
 
     # Actions
     actions = ['export_students_info',
-               'download_id_cards_pdf', 'download_single_card_image']
+               'download_id_cards_pdf']
 
     @admin.action(description="📋 تصدير معلومات الطلاب المحددين")
     def export_students_info(self, request, queryset):
@@ -98,40 +96,5 @@ class StudentUserAdmin(admin.ModelAdmin):
             self.message_user(
                 request,
                 f"⚠ حدث خطأ أثناء إنشاء البطاقات: {str(e)}",
-                messages.ERROR
-            )
-
-    @admin.action(description="🖼️ تحميل بطاقة واحدة (صورة PNG)")
-    def download_single_card_image(self, request, queryset):
-        """Download a single student's ID card as PNG image."""
-        if queryset.count() != 1:
-            self.message_user(
-                request,
-                "⚠ يرجى تحديد طالب واحد فقط لتحميل الصورة",
-                messages.WARNING
-            )
-            return
-
-        student = queryset.select_related('user').first()
-
-        try:
-            # Generate card image
-            img_buffer = generate_card_image_bytes(student, format='PNG')
-
-            # Create response
-            response = HttpResponse(
-                img_buffer.getvalue(),
-                content_type='image/png'
-            )
-
-            filename = f"بطاقة_{student.user.first_name}_{student.unique_code}.png"
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-            return response
-
-        except Exception as e:
-            self.message_user(
-                request,
-                f"⚠ حدث خطأ أثناء إنشاء البطاقة: {str(e)}",
                 messages.ERROR
             )
