@@ -3,7 +3,8 @@
 from rest_framework import generics, filters
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Avg, Sum, Value, FloatField
+from django.db.models.functions import Coalesce
 
 from courses.models import Course
 from courses.serializers import CourseListSerializer, CourseDetailSerializer
@@ -17,16 +18,20 @@ class CourseListView(generics.ListAPIView):
     """
     serializer_class = CourseListSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['is_active', 'season', 'instructor', 'for_adults']
+    filter_backends = [DjangoFilterBackend,
+                       filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['is_active', 'season',
+                        'instructor', 'for_adults', 'tags']
     search_fields = ['name', 'description']
-    ordering_fields = ['start_date', 'price', 'created_at', 'name']
+    ordering_fields = ['start_date', 'price',
+                       'created_at', 'name', 'average_rating']
     ordering = ['-start_date']
 
     def get_queryset(self):
         """
-        Return optimized queryset with annotated enrollment counts.
-        This avoids N+1 queries when serializing enrolled_count, available_spots, is_full.
+        Return optimized queryset with annotated enrollment counts and ratings.
+        This avoids N+1 queries when serializing enrolled_count, available_spots, 
+        is_full, and average_rating.
         """
         return Course.objects.select_related(
             'instructor__user',
@@ -38,7 +43,17 @@ class CourseListView(generics.ListAPIView):
             _enrolled_count=Count(
                 'enrollments',
                 filter=Q(enrollments__status='active')
-            )
+            ),
+            # Annotate rating statistics to avoid N+1 queries
+            _student_rating_sum=Coalesce(
+                Sum('student_ratings__rating'), Value(0)),
+            _student_rating_count=Count('student_ratings'),
+            _parent_rating_sum=Coalesce(
+                Sum('parent_ratings__rating'), Value(0)),
+            _parent_rating_count=Count('parent_ratings'),
+        ).annotate(
+            # Calculate combined average rating
+            _rating_count=Count('student_ratings') + Count('parent_ratings'),
         )
 
 
