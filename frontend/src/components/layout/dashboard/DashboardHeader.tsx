@@ -5,7 +5,7 @@ import Logo from "@/assets/logo.svg";
 import { getUser } from "@/actions/auth";
 import LogoutButton from "@/components/auth/LogoutButton";
 import NotificationsDrawer from "@/components/dashboard/NotificationsDrawer";
-import NavLink from "@/components/ui/NavLink";
+import NavLink from "@/components/ui/navigation/NavLink";
 import Image from "next/image";
 
 export default async function DashboardHeader() {

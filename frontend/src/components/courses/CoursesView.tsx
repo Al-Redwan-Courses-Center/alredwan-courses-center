@@ -69,7 +69,7 @@ export default function CoursesView() {
               <DataViewCell>
                 <div className="flex items-center justify-center gap-6">
                   <Link
-                    href={`/dashboard/my-courses/${item.id}`}
+                    href={`/dashboard/my-courses/${item.id}/lectures`}
                     className="text-olive-300 hover:text-olive-700 transition-colors"
                   >
                     <InfoIcon />

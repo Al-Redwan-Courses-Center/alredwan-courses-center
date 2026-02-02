@@ -14,7 +14,7 @@ const navLinkStyles = cva("", {
       ),
 
       dashboard: cn(
-        "shadow-button-secondary inline-block rounded-2xl px-0 pe-20 text-center font-bold text-gray-600 transition-colors",
+        "shadow-button-secondary inline-block rounded-2xl ps-5 pe-10 text-center font-bold text-gray-600 transition-colors",
       ),
     },
 
@@ -48,7 +48,7 @@ const navLinkStyles = cva("", {
       intent: "dashboard",
       active: true,
       class: cn(
-        "bg-olive-300 pointer-events-none rounded-2xl pe-10 pr-10 text-gray-100",
+        "bg-olive-300 shadow-soft pointer-events-none -translate-x-5 rounded-2xl text-gray-100",
       ),
     },
   ],
@@ -62,6 +62,7 @@ export default function NavLink({
   variant,
   size,
   icon = null,
+  precision = "exact",
   boldWidth = true,
   canActivate = true,
   children,
@@ -71,7 +72,7 @@ export default function NavLink({
   variant: VariantProps<typeof navLinkStyles>["intent"];
   size?: VariantProps<typeof navLinkStyles>["size"];
   icon?: ReactNode;
-  active?: boolean;
+  precision?: "exact" | "startsWith";
   boldWidth?: boolean;
   canActivate?: boolean;
   children: ReactNode;
@@ -85,7 +86,11 @@ export default function NavLink({
         navLinkStyles({
           intent: variant,
           boldWidth,
-          active: canActivate && pathname === href,
+          active:
+            canActivate &&
+            (precision === "exact"
+              ? pathname === href
+              : pathname.startsWith(href)),
           size,
         }),
 

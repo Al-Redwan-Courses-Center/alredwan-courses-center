@@ -26,6 +26,11 @@ const nextConfig: NextConfig = {
         destination: "/dashboard/todays-schedule",
         permanent: true,
       },
+      // {
+      //   source: "/dashboard/my-courses/:id",
+      //   destination: "/dashboard/my-courses/:id/lectures",
+      //   permanent: true,
+      // },
     ];
   },
 

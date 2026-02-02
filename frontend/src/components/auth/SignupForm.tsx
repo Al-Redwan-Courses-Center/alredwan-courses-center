@@ -49,8 +49,11 @@ const fieldMap: Record<keyof SignupInputs, string> = {
 const onSubmit: SubmitHandler<SignupInputs> = async (data) => {
   const { errors } = await signUp(data);
 
+  console.log(errors);
+
   if (errors)
     Object.entries(errors)?.forEach(([key, values]) => {
+      console.log(key, values);
       toast.error(
         `${fieldMap[key as keyof SignupInputs] || key}: ${values.join("\n")}`,
       );

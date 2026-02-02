@@ -1,0 +1,15 @@
+FROM python:3.14-slim AS bootstrap
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+WORKDIR /app
+
+FROM bootstrap AS dev
+ENV PATH="/app/venv/bin:$PATH"
+ENTRYPOINT ["sh", "docker-entrypoint.sh"]
+
+FROM bootstrap AS build
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt
+COPY . .
+RUN chmod +x docker-entrypoint.sh
+ENTRYPOINT ["./docker-entrypoint.sh"]

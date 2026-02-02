@@ -1,10 +1,11 @@
-import DefaultUser from "@/assets/images/default-user.svg";
 import { getUser } from "@/actions/auth";
+import DefaultUser from "@/assets/images/default-user.svg";
 import LogoutButton from "@/components/auth/LogoutButton";
 import ClipboardIcon from "@/components/icons/ClipboardIcon";
 import PanelsIcon from "@/components/icons/PanelsIcon";
 import PersonIcon from "@/components/icons/PersonIcon";
-import NavLink from "@/components/ui/NavLink";
+import NavLink from "@/components/ui/navigation/NavLink";
+import ResourceCollapsibleNavList from "@/components/ui/navigation/ResourceCollapsibleNavList";
 import Image from "next/image";
 
 export default async function DashboardNavSidebar() {
@@ -51,44 +52,25 @@ export default async function DashboardNavSidebar() {
           محاضرات اليوم
         </NavLink>
 
-        <div>
-          <NavLink
-            variant="dashboard"
-            size="medium"
-            href="/dashboard/my-courses"
-            icon={<ClipboardIcon />}
-          >
-            جميع الدورات
-          </NavLink>
-
-          {true && (
-            <ul className="flex list-disc flex-col items-start ps-5">
-              <NavLink
-                variant="dashboard"
-                size="medium"
-                href="/dashboard/my-courses"
-              >
-                المحاضرات
-              </NavLink>
-
-              <NavLink
-                variant="dashboard"
-                size="medium"
-                href="/dashboard/my-courses"
-              >
-                تفاصيل الدورة
-              </NavLink>
-
-              <NavLink
-                variant="dashboard"
-                size="medium"
-                href="/dashboard/my-courses"
-              >
-                الحجوزات
-              </NavLink>
-            </ul>
-          )}
-        </div>
+        <ResourceCollapsibleNavList
+          nestedNavLinks={[
+            {
+              href: "lectures",
+              label: "المحاضرات",
+            },
+            {
+              href: "",
+              label: "تفاصيل الدورة",
+            },
+            {
+              href: "enrollments",
+              label: "الحجوزات",
+            },
+          ]}
+          rootHref="/dashboard/my-courses"
+          rootLabel="جميع المحاضرات"
+          rootIcon={<ClipboardIcon />}
+        />
 
         <NavLink
           variant="dashboard"
@@ -99,6 +81,12 @@ export default async function DashboardNavSidebar() {
         >
           الملف الشخصي
         </NavLink>
+
+        {/* 
+        //
+        // MARK: LOGOUT
+        //
+        */}
 
         <LogoutButton
           variant="primary"
