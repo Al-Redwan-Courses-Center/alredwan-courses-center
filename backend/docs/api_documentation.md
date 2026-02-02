@@ -686,7 +686,7 @@ Retrieve detailed information about a specific instructor.
 
 **Example Request:**
 ```bash
-curl -X GET "http://localhost:8000/api/users/instructor/2/"
+curl -X GET "http://localhost:8000/api/users/instructors/2/"
 ```
 
 **Example Response:**
@@ -711,6 +711,125 @@ curl -X GET "http://localhost:8000/api/users/instructor/2/"
       "name": "Tajweed"
     }
   ]
+}
+```
+
+---
+
+### 7. Get Instructor Ratings
+Retrieve ratings and statistics for a specific instructor.
+
+**Endpoint:** `GET /api/users/instructors/{id}/ratings/`
+
+**Authentication:** Required (IsAuthenticated)
+
+**Description:** Returns aggregated rating statistics and individual ratings from both students and parents for a specific instructor. Ratings are linked to specific courses.
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | integer | Instructor ID |
+
+**Example Request:**
+```bash
+curl -X GET "http://localhost:8000/api/users/instructors/2/ratings/" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Example Response:**
+```json
+{
+  "instructor_id": 2,
+  "instructor_name": "Sheikh Ibrahim Ali",
+  "statistics": {
+    "average_rating": 8.75,
+    "total_ratings": 24,
+    "student_ratings_count": 15,
+    "student_average": 8.6,
+    "parent_ratings_count": 9,
+    "parent_average": 9.0
+  },
+  "ratings": {
+    "student_ratings": [
+      {
+        "id": 1,
+        "rating": 9,
+        "feedback": "Excellent teacher! Very patient and knowledgeable.",
+        "created_at": "2026-01-20T14:30:00Z",
+        "course_name": "Advanced Tajweed Course",
+        "rater_name": "Ali Ahmed",
+        "rater_type": "student"
+      },
+      {
+        "id": 2,
+        "rating": 8,
+        "feedback": "Great instructor, learned a lot.",
+        "created_at": "2026-01-18T10:15:00Z",
+        "course_name": "Quran Memorization - Intermediate",
+        "rater_name": "Fatima Said",
+        "rater_type": "student"
+      }
+    ],
+    "parent_ratings": [
+      {
+        "id": 1,
+        "rating": 10,
+        "feedback": "My son has improved tremendously under his guidance.",
+        "created_at": "2026-01-22T16:45:00Z",
+        "course_name": "Advanced Tajweed Course",
+        "rater_name": "Mohammad Hassan",
+        "rater_type": "parent"
+      },
+      {
+        "id": 2,
+        "rating": 9,
+        "feedback": "Very professional and caring instructor.",
+        "created_at": "2026-01-19T11:20:00Z",
+        "course_name": "Quran Memorization - Intermediate",
+        "rater_name": "Aisha Ibrahim",
+        "rater_type": "parent"
+      }
+    ]
+  }
+}
+```
+
+**Response Fields:**
+
+**Statistics Object:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `average_rating` | decimal | Combined average rating from all ratings (1-10) |
+| `total_ratings` | integer | Total number of ratings (students + parents) |
+| `student_ratings_count` | integer | Number of student ratings |
+| `student_average` | decimal | Average rating from students |
+| `parent_ratings_count` | integer | Number of parent ratings |
+| `parent_average` | decimal | Average rating from parents |
+
+**Individual Rating Object:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer | Unique rating identifier |
+| `rating` | integer | Rating value (1-10) |
+| `feedback` | string | Optional feedback text |
+| `created_at` | datetime | When the rating was created |
+| `course_name` | string | Name of the course this rating is for |
+| `rater_name` | string | Name of the person who gave the rating |
+| `rater_type` | string | Type of rater: "student" or "parent" |
+
+**Error Responses:**
+
+**404 Not Found** - Instructor doesn't exist:
+```json
+{
+  "detail": "Not found."
+}
+```
+
+**401 Unauthorized** - Missing or invalid authentication:
+```json
+{
+  "detail": "Authentication credentials were not provided."
 }
 ```
 
