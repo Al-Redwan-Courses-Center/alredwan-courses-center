@@ -7,6 +7,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from courses.models import LandingPageCourse
 from courses.serializers import LandingPageCourseSerializer
+from core.utils.pagination import CustomPageNumberPagination
 
 
 class LandingPageCourseListView(generics.ListAPIView):
@@ -16,9 +17,11 @@ class LandingPageCourseListView(generics.ListAPIView):
     
     Returns courses ordered by their display order.
     Supports filtering by course attributes, searching, and custom ordering.
+    Pagination: ?page=1&page_size=10 (default: 10, max: 100)
     """
     serializer_class = LandingPageCourseSerializer
     permission_classes = [AllowAny]
+    pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
     filterset_fields = {

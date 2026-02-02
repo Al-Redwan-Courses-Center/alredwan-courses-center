@@ -7,6 +7,7 @@ from django.db.models import Count, Q
 
 from courses.models import Course
 from courses.serializers import CourseListSerializer, CourseDetailSerializer
+from core.utils.pagination import CustomPageNumberPagination
 
 
 class CourseListView(generics.ListAPIView):
@@ -15,6 +16,7 @@ class CourseListView(generics.ListAPIView):
     GET /api/courses/
     
     Supports comprehensive filtering, searching, and ordering capabilities.
+    Pagination: ?page=1&page_size=10 (default: 10, max: 100)
     
     Available Filters:
     - is_active, season, instructor, for_adults, tags
@@ -32,6 +34,7 @@ class CourseListView(generics.ListAPIView):
     """
     serializer_class = CourseListSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
     # Define filters directly in the view

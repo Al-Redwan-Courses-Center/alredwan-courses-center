@@ -6,6 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from users.models import LandingPageInstructor
 from users.serializers import LandingPageInstructorSerializer
+from core.utils.pagination import CustomPageNumberPagination
 
 
 class LandingPageInstructorListView(generics.ListAPIView):
@@ -14,9 +15,11 @@ class LandingPageInstructorListView(generics.ListAPIView):
     GET /api/users/landingpageinstructors/
     Returns instructors ordered by their display order.
     Supports filtering by instructor attributes, searching, and custom ordering.
+    Pagination: ?page=1&page_size=10 (default: 10, max: 100)
     """
     serializer_class = LandingPageInstructorSerializer
     permission_classes = [AllowAny]
+    pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
     filterset_fields = {

@@ -6,6 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from users.models import Instructor
 from users.serializers import InstructorListSerializer, InstructorDetailSerializer
+from core.utils.pagination import CustomPageNumberPagination
 
 
 class InstructorListView(generics.ListAPIView):
@@ -14,6 +15,7 @@ class InstructorListView(generics.ListAPIView):
     GET /api/users/instructors/
     
     Supports comprehensive filtering, searching, and ordering capabilities.
+    Pagination: ?page=1&page_size=10 (default: 10, max: 100)
     
     Available Filters:
     - type (supervisor/normal), tags
@@ -26,6 +28,7 @@ class InstructorListView(generics.ListAPIView):
     """
     serializer_class = InstructorListSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     
     # Define filters directly in the view
