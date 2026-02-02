@@ -13,14 +13,48 @@ class CourseListView(generics.ListAPIView):
     """
     API endpoint for listing all courses
     GET /api/courses/
-
+    
+    Supports comprehensive filtering, searching, and ordering capabilities.
+    
+    Available Filters:
+    - is_active, season, instructor, for_adults, tags
+    - price__gte, price__lte
+    - start_date__gte, start_date__lte
+    - end_date__gte, end_date__lte
+    - capacity__gte, capacity__lte
+    - min_age__lte, max_age__gte
+    - num_lectures__gte, num_lectures__lte
+    - season__season_type, season__is_active
+    - instructor__type
+    
+    Search: name, description, instructor name
+    Ordering: start_date, end_date, price, created_at, name, capacity, num_lectures
     """
     serializer_class = CourseListSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['is_active', 'season', 'instructor', 'for_adults']
-    search_fields = ['name', 'description']
-    ordering_fields = ['start_date', 'price', 'created_at', 'name']
+    
+    # Define filters directly in the view
+    filterset_fields = {
+        'is_active': ['exact'],
+        'season': ['exact'],
+        'instructor': ['exact'],
+        'for_adults': ['exact'],
+        'tags': ['exact'],
+        'price': ['gte', 'lte'],
+        'start_date': ['gte', 'lte'],
+        'end_date': ['gte', 'lte'],
+        'capacity': ['gte', 'lte'],
+        'min_age': ['lte'],
+        'max_age': ['gte'],
+        'num_lectures': ['gte', 'lte'],
+        'season__season_type': ['exact'],
+        'season__is_active': ['exact'],
+        'instructor__type': ['exact'],
+    }
+    
+    search_fields = ['name', 'description', 'instructor__user__first_name', 'instructor__user__last_name']
+    ordering_fields = ['start_date', 'end_date', 'price', 'created_at', 'name', 'capacity', 'num_lectures']
     ordering = ['-start_date']
 
     def get_queryset(self):
@@ -63,8 +97,7 @@ class CourseDetailView(generics.RetrieveAPIView):
         ).annotate(
             _enrolled_count=Count(
                 'enrollments',
-                filter=Q(enrollments__status='active')
-            )
+                filter=Q(enrollments__status='active'))
         )
 
     def get_object(self):

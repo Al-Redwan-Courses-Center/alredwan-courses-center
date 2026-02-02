@@ -1,38 +1,46 @@
 #!/usr/bin/env python3
-"""Views for Users app"""
+"""Views for Instructor model"""
 from rest_framework import generics, filters
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Instructor, LandingPageInstructor
-from .serializers import InstructorListSerializer, InstructorDetailSerializer, LandingPageInstructorSerializer
-from django.shortcuts import render
 
-# Create your views here.
-
-class LandingPageInstructorListView(generics.ListAPIView):
-    """
-    API endpoint for listing featured instructors on landing page
-    GET /api/users/landingpageinstructors/
-    Returns instructors ordered by their display order
-    """
-    queryset = LandingPageInstructor.objects.select_related(
-        'instructor__user'
-    )
-    serializer_class = LandingPageInstructorSerializer
-    permission_classes = [AllowAny]
+from users.models import Instructor
+from users.serializers import InstructorListSerializer, InstructorDetailSerializer
 
 
 class InstructorListView(generics.ListAPIView):
     """
     API endpoint for listing all instructors
     GET /api/users/instructors/
+    
+    Supports comprehensive filtering, searching, and ordering capabilities.
+    
+    Available Filters:
+    - type (supervisor/normal), tags
+    - joined_date__gte, joined_date__lte
+    - user__first_name__icontains, user__last_name__icontains
+    - user__phone_number1__icontains, user__email__icontains
+    
+    Search: first_name, last_name, bio, email, phone
+    Ordering: joined_date, user__first_name, user__last_name, type
     """
     serializer_class = InstructorListSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['type', 'tags']
-    search_fields = ['user__first_name', 'user__last_name', 'bio']
-    ordering_fields = ['joined_date', 'user__first_name', 'user__last_name']
+    
+    # Define filters directly in the view
+    filterset_fields = {
+        'type': ['exact'],
+        'tags': ['exact'],
+        'joined_date': ['gte', 'lte'],
+        'user__first_name': ['icontains'],
+        'user__last_name': ['icontains'],
+        'user__phone_number1': ['icontains'],
+        'user__email': ['icontains'],
+    }
+    
+    search_fields = ['user__first_name', 'user__last_name', 'bio', 'user__email', 'user__phone_number1']
+    ordering_fields = ['joined_date', 'user__first_name', 'user__last_name', 'type']
     ordering = ['-joined_date']
 
     def get_queryset(self):

@@ -3,11 +3,10 @@
 Module for importing all Course views to make them accessible from courses.views
 '''
 from .course import CourseListView, CourseDetailView
-from .landing_page import LandingPageCourseListView, LandingPageInstructorListView
+from .landing_page_courses import LandingPageCourseListView
 
 __all__ = [
     'CourseListView',
     'CourseDetailView',
     'LandingPageCourseListView',
-    'LandingPageInstructorListView',
 ]
