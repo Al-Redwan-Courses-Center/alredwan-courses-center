@@ -3,7 +3,7 @@ import { ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
 import { UseFormRegisterReturn } from "react-hook-form";
 
 const containerStyles = cn(
-  "shadow-soft rounded-[2rem_0] bg-gray-50 px-10 py-4 [&_input]:text-[1.8rem] [&_input::placeholder]:font-semibold [&_input::placeholder]:text-gray-600",
+  "shadow-soft bg-gray-50 px-10 py-4 [&_input]:text-[1.8rem] [&_input::placeholder]:font-semibold [&_input::placeholder]:text-gray-600",
 );
 
 interface BaseInput {
@@ -13,15 +13,18 @@ interface BaseInput {
   label?: string;
   inputStyles?: string;
   type?: InputHTMLAttributes<HTMLInputElement>["type"];
+  revert?: boolean;
 }
 
 interface FieldSetInput extends BaseInput {
   icon?: never;
+  wrapperStyles?: never;
   fieldsetStyles?: string;
 }
 
 interface MinimalInput extends BaseInput {
   icon?: ReactNode;
+  wrapperStyles?: string;
   fieldsetStyles?: never;
 }
 
@@ -43,9 +46,11 @@ export default function Input({
   label = "",
   icon = null,
   button = null,
+  revert = false,
   placeholder = "",
-  inputStyles = "",
-  fieldsetStyles = "",
+  inputStyles,
+  wrapperStyles,
+  fieldsetStyles,
   type = "text",
   onChange = null,
   value,
@@ -54,7 +59,12 @@ export default function Input({
   if (label)
     return (
       <fieldset
-        className={cn(containerStyles, "relative pb-4", fieldsetStyles)}
+        className={cn(
+          containerStyles,
+          revert ? "rounded-[0_2rem]" : "rounded-[2rem_0]",
+          "relative pb-4",
+          fieldsetStyles,
+        )}
       >
         <legend className="ms-5 px-3 text-2xl font-bold">{label}</legend>
         <input
@@ -76,7 +86,14 @@ export default function Input({
     );
 
   return (
-    <div className={cn("flex items-center gap-6", icon && containerStyles)}>
+    <div
+      className={cn(
+        "flex items-center gap-6",
+        wrapperStyles,
+        icon && containerStyles,
+        revert ? "rounded-[0_2rem]" : "rounded-[2rem_0]",
+      )}
+    >
       {icon}
       <input
         onChange={(e) => onChange?.(e)}
@@ -90,6 +107,7 @@ export default function Input({
         )}
         type={type}
       />
+      {button}
     </div>
   );
 }

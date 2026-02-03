@@ -15,7 +15,7 @@ export default function DataViewLayoutToggle() {
       rightItem={{ icon: <TableIcon />, value: "table" }}
       state={layout}
       onToggle={setLayout}
-      className="absolute right-16 bottom-12 z-100"
+      className="absolute top-16 left-171 z-100"
     />
   );
 }

@@ -68,7 +68,7 @@ export default async function DashboardNavSidebar() {
             },
           ]}
           rootHref="/dashboard/my-courses"
-          rootLabel="جميع المحاضرات"
+          rootLabel="جميع الدورات"
           rootIcon={<ClipboardIcon />}
         />
 

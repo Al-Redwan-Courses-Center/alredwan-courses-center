@@ -1,15 +1,16 @@
 import {
-  StatusMap,
   DataViewFilterConfig,
   DataViewSortConfig,
+  StatusMap,
 } from "@/types/components";
 import { Lecture } from "@/types/entities";
+import { parse } from "date-fns";
 
 const headers = ["م", "المحاضرة", "الدورة", "البداية", "النهاية", "الحالة", ""];
 
 const statusWeights = {
   submitted: 1,
-  "not-submitted": 0,
+  pending: 0,
 };
 
 const sortConfig: DataViewSortConfig<Lecture> = {
@@ -19,17 +20,19 @@ const sortConfig: DataViewSortConfig<Lecture> = {
   },
   course: {
     sortFn: (a: Lecture, b: Lecture) =>
-      a.courseName.localeCompare(b.courseName),
+      (a.course_title || "").localeCompare(b.course_title || ""),
     label: headers[2],
   },
   startTime: {
     sortFn: (a: Lecture, b: Lecture) =>
-      a.startTime.getTime() - b.startTime.getTime(),
+      parse(a.start_time || "", "HH:mm", new Date()).getTime() -
+      parse(b.start_time || "", "HH:mm", new Date()).getTime(),
     label: headers[3],
   },
   endTime: {
     sortFn: (a: Lecture, b: Lecture) =>
-      a.endTime.getTime() - b.endTime.getTime(),
+      parse(a.end_time || "", "HH:mm", new Date()).getTime() -
+      parse(b.end_time || "", "HH:mm", new Date()).getTime(),
     label: headers[4],
   },
   status: {
@@ -51,12 +54,12 @@ const filterConfig: DataViewFilterConfig = {
   },
 };
 
-const statusMap: StatusMap<Lecture> = {
+const statusMap: StatusMap<any> = {
   submitted: {
     label: "تم التسجيل",
     color: "green",
   },
-  "not-submitted": {
+  pending: {
     label: "غير مسجلة",
     color: "gray",
   },

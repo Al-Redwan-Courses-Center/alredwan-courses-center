@@ -1,6 +1,6 @@
 "use client";
 
-import CourseCard from "@/components/courses/CourseCard";
+import MyCourseCard from "@/components/courses/MyCourseCard";
 import InfoIcon from "@/components/icons/InfoIcon";
 import DataView from "@/components/ui/data-view/DataView";
 import DataViewBody from "@/components/ui/data-view/DataViewBody";
@@ -14,14 +14,16 @@ import {
 } from "@/components/ui/data-view/DataViewRow";
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
-import { Course, MOCK_COURSES } from "@/dev-data/courses";
-import { cn, toHindiDigits } from "@/lib/utils";
+import { MY_COURSES } from "@/dev-data/db";
+import { cn, formatDate, toHindiDigits } from "@/lib/utils";
+import { Course } from "@/types/entities";
+import { parseISO } from "date-fns";
 import Link from "next/link";
 
-export default function CoursesView() {
+export default function MyCoursesView() {
   return (
-    <DataView<Course>
-      data={MOCK_COURSES}
+    <DataView
+      data={MY_COURSES}
       gridLayout={cn(
         "grid-cols-[minmax(0,0.5fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)_minmax(0,0.5fr)]",
       )}
@@ -57,19 +59,23 @@ export default function CoursesView() {
       <DataViewBody
         className="px-16"
         render={{
-          table: (item: Course, i) => (
-            <DataViewRow index={i} key={item.id}>
-              <DataViewCell>{toHindiDigits(item.id)}</DataViewCell>
-              <DataViewCell>{item.name}</DataViewCell>
-              <DataViewCell>{item.season?.name}</DataViewCell>
-              <DataViewCell>{item.start_date}</DataViewCell>
+          table: (course: Course, i) => (
+            <DataViewRow index={i} key={course.id}>
+              <DataViewCell>{toHindiDigits(i + 1)}</DataViewCell>
+              <DataViewCell>{course.title}</DataViewCell>
+              <DataViewCell>{course.season?.name}</DataViewCell>
               <DataViewCell>
-                {item.end_date ? item.end_date : "غير محدد"}
+                {formatDate(parseISO(course.start_date))}
+              </DataViewCell>
+              <DataViewCell>
+                {course.end_date
+                  ? formatDate(parseISO(course.end_date))
+                  : "غير محدد"}
               </DataViewCell>
               <DataViewCell>
                 <div className="flex items-center justify-center gap-6">
                   <Link
-                    href={`/dashboard/my-courses/${item.id}/lectures`}
+                    href={`/dashboard/my-courses/${course.id}/lectures`}
                     className="text-olive-300 hover:text-olive-700 transition-colors"
                   >
                     <InfoIcon />
@@ -80,7 +86,7 @@ export default function CoursesView() {
           ),
 
           cards: (item: Course, index) => (
-            <CourseCard course={item} index={index} key={item.id} />
+            <MyCourseCard course={item} index={index} key={item.id} />
           ),
         }}
       />

@@ -14,13 +14,13 @@ const baseStyles = cn("border-[2rem] border-white");
 
 export default function PictureGrid() {
   return (
-    <div className="tablet:origin-top-left tablet:scale-40 tablet:h-120 tablet:-left-[3.5%] relative grid h-272 w-full">
+    <div className="tablet:origin-top-left tablet:scale-40 tablet:h-120 tablet:-left-[3.5%] relative grid aspect-[2.58] h-auto w-full">
       <Image
         src={Image1}
         alt="Activity Image"
         className={cn(
           baseStyles,
-          "absolute left-61 h-auto w-253 rounded-[0_21rem]",
+          "absolute left-[8.68%] h-auto w-[36%] rounded-[0_32.72%_0_32.72%/0_47.59%_0_47.59%]",
         )}
         draggable="false"
       />
@@ -30,7 +30,7 @@ export default function PictureGrid() {
         alt="Activity Image"
         className={cn(
           baseStyles,
-          "absolute top-105 left-0 h-auto w-174 rounded-[20rem_0]",
+          "absolute top-[38.60%] left-[0%] h-auto w-[24.76%] rounded-[44.14%_0_44.14%_0/61.65%_0_61.65%_0]",
         )}
         draggable="false"
       />
@@ -40,7 +40,7 @@ export default function PictureGrid() {
         alt="Activity Image"
         className={cn(
           baseStyles,
-          "absolute top-144 left-133 h-120 w-158 rounded-[16.6rem_0] object-cover",
+          "absolute top-[52.94%] left-[18.92%] h-[44.12%] w-[22.5%] rounded-[42.23%_0_42.23%_0/55.33%_0_55.33%_0] object-cover",
         )}
         draggable="false"
       />
@@ -50,7 +50,7 @@ export default function PictureGrid() {
         alt="Activity Image"
         className={cn(
           baseStyles,
-          "absolute top-8 left-288 h-auto w-145 rounded-[12rem_0]",
+          "absolute top-[2.94%] left-[40.98%] h-auto w-[20.63%] rounded-[33.29%_0_33.29%_0/49.94%_0_49.94%_0]",
         )}
         draggable="false"
       />
@@ -60,7 +60,7 @@ export default function PictureGrid() {
         alt="Activity Image"
         className={cn(
           baseStyles,
-          "absolute top-102 left-256 h-auto w-164 -scale-x-100 rounded-[15.6rem_0]",
+          "absolute top-[37.50%] left-[36.43%] h-auto w-[23.34%] -scale-x-100 rounded-[38.26%_0_38.26%_0/51.01%_0_51.01%_0]",
         )}
         draggable="false"
       />
@@ -70,7 +70,7 @@ export default function PictureGrid() {
         alt="Activity Image"
         className={cn(
           baseStyles,
-          "absolute top-34 left-402 h-auto w-166 rounded-[0_15.6rem]",
+          "absolute top-[12.50%] left-[57.20%] h-auto w-[23.62%] rounded-[0_37.80%_0_37.80%/0_50.40%_0_50.40%]",
         )}
         draggable="false"
       />
@@ -80,7 +80,7 @@ export default function PictureGrid() {
         alt="Activity Image"
         className={cn(
           baseStyles,
-          "absolute top-145 left-390 h-auto w-182 rounded-[15rem_0]",
+          "absolute top-[53.31%] left-[55.49%] h-auto w-[25.9%] rounded-[33.15%_0_33.15%_0/49.72%_0_49.72%_0]",
         )}
         draggable="false"
       />
@@ -90,7 +90,7 @@ export default function PictureGrid() {
         alt="Activity Image"
         className={cn(
           baseStyles,
-          "absolute top-30 left-510 z-10 h-auto w-158 rounded-[15rem_0]",
+          "absolute top-[11.03%] left-[72.57%] z-10 h-auto w-[22.48%] rounded-[38.19%_0_38.19%_0/50.92%_0_50.92%_0]",
         )}
         draggable="false"
       />
@@ -100,7 +100,7 @@ export default function PictureGrid() {
         alt="Activity Image"
         className={cn(
           baseStyles,
-          "absolute top-84 left-565 h-185 w-139 rounded-[0_17.375rem]",
+          "absolute top-[30.88%] left-[80.39%] h-[68.01%] w-[19.78%] rounded-[0_50.28%_0_50.28%/0_37.57%_0_37.57%]",
         )}
         draggable="false"
       />

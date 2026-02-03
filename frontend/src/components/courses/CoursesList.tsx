@@ -1,6 +1,6 @@
 "use client";
 
-import CoursesView from "@/components/courses/CoursesView";
+import MyCoursesView from "@/components/courses/MyCoursesView";
 
 export default function CoursesList() {
   return;

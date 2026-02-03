@@ -19,19 +19,19 @@ services:
       retries: 10
       start_period: 10s
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: redwan-pgadmin
-    depends_on:
-      redwan-db:
-        condition: service_healthy
-    ports:
-      - "5050:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: redwan-pgadmin
+  #   depends_on:
+  #     redwan-db:
+  #       condition: service_healthy
+  #   ports:
+  #     - "5050:80"
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@admin.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   volumes:
+  #     - pgadmin_data:/var/lib/pgadmin
 
   redwan-backend:
     build:

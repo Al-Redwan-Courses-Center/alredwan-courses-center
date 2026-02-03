@@ -1,6 +1,5 @@
 import { getUser } from "@/actions/auth";
-import LecturesTable from "@/components/lectures/LectureTable";
-import { lectures } from "@/dev-data/lectures";
+import TodaysLecturesTable from "@/components/lectures/TodaysLecturesTable";
 import { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -18,7 +17,7 @@ export default async function Page() {
       </h1>
 
       <Suspense>
-        <LecturesTable data={lectures} />
+        <TodaysLecturesTable />
       </Suspense>
     </div>
   );

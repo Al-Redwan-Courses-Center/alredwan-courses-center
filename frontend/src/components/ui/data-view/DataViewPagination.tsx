@@ -7,7 +7,7 @@ import { cn, toHindiDigits } from "@/lib/utils";
 import { useContext } from "react";
 
 const paginationBtnStyles = cn(
-  "text-olive-400 h-auto w-10 disabled:pointer-events-none disabled:text-gray-600",
+  "text-olive-400 h-auto w-5 disabled:pointer-events-none disabled:text-gray-600",
 );
 
 export function DataViewPagination() {
@@ -17,7 +17,7 @@ export function DataViewPagination() {
   if (numPages <= 0) return null;
 
   return (
-    <div className="absolute right-1/2 bottom-9 flex translate-x-[50%] items-center gap-10">
+    <div className="absolute right-1/2 bottom-10 flex translate-x-[50%] items-center gap-10">
       <button
         disabled={page - 1 < 1}
         onClick={prevPage}
@@ -32,7 +32,7 @@ export function DataViewPagination() {
             key={pageNum}
             onClick={() => setPage(pageNum)}
             className={cn(
-              "hover:bg-olive-100 aspect-square h-auto w-15 content-center rounded-2xl text-3xl font-bold text-gray-600 transition-colors",
+              "hover:bg-olive-100 aspect-square h-auto w-10 content-center rounded-[0.8rem] text-2xl font-bold text-gray-600 transition-colors",
               page === pageNum &&
                 "bg-olive-100 pointer-events-none text-gray-900",
             )}

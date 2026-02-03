@@ -11,18 +11,19 @@ import DataViewCell from "@/components/ui/data-view/DataViewCell";
 import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
-import { lectures } from "@/dev-data/lectures";
 import { cn, formatTime, toHindiDigits } from "@/lib/utils";
 import { Lecture } from "@/types/entities";
 import { DataViewPagination } from "../ui/data-view/DataViewPagination";
 import { DataViewHeader, DataViewRow } from "../ui/data-view/DataViewRow";
+import { TODAYS_SCHEDULE } from "@/dev-data/db";
+import Link from "next/link";
 
 const { sortConfig, filterConfig, statusMap } = lecturesViewConfig;
 
-export default function LecturesTable() {
+export default function TodaysLecturesTable() {
   return (
     <DataView
-      data={lectures}
+      data={TODAYS_SCHEDULE}
       sortConfig={sortConfig}
       filterConfig={filterConfig}
       gridLayout={cn(
@@ -53,28 +54,30 @@ export default function LecturesTable() {
             return (
               <DataViewRow key={lecture.id} index={i}>
                 <DataViewCell className="font-bold">
-                  {toHindiDigits(lecture.id)}
+                  {toHindiDigits(i + 1)}
                 </DataViewCell>
                 <DataViewCell>{lecture.title}</DataViewCell>
-                <DataViewCell>{lecture.courseName}</DataViewCell>
+                <DataViewCell>{lecture.course_title}</DataViewCell>
                 <DataViewCell className="font-bold">
-                  {formatTime(lecture.startTime)}
+                  {formatTime(lecture.start_time)}
                 </DataViewCell>
                 <DataViewCell className="font-bold">
-                  {formatTime(lecture.endTime)}
+                  {formatTime(lecture.end_time)}
                 </DataViewCell>
                 <DataViewCell>
                   <StatusBadge color={color}>{label}</StatusBadge>
                 </DataViewCell>
                 <DataViewCell>
-                  <div className="[&>button]:text-olive-300 [&>button]:hover:text-olive-700 flex items-center justify-center gap-6 [&>button]:transition-colors">
+                  <div className="*:text-olive-300 *:hover:text-olive-700 flex items-center justify-center gap-6 *:transition-colors">
                     <button>
                       <EditIcon />
                     </button>
 
-                    <button>
+                    <Link
+                      href={`/dashboard/my-courses/${lecture.course.id}/lectures/${lecture.id}`}
+                    >
                       <InfoIcon />
-                    </button>
+                    </Link>
                   </div>
                 </DataViewCell>
               </DataViewRow>
