@@ -433,13 +433,18 @@ curl -X GET "http://localhost:8000/api/courses/landingpagecourses/?course__min_a
 ---
 
 ### 4. List Course Lectures
-Get all lectures for a specific course (scheduled, completed, and cancelled).
+Get all **accepted** lectures for a specific course.
 
 **Endpoint:** `GET /api/courses/{course_id}/lectures/`
 
 **Authentication:** Required (IsAuthenticated)
 
-**Description:** Returns all lectures for a course, including scheduled, completed, and cancelled lectures. Results are ordered by lecture_number, day, and start_time.
+**Description:** Returns only **accepted lectures** (`is_accepted=True`) for a course, including scheduled, completed, cancelled, and additional lectures. Results are ordered by lecture_number, day, and start_time.
+
+**Important Notes:**
+- Only lectures with `is_accepted=True` are returned
+- Additional lectures created by instructors need approval before appearing in this list
+- Optimized with `select_related` to prevent N+1 query problems
 
 **Path Parameters:**
 | Parameter | Type | Description |
@@ -469,6 +474,7 @@ curl -X GET "http://localhost:8000/api/courses/1/lectures/" \
     },
     "status": "scheduled",
     "status_display": "مجدولة",
+    "is_accepted": true,
     "attendance_taken": false,
     "created_at": "2026-01-15T10:30:00Z",
     "updated_at": "2026-01-15T10:30:00Z"
@@ -485,29 +491,12 @@ curl -X GET "http://localhost:8000/api/courses/1/lectures/" \
       "id": 3,
       "full_name": "Ahmed Mohamed"
     },
-    "status": "scheduled",
-    "status_display": "مجدولة",
+    "status": "additional",
+    "status_display": "اضافية",
+    "is_accepted": true,
     "attendance_taken": false,
     "created_at": "2026-01-15T10:30:00Z",
     "updated_at": "2026-01-15T10:30:00Z"
-  },
-  {
-    "id": "550e8400-e29b-41d4-a716-446655440002",
-    "lecture_number": 3,
-    "title": "Lecture 3",
-    "day": "2026-02-12",
-    "scheduled_at": "2026-02-12T10:00:00+02:00",
-    "start_time": "10:00:00",
-    "end_time": "12:00:00",
-    "instructor": {
-      "id": 3,
-      "full_name": "Ahmed Mohamed"
-    },
-    "status": "cancelled",
-    "status_display": "ملغاة",
-    "attendance_taken": false,
-    "created_at": "2026-01-15T10:30:00Z",
-    "updated_at": "2026-02-11T14:20:00Z"
   }
 ]
 ```
@@ -516,29 +505,34 @@ curl -X GET "http://localhost:8000/api/courses/1/lectures/" \
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | UUID | Unique lecture identifier |
-| `lecture_number` | integer | Lecture number (manually assigned) |
+| `lecture_number` | integer | Lecture number (unique within course) |
 | `title` | string | Lecture title |
 | `day` | date | Date of lecture (YYYY-MM-DD) |
 | `scheduled_at` | datetime | Full datetime when lecture starts (ISO 8601 with timezone) |
 | `start_time` | time | Start time (HH:MM:SS) |
 | `end_time` | time | End time (HH:MM:SS) |
 | `instructor` | object | Instructor details (id and full_name) |
-| `status` | string | Status: "scheduled", "completed", or "cancelled" |
+| `status` | string | Status: "scheduled", "completed", "cancelled", or "additional" |
 | `status_display` | string | Localized status display (Arabic) |
+| `is_accepted` | boolean | Whether lecture is accepted (always true in this endpoint) |
 | `attendance_taken` | boolean | Whether attendance has been recorded |
 | `created_at` | datetime | Creation timestamp |
 | `updated_at` | datetime | Last update timestamp |
 
 ---
 
-### 5. Create Course Lecture
-Create a new lecture for a specific course.
+### 5. Create Course Lecture (Additional Lecture)
+Create a new additional lecture for a specific course that requires approval.
 
 **Endpoint:** `POST /api/courses/{course_id}/lectures/`
 
 **Authentication:** Required (Admin, Supervisor, or Course Instructor)
 
-**Description:** Creates a new lecture with a manually assigned lecture number. The lecture number does NOT need to be unique - you can have multiple lectures with the same number.
+**Description:** Creates a new **ADDITIONAL lecture** with `status="additional"` and `is_accepted=False`. All users (admins, supervisors, and instructors) create additional lectures that require approval before appearing in the lecture list.
+
+**Smart Lecture Insertion Features:**
+1. **Automatic Shifting**: If the lecture number already exists, the new lecture is inserted at that position and all subsequent lectures are automatically shifted by +1
+2. **Automatic Course Extension**: If adding a lecture at or after the last lecture number, and the lecture date is after the course end date, the course end date is automatically updated
 
 **Path Parameters:**
 | Parameter | Type | Description |
@@ -553,15 +547,16 @@ Create a new lecture for a specific course.
 **Request Body:**
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `lecture_number` | integer | Yes | Lecture number (positive integer, can be duplicated) |
+| `lecture_number` | integer | Yes | Lecture number (positive integer, must be unique) |
 | `title` | string | No | Lecture title (defaults to "Lecture {number}") |
 | `day` | date | Yes | Date of lecture (YYYY-MM-DD) |
 | `start_time` | time | No | Start time (HH:MM:SS) |
 | `end_time` | time | No | End time (HH:MM:SS, must be after start_time) |
 | `instructor` | integer | No | Instructor ID (defaults to course instructor) |
-| `status` | string | No | Status: "scheduled" (default), "completed", "cancelled" |
 
-**Example Request:**
+**Example Requests:**
+
+**1. Adding a lecture at the end (will extend course if needed):**
 ```bash
 curl -X POST "http://localhost:8000/api/courses/1/lectures/" \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -571,32 +566,55 @@ curl -X POST "http://localhost:8000/api/courses/1/lectures/" \
     "title": "Advanced Tajweed Rules",
     "day": "2026-02-20",
     "start_time": "10:00:00",
-    "end_time": "12:00:00",
-    "status": "scheduled"
+    "end_time": "12:00:00"
   }'
 ```
+
+**2. Inserting a lecture in the middle (will shift subsequent lectures):**
+```bash
+curl -X POST "http://localhost:8000/api/courses/1/lectures/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "lecture_number": 5,
+    "title": "Extra Review Session",
+    "day": "2026-02-15",
+    "start_time": "14:00:00",
+    "end_time": "16:00:00"
+  }'
+```
+*Note: This will shift the existing lecture 5 to become lecture 6, lecture 6 to become lecture 7, etc.*
 
 **Example Response:**
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440010",
-  "lecture_number": 8,
-  "title": "Advanced Tajweed Rules",
-  "day": "2026-02-20",
-  "scheduled_at": "2026-02-20T10:00:00+02:00",
-  "start_time": "10:00:00",
-  "end_time": "12:00:00",
+  "lecture_number": 5,
+  "title": "Extra Review Session",
+  "day": "2026-02-15",
+  "scheduled_at": "2026-02-15T14:00:00+02:00",
+  "start_time": "14:00:00",
+  "end_time": "16:00:00",
   "instructor": {
     "id": 3,
     "full_name": "Ahmed Mohamed"
   },
-  "status": "scheduled",
-  "status_display": "مجدولة",
+  "status": "additional",
+  "status_display": "اضافية",
+  "is_accepted": false,
   "attendance_taken": false,
   "created_at": "2026-02-04T15:30:00Z",
   "updated_at": "2026-02-04T15:30:00Z"
 }
 ```
+
+**Behavior Examples:**
+
+| Scenario | What Happens |
+|----------|--------------|
+| Add lecture #8 when max is 7 | Creates lecture #8. If date > course.end_date, extends course end date |
+| Add lecture #5 when lecture #5 exists | Inserts new lecture as #5, shifts existing #5→#6, #6→#7, etc. |
+| Add lecture #3 when max is 7 | Creates lecture #3 without affecting other lectures |
 
 **Error Responses:**
 
@@ -626,16 +644,23 @@ curl -X POST "http://localhost:8000/api/courses/1/lectures/" \
 }
 ```
 
+**400 Bad Request** - Duplicate lecture number (unique constraint):
+```json
+{
+  "error": "Lecture with this number already exists for this course."
+}
+```
+
 ---
 
 ### 6. Check Lecture Number Availability
-Check if a lecture number is available or already exists for a course.
+Check if a lecture number is available and get detailed information about what will happen when you add it.
 
 **Endpoint:** `GET /api/courses/{course_id}/lectures/check-number/?lecture_number={number}`
 
 **Authentication:** Required (IsAuthenticated)
 
-**Description:** Checks if a lecture number is available for use. Always returns **200 OK** with the availability status in the response body.
+**Description:** Checks if a lecture number is available for use and provides detailed information about the action that will be taken. Always returns **200 OK** with the availability status and action description in the response body.
 
 **Path Parameters:**
 | Parameter | Type | Description |
@@ -649,48 +674,70 @@ Check if a lecture number is available or already exists for a course.
 
 **Example Requests:**
 ```bash
-# Check if lecture number 8 is available
+# Check if lecture number 8 is available (adding to end)
 curl -X GET "http://localhost:8000/api/courses/1/lectures/check-number/?lecture_number=8" \
   -H "Authorization: Bearer YOUR_TOKEN"
 
-# Check lecture number 5 when max is 7
+# Check lecture number 5 (might trigger shift)
 curl -X GET "http://localhost:8000/api/courses/1/lectures/check-number/?lecture_number=5" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 **Response Scenarios:**
 
-**Case 1: Number is Available**
-```json
-{
-  "lecture_number": 8,
-  "is_available": true,
-  "message": "Lecture number 8 is available"
-}
-```
-
-**Case 2: Number Already Exists**
-```json
-{
-  "lecture_number": 8,
-  "is_available": false,
-  "message": "Lecture number 8 already exists",
-  "existing_lecture": {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "status": "scheduled",
-    "scheduled_at": "2026-02-10T17:00:00+02:00"
-  }
-}
-```
-
-**Case 3: Number is Less Than Max Existing Number**
+**Scenario 1: Number Already Exists - Will Trigger Shift**
 ```json
 {
   "lecture_number": 5,
   "is_available": false,
-  "message": "Lecture number 5 is less than existing lectures",
+  "message": "Lecture number 5 already exists",
+  "action": "shift",
+  "action_description": "New lecture will be inserted at position 5. All lectures from 5 onwards will be shifted by +1.",
+  "existing_lecture": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "scheduled",
+    "scheduled_at": "2026-02-10T10:00:00+02:00"
+  },
+  "affected_lectures": "Lectures 5 and above will be renumbered"
+}
+```
+
+**Scenario 2: Number Available - Insert in Middle**
+```json
+{
+  "lecture_number": 5,
+  "is_available": true,
+  "message": "Lecture number 5 is available (inserting in the middle)",
+  "action": "insert",
+  "action_description": "New lecture will be created at position 5. No other lectures will be affected.",
   "max_existing_number": 7,
-  "suggestion": "Consider using a number greater than 7 or check if you want to insert in the middle"
+  "note": "This lecture will be positioned between existing lectures (max lecture number is 7)"
+}
+```
+
+**Scenario 3: Number Available - Append to End**
+```json
+{
+  "lecture_number": 8,
+  "is_available": true,
+  "message": "Lecture number 8 is available (adding to the end)",
+  "action": "append",
+  "action_description": "New lecture will be added at the end. If lecture date is after course end date, the course end date will be automatically extended.",
+  "max_existing_number": 7,
+  "current_course_end_date": "2026-06-30",
+  "note": "Course end date may be updated if the new lecture date exceeds it"
+}
+```
+
+**Scenario 4: First Lecture in Course**
+```json
+{
+  "lecture_number": 1,
+  "is_available": true,
+  "message": "Lecture number 1 is available (first lecture)",
+  "action": "create",
+  "action_description": "This will be the first lecture in the course.",
+  "note": "No existing lectures to affect"
 }
 ```
 
@@ -700,9 +747,22 @@ curl -X GET "http://localhost:8000/api/courses/1/lectures/check-number/?lecture_
 | `lecture_number` | integer | The number that was checked |
 | `is_available` | boolean | Whether the number is available |
 | `message` | string | Descriptive message about availability |
+| `action` | string | Action type: "shift", "insert", "append", or "create" |
+| `action_description` | string | Detailed description of what will happen |
 | `existing_lecture` | object | Details of existing lecture (if number exists) |
-| `max_existing_number` | integer | Maximum existing lecture number (if checked number is less) |
-| `suggestion` | string | Suggestion for user (if checked number is less than max) |
+| `max_existing_number` | integer | Maximum existing lecture number |
+| `current_course_end_date` | string | Current course end date (for append action) |
+| `affected_lectures` | string | Description of affected lectures (for shift action) |
+| `note` | string | Additional notes or warnings |
+
+**Action Types Explained:**
+
+| Action | When | What Happens |
+|--------|------|--------------|
+| `shift` | Number exists | Inserts new lecture, shifts all ≥ lectures by +1 |
+| `insert` | Number available in middle | Creates lecture without affecting others |
+| `append` | Number ≥ max+1 | Adds to end, may extend course end date |
+| `create` | First lecture | Creates first lecture in course |
 
 **Error Responses:**
 
