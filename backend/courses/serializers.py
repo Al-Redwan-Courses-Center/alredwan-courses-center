@@ -145,7 +145,7 @@ class LectureListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'lecture_number', 'title', 'day', 'scheduled_at',
             'start_time', 'end_time', 'instructor', 'status', 
-            'status_display', 'attendance_taken', 
+            'status_display', 'is_accepted', 'attendance_taken', 
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'attendance_taken']
@@ -163,12 +163,13 @@ class LectureCreateSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
+    is_accepted = serializers.BooleanField(required=False, default=True)
     
     class Meta:
         model = Lecture
         fields = [
             'lecture_number', 'title', 'day', 'start_time', 
-            'end_time', 'instructor', 'status'
+            'end_time', 'instructor', 'status', 'is_accepted'
         ]
     
     def validate_lecture_number(self, value):
@@ -198,12 +199,74 @@ class LectureCreateSerializer(serializers.ModelSerializer):
         return data
     
     def create(self, validated_data):
-        """Create lecture with course from context"""
+        """Create lecture with course from context using add_lecture_with_shift"""
         course = self.context.get('course')
-        validated_data['course'] = course
         
         # If no instructor specified, use course instructor
         if 'instructor' not in validated_data or validated_data['instructor'] is None:
             validated_data['instructor'] = course.instructor
         
-        return super().create(validated_data)
+        # Use the add_lecture_with_shift method to handle insertion and shifting
+        lecture = Lecture.add_lecture_with_shift(course, validated_data)
+        
+        return lecture
+
+
+class InstructorLectureCreateSerializer(serializers.ModelSerializer):
+    """Serializer for instructors creating additional lectures"""
+    instructor = serializers.PrimaryKeyRelatedField(
+        queryset=InstructorSerializer.Meta.model.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    
+    class Meta:
+        model = Lecture
+        fields = [
+            'lecture_number', 'title', 'day', 'start_time', 
+            'end_time', 'instructor'
+        ]
+    
+    def validate_lecture_number(self, value):
+        """Validate that lecture_number is positive"""
+        if value <= 0:
+            raise serializers.ValidationError(
+                "رقم المحاضرة يجب أن يكون عددًا صحيحًا موجبًا."
+            )
+        return value
+    
+    def validate(self, data):
+        """Validate lecture data"""
+        # Check time coherence
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+        
+        if start_time and end_time and start_time >= end_time:
+            raise serializers.ValidationError({
+                'end_time': "وقت البداية يجب أن يكون قبل وقت النهاية."
+            })
+        
+        # Get course from context
+        course = self.context.get('course')
+        if not course:
+            raise serializers.ValidationError("Course is required in context")
+        
+        return data
+    
+    def create(self, validated_data):
+        """Create additional lecture using create_instructor_lecture method"""
+        course = self.context.get('course')
+        instructor = validated_data.get('instructor') or course.instructor
+        
+        # Use the create_instructor_lecture method
+        lecture = Lecture.create_instructor_lecture(
+            course=course,
+            lecture_number=validated_data['lecture_number'],
+            day=validated_data['day'],
+            start_time=validated_data.get('start_time'),
+            end_time=validated_data.get('end_time'),
+            instructor=instructor,
+            title=validated_data.get('title', '')
+        )
+        
+        return lecture

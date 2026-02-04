@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Model representing a lecture scheduled for a course."""
 import datetime
-from django.db import models
+from django.db import models, transaction
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -12,6 +12,7 @@ class LectureStatus(models.TextChoices):
     SCHEDULED = 'scheduled', _('مجدولة')
     COMPLETED = 'completed', _('مكتملة')
     CANCELLED = 'cancelled', _('ملغاة')
+    ADDITIONAL = 'additional', _('اضافية')
 
 
 class Lecture(models.Model):
@@ -29,6 +30,7 @@ class Lecture(models.Model):
                                    on_delete=models.SET_NULL, related_name='lectures', verbose_name=_("المعلم"))
     status = models.CharField(
         max_length=10, choices=LectureStatus.choices, default=LectureStatus.SCHEDULED, verbose_name=_("حالة المحاضرة"))
+    is_accepted = models.BooleanField(default=True, verbose_name=_("هل تم قبول المحاضرة"))
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     updated_at = models.DateTimeField(auto_now=True)
@@ -45,7 +47,8 @@ class Lecture(models.Model):
             models.Index(fields=['course'], name='lecture_course_index'),
             models.Index(fields=['day'], name='lecture_day_index'),
             models.Index(fields=['course', 'lecture_number'],
-                         name='lecture_course_lecture_index')
+                         name='lecture_course_lecture_index'),
+            models.Index(fields=['course', 'is_accepted'], name='lecture_course_accepted_index'),
         ]
         verbose_name = _("محاضرة")
         verbose_name_plural = _("المحاضرات")
@@ -105,6 +108,7 @@ class Lecture(models.Model):
             LectureStatus.SCHEDULED: [LectureStatus.COMPLETED, LectureStatus.CANCELLED],
             LectureStatus.COMPLETED: [],
             LectureStatus.CANCELLED: [],
+            LectureStatus.ADDITIONAL: [LectureStatus.COMPLETED, LectureStatus.CANCELLED],
         }
         if new_status not in LectureStatus.values:
             raise ValidationError(f"Invalid status: {new_status}")
@@ -130,3 +134,103 @@ class Lecture(models.Model):
                 datetime.date.today(), self.end_time)
             return (end_dt - start_dt).total_seconds() / 3600.0
         return None
+
+    @classmethod
+    def create_instructor_lecture(cls, course, lecture_number, day, start_time=None, end_time=None, 
+                                   instructor=None, title=''):
+        """
+        Create a new lecture by an instructor (additional lecture).
+        Default status is ADDITIONAL and is_accepted is False.
+        
+        Args:
+            course: Course instance
+            lecture_number: The lecture number to assign
+            day: Date of the lecture
+            start_time: Optional start time
+            end_time: Optional end time
+            instructor: Optional instructor (defaults to course instructor)
+            title: Optional lecture title
+            
+        Returns:
+            Lecture instance
+        """
+        if instructor is None:
+            instructor = course.instructor
+        
+        lecture = cls(
+            course=course,
+            lecture_number=lecture_number,
+            day=day,
+            start_time=start_time,
+            end_time=end_time,
+            instructor=instructor,
+            title=title or f"Lecture {lecture_number}",
+            status=cls.LectureStatus.ADDITIONAL,
+            is_accepted=False
+        )
+        lecture.save()
+        return lecture
+
+    @classmethod
+    @transaction.atomic
+    def add_lecture_with_shift(cls, course, lecture_data):
+        """
+        Add a new lecture and shift subsequent lectures if necessary.
+        
+        If the lecture_number already exists, this will:
+        1. Insert the new lecture at that number
+        2. Increment all subsequent lecture numbers by 1
+        3. Update course end_date if adding to the end
+        
+        Args:
+            course: Course instance
+            lecture_data: Dictionary with lecture fields (lecture_number, day, start_time, etc.)
+            
+        Returns:
+            Lecture instance
+        """
+        target_number = lecture_data['lecture_number']
+        
+        # Check if lecture with this number exists
+        existing_lecture = cls.objects.filter(
+            course=course,
+            lecture_number=target_number
+        ).first()
+        
+        if existing_lecture:
+            # Get all lectures with number >= target_number, ordered by number descending
+            # This prevents unique constraint violations by updating in reverse order
+            lectures_to_shift = cls.objects.filter(
+                course=course,
+                lecture_number__gte=target_number
+            ).select_for_update().order_by('-lecture_number')
+            
+            # Shift all subsequent lectures by 1
+            for lecture in lectures_to_shift:
+                lecture.lecture_number += 1
+                lecture.save(update_fields=['lecture_number', 'updated_at'])
+        else:
+            # Check if this is the last lecture number
+            max_lecture = cls.objects.filter(course=course).order_by('-lecture_number').first()
+            if max_lecture and target_number == max_lecture.lecture_number + 1:
+                # Adding to the end - update course end_date
+                lecture_day = lecture_data.get('day')
+                if lecture_day and lecture_day > course.end_date:
+                    course.end_date = lecture_day
+                    course.save(update_fields=['end_date', 'updated_at'])
+        
+        # Create the new lecture
+        new_lecture = cls(
+            course=course,
+            lecture_number=target_number,
+            day=lecture_data['day'],
+            start_time=lecture_data.get('start_time'),
+            end_time=lecture_data.get('end_time'),
+            instructor=lecture_data.get('instructor') or course.instructor,
+            title=lecture_data.get('title', f"Lecture {target_number}"),
+            status=lecture_data.get('status', cls.LectureStatus.SCHEDULED),
+            is_accepted=lecture_data.get('is_accepted', True)
+        )
+        new_lecture.save()
+        
+        return new_lecture

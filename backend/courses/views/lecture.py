@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Max
 
 from courses.models import Course, Lecture
-from courses.serializers import LectureListSerializer, LectureCreateSerializer
+from courses.serializers import LectureListSerializer, LectureCreateSerializer, InstructorLectureCreateSerializer
 
 
 class LectureListCreateView(generics.ListCreateAPIView):
@@ -16,24 +16,42 @@ class LectureListCreateView(generics.ListCreateAPIView):
     API endpoint for listing and creating lectures for a course
     
     GET /api/courses/<course_id>/lectures/
-    Returns all lectures (scheduled, completed, cancelled) ordered by lecture_number and scheduled_at
+    Returns only accepted lectures (is_accepted=True) ordered by lecture_number
     
     POST /api/courses/<course_id>/lectures/
-    Creates a new lecture with manual lecture_number (must be unique within course)
+    Creates a new lecture with automatic shifting of subsequent lectures if number exists
+    Uses different logic based on user role:
+    - Admin/Supervisor: Creates regular lecture with is_accepted=True
+    - Course Instructor: Creates ADDITIONAL lecture with is_accepted=False
     """
     permission_classes = [IsAuthenticated]
     
     def get_serializer_class(self):
-        """Return appropriate serializer based on request method"""
+        """Return appropriate serializer based on request method and user role"""
         if self.request.method == 'POST':
+            # Check if user is the course instructor
+            course_id = self.kwargs.get('course_id')
+            course = get_object_or_404(Course, pk=course_id)
+            user = self.request.user
+            
+            # If user is the course instructor (not admin/supervisor)
+            is_course_instructor = (
+                hasattr(user, 'instructor_profile') and 
+                user.instructor_profile == course.instructor and
+                user.role not in ['admin', 'supervisor']
+            )
+            
+            if is_course_instructor:
+                return InstructorLectureCreateSerializer
             return LectureCreateSerializer
         return LectureListSerializer
     
     def get_queryset(self):
-        """Return all lectures for the specified course, ordered by lecture_number"""
+        """Return only accepted lectures for the specified course, ordered by lecture_number"""
         course_id = self.kwargs.get('course_id')
         return Lecture.objects.filter(
-            course_id=course_id
+            course_id=course_id,
+            is_accepted=True  # Only return accepted lectures
         ).select_related(
             'instructor__user'
         ).order_by('lecture_number', 'day', 'start_time')
@@ -128,15 +146,17 @@ class LectureNumberCheckView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check if lecture number exists
+        # Check if lecture number exists (only accepted lectures)
         existing_lecture = Lecture.objects.filter(
             course=course,
-            lecture_number=lecture_number
+            lecture_number=lecture_number,
+            is_accepted=True
         ).select_related('instructor__user').first()
         
-        # Get max existing lecture number
+        # Get max existing lecture number (only accepted lectures)
         max_number = Lecture.objects.filter(
-            course=course
+            course=course,
+            is_accepted=True
         ).aggregate(Max('lecture_number'))['lecture_number__max']
         
         # Case 1: Number already exists
