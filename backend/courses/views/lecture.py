@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Max
 
 from courses.models import Course, Lecture
-from courses.serializers import LectureListSerializer, LectureCreateSerializer, InstructorLectureCreateSerializer
+from courses.serializers import LectureListSerializer, InstructorLectureCreateSerializer
 
 
 class LectureListCreateView(generics.ListCreateAPIView):
@@ -19,31 +19,15 @@ class LectureListCreateView(generics.ListCreateAPIView):
     Returns only accepted lectures (is_accepted=True) ordered by lecture_number
     
     POST /api/courses/<course_id>/lectures/
-    Creates a new lecture with automatic shifting of subsequent lectures if number exists
-    Uses different logic based on user role:
-    - Admin/Supervisor: Creates regular lecture with is_accepted=True
-    - Course Instructor: Creates ADDITIONAL lecture with is_accepted=False
+    Creates a new ADDITIONAL lecture with is_accepted=False (requires approval)
+    All users (Admin/Supervisor/Instructor) create additional lectures
     """
     permission_classes = [IsAuthenticated]
     
     def get_serializer_class(self):
-        """Return appropriate serializer based on request method and user role"""
+        """Return appropriate serializer based on request method"""
         if self.request.method == 'POST':
-            # Check if user is the course instructor
-            course_id = self.kwargs.get('course_id')
-            course = get_object_or_404(Course, pk=course_id)
-            user = self.request.user
-            
-            # If user is the course instructor (not admin/supervisor)
-            is_course_instructor = (
-                hasattr(user, 'instructor_profile') and 
-                user.instructor_profile == course.instructor and
-                user.role not in ['admin', 'supervisor']
-            )
-            
-            if is_course_instructor:
-                return InstructorLectureCreateSerializer
-            return LectureCreateSerializer
+            return InstructorLectureCreateSerializer
         return LectureListSerializer
     
     def get_queryset(self):
@@ -65,7 +49,7 @@ class LectureListCreateView(generics.ListCreateAPIView):
         return context
     
     def create(self, request, *args, **kwargs):
-        """Create a new lecture with validation"""
+        """Create a new additional lecture with validation"""
         course_id = self.kwargs.get('course_id')
         course = get_object_or_404(Course, pk=course_id)
         
