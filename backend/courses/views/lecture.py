@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from django.db.models import Max
+from datetime import datetime, time
 
 from courses.models import Course, Lecture
 from courses.serializers import LectureListSerializer, InstructorLectureCreateSerializer
@@ -20,6 +20,7 @@ class LectureListCreateView(generics.ListCreateAPIView):
     
     POST /api/courses/<course_id>/lectures/
     Creates a new ADDITIONAL lecture with is_accepted=False (requires approval)
+    Lecture number is automatically calculated based on chronological order (date + time)
     All users (Admin/Supervisor/Instructor) create additional lectures
     """
     permission_classes = [IsAuthenticated]
@@ -88,110 +89,125 @@ class LectureListCreateView(generics.ListCreateAPIView):
             )
 
 
-class LectureNumberCheckView(APIView):
+class LectureDateCheckView(APIView):
     """
-    API endpoint for checking lecture number availability
+    API endpoint for checking lecture date and getting position information
     
-    GET /api/courses/<course_id>/lectures/check-number/?lecture_number=8
+    GET /api/courses/<course_id>/lectures/check-date/?day=2026-02-15
     
-    Always returns 200 OK with JSON body indicating:
-    - is_available: true/false
-    - message: descriptive message
-    - existing_lecture: details if number exists
-    - max_existing_number: if number is less than max
-    - action: what will happen when this lecture is added
+    Optional parameters: start_time, end_time (for conflict checking)
+    
+    Returns:
+    - Date validation
+    - Projected lecture number based on chronological order
+    - Position information (where it will be inserted)
+    - Previous and next lectures
+    - Time conflict information (only if times provided)
     """
     permission_classes = [IsAuthenticated]
     
     def get(self, request, course_id):
-        """Check if a lecture number is available for the course"""
+        """Check lecture date for validity and position"""
         # Validate course exists
         course = get_object_or_404(Course, pk=course_id)
         
-        # Get lecture_number from query params
-        lecture_number_str = request.query_params.get('lecture_number')
+        # Get parameters from query string
+        day_str = request.query_params.get('day')
+        start_time_str = request.query_params.get('start_time')
+        end_time_str = request.query_params.get('end_time')
         
-        if not lecture_number_str:
+        # Validate required parameters
+        if not day_str:
             return Response(
                 {
-                    'error': 'lecture_number query parameter is required',
-                    'detail': 'Please provide a lecture_number in the query string.'
+                    'error': 'day query parameter is required',
+                    'detail': 'Please provide a day in format YYYY-MM-DD.'
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Parse date
         try:
-            lecture_number = int(lecture_number_str)
+            day = datetime.strptime(day_str, '%Y-%m-%d').date()
         except ValueError:
             return Response(
                 {
-                    'error': 'Invalid lecture_number',
-                    'detail': 'lecture_number must be a valid integer.'
+                    'error': 'Invalid day format',
+                    'detail': 'day must be in format YYYY-MM-DD.'
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check if lecture number exists (only accepted lectures)
-        existing_lecture = Lecture.objects.filter(
+        # Parse times (optional - only for conflict checking)
+        start_time = None
+        end_time = None
+        
+        if start_time_str:
+            try:
+                start_time = datetime.strptime(start_time_str, '%H:%M:%S').time()
+            except ValueError:
+                try:
+                    start_time = datetime.strptime(start_time_str, '%H:%M').time()
+                except ValueError:
+                    return Response(
+                        {
+                            'error': 'Invalid start_time format',
+                            'detail': 'start_time must be in format HH:MM:SS or HH:MM.'
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+        
+        if end_time_str:
+            try:
+                end_time = datetime.strptime(end_time_str, '%H:%M:%S').time()
+            except ValueError:
+                try:
+                    end_time = datetime.strptime(end_time_str, '%H:%M').time()
+                except ValueError:
+                    return Response(
+                        {
+                            'error': 'Invalid end_time format',
+                            'detail': 'end_time must be in format HH:MM:SS or HH:MM.'
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+        
+        # Get position information (using day and default start_time if not provided)
+        position_info = Lecture.get_lecture_position_info(
             course=course,
-            lecture_number=lecture_number,
-            is_accepted=True
-        ).select_related('instructor__user').first()
+            day=day,
+            start_time=start_time or time(0, 0)  # Default to start of day
+        )
         
-        # Get max existing lecture number (only accepted lectures)
-        max_number = Lecture.objects.filter(
-            course=course,
-            is_accepted=True
-        ).aggregate(Max('lecture_number'))['lecture_number__max']
+        # Build base response
+        response_data = {
+            'day': day.isoformat(),
+            'is_valid': True,
+            **position_info
+        }
         
-        # Case 1: Number already exists - will trigger shifting
-        if existing_lecture:
-            return Response({
-                'lecture_number': lecture_number,
-                'is_available': False,
-                'message': f'Lecture number {lecture_number} already exists',
-                'action': 'shift',
-                'action_description': f'New lecture will be inserted at position {lecture_number}. All lectures from {lecture_number} onwards will be shifted by +1.',
-                'existing_lecture': {
-                    'id': str(existing_lecture.id),
-                    'status': existing_lecture.status,
-                    'scheduled_at': existing_lecture.get_start_datetime().isoformat() if existing_lecture.get_start_datetime() else None
-                },
-                'affected_lectures': f'Lectures {lecture_number} and above will be renumbered'
-            }, status=status.HTTP_200_OK)
+        # Add time information if provided
+        if start_time:
+            response_data['start_time'] = start_time.strftime('%H:%M:%S')
+        if end_time:
+            response_data['end_time'] = end_time.strftime('%H:%M:%S')
         
-        # Case 2: Number is less than max existing number - will be inserted in the middle
-        if max_number is not None and lecture_number < max_number:
-            return Response({
-                'lecture_number': lecture_number,
-                'is_available': True,
-                'message': f'Lecture number {lecture_number} is available (inserting in the middle)',
-                'action': 'insert',
-                'action_description': f'New lecture will be created at position {lecture_number}. No other lectures will be affected.',
-                'max_existing_number': max_number,
-                'note': f'This lecture will be positioned between existing lectures (max lecture number is {max_number})'
-            }, status=status.HTTP_200_OK)
+        # Check for time conflicts only if BOTH times are provided
+        if start_time and end_time:
+            conflict_info = Lecture.check_date_conflict(
+                course=course,
+                day=day,
+                start_time=start_time,
+                end_time=end_time
+            )
+            response_data['conflict_check'] = conflict_info
+        else:
+            # If times not provided, just show how many lectures exist on this day
+            lectures_on_day = Lecture.objects.filter(
+                course=course,
+                day=day,
+                is_accepted=True
+            ).count()
+            response_data['lectures_on_day'] = lectures_on_day
         
-        # Case 3: Number is equal to or greater than max + 1 - adding to the end
-        if max_number is not None and lecture_number >= max_number + 1:
-            course_end_date = course.end_date.isoformat() if course.end_date else 'not set'
-            return Response({
-                'lecture_number': lecture_number,
-                'is_available': True,
-                'message': f'Lecture number {lecture_number} is available (adding to the end)',
-                'action': 'append',
-                'action_description': f'New lecture will be added at the end. If lecture date is after course end date, the course end date will be automatically extended.',
-                'max_existing_number': max_number,
-                'current_course_end_date': course_end_date,
-                'note': 'Course end date may be updated if the new lecture date exceeds it'
-            }, status=status.HTTP_200_OK)
-        
-        # Case 4: No lectures exist yet - first lecture
-        return Response({
-            'lecture_number': lecture_number,
-            'is_available': True,
-            'message': f'Lecture number {lecture_number} is available (first lecture)',
-            'action': 'create',
-            'action_description': 'This will be the first lecture in the course.',
-            'note': 'No existing lectures to affect'
-        }, status=status.HTTP_200_OK)
+        return Response(response_data, status=status.HTTP_200_OK)

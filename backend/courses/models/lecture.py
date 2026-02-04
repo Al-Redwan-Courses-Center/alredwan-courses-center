@@ -136,15 +136,16 @@ class Lecture(models.Model):
         return None
 
     @classmethod
-    def create_instructor_lecture(cls, course, lecture_number, day, start_time=None, end_time=None, 
+    @transaction.atomic
+    def create_instructor_lecture(cls, course, day, start_time=None, end_time=None, 
                                    instructor=None, title=''):
         """
         Create a new lecture by an instructor (additional lecture).
+        Automatically assigns lecture_number based on chronological order (DATE ONLY).
         Default status is ADDITIONAL and is_accepted is False.
         
         Args:
             course: Course instance
-            lecture_number: The lecture number to assign
             day: Date of the lecture
             start_time: Optional start time
             end_time: Optional end time
@@ -157,80 +158,167 @@ class Lecture(models.Model):
         if instructor is None:
             instructor = course.instructor
         
+        # Create lecture with temporary lecture_number
         lecture = cls(
             course=course,
-            lecture_number=lecture_number,
+            lecture_number=9999,  # Temporary number
             day=day,
             start_time=start_time,
             end_time=end_time,
             instructor=instructor,
-            title=title or f"Lecture {lecture_number}",
+            title=title,
             status=cls.LectureStatus.ADDITIONAL,
             is_accepted=False
         )
         lecture.save()
+        
+        # Recalculate all lecture numbers for this course
+        cls.recalculate_lecture_numbers(course)
+        
+        # Reload to get the correct lecture_number
+        lecture.refresh_from_db()
+        
+        # Set default title if not provided
+        if not lecture.title:
+            lecture.title = f"Lecture {lecture.lecture_number}"
+            lecture.save(update_fields=['title'])
+        
+        # Update course end_date if this lecture is after current end date
+        if course.end_date and day > course.end_date:
+            course.end_date = day
+            course.save(update_fields=['end_date', 'updated_at'])
+        
         return lecture
 
     @classmethod
     @transaction.atomic
-    def add_lecture_with_shift(cls, course, lecture_data):
+    def recalculate_lecture_numbers(cls, course):
         """
-        Add a new lecture and shift subsequent lectures if necessary.
+        Recalculate lecture numbers for all accepted lectures in a course
+        based on chronological order (DATE ONLY - time is ignored).
         
-        If the lecture_number already exists, this will:
-        1. Insert the new lecture at that number
-        2. Increment all subsequent lecture numbers by 1
-        3. Update course end_date if adding to the end
+        Lectures on the same day are ordered by their creation time.
         
         Args:
             course: Course instance
-            lecture_data: Dictionary with lecture fields (lecture_number, day, start_time, etc.)
+        """
+        # Get all accepted lectures ordered by day only (then by created_at for same-day lectures)
+        lectures = cls.objects.filter(
+            course=course,
+            is_accepted=True
+        ).select_for_update().order_by('day', 'created_at')
+        
+        # Reassign lecture numbers sequentially
+        for index, lecture in enumerate(lectures, start=1):
+            if lecture.lecture_number != index:
+                lecture.lecture_number = index
+                lecture.save(update_fields=['lecture_number', 'updated_at'])
+
+    @classmethod
+    def check_date_conflict(cls, course, day, start_time, end_time, exclude_id=None):
+        """
+        Check if there's a time conflict with existing lectures on the same day.
+        
+        Args:
+            course: Course instance
+            day: Date of the lecture
+            start_time: Start time
+            end_time: End time
+            exclude_id: Lecture ID to exclude from check (for updates)
             
         Returns:
-            Lecture instance
+            Dictionary with conflict information
         """
-        target_number = lecture_data['lecture_number']
-        
-        # Check if lecture with this number exists
-        existing_lecture = cls.objects.filter(
+        # Get all accepted lectures on the same day
+        lectures_on_day = cls.objects.filter(
             course=course,
-            lecture_number=target_number
-        ).first()
-        
-        if existing_lecture:
-            # Get all lectures with number >= target_number, ordered by number descending
-            # This prevents unique constraint violations by updating in reverse order
-            lectures_to_shift = cls.objects.filter(
-                course=course,
-                lecture_number__gte=target_number
-            ).select_for_update().order_by('-lecture_number')
-            
-            # Shift all subsequent lectures by 1
-            for lecture in lectures_to_shift:
-                lecture.lecture_number += 1
-                lecture.save(update_fields=['lecture_number', 'updated_at'])
-        else:
-            # Check if this is the last lecture number
-            max_lecture = cls.objects.filter(course=course).order_by('-lecture_number').first()
-            if max_lecture and target_number == max_lecture.lecture_number + 1:
-                # Adding to the end - update course end_date
-                lecture_day = lecture_data.get('day')
-                if lecture_day and lecture_day > course.end_date:
-                    course.end_date = lecture_day
-                    course.save(update_fields=['end_date', 'updated_at'])
-        
-        # Create the new lecture
-        new_lecture = cls(
-            course=course,
-            lecture_number=target_number,
-            day=lecture_data['day'],
-            start_time=lecture_data.get('start_time'),
-            end_time=lecture_data.get('end_time'),
-            instructor=lecture_data.get('instructor') or course.instructor,
-            title=lecture_data.get('title', f"Lecture {target_number}"),
-            status=lecture_data.get('status', cls.LectureStatus.SCHEDULED),
-            is_accepted=lecture_data.get('is_accepted', True)
+            day=day,
+            is_accepted=True
         )
-        new_lecture.save()
         
-        return new_lecture
+        if exclude_id:
+            lectures_on_day = lectures_on_day.exclude(id=exclude_id)
+        
+        conflicts = []
+        for lecture in lectures_on_day:
+            # Check if times overlap (only if both lectures have times)
+            if start_time and end_time and lecture.start_time and lecture.end_time:
+                # Check for overlap: new lecture starts before existing ends AND new lecture ends after existing starts
+                if start_time < lecture.end_time and end_time > lecture.start_time:
+                    conflicts.append({
+                        'id': str(lecture.id),
+                        'lecture_number': lecture.lecture_number,
+                        'start_time': lecture.start_time.strftime('%H:%M:%S'),
+                        'end_time': lecture.end_time.strftime('%H:%M:%S'),
+                        'title': lecture.title
+                    })
+        
+        return {
+            'has_conflict': len(conflicts) > 0,
+            'conflicts': conflicts,
+            'date': day.isoformat(),
+            'total_lectures_on_day': lectures_on_day.count()
+        }
+
+    @classmethod
+    def get_lecture_position_info(cls, course, day, start_time=None):
+        """
+        Get information about where a new lecture would be inserted
+        based on chronological order (DATE ONLY - time is ignored).
+        
+        Args:
+            course: Course instance
+            day: Date of the lecture
+            start_time: Start time (optional, not used for positioning)
+            
+        Returns:
+            Dictionary with position information
+        """
+        # Get all accepted lectures ordered by date only
+        all_lectures = cls.objects.filter(
+            course=course,
+            is_accepted=True
+        ).order_by('day', 'created_at')
+        
+        # Count lectures before this date
+        lectures_before = cls.objects.filter(
+            course=course,
+            is_accepted=True,
+            day__lt=day
+        ).count()
+        
+        projected_number = lectures_before + 1
+        total_lectures = all_lectures.count()
+        
+        # Get surrounding lectures (by date only)
+        prev_lecture = cls.objects.filter(
+            course=course,
+            is_accepted=True,
+            day__lt=day
+        ).order_by('-day', '-created_at').first()
+        
+        next_lecture = cls.objects.filter(
+            course=course,
+            is_accepted=True,
+            day__gt=day
+        ).order_by('day', 'created_at').first()
+        
+        return {
+            'projected_lecture_number': projected_number,
+            'total_lectures': total_lectures,
+            'position': 'beginning' if projected_number == 1 else ('end' if projected_number > total_lectures else 'middle'),
+            'previous_lecture': {
+                'id': str(prev_lecture.id),
+                'lecture_number': prev_lecture.lecture_number,
+                'day': prev_lecture.day.isoformat(),
+                'start_time': prev_lecture.start_time.strftime('%H:%M:%S') if prev_lecture.start_time else None,
+                'title': prev_lecture.title
+            } if prev_lecture else None,
+            'next_lecture': {
+                'id': str(next_lecture.id),
+                'lecture_number': next_lecture.lecture_number,
+                'day': next_lecture.day.isoformat(),
+                'start_time': next_lecture.start_time.strftime('%H:%M:%S') if next_lecture.start_time else None,
+                'title': next_lecture.title
+            } if next_lecture else None
+        }

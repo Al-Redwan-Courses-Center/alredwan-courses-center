@@ -223,17 +223,8 @@ class InstructorLectureCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lecture
         fields = [
-            'lecture_number', 'title', 'day', 'start_time', 
-            'end_time', 'instructor'
+            'title', 'day', 'start_time', 'end_time', 'instructor'
         ]
-    
-    def validate_lecture_number(self, value):
-        """Validate that lecture_number is positive"""
-        if value <= 0:
-            raise serializers.ValidationError(
-                "رقم المحاضرة يجب أن يكون عددًا صحيحًا موجبًا."
-            )
-        return value
     
     def validate(self, data):
         """Validate lecture data"""
@@ -251,56 +242,40 @@ class InstructorLectureCreateSerializer(serializers.ModelSerializer):
         if not course:
             raise serializers.ValidationError("Course is required in context")
         
+        # Check for time conflicts on the same day
+        day = data.get('day')
+        if start_time and end_time:
+            conflict_info = Lecture.check_date_conflict(
+                course=course,
+                day=day,
+                start_time=start_time,
+                end_time=end_time
+            )
+            
+            if conflict_info['has_conflict']:
+                conflicts_detail = [
+                    f"Lecture #{c['lecture_number']} ({c['start_time']} - {c['end_time']})"
+                    for c in conflict_info['conflicts']
+                ]
+                raise serializers.ValidationError({
+                    'start_time': f"Time conflict detected with existing lecture(s): {', '.join(conflicts_detail)}"
+                })
+        
         return data
     
     def create(self, validated_data):
-        """Create additional lecture using create_instructor_lecture and add_lecture_with_shift methods"""
+        """Create additional lecture with auto-calculated lecture_number"""
         course = self.context.get('course')
         instructor = validated_data.get('instructor') or course.instructor
-        lecture_number = validated_data['lecture_number']
         
-        # Check if lecture with this number already exists (only accepted lectures)
-        existing_lecture = Lecture.objects.filter(
+        # Use the create_instructor_lecture method which auto-assigns lecture_number
+        lecture = Lecture.create_instructor_lecture(
             course=course,
-            lecture_number=lecture_number,
-            is_accepted=True
-        ).exists()
-        
-        if existing_lecture:
-            # Use add_lecture_with_shift to insert and shift subsequent lectures
-            lecture_data = {
-                'lecture_number': lecture_number,
-                'day': validated_data['day'],
-                'start_time': validated_data.get('start_time'),
-                'end_time': validated_data.get('end_time'),
-                'instructor': instructor,
-                'title': validated_data.get('title', ''),
-                'status': Lecture.LectureStatus.ADDITIONAL,
-                'is_accepted': False
-            }
-            lecture = Lecture.add_lecture_with_shift(course, lecture_data)
-        else:
-            # No conflict, use create_instructor_lecture directly
-            lecture = Lecture.create_instructor_lecture(
-                course=course,
-                lecture_number=lecture_number,
-                day=validated_data['day'],
-                start_time=validated_data.get('start_time'),
-                end_time=validated_data.get('end_time'),
-                instructor=instructor,
-                title=validated_data.get('title', '')
-            )
-            
-            # Check if this is adding to the end and update course end_date if needed
-            max_lecture = Lecture.objects.filter(
-                course=course,
-                is_accepted=True
-            ).order_by('-lecture_number').first()
-            
-            if max_lecture and lecture_number >= max_lecture.lecture_number:
-                lecture_day = validated_data['day']
-                if course.end_date and lecture_day > course.end_date:
-                    course.end_date = lecture_day
-                    course.save(update_fields=['end_date', 'updated_at'])
+            day=validated_data['day'],
+            start_time=validated_data.get('start_time'),
+            end_time=validated_data.get('end_time'),
+            instructor=instructor,
+            title=validated_data.get('title', '')
+        )
         
         return lecture
