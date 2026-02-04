@@ -5,6 +5,8 @@ from .views import (
     CourseListView, 
     CourseDetailView,
     LandingPageCourseListView,
+    LectureListCreateView,
+    LectureNumberCheckView,
 )
 
 app_name = 'courses'
@@ -13,4 +15,8 @@ urlpatterns = [
     path('', CourseListView.as_view(), name='course-list'),
     path('landingpagecourses/', LandingPageCourseListView.as_view(), name='landing-course-list'),
     path('<str:pk>/', CourseDetailView.as_view(), name='course-detail'),
+    
+    # Lecture endpoints
+    path('<str:course_id>/lectures/', LectureListCreateView.as_view(), name='lecture-list-create'),
+    path('<str:course_id>/lectures/check-number/', LectureNumberCheckView.as_view(), name='lecture-check-number'),
 ]

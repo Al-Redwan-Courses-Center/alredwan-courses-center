@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Serializers for Course app"""
 from rest_framework import serializers
-from .models import Course, Tag, Season, CourseSchedule, LandingPageCourse
+from .models import Course, Tag, Season, CourseSchedule, LandingPageCourse, Lecture
 from users.serializers import InstructorSerializer
 
 
@@ -118,3 +118,92 @@ class LandingPageCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = LandingPageCourse
         fields = ['id', 'course', 'order', 'created_at']
+
+
+class LectureInstructorSerializer(serializers.ModelSerializer):
+    """Minimal instructor serializer for lecture responses"""
+    full_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = InstructorSerializer.Meta.model
+        fields = ['id', 'full_name']
+    
+    def get_full_name(self, obj):
+        if obj.user:
+            return f"{obj.user.first_name} {obj.user.last_name}".strip()
+        return ""
+
+
+class LectureListSerializer(serializers.ModelSerializer):
+    """Serializer for listing lectures"""
+    instructor = LectureInstructorSerializer(read_only=True)
+    scheduled_at = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    
+    class Meta:
+        model = Lecture
+        fields = [
+            'id', 'lecture_number', 'title', 'day', 'scheduled_at',
+            'start_time', 'end_time', 'instructor', 'status', 
+            'status_display', 'attendance_taken', 
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'attendance_taken']
+    
+    def get_scheduled_at(self, obj):
+        """Return timezone-aware datetime for the lecture start"""
+        start_dt = obj.get_start_datetime()
+        return start_dt.isoformat() if start_dt else None
+
+
+class LectureCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating lectures"""
+    instructor = serializers.PrimaryKeyRelatedField(
+        queryset=InstructorSerializer.Meta.model.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    
+    class Meta:
+        model = Lecture
+        fields = [
+            'lecture_number', 'title', 'day', 'start_time', 
+            'end_time', 'instructor', 'status'
+        ]
+    
+    def validate_lecture_number(self, value):
+        """Validate that lecture_number is positive"""
+        if value <= 0:
+            raise serializers.ValidationError(
+                "رقم المحاضرة يجب أن يكون عددًا صحيحًا موجبًا."
+            )
+        return value
+    
+    def validate(self, data):
+        """Validate lecture data"""
+        # Check time coherence
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+        
+        if start_time and end_time and start_time >= end_time:
+            raise serializers.ValidationError({
+                'end_time': "وقت البداية يجب أن يكون قبل وقت النهاية."
+            })
+        
+        # Get course from context
+        course = self.context.get('course')
+        if not course:
+            raise serializers.ValidationError("Course is required in context")
+        
+        return data
+    
+    def create(self, validated_data):
+        """Create lecture with course from context"""
+        course = self.context.get('course')
+        validated_data['course'] = course
+        
+        # If no instructor specified, use course instructor
+        if 'instructor' not in validated_data or validated_data['instructor'] is None:
+            validated_data['instructor'] = course.instructor
+        
+        return super().create(validated_data)
