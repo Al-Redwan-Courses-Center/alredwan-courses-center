@@ -99,6 +99,7 @@ class LectureNumberCheckView(APIView):
     - message: descriptive message
     - existing_lecture: details if number exists
     - max_existing_number: if number is less than max
+    - action: what will happen when this lecture is added
     """
     permission_classes = [IsAuthenticated]
     
@@ -143,32 +144,54 @@ class LectureNumberCheckView(APIView):
             is_accepted=True
         ).aggregate(Max('lecture_number'))['lecture_number__max']
         
-        # Case 1: Number already exists
+        # Case 1: Number already exists - will trigger shifting
         if existing_lecture:
             return Response({
                 'lecture_number': lecture_number,
                 'is_available': False,
                 'message': f'Lecture number {lecture_number} already exists',
+                'action': 'shift',
+                'action_description': f'New lecture will be inserted at position {lecture_number}. All lectures from {lecture_number} onwards will be shifted by +1.',
                 'existing_lecture': {
                     'id': str(existing_lecture.id),
                     'status': existing_lecture.status,
                     'scheduled_at': existing_lecture.get_start_datetime().isoformat() if existing_lecture.get_start_datetime() else None
-                }
+                },
+                'affected_lectures': f'Lectures {lecture_number} and above will be renumbered'
             }, status=status.HTTP_200_OK)
         
-        # Case 2: Number is less than max existing number
+        # Case 2: Number is less than max existing number - will be inserted in the middle
         if max_number is not None and lecture_number < max_number:
             return Response({
                 'lecture_number': lecture_number,
-                'is_available': False,
-                'message': f'Lecture number {lecture_number} is less than existing lectures',
+                'is_available': True,
+                'message': f'Lecture number {lecture_number} is available (inserting in the middle)',
+                'action': 'insert',
+                'action_description': f'New lecture will be created at position {lecture_number}. No other lectures will be affected.',
                 'max_existing_number': max_number,
-                'suggestion': f'Consider using a number greater than {max_number} or check if you want to insert in the middle'
+                'note': f'This lecture will be positioned between existing lectures (max lecture number is {max_number})'
             }, status=status.HTTP_200_OK)
         
-        # Case 3: Number is available
+        # Case 3: Number is equal to or greater than max + 1 - adding to the end
+        if max_number is not None and lecture_number >= max_number + 1:
+            course_end_date = course.end_date.isoformat() if course.end_date else 'not set'
+            return Response({
+                'lecture_number': lecture_number,
+                'is_available': True,
+                'message': f'Lecture number {lecture_number} is available (adding to the end)',
+                'action': 'append',
+                'action_description': f'New lecture will be added at the end. If lecture date is after course end date, the course end date will be automatically extended.',
+                'max_existing_number': max_number,
+                'current_course_end_date': course_end_date,
+                'note': 'Course end date may be updated if the new lecture date exceeds it'
+            }, status=status.HTTP_200_OK)
+        
+        # Case 4: No lectures exist yet - first lecture
         return Response({
             'lecture_number': lecture_number,
             'is_available': True,
-            'message': f'Lecture number {lecture_number} is available'
+            'message': f'Lecture number {lecture_number} is available (first lecture)',
+            'action': 'create',
+            'action_description': 'This will be the first lecture in the course.',
+            'note': 'No existing lectures to affect'
         }, status=status.HTTP_200_OK)
