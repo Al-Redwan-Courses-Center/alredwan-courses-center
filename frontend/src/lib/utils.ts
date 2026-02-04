@@ -66,6 +66,10 @@ export function getWeekDay(num: number) {
   return WEEKDAYS[num];
 }
 
+export function getWeekDayIndex(weekday: string) {
+  return WEEKDAYS.findIndex((w) => w === weekday);
+}
+
 export function debounceFn(fn: (...args: any[]) => any, delay: number) {
   let timerId: NodeJS.Timeout;
 

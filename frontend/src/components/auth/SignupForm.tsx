@@ -2,7 +2,7 @@
 
 import { signUp } from "@/actions/auth";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import FieldSetInput from "@/components/ui/FieldSetInput";
 import { cn, toHindiDigits } from "@/lib/utils";
 import { SignupInputs } from "@/types/auth";
 import { signIn } from "next-auth/react";
@@ -113,7 +113,7 @@ export default function SignupForm() {
           MARK: FIRST NAME
         */}
         <div className={cn(inputWrapperStyles)}>
-          <Input
+          <FieldSetInput
             label="الاسم الأول"
             placeholder="مسعد"
             registerReturn={register("first_name", {
@@ -142,7 +142,7 @@ export default function SignupForm() {
           MARK: LAST NAME
         */}
         <div className={cn(inputWrapperStyles)}>
-          <Input
+          <FieldSetInput
             label="الاسم الأخير"
             placeholder="محمود"
             registerReturn={register("last_name", {
@@ -171,7 +171,7 @@ export default function SignupForm() {
           MARK: EMAIL
         */}
         <div className={cn(inputWrapperStyles)}>
-          <Input
+          <FieldSetInput
             type="email"
             label="البريد الإلكتروني (اختياري)"
             placeholder="test1234@example.com"
@@ -249,7 +249,7 @@ export default function SignupForm() {
               case "nid": {
                 return (
                   <div className={cn(inputWrapperStyles)}>
-                    <Input
+                    <FieldSetInput
                       label="الرقم القومي (اختياري)"
                       placeholder="01234567890123"
                       registerReturn={register("identity_number", {
@@ -270,7 +270,7 @@ export default function SignupForm() {
               case "passport": {
                 return (
                   <div className={cn(inputWrapperStyles)}>
-                    <Input
+                    <FieldSetInput
                       label="رقم جواز السفر (اختياري)"
                       placeholder="01234567890123"
                       registerReturn={register("identity_number", {
@@ -291,7 +291,7 @@ export default function SignupForm() {
               case "other": {
                 return (
                   <div className={cn(inputWrapperStyles)}>
-                    <Input
+                    <FieldSetInput
                       label="أخرى (اختياري)"
                       placeholder="01234567890123"
                       registerReturn={register("identity_number", {
@@ -316,7 +316,7 @@ export default function SignupForm() {
           MARK: PHONE 1
         */}
         <div className={cn(inputWrapperStyles)}>
-          <Input
+          <FieldSetInput
             label="رقم الهاتف الأول"
             placeholder="+201234567890"
             registerReturn={register("phone_number1", {
@@ -341,7 +341,7 @@ export default function SignupForm() {
           MARK: PHONE 2
         */}
         <div className={cn(inputWrapperStyles)}>
-          <Input
+          <FieldSetInput
             label="رقم الهاتف الثاني (اختياري)"
             placeholder="+201234567890"
             registerReturn={register("phone_number2", {
@@ -361,7 +361,7 @@ export default function SignupForm() {
           MARK: DOB
         */}
         <div className={cn(inputWrapperStyles)}>
-          <Input
+          <FieldSetInput
             type="date"
             label="تاريخ الميلاد"
             registerReturn={register("dob", {
@@ -389,7 +389,7 @@ export default function SignupForm() {
           MARK: ADDRESS
         */}
         <div className={cn(inputWrapperStyles)}>
-          <Input
+          <FieldSetInput
             label="العنوان (اختياري)"
             placeholder="مبنى سـ ، شارع صـ ، مدينة عـ"
             registerReturn={register("address", {
@@ -418,7 +418,7 @@ export default function SignupForm() {
           MARK: LOCATION
         */}
         <div className={cn(inputWrapperStyles)}>
-          <Input
+          <FieldSetInput
             label="الموقع (رابط خرائط جوجل) (اختياري)"
             placeholder="https://maps.app.goo.gl/xyzabcedfg"
             registerReturn={register("location", {
@@ -493,7 +493,7 @@ export default function SignupForm() {
           MARK: PASSWORD
         */}
         <div className={cn(inputWrapperStyles)}>
-          <Input
+          <FieldSetInput
             type="password"
             label="كلمة المرور"
             registerReturn={register("password", {
@@ -517,7 +517,7 @@ export default function SignupForm() {
           MARK: CONFIRM PASSWORD
         */}
         <div className={cn(inputWrapperStyles)}>
-          <Input
+          <FieldSetInput
             type="password"
             label="تأكيد كلمة المرور"
             registerReturn={register("re_password", {

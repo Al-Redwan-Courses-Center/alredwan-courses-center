@@ -27,7 +27,7 @@ export interface ButtonProps extends BaseProps, ComponentProps<"button"> {
   type?: ButtonHTMLAttributes<HTMLButtonElement>["type"];
 }
 
-const buttonStyles = cva(
+export const buttonStyles = cva(
   "shadow-button-secondary inline-block text-center font-bold transition-colors",
   {
     variants: {

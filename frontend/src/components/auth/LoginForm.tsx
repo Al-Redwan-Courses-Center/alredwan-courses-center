@@ -1,7 +1,7 @@
 "use client";
 
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import FieldSetInput from "@/components/ui/FieldSetInput";
 import { LoginInputs } from "@/types/auth";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
@@ -50,13 +50,13 @@ export default function LoginForm({
       className="flex flex-col gap-20 text-3xl [&>input]:bg-gray-300"
     >
       <div className="flex flex-col gap-10">
-        <Input
+        <FieldSetInput
           label="رقم الهاتف"
           placeholder="+201234567890"
           registerReturn={register("phone_number1")}
         />
 
-        <Input
+        <FieldSetInput
           type={showPassword ? "text" : "password"}
           label="كلمة المرور"
           button={

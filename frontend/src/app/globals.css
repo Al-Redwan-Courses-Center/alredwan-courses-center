@@ -97,3 +97,13 @@ a {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+.group\/day:last-child
+  button[data-range-middle="true"][data-range-start="false"][data-range-end="false"] {
+  border-radius: 0 9999px 9999px 0;
+}
+
+.group\/day:first-child
+  button[data-range-middle="true"][data-range-start="false"][data-range-end="false"] {
+  border-radius: 9999px 0 0 9999px;
+}

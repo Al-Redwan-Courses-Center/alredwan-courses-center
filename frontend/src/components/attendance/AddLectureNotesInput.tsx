@@ -12,6 +12,8 @@ export default function AddLectureNotesInput() {
 
   return (
     <Input
+      id="lecture note"
+      shape="leafRevert"
       placeholder="أضف ملاحظة"
       wrapperStyles={cn(
         "[&_svg]:text-olive-300 relative w-full",
@@ -19,7 +21,6 @@ export default function AddLectureNotesInput() {
       )}
       inputStyles={cn("w-full text-3xl placeholder:text-3xl")}
       icon={<NotepadIcon />}
-      revert
       value={lectureNote}
       onChange={(e) => setLectureNote(e.target.value)}
       button={
