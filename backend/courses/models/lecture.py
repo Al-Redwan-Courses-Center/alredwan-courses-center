@@ -191,7 +191,7 @@ class Lecture(models.Model):
         """
         target_number = lecture_data['lecture_number']
         
-        # Check if lecture with this number exists
+        # Check if lecture with this number exists (including unaccepted lectures)
         existing_lecture = cls.objects.filter(
             course=course,
             lecture_number=target_number
@@ -205,9 +205,23 @@ class Lecture(models.Model):
                 lecture_number__gte=target_number
             ).select_for_update().order_by('-lecture_number')
             
-            # Shift all subsequent lectures by 1
-            for lecture in lectures_to_shift:
-                lecture.lecture_number += 1
+            # First pass: Move all lectures to temporary large positive numbers to avoid conflicts
+            # Using numbers starting from 1000000 to avoid conflicts with actual lecture numbers
+            temp_offset = 1000000
+            temp_mapping = {}
+            for idx, lecture in enumerate(lectures_to_shift):
+                temp_number = temp_offset + lecture.lecture_number
+                temp_mapping[temp_number] = lecture.lecture_number
+                lecture.lecture_number = temp_number
+                lecture.save(update_fields=['lecture_number', 'updated_at'])
+            
+            # Second pass: Move from temporary to final positions
+            for lecture in cls.objects.filter(
+                course=course,
+                lecture_number__gte=temp_offset
+            ).order_by('lecture_number'):
+                original_number = temp_mapping[lecture.lecture_number]
+                lecture.lecture_number = original_number + 1
                 lecture.save(update_fields=['lecture_number', 'updated_at'])
         else:
             # Check if this is the last lecture number
