@@ -28,6 +28,7 @@ class Migration(migrations.Migration):
         # Add the index
         migrations.AddIndex(
             model_name='landingpagecourse',
-            index=models.Index(fields=['-order', '-created_at'], name='landing_course_order_idx'),
+            index=models.Index(
+                fields=['-order', '-created_at'], name='landing_course_order_idx'),
         ),
     ]

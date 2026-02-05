@@ -25,35 +25,35 @@ except ImportError:
 async def test_websocket(token: str):
     """Test WebSocket connection with JWT authentication."""
     uri = f"ws://localhost:8000/ws/attendance/?token={token}"
-    
+
     print(f"Connecting to: {uri[:50]}...")
-    
+
     try:
         async with websockets.connect(uri) as websocket:
             print("✅ Connected successfully!")
-            
+
             # Wait for welcome message
             response = await asyncio.wait_for(websocket.recv(), timeout=5)
             data = json.loads(response)
             print(f"📩 Welcome message: {json.dumps(data, indent=2)}")
-            
+
             # Test ping
             print("\n📤 Sending ping...")
             await websocket.send(json.dumps({"type": "ping"}))
             response = await asyncio.wait_for(websocket.recv(), timeout=5)
             data = json.loads(response)
             print(f"📩 Response: {json.dumps(data, indent=2)}")
-            
+
             # Request summary
             print("\n📤 Requesting today's summary...")
             await websocket.send(json.dumps({"type": "request_summary"}))
             response = await asyncio.wait_for(websocket.recv(), timeout=5)
             data = json.loads(response)
             print(f"📩 Summary: {json.dumps(data, indent=2)}")
-            
+
             print("\n✅ All tests passed!")
             print("\n⏳ Listening for real-time updates (press Ctrl+C to stop)...")
-            
+
             # Keep listening for updates
             while True:
                 try:
@@ -63,7 +63,7 @@ async def test_websocket(token: str):
                 except asyncio.TimeoutError:
                     # Send ping to keep connection alive
                     await websocket.send(json.dumps({"type": "ping"}))
-                    
+
     except websockets.exceptions.ConnectionClosedError as e:
         if e.code == 4001:
             print("❌ Connection rejected: No token provided")
@@ -83,11 +83,12 @@ def main():
         print("\nGet a token by running:")
         print("  curl -X POST http://localhost:8000/api/auth/jwt/create/ \\")
         print("    -H 'Content-Type: application/json' \\")
-        print("    -d '{\"phone_number1\": \"+201000000001\", \"password\": \"your_password\"}'")
+        print(
+            "    -d '{\"phone_number1\": \"+201000000001\", \"password\": \"your_password\"}'")
         sys.exit(1)
-    
+
     token = sys.argv[1]
-    
+
     try:
         asyncio.run(test_websocket(token))
     except KeyboardInterrupt:
