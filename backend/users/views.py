@@ -9,6 +9,7 @@ from django.shortcuts import render
 
 # Create your views here.
 
+
 class LandingPageInstructorListView(generics.ListAPIView):
     """
     API endpoint for listing featured instructors on landing page
@@ -29,7 +30,6 @@ class InstructorListView(generics.ListAPIView):
     """
     serializer_class = InstructorListSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['type', 'tags']
     search_fields = ['user__first_name', 'user__last_name', 'bio']
     ordering_fields = ['joined_date', 'user__first_name', 'user__last_name']

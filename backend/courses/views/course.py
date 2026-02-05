@@ -2,12 +2,12 @@
 """Views for Course model"""
 from rest_framework import generics, filters
 from rest_framework.permissions import IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet
 from django.db.models import Count, Q, Avg, Sum, Value, FloatField
 from django.db.models.functions import Coalesce
-
 from courses.models import Course
 from courses.serializers import CourseListSerializer, CourseDetailSerializer
+from courses.filters import CoursePriceFilter
 
 
 class CourseListView(generics.ListAPIView):
@@ -18,11 +18,7 @@ class CourseListView(generics.ListAPIView):
     """
     serializer_class = CourseListSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend,
-                       filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['is_active', 'season',
-                        'instructor', 'for_adults', 'tags']
-    search_fields = ['name', 'description']
+    filterset_class = CoursePriceFilter
     ordering_fields = ['start_date', 'price',
                        'created_at', 'name', 'average_rating']
     ordering = ['-start_date']
