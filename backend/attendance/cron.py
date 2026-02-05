@@ -10,7 +10,7 @@ from .models.attendance_cron_log import AttendanceCronLog
 def generate_instructor_attendance_weekly():
     """
     Cron job to generate attendance records one week ahead.
-    
+
     Runs every Sunday at 00:05 AM.
     Creates attendance records for the upcoming week based on:
     - Supervisor schedules
@@ -31,10 +31,10 @@ def generate_instructor_attendance_weekly():
 def mark_absent_daily():
     """
     Cron job to mark instructors as absent at end of day.
-    
+
     Runs at 23:59 every day.
     Marks all PENDING or NOT_STARTED records for TODAY as ABSENT.
-    
+
     This catches instructors who:
     - Never checked in for their scheduled duties
     - Had attendance records created but never showed up
@@ -62,7 +62,7 @@ def mark_absent_daily():
 def mark_absent_for_yesterday():
     """
     Cron job to mark instructors as absent for yesterday (fallback).
-    
+
     Runs at 00:01 AM to catch any records that weren't marked
     the previous day (e.g., if the 23:59 job failed).
     """
@@ -88,7 +88,7 @@ def mark_absent_for_yesterday():
 def update_pending_to_not_started():
     """
     Cron job to update PENDING status to NOT_STARTED at the beginning of day.
-    
+
     Runs at 06:00 AM to mark today's attendance as awaiting check-in.
     This is useful for dashboards to show which instructors are expected today.
     """
@@ -98,13 +98,12 @@ def update_pending_to_not_started():
         date=today,
         status=AttendanceStatus.NOT_STARTED
     )
-    
+
     # Log the count
     count = qs.count()
-    
+
     if count > 0:
         AttendanceCronLog.objects.create(
             job_name="update_pending_to_not_started",
             details=f"{count} attendance records ready for today {today}"
         )
-

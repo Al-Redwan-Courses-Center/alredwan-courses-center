@@ -32,6 +32,7 @@ urlpatterns = [
     re_path(r'^auth/', include('djoser.urls.jwt')),
     path('api/courses/', include('courses.urls')),
     path('api/users/', include('users.urls')),
+    path('api/attendance/', include('attendance.api_urls')),
 ] + debug_toolbar_urls()
 
 
