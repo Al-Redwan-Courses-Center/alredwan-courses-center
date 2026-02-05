@@ -59,7 +59,7 @@ class InstructorAttendanceConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json({
             "type": "connection_established",
             "message": f"Connected as {user.get_full_name()}",
-            "user_id": user.id,
+            "user_id": str(user.id),
         })
 
     async def disconnect(self, close_code):
