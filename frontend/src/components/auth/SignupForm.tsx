@@ -59,7 +59,9 @@ const onSubmit: SubmitHandler<SignupInputs> = async (data) => {
       );
     });
   else {
-    toast.success("تم تسجيل حسابك بنجاح!\nسيتم توجيهك بعد قليل");
+    toast.success("تم تسجيل حسابك بنجاح!\nسيتم توجيهك بعد قليل", {
+      duration: 5000,
+    });
 
     setTimeout(async () => {
       const res = await signIn("credentials", {
@@ -68,8 +70,7 @@ const onSubmit: SubmitHandler<SignupInputs> = async (data) => {
         redirect: false,
       });
 
-      if (res?.ok) return window.location.replace("/");
-
+      if (res?.ok) return window.location.replace("/dashboard");
       toast.error(res?.error || "حدث خطأ أثناء تسجيل الدخول! حاول مرة أخرى!");
     }, 3000);
   }

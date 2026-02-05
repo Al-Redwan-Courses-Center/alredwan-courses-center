@@ -1,4 +1,4 @@
-import { getUser } from "@/actions/auth";
+import { getUser, protect } from "@/actions/auth";
 import TodaysLecturesTable from "@/components/lectures/TodaysLecturesTable";
 import { Metadata } from "next";
 import { Suspense } from "react";
@@ -8,6 +8,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
+  await protect(["instructor"]);
+
   const { first_name } = await getUser();
 
   return (

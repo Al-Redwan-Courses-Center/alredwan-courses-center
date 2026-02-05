@@ -45,6 +45,7 @@ const initialContext: DataViewContext<any> = {
 
 export const DataViewContext =
   createContext<DataViewContext<any>>(initialContext);
+
 const MAX_ITEMS_PER_PAGE = 6;
 
 export default function DataView<T extends Record<string, any>>({
@@ -53,6 +54,7 @@ export default function DataView<T extends Record<string, any>>({
   maxItemsPerPage = MAX_ITEMS_PER_PAGE,
   sortConfig,
   filterConfig,
+  viewLayout = "table",
   children,
 }: {
   gridLayout: string;
@@ -60,9 +62,11 @@ export default function DataView<T extends Record<string, any>>({
   maxItemsPerPage?: number;
   sortConfig: DataViewSortConfig<T>;
   filterConfig: DataViewFilterConfig;
+  viewLayout?: "table" | "cards";
   children: ReactNode;
 }) {
-  const [layout, setLayout] = useState<DataViewContext<T>["layout"]>("table");
+  const [layout, setLayout] =
+    useState<DataViewContext<T>["layout"]>(viewLayout);
   const { mutateSearchParams, searchParams } = useMutateSearchParams();
 
   const searchableKeys = !!data.length ? Object.keys(data[0]) : [""];
@@ -70,8 +74,6 @@ export default function DataView<T extends Record<string, any>>({
   const filteredData = useFilterData<T>(data, filterConfig);
   const searchedData = useSearchData<T>(filteredData, searchableKeys);
   const sortedData = useSortData<T>(searchedData, sortConfig);
-
-  if (layout === "cards") maxItemsPerPage = 8;
 
   const page = +(searchParams.get("page") || "1");
   const numPages = Math.ceil(searchedData.length / maxItemsPerPage);

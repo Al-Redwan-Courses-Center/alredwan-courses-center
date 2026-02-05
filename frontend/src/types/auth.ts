@@ -1,3 +1,5 @@
+import { Session } from "next-auth";
+
 export interface UserEntity {
   id: string;
   phone_number1: string;
@@ -19,6 +21,10 @@ export interface UserEntity {
   exp: number;
   error?: string;
 }
+
+export type UserSession = (Session | null) & {
+  user: UserEntity;
+};
 
 export interface LoginInputs {
   phone_number1: string;

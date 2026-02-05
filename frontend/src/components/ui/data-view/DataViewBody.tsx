@@ -13,7 +13,7 @@ export default function DataViewBody<T>({
 }) {
   const { data, layout } = useContext(DataViewContext);
 
-  if (!data.length)
+  if (data.length <= 0)
     return (
       <div className="flex w-full flex-col items-center justify-center gap-4 pt-80 text-4xl font-bold">
         <span className="text-red-800">لا توجد بيانات!</span>

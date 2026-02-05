@@ -24,11 +24,15 @@ export default function PublicCourseCard({
   return (
     <ItemCard
       cardHeader={
-        <Image
-          src={CourseImage}
-          alt="Template Course Image"
-          draggable="false"
-        />
+        <div className="relative h-full">
+          <Image
+            src={course.images.cover}
+            fill
+            alt="Template Course Image"
+            draggable="false"
+            className="object-cover"
+          />
+        </div>
       }
       cardFooter={
         <div
@@ -58,7 +62,7 @@ export default function PublicCourseCard({
       }
       index={index}
     >
-      <h3 className="mb-3 text-3xl font-bold">{course.title}</h3>
+      <h3 className="mb-3 text-[1.28rem] font-bold">{course.title}</h3>
       <p className="mb-5">
         دورات شامل لتعلم تلاوة القرآن الكريم وأحكام التجويد
       </p>

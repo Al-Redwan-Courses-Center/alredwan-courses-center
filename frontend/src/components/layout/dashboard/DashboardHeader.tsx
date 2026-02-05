@@ -9,7 +9,7 @@ import NavLink from "@/components/ui/navigation/NavLink";
 import Image from "next/image";
 
 export default async function DashboardHeader() {
-  const { first_name, image } = await getUser();
+  const { first_name, image, role } = await getUser();
 
   return (
     <div className="relative z-50 col-span-2 flex items-center bg-gray-100 py-2 ps-112 pe-200">
@@ -43,7 +43,9 @@ export default async function DashboardHeader() {
             draggable={false}
           />
         )}
-        <span className="text-olive-700 text-4xl">أخ {first_name}</span>
+        <span className="text-olive-700 text-4xl">
+          {role === "instructor" && "أخ"} {first_name}
+        </span>
       </div>
 
       <NotificationsDrawer className="me-18">
