@@ -247,14 +247,34 @@ python manage.py sqlmigrate <app_name> <migration_number>
 
 | Model | Description |
 |-------|-------------|
+| `InstructorAttendance` | Instructor check-in/check-out record with rating. Supports both lecture and supervision attendance types |
+| `SupervisorSchedule` | Weekly schedule for supervisor instructors (day, start/end time, grace period) |
 | `LectureAttendance` | Attendance record per student/child per lecture. Includes `present`, `rating` (1.00-10.00), `notes`, `marked_by`, `marked_at` |
-| `StudentInstructorRating` | Rating of instructors by students |
-| `Device` | Registered devices for attendance |
+| `AttendanceDevice` | Registered fingerprint/RFID devices for attendance |
 | `AttendanceCronLog` | Logs for cron job executions |
 
+**Instructor Attendance Types:**
+- `LECTURE` — Attendance for instructors assigned to teach a lecture
+- `SUPERVISION` — Attendance for supervisors based on their weekly schedule
+
+**Instructor Attendance Statuses:**
+- `NOT_STARTED` — Day hasn't started yet
+- `PENDING` — Awaiting check-in
+- `PRESENT` — Checked in on time
+- `LATE` — Checked in after grace period
+- `ABSENT` — Did not check in (marked by cron or admin)
+
+**Rating Logic:**
+- `null` — Absent/not started (cannot rate)
+- `0.00` — Present but not rated yet
+- `1.00-10.00` — Actual rating given by admin
+
+📚 **Detailed API documentation:** [`attendance/docs/`](attendance/docs/)
+
 **Business Rules:**
-- Exactly one of `child` or `student` must be set per attendance record
-- Rating is required when marking attendance (`present` is set)
+- Exactly one of `child` or `student` must be set per lecture attendance record
+- Instructors can have multiple attendance records per day (lecture + supervision)
+- Rating is required when marking student attendance (`present` is set)
 - Rating range: 1.00 - 10.00
 
 ### Enrollments & Payments App (`enrollments_payments/`)
@@ -340,20 +360,67 @@ Real-time communication is handled via Django Channels.
 
 | Endpoint | Description |
 |----------|-------------|
-| `ws://localhost:8000/ws/attendance/` | Real-time attendance updates for instructors |
+| `ws://localhost:8000/ws/attendance/?token=<jwt_token>` | Real-time attendance updates for admin dashboard |
+
+**Authentication:**
+WebSocket connections require JWT authentication via query string.
 
 **Usage:**
 ```javascript
-const socket = new WebSocket('ws://localhost:8000/ws/attendance/');
+// Get the JWT token first from login
+const accessToken = 'your-jwt-access-token';
+
+// Connect with authentication
+const socket = new WebSocket(`ws://localhost:8000/ws/attendance/?token=${accessToken}`);
+
+socket.onopen = function() {
+    console.log('Connected to attendance updates');
+};
 
 socket.onmessage = function(event) {
     const data = JSON.parse(event.data);
-    console.log('Attendance update:', data);
+    console.log('Received:', data.type, data);
+    
+    // Handle different message types
+    switch(data.type) {
+        case 'connection_established':
+            console.log('Connected as:', data.message);
+            break;
+        case 'attendance_update':
+            console.log('Instructor checked in/out:', data.data);
+            break;
+        case 'attendance_rated':
+            console.log('Attendance rated:', data.data);
+            break;
+        case 'summary_response':
+            console.log('Today summary:', data.data);
+            break;
+    }
 };
+
+socket.onerror = function(error) {
+    console.log('WebSocket error:', error);
+};
+
+// Request current summary
+socket.send(JSON.stringify({ type: 'request_summary' }));
+
+// Health check
+socket.send(JSON.stringify({ type: 'ping' }));
 ```
 
 **Events Received:**
-- `attendance_update` — Sent when attendance is marked for a lecture
+- `connection_established` — Sent on successful connection
+- `attendance_update` — Sent when instructor checks in
+- `attendance_check_out` — Sent when instructor checks out
+- `attendance_rated` — Sent when attendance is rated
+- `summary_response` — Response to summary request
+- `pong` — Response to ping
+
+**WebSocket Close Codes:**
+- `4001` — No token provided
+- `4002` — Invalid token
+- `4003` — Not authorized (not staff)
 
 ---
 
@@ -400,8 +467,10 @@ Configured using `django-crontab`:
 
 | Schedule | Job | Description |
 |----------|-----|-------------|
-| Every Sunday at 00:05 AM | `generate_instructor_attendance_weekly` | Generates weekly instructor attendance records |
-| Daily at 11:59 PM | `mark_absent_daily` | Marks students as absent if attendance not taken |
+| Every Sunday at 00:05 AM | `generate_instructor_attendance_weekly` | Generates weekly instructor attendance records based on schedules and lectures |
+| Daily at 11:59 PM | `mark_absent_daily` | Marks instructors as absent if they didn't check in |
+| Daily at 00:01 AM | `mark_absent_for_yesterday` | Fallback job to mark yesterday's pending records as absent |
+| Daily at 06:00 AM | `update_pending_to_not_started` | Logs today's expected attendance count |
 
 Cron jobs are defined in `settings.py` under `CRONJOBS`.
 
@@ -417,6 +486,37 @@ dj crontab show
 # Remove all cron jobs
 dj crontab remove
 ```
+
+---
+
+## Instructor Attendance API
+
+The instructor attendance system supports fingerprint device integration and admin dashboard.
+
+### Base URL
+
+```
+/api/attendance/
+```
+
+### Main Endpoints
+
+| Purpose | Method | Endpoint | Auth |
+|---------|--------|----------|------|
+| Fingerprint Check-in | POST | `/api/attendance/check-in/` | Device ID |
+| Fingerprint Check-out | POST | `/api/attendance/check-out/` | Device ID |
+| Today's Attendance | GET | `/api/attendance/today/` | Admin JWT |
+| Today's Summary | GET | `/api/attendance/today/summary/` | Admin JWT |
+| Rate Attendance | POST | `/api/attendance/{id}/rate/` | Admin JWT |
+| Manual Check-in | POST | `/api/attendance/{id}/manual-check-in/` | Admin JWT |
+| Manual Check-out | POST | `/api/attendance/{id}/manual-check-out/` | Admin JWT |
+| Mark Absent | POST | `/api/attendance/{id}/mark-absent/` | Admin JWT |
+| Attendance by Date | GET | `/api/attendance/date/{YYYY-MM-DD}/` | Admin JWT |
+| Instructor History | GET | `/api/attendance/instructor/{id}/` | Admin JWT |
+| Device Management | GET/POST | `/api/attendance/devices/` | Admin JWT |
+| Schedule Management | GET/POST | `/api/attendance/schedules/` | Admin JWT |
+
+📚 **Detailed API documentation:** [`attendance/docs/api.md`](attendance/docs/api.md)
 
 ---
 
