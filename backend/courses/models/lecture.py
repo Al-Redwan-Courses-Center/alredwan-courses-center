@@ -180,7 +180,7 @@ class Lecture(models.Model):
         If the lecture_number already exists, this will:
         1. Insert the new lecture at that number
         2. Increment all subsequent lecture numbers by 1
-        3. Update course end_date if adding to the end
+        3. Update course end_date if the lecture date exceeds current end_date
         
         Args:
             course: Course instance
@@ -190,6 +190,7 @@ class Lecture(models.Model):
             Lecture instance
         """
         target_number = lecture_data['lecture_number']
+        lecture_day = lecture_data.get('day')
         
         # Check if lecture with this number exists (including unaccepted lectures)
         existing_lecture = cls.objects.filter(
@@ -223,15 +224,12 @@ class Lecture(models.Model):
                 original_number = temp_mapping[lecture.lecture_number]
                 lecture.lecture_number = original_number + 1
                 lecture.save(update_fields=['lecture_number', 'updated_at'])
-        else:
-            # Check if this is the last lecture number
-            max_lecture = cls.objects.filter(course=course).order_by('-lecture_number').first()
-            if max_lecture and target_number == max_lecture.lecture_number + 1:
-                # Adding to the end - update course end_date
-                lecture_day = lecture_data.get('day')
-                if lecture_day and lecture_day > course.end_date:
-                    course.end_date = lecture_day
-                    course.save(update_fields=['end_date', 'updated_at'])
+        
+        # Always check if the new lecture date exceeds the course end_date
+        # Update course end_date if necessary
+        if lecture_day and course.end_date and lecture_day > course.end_date:
+            course.end_date = lecture_day
+            course.save(update_fields=['end_date', 'updated_at'])
         
         # Create the new lecture
         new_lecture = cls(

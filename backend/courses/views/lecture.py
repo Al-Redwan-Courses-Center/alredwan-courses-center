@@ -64,7 +64,7 @@ class LectureListCreateView(generics.ListCreateAPIView):
     Creates a new ADDITIONAL lecture with is_accepted=False (requires approval)
     All users (Admin/Supervisor/Instructor) create additional lectures
     """
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     pagination_class = CustomPageNumberPagination
     filterset_class = LectureFilter
     filter_backends = [filters.DjangoFilterBackend]
@@ -99,21 +99,21 @@ class LectureListCreateView(generics.ListCreateAPIView):
         course = get_object_or_404(Course, pk=course_id)
         
         # Check permissions - admin, supervisor, or instructor of this course
-        user = request.user
-        is_authorized = (
-            user.role in ['admin', 'supervisor'] or
-            (hasattr(user, 'instructor_profile') and 
-             user.instructor_profile == course.instructor)
-        )
+        # user = request.user
+        # is_authorized = (
+        #     user.role in ['admin', 'supervisor'] or
+        #     (hasattr(user, 'instructor_profile') and 
+        #      user.instructor_profile == course.instructor)
+        # )
         
-        if not is_authorized:
-            return Response(
-                {
-                    'error': 'You do not have permission to create lectures for this course.',
-                    'detail': 'Only administrators, supervisors, or the course instructor can create lectures.'
-                },
-                status=status.HTTP_403_FORBIDDEN
-            )
+        # if not is_authorized:
+        #     return Response(
+        #         {
+        #             'error': 'You do not have permission to create lectures for this course.',
+        #             'detail': 'Only administrators, supervisors, or the course instructor can create lectures.'
+        #         },
+        #         status=status.HTTP_403_FORBIDDEN
+        #     )
         
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -146,7 +146,7 @@ class LectureNumberCheckView(APIView):
     - max_existing_number: if number is less than max
     - action: what will happen when this lecture is added
     """
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     
     def get(self, request, course_id):
         """Check if a lecture number is available for the course"""
