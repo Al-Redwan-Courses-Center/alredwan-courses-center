@@ -6,9 +6,38 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db.models import Max
+from django_filters import rest_framework as filters
 
 from courses.models import Course, Lecture
 from courses.serializers import LectureListSerializer, InstructorLectureCreateSerializer
+from core.utils.pagination import CustomPageNumberPagination
+
+
+class LectureFilter(filters.FilterSet):
+    """
+    Filter class for Lecture queryset with date ranges and other filters
+    
+    Available filters:
+    - start_date: Filter lectures on or after this date (format: YYYY-MM-DD)
+    - end_date: Filter lectures on or before this date (format: YYYY-MM-DD)
+    - status: Filter by lecture status (scheduled, completed, cancelled, additional)
+    - instructor: Filter by instructor ID
+    - attendance_taken: Filter by whether attendance was taken (true/false)
+    
+    Example usage:
+    - /api/courses/1/lectures/?start_date=2026-02-01&end_date=2026-02-28
+    - /api/courses/1/lectures/?status=scheduled&instructor=5
+    - /api/courses/1/lectures/?attendance_taken=false&page=1&page_size=20
+    """
+    start_date = filters.DateFilter(field_name='day', lookup_expr='gte', label='Start Date (>=)')
+    end_date = filters.DateFilter(field_name='day', lookup_expr='lte', label='End Date (<=)')
+    status = filters.ChoiceFilter(choices=Lecture._meta.get_field('status').choices)
+    instructor = filters.NumberFilter(field_name='instructor__id')
+    attendance_taken = filters.BooleanFilter()
+    
+    class Meta:
+        model = Lecture
+        fields = ['start_date', 'end_date', 'status', 'instructor', 'attendance_taken']
 
 
 class LectureListCreateView(generics.ListCreateAPIView):
@@ -18,11 +47,27 @@ class LectureListCreateView(generics.ListCreateAPIView):
     GET /api/courses/<course_id>/lectures/
     Returns only accepted lectures (is_accepted=True) ordered by lecture_number
     
+    Filters:
+    - start_date: Filter lectures on or after this date (YYYY-MM-DD)
+    - end_date: Filter lectures on or before this date (YYYY-MM-DD)
+    - status: Filter by status (scheduled, completed, cancelled, additional)
+    - instructor: Filter by instructor ID
+    - attendance_taken: Filter by attendance status (true/false)
+    
+    Pagination: ?page=1&page_size=10 (default: 10, max: 100)
+    
+    Example:
+    - /api/courses/1/lectures/?start_date=2026-02-01&end_date=2026-02-28&status=scheduled
+    - /api/courses/1/lectures/?instructor=5&attendance_taken=false&page=1&page_size=20
+    
     POST /api/courses/<course_id>/lectures/
     Creates a new ADDITIONAL lecture with is_accepted=False (requires approval)
     All users (Admin/Supervisor/Instructor) create additional lectures
     """
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+    pagination_class = CustomPageNumberPagination
+    filterset_class = LectureFilter
+    filter_backends = [filters.DjangoFilterBackend]
     
     def get_serializer_class(self):
         """Return appropriate serializer based on request method"""
@@ -54,21 +99,21 @@ class LectureListCreateView(generics.ListCreateAPIView):
         course = get_object_or_404(Course, pk=course_id)
         
         # Check permissions - admin, supervisor, or instructor of this course
-        # user = request.user
-        # is_authorized = (
-        #     user.role in ['admin', 'supervisor'] or
-        #     (hasattr(user, 'instructor_profile') and 
-        #      user.instructor_profile == course.instructor)
-        # )
+        user = request.user
+        is_authorized = (
+            user.role in ['admin', 'supervisor'] or
+            (hasattr(user, 'instructor_profile') and 
+             user.instructor_profile == course.instructor)
+        )
         
-        # if not is_authorized:
-        #     return Response(
-        #         {
-        #             'error': 'You do not have permission to create lectures for this course.',
-        #             'detail': 'Only administrators, supervisors, or the course instructor can create lectures.'
-        #         },
-        #         status=status.HTTP_403_FORBIDDEN
-        #     )
+        if not is_authorized:
+            return Response(
+                {
+                    'error': 'You do not have permission to create lectures for this course.',
+                    'detail': 'Only administrators, supervisors, or the course instructor can create lectures.'
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
         
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
