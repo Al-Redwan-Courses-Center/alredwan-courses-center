@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Serializers for Course app"""
 from rest_framework import serializers
-from .models import Course, Tag, Season, CourseSchedule, LandingPageCourse, Lecture
+from .models import Course, Tag, Season, CourseSchedule, LandingPageCourse, Lecture, LectureStatus
 from users.serializers import InstructorSerializer
 
 
@@ -275,7 +275,7 @@ class InstructorLectureCreateSerializer(serializers.ModelSerializer):
                 'end_time': validated_data.get('end_time'),
                 'instructor': instructor,
                 'title': validated_data.get('title', ''),
-                'status': Lecture.LectureStatus.ADDITIONAL,
+                'status': LectureStatus.ADDITIONAL,
                 'is_accepted': False
             }
             lecture = Lecture.add_lecture_with_shift(course, lecture_data)

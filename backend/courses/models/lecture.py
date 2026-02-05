@@ -165,7 +165,7 @@ class Lecture(models.Model):
             end_time=end_time,
             instructor=instructor,
             title=title or f"Lecture {lecture_number}",
-            status=cls.LectureStatus.ADDITIONAL,
+            status=LectureStatus.ADDITIONAL,
             is_accepted=False
         )
         lecture.save()
@@ -228,7 +228,7 @@ class Lecture(models.Model):
             end_time=lecture_data.get('end_time'),
             instructor=lecture_data.get('instructor') or course.instructor,
             title=lecture_data.get('title', f"Lecture {target_number}"),
-            status=lecture_data.get('status', cls.LectureStatus.SCHEDULED),
+            status=lecture_data.get('status', LectureStatus.SCHEDULED),
             is_accepted=lecture_data.get('is_accepted', True)
         )
         new_lecture.save()
