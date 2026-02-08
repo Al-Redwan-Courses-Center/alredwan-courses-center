@@ -162,8 +162,6 @@ class CourseUpdateSerializer(serializers.ModelSerializer):
         return data
 
 
-class LectureUpdateSerializer(serializers.ModelSerializer):
-    """Serializer for updating lecture information"""
 class LectureInstructorSerializer(serializers.ModelSerializer):
     """Minimal instructor serializer for lecture responses"""
     full_name = serializers.SerializerMethodField()
@@ -256,13 +254,8 @@ class LectureCreateSerializer(serializers.ModelSerializer):
         return lecture
 
 
-class InstructorLectureCreateSerializer(serializers.ModelSerializer):
-    """Serializer for instructors creating additional lectures"""
-    instructor = serializers.PrimaryKeyRelatedField(
-        queryset=InstructorSerializer.Meta.model.objects.all(),
-        required=False,
-        allow_null=True
-    )
+class LectureUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating lecture information"""
     
     class Meta:
         model = Lecture
@@ -299,6 +292,18 @@ class InstructorLectureCreateSerializer(serializers.ModelSerializer):
         
         return data
 
+
+class InstructorLectureCreateSerializer(serializers.ModelSerializer):
+    """Serializer for instructors creating additional lectures"""
+    instructor = serializers.PrimaryKeyRelatedField(
+        queryset=InstructorSerializer.Meta.model.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    
+    class Meta:
+        model = Lecture
+        fields = [
             'lecture_number', 'title', 'day', 'start_time', 
             'end_time', 'instructor'
         ]

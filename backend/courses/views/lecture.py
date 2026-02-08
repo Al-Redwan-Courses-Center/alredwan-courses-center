@@ -9,7 +9,8 @@ from django.db.models import Max
 from django_filters import rest_framework as filters
 
 from courses.models import Course, Lecture
-from courses.serializers import LectureListSerializer, InstructorLectureCreateSerializer
+from courses.serializers import LectureListSerializer, InstructorLectureCreateSerializer, LectureUpdateSerializer
+from courses.permissions import IsAdminOrCourseInstructor
 from core.utils.pagination import CustomPageNumberPagination
 
 
@@ -240,3 +241,38 @@ class LectureNumberCheckView(APIView):
             'action_description': 'This will be the first lecture in the course.',
             'note': 'No existing lectures to affect'
         }, status=status.HTTP_200_OK)
+
+
+class LectureUpdateView(generics.UpdateAPIView):
+    """
+    API endpoint for updating lecture information
+    PUT/PATCH /api/lectures/{id}/edit/
+    
+    Authentication required: Admin or course instructor only
+    """
+    queryset = Lecture.objects.select_related('course', 'instructor')
+    serializer_class = LectureUpdateSerializer
+    permission_classes = [IsAdminOrCourseInstructor]
+    lookup_field = 'pk'
+    
+    def update(self, request, *args, **kwargs):
+        """Override to add custom response with detailed info"""
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        return Response({
+            'id': instance.id,
+            'title': instance.title,
+            'course': instance.course.name,
+            'course_id': instance.course.id,
+            'day': instance.day,
+            'start_time': instance.start_time,
+            'end_time': instance.end_time,
+            'lecture_number': instance.lecture_number,
+            'status': instance.status,
+            'attendance_taken': instance.attendance_taken,
+            'updated_at': instance.updated_at,
+        })

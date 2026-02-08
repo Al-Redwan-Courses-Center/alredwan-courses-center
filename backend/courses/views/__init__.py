@@ -2,14 +2,16 @@
 '''
 Module for importing all Course views to make them accessible from courses.views
 '''
-from .course import CourseListView, CourseDetailView
+from .course import CourseListView, CourseDetailView, CourseUpdateView
 from .landing_page_courses import LandingPageCourseListView
-from .lecture import LectureListCreateView, LectureNumberCheckView
+from .lecture import LectureListCreateView, LectureNumberCheckView, LectureUpdateView
 
 __all__ = [
     'CourseListView',
     'CourseDetailView',
+    'CourseUpdateView',
     'LandingPageCourseListView',
     'LectureListCreateView',
     'LectureNumberCheckView',
+    'LectureUpdateView',
 ]

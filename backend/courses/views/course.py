@@ -2,11 +2,13 @@
 """Views for Course model"""
 from rest_framework import generics, filters
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q
 
 from courses.models import Course
-from courses.serializers import CourseListSerializer, CourseDetailSerializer
+from courses.serializers import CourseListSerializer, CourseDetailSerializer, CourseUpdateSerializer
+from courses.permissions import IsAdminOrCourseInstructor
 from core.utils.pagination import CustomPageNumberPagination
 
 
@@ -114,3 +116,28 @@ class CourseDetailView(generics.RetrieveAPIView):
 
         # Otherwise try to get by slug
         return generics.get_object_or_404(queryset, slug=lookup_value)
+
+
+class CourseUpdateView(generics.UpdateAPIView):
+    """
+    API endpoint for updating course information
+    PUT/PATCH /api/courses/{id}/edit/
+    
+    Authentication required: Admin or course instructor only
+    """
+    queryset = Course.objects.select_related('instructor', 'season').prefetch_related('tags', 'schedules')
+    serializer_class = CourseUpdateSerializer
+    permission_classes = [IsAdminOrCourseInstructor]
+    lookup_field = 'pk'
+    
+    def update(self, request, *args, **kwargs):
+        """Override to return detailed course info after update"""
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        # Return detailed course information
+        output_serializer = CourseDetailSerializer(instance)
+        return Response(output_serializer.data)
