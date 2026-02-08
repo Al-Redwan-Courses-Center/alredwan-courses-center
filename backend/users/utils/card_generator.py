@@ -1,5 +1,5 @@
-def generate_children_pdf(children):
-    """Generate PDF with cards for multiple children."""
+def generate_students_pdf(students):
+    """Generate PDF with cards for multiple students."""
     from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import letter
     from reportlab.lib.utils import ImageReader
@@ -13,14 +13,14 @@ def generate_children_pdf(children):
     card_height = height / cards_per_page
     y_position = height
 
-    for i, child in enumerate(children):
+    for i, student in enumerate(students):
         if i % cards_per_page == 0 and i > 0:
             c.showPage()
             y_position = height
 
         # Generate card image on the fly
         try:
-            card_buffer = child.generate_card_image_buffer()
+            card_buffer = student.generate_card_image_buffer()
             img = ImageReader(card_buffer)
             img_width, img_height = img.getSize()
             target_width = width - 100
@@ -34,8 +34,8 @@ def generate_children_pdf(children):
             c.drawImage(img, x, y, new_width, new_height)
             y_position -= card_height
         except Exception as e:
-            # If generation fails, skip this child
-            print(f"Failed to generate card for child {child.unique_code}: {e}")
+            # If generation fails, skip this student
+            print(f"Failed to generate card for student {student.unique_code}: {e}")
             continue
 
     c.save()

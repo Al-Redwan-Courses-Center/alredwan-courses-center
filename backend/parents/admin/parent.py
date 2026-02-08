@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 
 from ..models import Parent, Child, ChildParents, ParentLinkRequest
-from ..utils.card_generator import generate_children_pdf, generate_card_image_bytes
+from ..utils.card_generator import generate_children_pdf
 
 
 # =============================================================================
@@ -423,7 +423,7 @@ class ChildAdmin(admin.ModelAdmin):
     list_display = (
         'get_unique_code_badge', 'get_full_name', 'get_gender_badge',
         'get_age_display', 'get_primary_parent_link', 'get_enrollments_badge',
-        'get_phone_display'
+        'get_phone_display', 'image'
     )
     list_filter = ('gender', ChildAgeFilter,
                    HasEnrollmentsFilter, 'created_at')
@@ -593,7 +593,8 @@ class ChildAdmin(admin.ModelAdmin):
 
     # Actions
     actions = ['export_children_info',
-               'download_id_cards_pdf', 'download_single_card_image']
+               'download_id_cards_pdf',
+               'download_single_card_image']
 
     @admin.action(description="📋 تصدير معلومات الأطفال المحددين")
     def export_children_info(self, request, queryset):
@@ -604,6 +605,45 @@ class ChildAdmin(admin.ModelAdmin):
             f"تم تحديد {count} طفل. (يمكن تنفيذ التصدير لاحقاً)",
             messages.INFO
         )
+
+    @admin.action(description="🖼️ تحميل صورة بطاقة واحدة")
+    def download_single_card_image(self, request, queryset):
+        """Download card image for a single selected child."""
+        if queryset.count() != 1:
+            self.message_user(
+                request, "يرجى تحديد طفل واحد فقط", messages.WARNING)
+            return
+
+        child = queryset.first()
+
+        try:
+            # Generate card image buffer
+            image_buffer = child.generate_card_image_buffer()
+
+            # Create response
+            response = HttpResponse(
+                image_buffer.getvalue(),
+                content_type='image/png'
+            )
+
+            # Set filename
+            filename = f"بطاقة_{child.first_name}_{child.unique_code}.png"
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+            self.message_user(
+                request,
+                f"✓ تم تحميل بطاقة {child.first_name} بنجاح",
+                messages.SUCCESS
+            )
+
+            return response
+
+        except Exception as e:
+            self.message_user(
+                request,
+                f"⚠ حدث خطأ أثناء إنشاء البطاقة: {str(e)}",
+                messages.ERROR
+            )
 
     @admin.action(description="🪪 تحميل بطاقات الهوية (PDF)")
     def download_id_cards_pdf(self, request, queryset):
@@ -646,42 +686,6 @@ class ChildAdmin(admin.ModelAdmin):
             self.message_user(
                 request,
                 f"⚠ حدث خطأ أثناء إنشاء البطاقات: {str(e)}",
-                messages.ERROR
-            )
-
-    @admin.action(description="🖼️ تحميل بطاقة واحدة (صورة PNG)")
-    def download_single_card_image(self, request, queryset):
-        """Download a single child's ID card as PNG image."""
-        if queryset.count() != 1:
-            self.message_user(
-                request,
-                "⚠ يرجى تحديد طفل واحد فقط لتحميل الصورة",
-                messages.WARNING
-            )
-            return
-
-        child = queryset.select_related(
-            'primary_parent', 'primary_parent__user').first()
-
-        try:
-            # Generate card image
-            img_buffer = generate_card_image_bytes(child, format='PNG')
-
-            # Create response
-            response = HttpResponse(
-                img_buffer.getvalue(),
-                content_type='image/png'
-            )
-
-            filename = f"بطاقة_{child.first_name}_{child.unique_code}.png"
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-            return response
-
-        except Exception as e:
-            self.message_user(
-                request,
-                f"⚠ حدث خطأ أثناء إنشاء البطاقة: {str(e)}",
                 messages.ERROR
             )
 

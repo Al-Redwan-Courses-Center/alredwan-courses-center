@@ -199,3 +199,42 @@ class InstructorDetailSerializer(serializers.ModelSerializer):
         """Get tags for the instructor"""
         from courses.serializers import TagSerializer
         return TagSerializer(obj.tags.all(), many=True).data
+
+
+class InstructorRatingSerializer(serializers.Serializer):
+    """Serializer for individual instructor ratings (both student and parent)"""
+    id = serializers.IntegerField(read_only=True)
+    rating = serializers.IntegerField(read_only=True)
+    feedback = serializers.CharField(read_only=True, allow_null=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    course_name = serializers.SerializerMethodField()
+    rater_name = serializers.SerializerMethodField()
+    rater_type = serializers.SerializerMethodField()
+
+    def get_course_name(self, obj):
+        """Get the course name for this rating"""
+        return obj.course.name if obj.course else None
+
+    def get_rater_name(self, obj):
+        """Get the name of the person who gave the rating"""
+        if hasattr(obj, 'student'):
+            return obj.student.user.get_full_name()
+        elif hasattr(obj, 'parent'):
+            return obj.parent.user.get_full_name()
+        return None
+
+    def get_rater_type(self, obj):
+        """Return whether the rater is a student or parent"""
+        if hasattr(obj, 'student'):
+            return 'student'
+        elif hasattr(obj, 'parent'):
+            return 'parent'
+        return None
+
+
+class InstructorRatingDetailSerializer(serializers.Serializer):
+    """Serializer for instructor rating statistics and details"""
+    instructor_id = serializers.IntegerField(read_only=True)
+    instructor_name = serializers.CharField(read_only=True)
+    statistics = serializers.DictField(read_only=True)
+    ratings = serializers.DictField(read_only=True)

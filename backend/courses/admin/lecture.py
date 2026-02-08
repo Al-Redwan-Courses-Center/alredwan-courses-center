@@ -26,10 +26,10 @@ class LectureAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
     list_display = (
         'get_lecture_title', 'get_course_link', 'get_lecture_number', 'get_day_display',
         'get_time_range', 'get_instructor_name', 'get_status_badge',
-        'get_attendance_status'
+        'get_acceptance_status', 'get_attendance_status'
     )
     list_filter = (
-        'status', 'attendance_taken', LectureDateRangeFilter,
+        'status', 'is_accepted', 'attendance_taken', LectureDateRangeFilter,
         'course__season', 'course', 'instructor'
     )
     search_fields = (
@@ -60,7 +60,7 @@ class LectureAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
             'fields': ('day', 'start_time', 'end_time'),
         }),
         (_('الحالة والحضور'), {
-            'fields': ('status', 'attendance_taken'),
+            'fields': ('status', 'is_accepted', 'attendance_taken'),
         }),
     )
 
@@ -172,3 +172,8 @@ class LectureAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
     def get_attendance_status(self, obj):
         """Display attendance status."""
         return obj.attendance_taken
+
+    @admin.display(description=_('مقبولة'), boolean=True, ordering='is_accepted')
+    def get_acceptance_status(self, obj):
+        """Display acceptance status."""
+        return obj.is_accepted

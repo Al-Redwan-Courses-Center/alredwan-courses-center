@@ -5,8 +5,8 @@ from attendance.models.lecture_attendance import LectureAttendance
 @admin.register(LectureAttendance)
 class LectureAttendanceAdmin(admin.ModelAdmin):
     list_display = ('get_lecture', 'get_participant', 'get_present',
-                    'get_rating', 'get_marked_by', 'get_marked_at')
-    list_filter = ('present', 'lecture__course', 'marked_at')
+                    'get_rating', 'get_marked_by', 'get_marked_via', 'get_marked_at')
+    list_filter = ('present', 'lecture__course', 'marked_via', 'marked_at')
     search_fields = ('lecture__title', 'student__user__first_name',
                      'child__first_name', 'notes')
     date_hierarchy = 'marked_at'
@@ -15,7 +15,7 @@ class LectureAttendanceAdmin(admin.ModelAdmin):
     fieldsets = (
         ('معلومات الحضور', {'fields': ('lecture', 'student', 'child')}),
         ('الحالة والتقييم', {'fields': ('present', 'rating', 'notes')}),
-        ('معلومات التسجيل', {'fields': ('marked_by', 'marked_at')}),
+        ('معلومات التسجيل', {'fields': ('marked_by', 'marked_via', 'marked_at')}),
         ('التواريخ', {'fields': ('created_at', 'updated_at')}),
     )
 
@@ -40,6 +40,11 @@ class LectureAttendanceAdmin(admin.ModelAdmin):
     get_marked_by.short_description = 'تم التسجيل بواسطة'
     get_marked_by.admin_order_field = 'marked_by'
 
+    def get_marked_via(self, obj):
+        return obj.get_marked_via_display()
+    get_marked_via.short_description = 'طريقة التسجيل'
+    get_marked_via.admin_order_field = 'marked_via'
+
     def get_marked_at(self, obj):
         return obj.marked_at
     get_marked_at.short_description = 'تاريخ التسجيل'
@@ -61,6 +66,8 @@ class LectureAttendanceAdmin(admin.ModelAdmin):
             form.base_fields['notes'].label = 'ملاحظات'
         if 'marked_by' in form.base_fields:
             form.base_fields['marked_by'].label = 'تم التسجيل بواسطة'
+        if 'marked_via' in form.base_fields:
+            form.base_fields['marked_via'].label = 'طريقة التسجيل'
         if 'marked_at' in form.base_fields:
             form.base_fields['marked_at'].label = 'تاريخ التسجيل'
         if 'created_at' in form.base_fields:

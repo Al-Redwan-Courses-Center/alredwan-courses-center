@@ -30,6 +30,12 @@ class LectureAttendance(models.Model):
     notes = models.TextField(null=True, blank=True)
     marked_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
                                   null=True, blank=True, related_name='marked_lecture_attendances')
+    marked_via = models.CharField(
+        max_length=20,
+        choices=[('manual', 'يدوي'), ('qr_scan', 'مسح QR')],
+        default='manual',
+        verbose_name=("طريقة التسجيل")
+    )
     marked_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
@@ -131,10 +137,11 @@ class LectureAttendance(models.Model):
         # The view should call LectureAttendance.can_mark_now(lecture) and if False return 403 unless user is admin.
         return (now >= window_start) and (now <= window_end)
 
-    def mark(self, present: bool, marked_by_user):
+    def mark(self, present: bool, marked_by_user, marked_via='manual'):
         """Helper to set present and rating requirement should be enforced by the caller before calling mark."""
         self.present = present
         self.marked_by = marked_by_user
+        self.marked_via = marked_via
         self.marked_at = timezone.now()
         # rating must be set by caller; we do not auto set rating here.
         self.save()

@@ -1,6 +1,9 @@
-
 from django.contrib import admin
+from django.contrib import messages
+from django.http import HttpResponse
+
 from ..models.student import StudentUser
+from ..utils.card_generator import generate_students_pdf
 
 
 @admin.register(StudentUser)
@@ -38,3 +41,100 @@ class StudentUserAdmin(admin.ModelAdmin):
     def get_gender(self, obj):
         return obj.user.get_gender_display()
     get_gender.short_description = 'النوع'
+
+    # Actions
+    actions = ['export_students_info',
+               'download_id_cards_pdf',
+               'download_single_card_image']
+
+    @admin.action(description="📋 تصدير معلومات الطلاب المحددين")
+    def export_students_info(self, request, queryset):
+        """Export basic info about selected students."""
+        count = queryset.count()
+        self.message_user(
+            request,
+            f"تم تحديد {count} طالب. (يمكن تنفيذ التصدير لاحقاً)",
+            messages.INFO
+        )
+
+    @admin.action(description="🖼️ تحميل صورة بطاقة واحدة")
+    def download_single_card_image(self, request, queryset):
+        """Download card image for a single selected student."""
+        if queryset.count() != 1:
+            self.message_user(
+                request, "يرجى تحديد طالب واحد فقط", messages.WARNING)
+            return
+
+        student = queryset.first()
+
+        try:
+            # Generate card image buffer
+            image_buffer = student.generate_card_image_buffer()
+
+            # Create response
+            response = HttpResponse(
+                image_buffer.getvalue(),
+                content_type='image/png'
+            )
+
+            # Set filename
+            filename = f"بطاقة_{student.user.first_name}_{student.unique_code}.png"
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+            self.message_user(
+                request,
+                f"✓ تم تحميل بطاقة {student.user.first_name} بنجاح",
+                messages.SUCCESS
+            )
+
+            return response
+
+        except Exception as e:
+            self.message_user(
+                request,
+                f"⚠ حدث خطأ أثناء إنشاء البطاقة: {str(e)}",
+                messages.ERROR
+            )
+
+    @admin.action(description="🪪 تحميل بطاقات الهوية (PDF)")
+    def download_id_cards_pdf(self, request, queryset):
+        """Download ID cards for selected students as PDF."""
+        students = list(queryset.select_related('user'))
+
+        if not students:
+            self.message_user(
+                request, "لم يتم تحديد أي طلاب", messages.WARNING)
+            return
+
+        try:
+            # Generate PDF with all selected students
+            pdf_buffer = generate_students_pdf(students)
+
+            # Create response
+            response = HttpResponse(
+                pdf_buffer.getvalue(),
+                content_type='application/pdf'
+            )
+
+            # Set filename
+            if len(students) == 1:
+                filename = f"بطاقة_{students[0].user.first_name}_{students[0].unique_code}.pdf"
+            else:
+                filename = f"بطاقات_الطلاب_{len(students)}.pdf"
+
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+            self.message_user(
+                request,
+                f"✓ تم تحميل بطاقات {len(students)} طالب بنجاح",
+                messages.SUCCESS
+            )
+
+            return response
+
+        except Exception as e:
+            self.message_user(
+                request,
+                f"⚠ حدث خطأ أثناء إنشاء البطاقات: {str(e)}",
+                messages.ERROR
+            )
