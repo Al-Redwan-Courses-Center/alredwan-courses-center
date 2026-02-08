@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "../tailwind-plugins/separate.ts";
 
 :root {
   font-size: 62.5%;
@@ -35,6 +36,8 @@
   --drop-shadow-primary:
     3.824px 3.278px 7.976px rgba(0, 0, 0, 0.25),
     0 2.185px 2.185px rgba(0, 0, 0, 0.25);
+  --drop-shadow-soft: drop-shadow(2.04px 1.748px 4.254px rgba(0, 0, 0, 0.25))
+    drop-shadow(0 1.165px 1.165px rgba(0, 0, 0, 0.25));
 
   --font-medad: var(--font-medad);
   --font-messiri: var(--font-messiri);
@@ -73,4 +76,35 @@ svg {
 button,
 a {
   cursor: pointer;
+}
+
+::-webkit-scrollbar {
+  width: 10px; /* for vertical scrollbars */
+  height: 10px; /* for horizontal scrollbars */
+}
+
+/* Style the track (background) */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Style the thumb (draggable handle) */
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+/* Change thumb color on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.group\/day:last-child
+  button[data-range-middle="true"][data-range-start="false"][data-range-end="false"] {
+  border-radius: 0 9999px 9999px 0;
+}
+
+.group\/day:first-child
+  button[data-range-middle="true"][data-range-start="false"][data-range-end="false"] {
+  border-radius: 9999px 0 0 9999px;
 }

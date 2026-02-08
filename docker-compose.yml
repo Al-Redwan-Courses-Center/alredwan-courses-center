@@ -9,34 +9,41 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U redwan_courses_center_dev -d redwan_courses_center_dev_db"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U redwan_courses_center_dev -d redwan_courses_center_dev_db",
+        ]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
       start_period: 10s
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: redwan-pgadmin
-    depends_on:
-      redwan-db:
-        condition: service_healthy
-    ports:
-      - "5050:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: redwan-pgadmin
+  #   depends_on:
+  #     redwan-db:
+  #       condition: service_healthy
+  #   ports:
+  #     - "5050:80"
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@admin.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   volumes:
+  #     - pgadmin_data:/var/lib/pgadmin
 
   redwan-backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile_Slim
+      target: dev
+    env_file:
+      - ./backend/.env
     container_name: redwan-backend
     depends_on:
       redwan-db:
         condition: service_healthy
-    env_file:
-      - ./backend.env
     ports:
       - "8000:8000"
     volumes:
@@ -49,15 +56,10 @@ services:
         ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
       start_period: 10s
 
   redwan-frontend:
-    develop:
-      watch:
-        - path: ./frontend
-          action: sync
-          target: /app
     stdin_open: true
     tty: true
     build:
@@ -70,6 +72,9 @@ services:
         condition: service_healthy
     ports:
       - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /home/alyeldeen/.local/share/pnpm/store/v10:/app/.pnpm-store/v10
 
 volumes:
   postgres_data:

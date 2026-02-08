@@ -18,31 +18,103 @@ http://localhost:8000/api
 ## Courses Endpoints
 
 ### 1. List All Courses
-Get a list of all available courses.
+Get a list of all available courses with comprehensive filtering options.
 
 **Endpoint:** `GET /api/courses/`
 
-**Authentication:** Not required (Public)
+**Authentication:** Required (IsAuthenticated)
 
 **Query Parameters:**
+
+**Basic Filters:**
 | Parameter | Type | Description | Example |
 |-----------|------|-------------|---------|
 | `is_active` | boolean | Filter by course status | `?is_active=true` |
 | `season` | integer | Filter by season ID | `?season=1` |
 | `instructor` | integer | Filter by instructor ID | `?instructor=5` |
 | `for_adults` | boolean | Filter courses for adults/children | `?for_adults=true` |
-| `search` | string | Search in course name and description | `?search=quran` |
+| `tags` | integer | Filter by tag ID | `?tags=1` |
+
+**Price Filters:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `price_min` | decimal | Minimum price | `?price_min=300` |
+| `price_max` | decimal | Maximum price | `?price_max=1000` |
+| `price_min` & `price_max` | decimal | Price range | `?price_min=300&price_max=800` |
+
+**Date Filters:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `start_date_after` | date | Start date on or after | `?start_date_after=2026-02-01` |
+| `start_date_before` | date | Start date on or before | `?start_date_before=2026-12-31` |
+| `end_date_after` | date | End date on or after | `?end_date_after=2026-06-01` |
+| `end_date_before` | date | End date on or before | `?end_date_before=2026-12-31` |
+
+**Capacity & Lectures Filters:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `capacity_min` | integer | Minimum capacity | `?capacity_min=20` |
+| `capacity_max` | integer | Maximum capacity | `?capacity_max=50` |
+| `num_lectures_min` | integer | Minimum number of lectures | `?num_lectures_min=30` |
+| `num_lectures_max` | integer | Maximum number of lectures | `?num_lectures_max=50` |
+
+**Age Range Filters:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `min_age_max` | integer | Courses with min age up to value | `?min_age_max=10` |
+| `max_age_min` | integer | Courses with max age from value | `?max_age_min=12` |
+
+**Availability Filters:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `has_available_spots` | boolean | Courses with available spots | `?has_available_spots=true` |
+| `is_full` | boolean | Filter full/available courses | `?is_full=false` |
+
+**Season Filters:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `season_type` | string | Filter by season type | `?season_type=summer_camp` |
+| `season_is_active` | boolean | Filter by active season | `?season_is_active=true` |
+
+**Instructor Filters:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `instructor_type` | string | Filter by instructor type | `?instructor_type=supervisor` |
+
+**Search & Ordering:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `search` | string | Search in name, description, instructor name | `?search=quran` |
 | `ordering` | string | Order results by field | `?ordering=-start_date` |
 
 **Ordering Options:**
 - `start_date` / `-start_date` (ascending/descending)
+- `end_date` / `-end_date`
 - `price` / `-price`
 - `created_at` / `-created_at`
 - `name` / `-name`
+- `capacity` / `-capacity`
+- `num_lectures` / `-num_lectures`
 
-**Example Request:**
+**Example Requests:**
 ```bash
+# Get all active courses
 curl -X GET "http://localhost:8000/api/courses/?is_active=true&ordering=-start_date"
+
+# Get affordable courses (price <= 500) starting in February
+curl -X GET "http://localhost:8000/api/courses/?price_max=500&start_date_after=2026-02-01"
+
+# Get courses with available spots for children
+curl -X GET "http://localhost:8000/api/courses/?has_available_spots=true&for_adults=false"
+
+# Get summer camp courses with at least 30 lectures
+curl -X GET "http://localhost:8000/api/courses/?season_type=summer_camp&num_lectures_min=30"
+
+# Search for Tajweed courses taught by supervisors
+curl -X GET "http://localhost:8000/api/courses/?search=tajweed&instructor_type=supervisor"
+
+# Get courses suitable for ages 8-12
+curl -X GET "http://localhost:8000/api/courses/?min_age_max=8&max_age_min=12"
 ```
 
 **Example Response:**
@@ -187,11 +259,75 @@ Get courses featured on the landing page, ordered by display priority.
 
 **Authentication:** Not required (Public)
 
-**Description:** Returns only active courses that have been marked as featured for display on the landing page. Results are automatically ordered by the `order` field (higher numbers appear first).
+**Description:** Returns only active courses that have been marked as featured for display on the landing page. Results are automatically ordered by the `order` field (higher numbers appear first). **This endpoint supports all the same filters as the main courses endpoint** with `course__` prefix.
 
-**Example Request:**
+**Query Parameters:**
+
+**Landing Page Specific:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `order` | integer | Filter by exact display order | `?order=100` |
+| `order__gte` | integer | Filter by minimum order value | `?order__gte=50` |
+| `order__lte` | integer | Filter by maximum order value | `?order__lte=100` |
+
+**Course Filters (same as main courses endpoint with `course__` prefix):**
+
+**Basic Filters:**
+- `course__is_active`, `course__season`, `course__instructor`, `course__for_adults`, `course__tags`
+
+**Price Filters:**
+- `course__price_min`, `course__price_max`
+
+**Date Filters:**
+- `course__start_date_after`, `course__start_date_before`
+- `course__end_date_after`, `course__end_date_before`
+
+**Capacity & Lectures:**
+- `course__capacity_min`, `course__capacity_max`
+- `course__num_lectures_min`, `course__num_lectures_max`
+
+**Age Range:**
+- `course__min_age_max`, `course__max_age_min`
+
+**Season & Instructor:**
+- `course__season_type`, `course__season_is_active`
+- `course__instructor_type`
+
+**Search & Ordering:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `search` | string | Search in course name, description, instructor name | `?search=quran` |
+| `ordering` | string | Order results by field | `?ordering=-course__start_date` |
+
+**Ordering Options:**
+- `order` / `-order` (display priority - default: `-order`)
+- `course__start_date` / `-course__start_date`
+- `course__end_date` / `-course__end_date`
+- `course__price` / `-course__price`
+- `course__name` / `-course__name`
+- `course__capacity` / `-course__capacity`
+- `course__num_lectures` / `-course__num_lectures`
+- `created_at` / `-created_at`
+
+**Example Requests:**
 ```bash
+# Get all landing page courses
 curl -X GET "http://localhost:8000/api/courses/landingpagecourses/"
+
+# Get high priority (order >= 90) adult courses
+curl -X GET "http://localhost:8000/api/courses/landingpagecourses/?order__gte=90&course__for_adults=true"
+
+# Get affordable featured courses (price <= 500) starting in February
+curl -X GET "http://localhost:8000/api/courses/landingpagecourses/?course__price_max=500&course__start_date_after=2026-02-01"
+
+# Search for Quran courses with at least 30 lectures
+curl -X GET "http://localhost:8000/api/courses/landingpagecourses/?search=quran&course__num_lectures_min=30"
+
+# Get featured summer camp courses taught by supervisors
+curl -X GET "http://localhost:8000/api/courses/landingpagecourses/?course__season_type=summer_camp&course__instructor_type=supervisor"
+
+# Get featured courses suitable for ages 8-12 with available spots
+curl -X GET "http://localhost:8000/api/courses/landingpagecourses/?course__min_age_max=8&course__max_age_min=12"
 ```
 
 **Example Response:**
@@ -296,20 +432,433 @@ curl -X GET "http://localhost:8000/api/courses/landingpagecourses/"
 
 ---
 
+### 4. List Course Lectures
+Get all **accepted** lectures for a specific course.
+
+**Endpoint:** `GET /api/courses/{course_id}/lectures/`
+
+**Authentication:** Required (IsAuthenticated)
+
+**Description:** Returns only **accepted lectures** (`is_accepted=True`) for a course, including scheduled, completed, cancelled, and additional lectures. Results are ordered by lecture_number, day, and start_time.
+
+**Important Notes:**
+- Only lectures with `is_accepted=True` are returned
+- Additional lectures created by instructors need approval before appearing in this list
+- Optimized with `select_related` to prevent N+1 query problems
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `course_id` | string/UUID | Course ID |
+
+**Example Request:**
+```bash
+curl -X GET "http://localhost:8000/api/courses/1/lectures/" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Example Response:**
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "lecture_number": 1,
+    "title": "Introduction to Quran Memorization",
+    "day": "2026-02-08",
+    "scheduled_at": "2026-02-08T10:00:00+02:00",
+    "start_time": "10:00:00",
+    "end_time": "12:00:00",
+    "instructor": {
+      "id": 3,
+      "full_name": "Ahmed Mohamed"
+    },
+    "status": "scheduled",
+    "status_display": "مجدولة",
+    "is_accepted": true,
+    "attendance_taken": false,
+    "created_at": "2026-01-15T10:30:00Z",
+    "updated_at": "2026-01-15T10:30:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "lecture_number": 2,
+    "title": "Lecture 2",
+    "day": "2026-02-10",
+    "scheduled_at": "2026-02-10T10:00:00+02:00",
+    "start_time": "10:00:00",
+    "end_time": "12:00:00",
+    "instructor": {
+      "id": 3,
+      "full_name": "Ahmed Mohamed"
+    },
+    "status": "additional",
+    "status_display": "اضافية",
+    "is_accepted": true,
+    "attendance_taken": false,
+    "created_at": "2026-01-15T10:30:00Z",
+    "updated_at": "2026-01-15T10:30:00Z"
+  }
+]
+```
+
+**Response Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Unique lecture identifier |
+| `lecture_number` | integer | Lecture number (unique within course) |
+| `title` | string | Lecture title |
+| `day` | date | Date of lecture (YYYY-MM-DD) |
+| `scheduled_at` | datetime | Full datetime when lecture starts (ISO 8601 with timezone) |
+| `start_time` | time | Start time (HH:MM:SS) |
+| `end_time` | time | End time (HH:MM:SS) |
+| `instructor` | object | Instructor details (id and full_name) |
+| `status` | string | Status: "scheduled", "completed", "cancelled", or "additional" |
+| `status_display` | string | Localized status display (Arabic) |
+| `is_accepted` | boolean | Whether lecture is accepted (always true in this endpoint) |
+| `attendance_taken` | boolean | Whether attendance has been recorded |
+| `created_at` | datetime | Creation timestamp |
+| `updated_at` | datetime | Last update timestamp |
+
+---
+
+### 5. Create Course Lecture (Additional Lecture)
+Create a new additional lecture for a specific course that requires approval.
+
+**Endpoint:** `POST /api/courses/{course_id}/lectures/`
+
+**Authentication:** Required (Admin, Supervisor, or Course Instructor)
+
+**Description:** Creates a new **ADDITIONAL lecture** with `status="additional"` and `is_accepted=False`. All users (admins, supervisors, and instructors) create additional lectures that require approval before appearing in the lecture list.
+
+**Smart Lecture Insertion Features:**
+1. **Automatic Shifting**: If the lecture number already exists, the new lecture is inserted at that position and all subsequent lectures are automatically shifted by +1
+2. **Automatic Course Extension**: If adding a lecture at or after the last lecture number, and the lecture date is after the course end date, the course end date is automatically updated
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `course_id` | string/UUID | Course ID |
+
+**Permissions:** 
+- Admin users
+- Supervisor users
+- The instructor assigned to the course
+
+**Request Body:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `lecture_number` | integer | Yes | Lecture number (positive integer, must be unique) |
+| `title` | string | No | Lecture title (defaults to "Lecture {number}") |
+| `day` | date | Yes | Date of lecture (YYYY-MM-DD) |
+| `start_time` | time | No | Start time (HH:MM:SS) |
+| `end_time` | time | No | End time (HH:MM:SS, must be after start_time) |
+| `instructor` | integer | No | Instructor ID (defaults to course instructor) |
+
+**Example Requests:**
+
+**1. Adding a lecture at the end (will extend course if needed):**
+```bash
+curl -X POST "http://localhost:8000/api/courses/1/lectures/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "lecture_number": 8,
+    "title": "Advanced Tajweed Rules",
+    "day": "2026-02-20",
+    "start_time": "10:00:00",
+    "end_time": "12:00:00"
+  }'
+```
+
+**2. Inserting a lecture in the middle (will shift subsequent lectures):**
+```bash
+curl -X POST "http://localhost:8000/api/courses/1/lectures/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "lecture_number": 5,
+    "title": "Extra Review Session",
+    "day": "2026-02-15",
+    "start_time": "14:00:00",
+    "end_time": "16:00:00"
+  }'
+```
+*Note: This will shift the existing lecture 5 to become lecture 6, lecture 6 to become lecture 7, etc.*
+
+**Example Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440010",
+  "lecture_number": 5,
+  "title": "Extra Review Session",
+  "day": "2026-02-15",
+  "scheduled_at": "2026-02-15T14:00:00+02:00",
+  "start_time": "14:00:00",
+  "end_time": "16:00:00",
+  "instructor": {
+    "id": 3,
+    "full_name": "Ahmed Mohamed"
+  },
+  "status": "additional",
+  "status_display": "اضافية",
+  "is_accepted": false,
+  "attendance_taken": false,
+  "created_at": "2026-02-04T15:30:00Z",
+  "updated_at": "2026-02-04T15:30:00Z"
+}
+```
+
+**Behavior Examples:**
+
+| Scenario | What Happens |
+|----------|--------------|
+| Add lecture #8 when max is 7 | Creates lecture #8. If date > course.end_date, extends course end date |
+| Add lecture #5 when lecture #5 exists | Inserts new lecture as #5, shifts existing #5→#6, #6→#7, etc. |
+| Add lecture #3 when max is 7 | Creates lecture #3 without affecting other lectures |
+
+**Error Responses:**
+
+**403 Forbidden** - User doesn't have permission:
+```json
+{
+  "error": "You do not have permission to create lectures for this course.",
+  "detail": "Only administrators, supervisors, or the course instructor can create lectures."
+}
+```
+
+**400 Bad Request** - Validation error:
+```json
+{
+  "lecture_number": [
+    "رقم المحاضرة يجب أن يكون عددًا صحيحًا موجبًا."
+  ]
+}
+```
+
+**400 Bad Request** - Time validation error:
+```json
+{
+  "end_time": [
+    "وقت البداية يجب أن يكون قبل وقت النهاية."
+  ]
+}
+```
+
+**400 Bad Request** - Duplicate lecture number (unique constraint):
+```json
+{
+  "error": "Lecture with this number already exists for this course."
+}
+```
+
+---
+
+### 6. Check Lecture Number Availability
+Check if a lecture number is available and get detailed information about what will happen when you add it.
+
+**Endpoint:** `GET /api/courses/{course_id}/lectures/check-number/?lecture_number={number}`
+
+**Authentication:** Required (IsAuthenticated)
+
+**Description:** Checks if a lecture number is available for use and provides detailed information about the action that will be taken. Always returns **200 OK** with the availability status and action description in the response body.
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `course_id` | string/UUID | Course ID |
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `lecture_number` | integer | Yes | The lecture number to check |
+
+**Example Requests:**
+```bash
+# Check if lecture number 8 is available (adding to end)
+curl -X GET "http://localhost:8000/api/courses/1/lectures/check-number/?lecture_number=8" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Check lecture number 5 (might trigger shift)
+curl -X GET "http://localhost:8000/api/courses/1/lectures/check-number/?lecture_number=5" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Response Scenarios:**
+
+**Scenario 1: Number Already Exists - Will Trigger Shift**
+```json
+{
+  "lecture_number": 5,
+  "is_available": false,
+  "message": "Lecture number 5 already exists",
+  "action": "shift",
+  "action_description": "New lecture will be inserted at position 5. All lectures from 5 onwards will be shifted by +1.",
+  "existing_lecture": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "status": "scheduled",
+    "scheduled_at": "2026-02-10T10:00:00+02:00"
+  },
+  "affected_lectures": "Lectures 5 and above will be renumbered"
+}
+```
+
+**Scenario 2: Number Available - Insert in Middle**
+```json
+{
+  "lecture_number": 5,
+  "is_available": true,
+  "message": "Lecture number 5 is available (inserting in the middle)",
+  "action": "insert",
+  "action_description": "New lecture will be created at position 5. No other lectures will be affected.",
+  "max_existing_number": 7,
+  "note": "This lecture will be positioned between existing lectures (max lecture number is 7)"
+}
+```
+
+**Scenario 3: Number Available - Append to End**
+```json
+{
+  "lecture_number": 8,
+  "is_available": true,
+  "message": "Lecture number 8 is available (adding to the end)",
+  "action": "append",
+  "action_description": "New lecture will be added at the end. If lecture date is after course end date, the course end date will be automatically extended.",
+  "max_existing_number": 7,
+  "current_course_end_date": "2026-06-30",
+  "note": "Course end date may be updated if the new lecture date exceeds it"
+}
+```
+
+**Scenario 4: First Lecture in Course**
+```json
+{
+  "lecture_number": 1,
+  "is_available": true,
+  "message": "Lecture number 1 is available (first lecture)",
+  "action": "create",
+  "action_description": "This will be the first lecture in the course.",
+  "note": "No existing lectures to affect"
+}
+```
+
+**Response Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `lecture_number` | integer | The number that was checked |
+| `is_available` | boolean | Whether the number is available |
+| `message` | string | Descriptive message about availability |
+| `action` | string | Action type: "shift", "insert", "append", or "create" |
+| `action_description` | string | Detailed description of what will happen |
+| `existing_lecture` | object | Details of existing lecture (if number exists) |
+| `max_existing_number` | integer | Maximum existing lecture number |
+| `current_course_end_date` | string | Current course end date (for append action) |
+| `affected_lectures` | string | Description of affected lectures (for shift action) |
+| `note` | string | Additional notes or warnings |
+
+**Action Types Explained:**
+
+| Action | When | What Happens |
+|--------|------|--------------|
+| `shift` | Number exists | Inserts new lecture, shifts all ≥ lectures by +1 |
+| `insert` | Number available in middle | Creates lecture without affecting others |
+| `append` | Number ≥ max+1 | Adds to end, may extend course end date |
+| `create` | First lecture | Creates first lecture in course |
+
+**Error Responses:**
+
+**400 Bad Request** - Missing lecture_number parameter:
+```json
+{
+  "error": "lecture_number query parameter is required",
+  "detail": "Please provide a lecture_number in the query string."
+}
+```
+
+**400 Bad Request** - Invalid lecture_number format:
+```json
+{
+  "error": "Invalid lecture_number",
+  "detail": "lecture_number must be a valid integer."
+}
+```
+
+**404 Not Found** - Course doesn't exist:
+```json
+{
+  "detail": "Not found."
+}
+```
+
+---
+
 ## Users Endpoints
 
 ### 4. Get Landing Page Featured Instructors
 Get instructors featured on the landing page, ordered by display priority.
 
-**Endpoint:** `GET /api/users/instructors/landing/`
+**Endpoint:** `GET /api/users/landingpageinstructors/`
 
 **Authentication:** Not required (Public)
 
-**Description:** Returns instructors that have been marked as featured for display on the landing page. Results are automatically ordered by the `order` field (higher numbers appear first).
+**Description:** Returns instructors that have been marked as featured for display on the landing page. Results are automatically ordered by the `order` field (higher numbers appear first). **This endpoint supports all the same filters as the main instructors endpoint** with `instructor__` prefix.
 
-**Example Request:**
+**Query Parameters:**
+
+**Landing Page Specific:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `order` | integer | Filter by exact display order | `?order=100` |
+| `order__gte` | integer | Filter by minimum order value | `?order__gte=50` |
+| `order__lte` | integer | Filter by maximum order value | `?order__lte=100` |
+
+**Instructor Filters (same as main instructors endpoint with `instructor__` prefix):**
+
+**Basic Filters:**
+- `instructor__type`, `instructor__tags`
+
+**Date Filters:**
+- `instructor__joined_date_after`, `instructor__joined_date_before`
+
+**Name Filters:**
+- `instructor__first_name`, `instructor__last_name`
+
+**Contact Filters:**
+- `instructor__phone`, `instructor__email`
+
+**Course-Related Filters:**
+- `instructor__has_active_courses`, `instructor__min_courses`
+
+**Search & Ordering:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `search` | string | Search in name, bio, email, phone | `?search=ibrahim` |
+| `ordering` | string | Order results by field | `?ordering=-instructor__joined_date` |
+
+**Ordering Options:**
+- `order` / `-order` (display priority - default: `-order`)
+- `instructor__joined_date` / `-instructor__joined_date`
+- `instructor__type` / `-instructor__type`
+- `created_at` / `-created_at`
+
+**Example Requests:**
 ```bash
+# Get all landing page instructors
 curl -X GET "http://localhost:8000/api/users/landingpageinstructors/"
+
+# Get high priority (order >= 90) supervisor instructors
+curl -X GET "http://localhost:8000/api/users/landingpageinstructors/?order__gte=90&instructor__type=supervisor"
+
+# Get featured instructors who joined in 2024 with active courses
+curl -X GET "http://localhost:8000/api/users/landingpageinstructors/?instructor__joined_date_after=2024-01-01&instructor__has_active_courses=true"
+
+# Search for instructors teaching Tajweed
+curl -X GET "http://localhost:8000/api/users/landingpageinstructors/?search=tajweed"
+
+# Get featured instructors with at least 3 active courses
+curl -X GET "http://localhost:8000/api/users/landingpageinstructors/?instructor__min_courses=3"
+
+# Filter by email domain and type
+curl -X GET "http://localhost:8000/api/users/landingpageinstructors/?instructor__email=alredwan.com&instructor__type=supervisor"
 ```
 
 **Example Response:**
@@ -364,6 +913,283 @@ curl -X GET "http://localhost:8000/api/users/landingpageinstructors/"
     }
   }
 ]
+```
+
+---
+
+### 5. List All Instructors
+Get a list of all instructors with comprehensive filtering options.
+
+**Endpoint:** `GET /api/users/instructors/`
+
+**Authentication:** Required (IsAuthenticated)
+
+**Query Parameters:**
+
+**Basic Filters:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `type` | string | Filter by instructor type (supervisor/normal) | `?type=supervisor` |
+| `tags` | integer | Filter by tag ID | `?tags=1` |
+
+**Date Filters:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `joined_date_after` | date | Joined on or after | `?joined_date_after=2024-01-01` |
+| `joined_date_before` | date | Joined on or before | `?joined_date_before=2026-01-31` |
+
+**Name Filters:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `first_name` | string | Filter by first name (contains) | `?first_name=ahmed` |
+| `last_name` | string | Filter by last name (contains) | `?last_name=hassan` |
+
+**Contact Filters:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `phone` | string | Filter by phone number (contains) | `?phone=0123` |
+| `email` | string | Filter by email (contains) | `?email=gmail.com` |
+
+**Course-Related Filters:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `has_active_courses` | boolean | Filter instructors with active courses | `?has_active_courses=true` |
+| `min_courses` | integer | Minimum number of active courses | `?min_courses=2` |
+
+**Search & Ordering:**
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `search` | string | Search in name, bio, email, phone | `?search=sheikh` |
+| `ordering` | string | Order results by field | `?ordering=-joined_date` |
+
+**Ordering Options:**
+- `joined_date` / `-joined_date` (ascending/descending)
+- `user__first_name` / `-user__first_name`
+- `user__last_name` / `-user__last_name`
+- `type` / `-type`
+
+**Example Requests:**
+```bash
+# Get all supervisor instructors
+curl -X GET "http://localhost:8000/api/users/instructors/?type=supervisor&ordering=-joined_date"
+
+# Get instructors who joined in 2024 and have active courses
+curl -X GET "http://localhost:8000/api/users/instructors/?joined_date_after=2024-01-01&has_active_courses=true"
+
+# Get instructors with at least 3 active courses
+curl -X GET "http://localhost:8000/api/users/instructors/?min_courses=3"
+
+# Search for instructors by name or bio
+curl -X GET "http://localhost:8000/api/users/instructors/?search=tajweed"
+
+# Get instructors teaching Quran (tag filter)
+curl -X GET "http://localhost:8000/api/users/instructors/?tags=1"
+
+# Filter by email domain
+curl -X GET "http://localhost:8000/api/users/instructors/?email=alredwan.com"
+```
+
+**Example Response:**
+```json
+[
+  {
+    "id": 2,
+    "name": "Sheikh Ibrahim Ali",
+    "bio": "Sheikh Ibrahim has over 15 years of experience teaching Quran and Tajweed. He holds an Ijazah in Quranic recitation and has memorized the entire Quran. He specializes in teaching advanced Tajweed rules and helping students perfect their recitation.",
+    "type": "normal",
+    "type_display": "عادي / خارجي",
+    "image_url": "http://localhost:8000/media/instructors/2/profile.jpg",
+    "joined_date": "2024-09-01",
+    "tags": [
+      {
+        "id": 1,
+        "name": "Quran"
+      },
+      {
+        "id": 3,
+        "name": "Tajweed"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Fatima Hassan",
+    "bio": "Sister Fatima is passionate about teaching Islamic studies to children. She has a degree in Islamic Education and has been teaching for 8 years. She creates engaging and fun learning experiences for young students.",
+    "type": "supervisor",
+    "type_display": "مشرف",
+    "image_url": "http://localhost:8000/media/instructors/4/profile.jpg",
+    "joined_date": "2023-02-15",
+    "tags": [
+      {
+        "id": 4,
+        "name": "Islamic Studies"
+      }
+    ]
+  }
+]
+```
+
+---
+
+### 6. Get Instructor by ID
+Retrieve detailed information about a specific instructor.
+
+**Endpoint:** `GET /api/users/instructors/{id}/`
+
+**Authentication:** Not required (Public)
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | integer | Instructor ID |
+
+**Example Request:**
+```bash
+curl -X GET "http://localhost:8000/api/users/instructors/2/"
+```
+
+**Example Response:**
+```json
+{
+  "id": 2,
+  "name": "Sheikh Ibrahim Ali",
+  "email": "ibrahim.ali@alredwan.com",
+  "phone": "+201234567890",
+  "bio": "Sheikh Ibrahim has over 15 years of experience teaching Quran and Tajweed. He holds an Ijazah in Quranic recitation and has memorized the entire Quran. He specializes in teaching advanced Tajweed rules and helping students perfect their recitation.",
+  "type": "normal",
+  "type_display": "عادي / خارجي",
+  "image_url": "http://localhost:8000/media/instructors/2/profile.jpg",
+  "joined_date": "2024-09-01",
+  "tags": [
+    {
+      "id": 1,
+      "name": "Quran"
+    },
+    {
+      "id": 3,
+      "name": "Tajweed"
+    }
+  ]
+}
+```
+
+---
+
+### 7. Get Instructor Ratings
+Retrieve ratings and statistics for a specific instructor.
+
+**Endpoint:** `GET /api/users/instructors/{id}/ratings/`
+
+**Authentication:** Required (IsAuthenticated)
+
+**Description:** Returns aggregated rating statistics and individual ratings from both students and parents for a specific instructor. Ratings are linked to specific courses.
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | integer | Instructor ID |
+
+**Example Request:**
+```bash
+curl -X GET "http://localhost:8000/api/users/instructors/2/ratings/" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Example Response:**
+```json
+{
+  "instructor_id": 2,
+  "instructor_name": "Sheikh Ibrahim Ali",
+  "statistics": {
+    "average_rating": 8.75,
+    "total_ratings": 24,
+    "student_ratings_count": 15,
+    "student_average": 8.6,
+    "parent_ratings_count": 9,
+    "parent_average": 9.0
+  },
+  "ratings": {
+    "student_ratings": [
+      {
+        "id": 1,
+        "rating": 9,
+        "feedback": "Excellent teacher! Very patient and knowledgeable.",
+        "created_at": "2026-01-20T14:30:00Z",
+        "course_name": "Advanced Tajweed Course",
+        "rater_name": "Ali Ahmed",
+        "rater_type": "student"
+      },
+      {
+        "id": 2,
+        "rating": 8,
+        "feedback": "Great instructor, learned a lot.",
+        "created_at": "2026-01-18T10:15:00Z",
+        "course_name": "Quran Memorization - Intermediate",
+        "rater_name": "Fatima Said",
+        "rater_type": "student"
+      }
+    ],
+    "parent_ratings": [
+      {
+        "id": 1,
+        "rating": 10,
+        "feedback": "My son has improved tremendously under his guidance.",
+        "created_at": "2026-01-22T16:45:00Z",
+        "course_name": "Advanced Tajweed Course",
+        "rater_name": "Mohammad Hassan",
+        "rater_type": "parent"
+      },
+      {
+        "id": 2,
+        "rating": 9,
+        "feedback": "Very professional and caring instructor.",
+        "created_at": "2026-01-19T11:20:00Z",
+        "course_name": "Quran Memorization - Intermediate",
+        "rater_name": "Aisha Ibrahim",
+        "rater_type": "parent"
+      }
+    ]
+  }
+}
+```
+
+**Response Fields:**
+
+**Statistics Object:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `average_rating` | decimal | Combined average rating from all ratings (1-10) |
+| `total_ratings` | integer | Total number of ratings (students + parents) |
+| `student_ratings_count` | integer | Number of student ratings |
+| `student_average` | decimal | Average rating from students |
+| `parent_ratings_count` | integer | Number of parent ratings |
+| `parent_average` | decimal | Average rating from parents |
+
+**Individual Rating Object:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer | Unique rating identifier |
+| `rating` | integer | Rating value (1-10) |
+| `feedback` | string | Optional feedback text |
+| `created_at` | datetime | When the rating was created |
+| `course_name` | string | Name of the course this rating is for |
+| `rater_name` | string | Name of the person who gave the rating |
+| `rater_type` | string | Type of rater: "student" or "parent" |
+
+**Error Responses:**
+
+**404 Not Found** - Instructor doesn't exist:
+```json
+{
+  "detail": "Not found."
+}
+```
+
+**401 Unauthorized** - Missing or invalid authentication:
+```json
+{
+  "detail": "Authentication credentials were not provided."
+}
 ```
 
 ---

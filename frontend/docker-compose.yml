@@ -15,8 +15,10 @@ services:
       target: dev
     environment:
       - NODE_ENV=development
+      - npm_config_store_dir=/home/alyeldeen39/.local/share/pnpm/store/v10
     ports:
       - "3000:3000"
     volumes:
       - ./:/app
       - /app/node_modules
+      - /home/alyeldeen39/.local/share/pnpm/store/v10:/home/alyeldeen39/.local/share/pnpm/store/v10

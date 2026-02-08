@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Serializers for Course app"""
 from rest_framework import serializers
-from .models import Course, Tag, Season, CourseSchedule, LandingPageCourse, Lecture
+from .models import Course, Tag, Season, CourseSchedule, LandingPageCourse, Lecture, LectureStatus
 from users.serializers import InstructorSerializer
 
 
@@ -29,44 +29,86 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
 
 
 class CourseListSerializer(serializers.ModelSerializer):
-    """Serializer for listing courses"""
+    """
+    Serializer for listing courses.
+    
+    Note: enrolled_count, available_spots, is_full use annotated _enrolled_count
+    from the view's queryset to avoid N+1 queries. Falls back to model properties
+    if annotation is not present.
+    """
     tags = TagSerializer(many=True, read_only=True)
     instructor = InstructorSerializer(read_only=True)
     season = SeasonSerializer(read_only=True)
-    enrolled_count = serializers.IntegerField(read_only=True)
-    available_spots = serializers.IntegerField(read_only=True)
-    is_full = serializers.BooleanField(read_only=True)
-    
+    enrolled_count = serializers.SerializerMethodField()
+    available_spots = serializers.SerializerMethodField()
+    is_full = serializers.SerializerMethodField()
+
     class Meta:
         model = Course
         fields = [
-            'id', 'name', 'slug', 'description', 'start_date', 'end_date',
+            'id', 'name', 'slug', 'description', 'image', 'start_date', 'end_date',
             'num_lectures', 'capacity', 'price', 'is_active',
             'season', 'instructor', 'tags', 'for_adults',
             'min_age', 'max_age', 'enrolled_count', 'available_spots',
             'is_full', 'created_at', 'updated_at'
         ]
 
+    def get_enrolled_count(self, obj):
+        """Use annotated count if available, otherwise fall back to property."""
+        if hasattr(obj, '_enrolled_count'):
+            return obj._enrolled_count
+        return obj.enrolled_count
+
+    def get_available_spots(self, obj):
+        """Calculate available spots using annotated count if available."""
+        enrolled = self.get_enrolled_count(obj)
+        return max(0, obj.capacity - enrolled)
+
+    def get_is_full(self, obj):
+        """Check if course is full using annotated count if available."""
+        enrolled = self.get_enrolled_count(obj)
+        return enrolled >= obj.capacity
+
 
 class CourseDetailSerializer(serializers.ModelSerializer):
-    """Serializer for detailed course view"""
+    """
+    Serializer for detailed course view.
+    
+    Note: Uses annotated _enrolled_count from queryset to avoid N+1 queries.
+    """
     tags = TagSerializer(many=True, read_only=True)
     instructor = InstructorSerializer(read_only=True)
     season = SeasonSerializer(read_only=True)
     schedules = CourseScheduleSerializer(many=True, read_only=True)
-    enrolled_count = serializers.IntegerField(read_only=True)
-    available_spots = serializers.IntegerField(read_only=True)
-    is_full = serializers.BooleanField(read_only=True)
-    
+    enrolled_count = serializers.SerializerMethodField()
+    available_spots = serializers.SerializerMethodField()
+    is_full = serializers.SerializerMethodField()
+
     class Meta:
         model = Course
         fields = [
-            'id', 'name', 'slug', 'description', 'start_date', 'end_date',
+            'id', 'name', 'slug', 'description', 'image', 'start_date', 'end_date',
             'num_lectures', 'capacity', 'price', 'is_active',
             'season', 'instructor', 'tags', 'schedules', 'for_adults',
             'min_age', 'max_age', 'enrolled_count', 'available_spots',
             'is_full', 'created_at', 'updated_at'
         ]
+
+    def get_enrolled_count(self, obj):
+        """Use annotated count if available, otherwise fall back to property."""
+        if hasattr(obj, '_enrolled_count'):
+            return obj._enrolled_count
+        return obj.enrolled_count
+
+    def get_available_spots(self, obj):
+        """Calculate available spots using annotated count if available."""
+        enrolled = self.get_enrolled_count(obj)
+        return max(0, obj.capacity - enrolled)
+
+    def get_is_full(self, obj):
+        """Check if course is full using annotated count if available."""
+        enrolled = self.get_enrolled_count(obj)
+        return enrolled >= obj.capacity
 
 
 class LandingPageCourseSerializer(serializers.ModelSerializer):
@@ -122,6 +164,105 @@ class CourseUpdateSerializer(serializers.ModelSerializer):
 
 class LectureUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating lecture information"""
+class LectureInstructorSerializer(serializers.ModelSerializer):
+    """Minimal instructor serializer for lecture responses"""
+    full_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = InstructorSerializer.Meta.model
+        fields = ['id', 'full_name']
+    
+    def get_full_name(self, obj):
+        if obj.user:
+            return f"{obj.user.first_name} {obj.user.last_name}".strip()
+        return ""
+
+
+class LectureListSerializer(serializers.ModelSerializer):
+    """Serializer for listing lectures"""
+    instructor = LectureInstructorSerializer(read_only=True)
+    scheduled_at = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    
+    class Meta:
+        model = Lecture
+        fields = [
+            'id', 'lecture_number', 'title', 'day', 'scheduled_at',
+            'start_time', 'end_time', 'instructor', 'status', 
+            'status_display', 'is_accepted', 'attendance_taken', 
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'attendance_taken']
+    
+    def get_scheduled_at(self, obj):
+        """Return timezone-aware datetime for the lecture start"""
+        start_dt = obj.get_start_datetime()
+        return start_dt.isoformat() if start_dt else None
+
+
+class LectureCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating lectures"""
+    instructor = serializers.PrimaryKeyRelatedField(
+        queryset=InstructorSerializer.Meta.model.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    is_accepted = serializers.BooleanField(required=False, default=True)
+    
+    class Meta:
+        model = Lecture
+        fields = [
+            'lecture_number', 'title', 'day', 'start_time', 
+            'end_time', 'instructor', 'status', 'is_accepted'
+        ]
+    
+    def validate_lecture_number(self, value):
+        """Validate that lecture_number is positive"""
+        if value <= 0:
+            raise serializers.ValidationError(
+                "رقم المحاضرة يجب أن يكون عددًا صحيحًا موجبًا."
+            )
+        return value
+    
+    def validate(self, data):
+        """Validate lecture data"""
+        # Check time coherence
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+        
+        if start_time and end_time and start_time >= end_time:
+            raise serializers.ValidationError({
+                'end_time': "وقت البداية يجب أن يكون قبل وقت النهاية."
+            })
+        
+        # Get course from context
+        course = self.context.get('course')
+        if not course:
+            raise serializers.ValidationError("Course is required in context")
+        
+        return data
+    
+    def create(self, validated_data):
+        """Create lecture with course from context using add_lecture_with_shift"""
+        course = self.context.get('course')
+        
+        # If no instructor specified, use course instructor
+        if 'instructor' not in validated_data or validated_data['instructor'] is None:
+            validated_data['instructor'] = course.instructor
+        
+        # Use the add_lecture_with_shift method to handle insertion and shifting
+        lecture = Lecture.add_lecture_with_shift(course, validated_data)
+        
+        return lecture
+
+
+class InstructorLectureCreateSerializer(serializers.ModelSerializer):
+    """Serializer for instructors creating additional lectures"""
+    instructor = serializers.PrimaryKeyRelatedField(
+        queryset=InstructorSerializer.Meta.model.objects.all(),
+        required=False,
+        allow_null=True
+    )
     
     class Meta:
         model = Lecture
@@ -158,3 +299,52 @@ class LectureUpdateSerializer(serializers.ModelSerializer):
         
         return data
 
+            'lecture_number', 'title', 'day', 'start_time', 
+            'end_time', 'instructor'
+        ]
+    
+    def validate_lecture_number(self, value):
+        """Validate that lecture_number is positive"""
+        if value <= 0:
+            raise serializers.ValidationError(
+                "رقم المحاضرة يجب أن يكون عددًا صحيحًا موجبًا."
+            )
+        return value
+    
+    def validate(self, data):
+        """Validate lecture data"""
+        # Check time coherence
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+        
+        if start_time and end_time and start_time >= end_time:
+            raise serializers.ValidationError({
+                'end_time': "وقت البداية يجب أن يكون قبل وقت النهاية."
+            })
+        
+        # Get course from context
+        course = self.context.get('course')
+        if not course:
+            raise serializers.ValidationError("Course is required in context")
+        
+        return data
+    
+    def create(self, validated_data):
+        """Create additional lecture using add_lecture_with_shift method - always shifts existing lectures"""
+        course = self.context.get('course')
+        instructor = validated_data.get('instructor') or course.instructor
+        
+        # Always use add_lecture_with_shift to handle conflicts properly
+        lecture_data = {
+            'lecture_number': validated_data['lecture_number'],
+            'day': validated_data['day'],
+            'start_time': validated_data.get('start_time'),
+            'end_time': validated_data.get('end_time'),
+            'instructor': instructor,
+            'title': validated_data.get('title', ''),
+            'status': LectureStatus.ADDITIONAL,
+            'is_accepted': False
+        }
+        lecture = Lecture.add_lecture_with_shift(course, lecture_data)
+        
+        return lecture

@@ -1,12 +1,16 @@
 "use client";
 
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
+import FieldSetInput from "@/components/ui/FieldSetInput";
 import { LoginInputs } from "@/types/auth";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -16,11 +20,11 @@ export default function LoginForm({
 }: {
   callbackUrl?: string | null;
 }) {
-  const pathname = usePathname();
-  const router = useRouter();
+  const [countryCode, setCountryCode] = useState("20");
+  const [showCountryCodeList, setShowCountryCodeList] = useState(false);
   const { register, handleSubmit } = useForm<LoginInputs>({
     defaultValues: {
-      phone_number1: "+201234567899",
+      phone_number1: "01234567899",
       password: "Subnautica455",
     },
   });
@@ -33,30 +37,102 @@ export default function LoginForm({
     });
 
     if (res?.ok) {
-      if (pathname === "/") {
-        toast.success("مرحباً!");
-        router.refresh();
-      } else window.location.replace(callbackUrl || "/");
+      // if (pathname === "/") {
+      toast.success("مرحباً!");
+      // router.refresh();
+      // } else
+      window.location.replace(callbackUrl || "/dashboard");
 
       return;
     }
 
-    toast.error(res?.error || "حدث خطأ أثناء تسجيل الدخول! حاول مرة أخرى!");
+    let errMssg = "";
+
+    switch (res?.status) {
+      case 401: {
+        errMssg = "بياناتك خاطئة!\nمن فضلك أدخل بيانات صحيحة";
+        break;
+      }
+
+      default: {
+        errMssg = "حدث خطأ أثناء تسجيل الدخول!\nحاول مرة أخرى!";
+      }
+    }
+
+    toast.error(errMssg);
   };
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit((credentials) =>
+        onSubmit({
+          ...credentials,
+          phone_number1: `+${countryCode + credentials.phone_number1.slice(1)}`,
+        }),
+      )}
       className="flex flex-col gap-20 text-3xl [&>input]:bg-gray-300"
     >
       <div className="flex flex-col gap-10">
-        <Input
+        <FieldSetInput
           label="رقم الهاتف"
-          placeholder="+201234567890"
+          placeholder="01234567890"
+          button={
+            <DropdownMenu
+              open={showCountryCodeList}
+              onOpenChange={setShowCountryCodeList}
+            >
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="relative -top-2 rounded-lg p-2 transition-colors hover:bg-gray-300"
+                  dir="ltr"
+                >
+                  +{countryCode}
+                </button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent className="relative z-1000 w-fit min-w-0 bg-gray-100 px-5">
+                <ul className="w-fit text-center text-3xl [direction:ltr] [&>li]:w-full [&>li]:py-5 [&>li]:not-last:border-b">
+                  <li>
+                    <button
+                      onClick={() => {
+                        setCountryCode("20");
+                        setShowCountryCodeList(false);
+                      }}
+                      className="rounded-lg p-2 transition-colors hover:bg-gray-300"
+                    >
+                      +20
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => {
+                        setCountryCode("1");
+                        setShowCountryCodeList(false);
+                      }}
+                      className="rounded-lg p-2 transition-colors hover:bg-gray-300"
+                    >
+                      +1
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      onClick={() => {
+                        setCountryCode("44");
+                        setShowCountryCodeList(false);
+                      }}
+                      className="rounded-lg p-2 transition-colors hover:bg-gray-300"
+                    >
+                      +44
+                    </button>
+                  </li>
+                </ul>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          }
           registerReturn={register("phone_number1")}
         />
 
-        <Input
+        <FieldSetInput
           type={showPassword ? "text" : "password"}
           label="كلمة المرور"
           button={

@@ -121,7 +121,7 @@ class CustomUser(AbstractUser):
     # Authentication settings
     username = None
     USERNAME_FIELD = "phone_number1"
-    REQUIRED_FIELDS = ["dob", "first_name", "last_name"]
+    REQUIRED_FIELDS = ["dob", "first_name", "last_name", "gender"]
 
     objects = CustomUserManager()
 

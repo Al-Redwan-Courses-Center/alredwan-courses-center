@@ -8,6 +8,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "./globals.css";
 import ToastProvider from "@/providers/ToastProvider";
+import LocalizationProvider from "@/providers/LocalizationProvider";
 
 const medad = localFont({
   src: "./fonts/medad-platinum.ttf",
@@ -44,7 +45,9 @@ export default function RootLayout({
         dir="rtl"
       >
         <ToastProvider />
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <LocalizationProvider>{children}</LocalizationProvider>
+        </AuthProvider>
       </body>
     </html>
   );

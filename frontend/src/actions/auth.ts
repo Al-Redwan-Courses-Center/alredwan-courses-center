@@ -25,7 +25,7 @@ export async function redirectAuthUser() {
 
   const isAuth = !!session && !session.error;
 
-  if (isAuth) redirect("/");
+  if (isAuth) redirect("/dashboard");
 }
 
 export async function getUser() {
@@ -36,4 +36,12 @@ export async function getUser() {
   if (!session?.user) redirect("/");
 
   return session.user;
+}
+
+export async function protect(allowedRoles: string[]) {
+  const { role } = await getUser();
+
+  if (allowedRoles.includes(role)) return;
+
+  redirect("/dashboard");
 }

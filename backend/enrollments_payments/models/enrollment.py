@@ -13,6 +13,54 @@ class EnrollmentStatus(models.TextChoices):
     DROPPED = 'dropped', 'ملغى'  # Enrollment cancelled or dropped
     REFUNDED = 'refunded', 'مسترد'  # Enrollment refunded
 
+
+class EnrollmentManager(models.Manager):
+    """Custom manager for Enrollment model with utility methods."""
+
+    def active(self):
+        """Return only active enrollments."""
+        return self.filter(status=EnrollmentStatus.ACTIVE)
+
+    def get_completable_enrollments(self):
+        """
+        Get active enrollments that should be marked as completed.
+
+        Criteria for completion:
+        1. Course end_date has passed, OR
+        2. All lectures in the course are completed (status='completed')
+        """
+        today = timezone.localdate()
+
+        # Get active enrollments
+        active_enrollments = self.active().select_related(
+            'course').prefetch_related('course__lectures')
+
+        completable = []
+        for enrollment in active_enrollments:
+            if enrollment.should_be_completed():
+                completable.append(enrollment.pk)
+
+        return self.filter(pk__in=completable)
+
+    def mark_completed_enrollments(self):
+        """
+        Find and mark all enrollments that should be completed.
+        Returns the count of enrollments marked as completed.
+        """
+        completable = self.get_completable_enrollments()
+        count = 0
+
+        for enrollment in completable:
+            try:
+                enrollment.update_status(EnrollmentStatus.COMPLETED)
+                count += 1
+            except ValidationError:
+                # Skip if status transition is not valid
+                pass
+
+        return count
+
+
 class Enrollment(models.Model):
     """Model representing an active enrollment."""
 
@@ -35,6 +83,9 @@ class Enrollment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     dropped_at = models.DateTimeField(null=True, blank=True)
+
+    # Custom manager
+    objects = EnrollmentManager()
 
     class Meta:
         """Meta class for Enrollment model."""
@@ -120,6 +171,76 @@ class Enrollment(models.Model):
         """Get the enrolled participant (child or student)."""
         return self.child if self.child else self.student
 
+    def should_be_completed(self):
+        """
+        Check if this enrollment should be automatically marked as completed.
+
+        Returns True if:
+        1. The course end_date has passed (if end_date is set), OR
+        2. All scheduled lectures have been completed (if num_lectures is set)
+
+        Only applies to ACTIVE enrollments.
+        """
+        if self.status != EnrollmentStatus.ACTIVE:
+            return False
+
+        today = timezone.localdate()
+
+        # Check 1: Course end_date has passed
+        if self.course.end_date and self.course.end_date < today:
+            return True
+
+        # Check 2: All lectures are completed
+        if self.course.num_lectures:
+            from courses.models.lecture import LectureStatus
+
+            total_lectures = self.course.lectures.count()
+            completed_lectures = self.course.lectures.filter(
+                status=LectureStatus.COMPLETED
+            ).count()
+
+            # If we have the expected number of lectures and all are completed
+            if total_lectures >= self.course.num_lectures and completed_lectures >= self.course.num_lectures:
+                return True
+
+        return False
+
+    def get_completion_progress(self):
+        """
+        Get the completion progress of this enrollment.
+
+        Returns a dict with:
+        - total_lectures: Total number of lectures in course
+        - completed_lectures: Number of completed lectures
+        - percentage: Completion percentage (0-100)
+        - end_date_passed: Whether course end date has passed
+        - is_completable: Whether enrollment can be marked as completed
+        """
+        from courses.models.lecture import LectureStatus
+
+        today = timezone.localdate()
+        total_lectures = self.course.lectures.count()
+        completed_lectures = self.course.lectures.filter(
+            status=LectureStatus.COMPLETED
+        ).count()
+
+        expected_lectures = self.course.num_lectures or total_lectures
+        percentage = (completed_lectures / expected_lectures *
+                      100) if expected_lectures > 0 else 0
+
+        end_date_passed = bool(
+            self.course.end_date and self.course.end_date < today)
+
+        return {
+            'total_lectures': total_lectures,
+            'expected_lectures': expected_lectures,
+            'completed_lectures': completed_lectures,
+            'percentage': round(percentage, 1),
+            'end_date_passed': end_date_passed,
+            'course_end_date': self.course.end_date,
+            'is_completable': self.should_be_completed(),
+        }
+
     def save(self, *args, **kwargs):
         """Override save to ensure clean is called."""
         self.full_clean()  # Call clean method before saving
@@ -128,4 +249,4 @@ class Enrollment(models.Model):
     def __str__(self):
         """String representation of the Enrollment."""
         participant = self.get_participant() or 'Unknown'
-        return f"Enrollment for {participant} in {self.course}"
+        return f"إلتحاق {participant} في {self.course}"

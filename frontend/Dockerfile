@@ -1,11 +1,15 @@
-FROM node:lts-alpine3.23 AS base
+FROM node:lts-alpine3.23 AS bootstrap
 WORKDIR /app
-COPY ./package*.json .
-RUN npm ci
-COPY . .
+RUN npm i -g pnpm
 
-FROM base as dev
-CMD ["npx", "nodemon", "--watch", "package.json", "--ignore", "package-lock.json", "--exec", "npm install && npm run dev"]
+FROM bootstrap as dev
+CMD ["npm", "run", "dev"]
+
+FROM bootstrap as base
+COPY ./package*.json ./pnpm-lock.yaml ./
+# RUN npm ci
+RUN pnpm install --frozen-lockfile
+COPY . .
 
 FROM base AS build
 RUN npm run build

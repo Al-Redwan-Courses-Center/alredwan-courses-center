@@ -1,4 +1,4 @@
-import NavLink from "@/components/ui/NavLink";
+import NavLink from "@/components/ui/navigation/NavLink";
 import Button from "@/components/ui/Button";
 import Image from "next/image";
 import Logo from "@/assets/logo.svg";

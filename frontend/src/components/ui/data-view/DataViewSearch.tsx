@@ -22,6 +22,7 @@ export default function DataViewSearch() {
 
   return (
     <Input
+      id="searchbar"
       icon={<SearchIcon className="text-olive-300" />}
       placeholder="ابحث عن دورة أو محاضرة"
       inputStyles={cn("w-228")}
