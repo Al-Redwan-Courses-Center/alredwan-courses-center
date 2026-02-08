@@ -8,15 +8,14 @@ from .models.lecture_attendance import LectureAttendance
 from .serializers import MarkAttendanceSerializer, LectureAttendanceSerializer
 
 
-class MarkAttendanceView(APIView):
+class LectureAttendanceView(APIView):
     """
     API endpoint to mark attendance for a student or child.
     
-    POST /api/attendance/lecture/mark/
+    POST /api/attendance/lecture/<lecture_id>/mark/
     
     Request body:
     {
-        "lecture_id": 45,
         "code": "M64793",
         "participant_type": "student",
         "rating": 8,
@@ -25,10 +24,14 @@ class MarkAttendanceView(APIView):
     """
     permission_classes = [IsAuthenticated]
     
-    def post(self, request):
+    def post(self, request, lecture_id):
         """Mark attendance for a student or child using their code."""
+        # Add lecture_id to the request data
+        data = request.data.copy()
+        data['lecture_id'] = lecture_id
+        
         serializer = MarkAttendanceSerializer(
-            data=request.data,
+            data=data,
             context={'request': request}
         )
         
@@ -59,6 +62,7 @@ class MarkAttendanceView(APIView):
             return Response(
                 {
                     'message': 'Attendance marked successfully',
+                    'lecture_id': validated_data['lecture_id'],
                     'attendance': response_serializer.data
                 },
                 status=status.HTTP_200_OK
