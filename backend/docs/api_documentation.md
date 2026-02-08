@@ -791,6 +791,134 @@ curl -X GET "http://localhost:8000/api/courses/1/lectures/check-number/?lecture_
 
 ---
 
+### 7. Update Lecture
+Update information for a specific lecture.
+
+**Endpoint:** `PUT/PATCH /api/courses/lectures/{id}/edit/`
+
+**Authentication:** Required (Admin or Course Instructor)
+
+**Description:** Update lecture details such as title, date, time, and status. Lectures with attendance already taken cannot have their date/time modified.
+
+**Permissions:**
+- Admin users
+- The instructor assigned to the course
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | integer | Lecture ID |
+
+**Request Body:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `title` | string | No | Lecture title |
+| `day` | date | No | Date of lecture (YYYY-MM-DD) |
+| `start_time` | time | No | Start time (HH:MM:SS) |
+| `end_time` | time | No | End time (HH:MM:SS, must be after start_time) |
+| `status` | string | No | Lecture status: "scheduled", "completed", "cancelled", or "additional" |
+
+**Example Requests:**
+
+**1. Update lecture title:**
+```bash
+curl -X PATCH "http://localhost:8000/api/courses/lectures/5/edit/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Advanced Tajweed - Makharij Al-Huruf"
+  }'
+```
+
+**2. Update lecture date and time:**
+```bash
+curl -X PATCH "http://localhost:8000/api/courses/lectures/5/edit/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "day": "2026-02-20",
+    "start_time": "14:00:00",
+    "end_time": "16:00:00"
+  }'
+```
+
+**3. Mark lecture as completed:**
+```bash
+curl -X PATCH "http://localhost:8000/api/courses/lectures/5/edit/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "completed"
+  }'
+```
+
+**4. Full update with PUT:**
+```bash
+curl -X PUT "http://localhost:8000/api/courses/lectures/5/edit/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Quran Memorization Review",
+    "day": "2026-02-22",
+    "start_time": "10:00:00",
+    "end_time": "12:00:00",
+    "status": "scheduled"
+  }'
+```
+
+**Example Response:**
+```json
+{
+  "id": 5,
+  "title": "Advanced Tajweed - Makharij Al-Huruf",
+  "course": "Quran Memorization - Beginner",
+  "course_id": 1,
+  "day": "2026-02-20",
+  "start_time": "14:00:00",
+  "end_time": "16:00:00",
+  "lecture_number": 5,
+  "status": "scheduled",
+  "attendance_taken": false,
+  "updated_at": "2026-02-08T16:45:00Z"
+}
+```
+
+**Error Responses:**
+
+**403 Forbidden** - User doesn't have permission:
+```json
+{
+  "detail": "You do not have permission to perform this action."
+}
+```
+
+**400 Bad Request** - Time validation error:
+```json
+{
+  "end_time": [
+    "End time must be after start time."
+  ]
+}
+```
+
+**400 Bad Request** - Attendance already taken:
+```json
+{
+  "non_field_errors": [
+    "Cannot modify lecture date/time after attendance has been taken."
+  ]
+}
+```
+
+**404 Not Found** - Lecture doesn't exist:
+```json
+{
+  "detail": "Not found."
+}
+```
+
+---
+
 ## Users Endpoints
 
 ### 4. Get Landing Page Featured Instructors
