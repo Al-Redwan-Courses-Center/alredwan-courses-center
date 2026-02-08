@@ -174,7 +174,7 @@ class StudentUser(ImageOptimizationMixin, models.Model):
             "code": self.unique_code,
             "name": f"{self.user.first_name} {self.user.last_name}",
             "dob": self.user.dob.isoformat() if self.user.dob else None,
-            "type": "quran_student"
+            "type": "student"
         }
         qr_data = json.dumps(data, ensure_ascii=False)
         
