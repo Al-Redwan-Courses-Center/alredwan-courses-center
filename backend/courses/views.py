@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 """Views for Course app"""
 from django.shortcuts import render
-from rest_framework import generics, filters
+from rest_framework import generics, filters, status
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Course, LandingPageCourse
+from .models import Course, LandingPageCourse, Lecture
 from users.models import LandingPageInstructor
 from .serializers import (
     CourseListSerializer, 
     CourseDetailSerializer,
     LandingPageCourseSerializer,
+    CourseUpdateSerializer,
+    LectureUpdateSerializer,
 )
 from users.serializers import LandingPageInstructorSerializer
+from .permissions import IsAdminOrCourseInstructor
 
 
 class CourseListView(generics.ListAPIView):
@@ -50,6 +54,66 @@ class CourseDetailView(generics.RetrieveAPIView):
         
         # Otherwise try to get by slug
         return generics.get_object_or_404(self.queryset, slug=lookup_value)
+
+
+class CourseUpdateView(generics.UpdateAPIView):
+    """
+    API endpoint for updating course information
+    PUT/PATCH /api/courses/{id}/edit/
+    
+    Authentication required: Admin or course instructor only
+    """
+    queryset = Course.objects.select_related('instructor', 'season').prefetch_related('tags', 'schedules')
+    serializer_class = CourseUpdateSerializer
+    permission_classes = [IsAdminOrCourseInstructor]
+    lookup_field = 'pk'
+    
+    def update(self, request, *args, **kwargs):
+        """Override to return detailed course info after update"""
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        # Return detailed course information
+        output_serializer = CourseDetailSerializer(instance)
+        return Response(output_serializer.data)
+
+
+class LectureUpdateView(generics.UpdateAPIView):
+    """
+    API endpoint for updating lecture information
+    PUT/PATCH /api/lectures/{id}/edit/
+    
+    Authentication required: Admin or course instructor only
+    """
+    queryset = Lecture.objects.select_related('course', 'instructor')
+    serializer_class = LectureUpdateSerializer
+    permission_classes = [IsAdminOrCourseInstructor]
+    lookup_field = 'pk'
+    
+    def update(self, request, *args, **kwargs):
+        """Override to add custom response with detailed info"""
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        return Response({
+            'id': instance.id,
+            'title': instance.title,
+            'course': instance.course.name,
+            'course_id': instance.course.id,
+            'day': instance.day,
+            'start_time': instance.start_time,
+            'end_time': instance.end_time,
+            'lecture_number': instance.lecture_number,
+            'status': instance.status,
+            'attendance_taken': instance.attendance_taken,
+            'updated_at': instance.updated_at,
+        })
 
 
 class LandingPageCourseListView(generics.ListAPIView):
