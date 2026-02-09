@@ -530,9 +530,11 @@ Create a new additional lecture for a specific course that requires approval.
 
 **Description:** Creates a new **ADDITIONAL lecture** with `status="additional"` and `is_accepted=False`. All users (admins, supervisors, and instructors) create additional lectures that require approval before appearing in the lecture list.
 
-**Smart Lecture Insertion Features:**
-1. **Automatic Shifting**: If the lecture number already exists, the new lecture is inserted at that position and all subsequent lectures are automatically shifted by +1
-2. **Automatic Course Extension**: If adding a lecture at or after the last lecture number, and the lecture date is after the course end date, the course end date is automatically updated
+**Smart Automatic Lecture Numbering Features:**
+1. **No Manual Lecture Numbers**: The instructor only provides the date and start time. The system automatically calculates the lecture number based on chronological order.
+2. **Conflict Prevention**: Cannot create two lectures with the same date+time. The system checks for duplicates and raises an error.
+3. **Automatic Insertion & Renumbering**: If the new lecture falls between existing lectures (by date+time), it's automatically inserted at the correct position and all subsequent lectures are renumbered.
+4. **Automatic Course Extension**: If the lecture date exceeds the course end date, the course end date is automatically updated.
 
 **Path Parameters:**
 | Parameter | Type | Description |
@@ -547,28 +549,32 @@ Create a new additional lecture for a specific course that requires approval.
 **Request Body:**
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `lecture_number` | integer | Yes | Lecture number (positive integer, must be unique) |
 | `title` | string | No | Lecture title (defaults to "Lecture {number}") |
 | `day` | date | Yes | Date of lecture (YYYY-MM-DD) |
 | `start_time` | time | No | Start time (HH:MM:SS) |
 | `end_time` | time | No | End time (HH:MM:SS, must be after start_time) |
 | `instructor` | integer | No | Instructor ID (defaults to course instructor) |
 
+**Important Notes:**
+- `lecture_number` is **NOT** required in the request - it is calculated automatically
+- The system determines the lecture number by sorting all lectures by date and start_time
+- If inserting between existing lectures, subsequent lectures are automatically renumbered
+
 **Example Requests:**
 
-**1. Adding a lecture at the end (will extend course if needed):**
+**1. Adding a lecture at the end:**
 ```bash
 curl -X POST "http://localhost:8000/api/courses/1/lectures/" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "lecture_number": 8,
     "title": "Advanced Tajweed Rules",
     "day": "2026-02-20",
     "start_time": "10:00:00",
     "end_time": "12:00:00"
   }'
 ```
+*The system will automatically assign this as lecture #8 (if there are 7 existing lectures)*
 
 **2. Inserting a lecture in the middle (will shift subsequent lectures):**
 ```bash
@@ -576,14 +582,16 @@ curl -X POST "http://localhost:8000/api/courses/1/lectures/" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "lecture_number": 5,
     "title": "Extra Review Session",
-    "day": "2026-02-15",
+    "day": "2026-02-12",
     "start_time": "14:00:00",
     "end_time": "16:00:00"
   }'
 ```
-*Note: This will shift the existing lecture 5 to become lecture 6, lecture 6 to become lecture 7, etc.*
+*If this date+time falls between lecture #4 (Feb 10) and lecture #5 (Feb 15), the system will automatically:*
+- *Assign this as the new lecture #5*
+- *Renumber the old lecture #5 to become #6*
+- *Renumber lecture #6 to become #7, etc.*
 
 **Example Response:**
 ```json
@@ -591,8 +599,8 @@ curl -X POST "http://localhost:8000/api/courses/1/lectures/" \
   "id": "550e8400-e29b-41d4-a716-446655440010",
   "lecture_number": 5,
   "title": "Extra Review Session",
-  "day": "2026-02-15",
-  "scheduled_at": "2026-02-15T14:00:00+02:00",
+  "day": "2026-02-12",
+  "scheduled_at": "2026-02-12T14:00:00+02:00",
   "start_time": "14:00:00",
   "end_time": "16:00:00",
   "instructor": {
@@ -608,13 +616,14 @@ curl -X POST "http://localhost:8000/api/courses/1/lectures/" \
 }
 ```
 
-**Behavior Examples:**
+**How Lecture Numbers Are Calculated:**
 
 | Scenario | What Happens |
 |----------|--------------|
-| Add lecture #8 when max is 7 | Creates lecture #8. If date > course.end_date, extends course end date |
-| Add lecture #5 when lecture #5 exists | Inserts new lecture as #5, shifts existing #5→#6, #6→#7, etc. |
-| Add lecture #3 when max is 7 | Creates lecture #3 without affecting other lectures |
+| Add lecture on Feb 25 when last lecture is Feb 20 | Automatically assigned as next lecture number (e.g., #8 if 7 lectures exist) |
+| Add lecture on Feb 12 between Feb 10 (#4) and Feb 15 (#5) | Inserted as new #5, old #5→#6, #6→#7, etc. |
+| Add lecture on Feb 08 before all lectures | Becomes lecture #1, all others shift up by 1 |
+| Date exceeds course end date | Course end date is automatically extended |
 
 **Error Responses:**
 
@@ -623,15 +632,6 @@ curl -X POST "http://localhost:8000/api/courses/1/lectures/" \
 {
   "error": "You do not have permission to create lectures for this course.",
   "detail": "Only administrators, supervisors, or the course instructor can create lectures."
-}
-```
-
-**400 Bad Request** - Validation error:
-```json
-{
-  "lecture_number": [
-    "رقم المحاضرة يجب أن يكون عددًا صحيحًا موجبًا."
-  ]
 }
 ```
 
@@ -644,23 +644,28 @@ curl -X POST "http://localhost:8000/api/courses/1/lectures/" \
 }
 ```
 
-**400 Bad Request** - Duplicate lecture number (unique constraint):
+**400 Bad Request** - Duplicate date+time:
 ```json
 {
-  "error": "Lecture with this number already exists for this course."
+  "day": [
+    "محاضرة موجودة بالفعل في 2026-02-15 في الوقت 10:00:00. لا يمكن إنشاء محاضرات مكررة في نفس التاريخ والوقت."
+  ],
+  "start_time": [
+    "محاضرة موجودة بالفعل في هذا الوقت."
+  ]
 }
 ```
 
 ---
 
-### 6. Check Lecture Number Availability
-Check if a lecture number is available and get detailed information about what will happen when you add it.
+### 6. Check Lecture Date/Time Availability
+Check if a lecture can be created at a specific date and time, and see what lecture number will be automatically assigned.
 
-**Endpoint:** `GET /api/courses/{course_id}/lectures/check-number/?lecture_number={number}`
+**Endpoint:** `GET /api/courses/{course_id}/lectures/check-datetime/?day={date}&start_time={time}`
 
 **Authentication:** Required (IsAuthenticated)
 
-**Description:** Checks if a lecture number is available for use and provides detailed information about the action that will be taken. Always returns **200 OK** with the availability status and action description in the response body.
+**Description:** Checks if a date and time is available for creating a new lecture. Provides detailed information about what will happen when you create the lecture, including the automatic lecture number that will be assigned and whether existing lectures will be renumbered. Always returns **200 OK** with the availability status and action description in the response body.
 
 **Path Parameters:**
 | Parameter | Type | Description |
@@ -670,115 +675,139 @@ Check if a lecture number is available and get detailed information about what w
 **Query Parameters:**
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `lecture_number` | integer | Yes | The lecture number to check |
+| `day` | date | Yes | The date to check (YYYY-MM-DD) |
+| `start_time` | time | No | The start time to check (HH:MM:SS). If omitted, uses midnight for comparison |
 
 **Example Requests:**
 ```bash
-# Check if lecture number 8 is available (adding to end)
-curl -X GET "http://localhost:8000/api/courses/1/lectures/check-number/?lecture_number=8" \
+# Check if Feb 20 at 10:00 AM is available (likely adding to end)
+curl -X GET "http://localhost:8000/api/courses/1/lectures/check-datetime/?day=2026-02-20&start_time=10:00:00" \
   -H "Authorization: Bearer YOUR_TOKEN"
 
-# Check lecture number 5 (might trigger shift)
-curl -X GET "http://localhost:8000/api/courses/1/lectures/check-number/?lecture_number=5" \
+# Check if Feb 12 at 2:00 PM is available (might trigger insertion and shift)
+curl -X GET "http://localhost:8000/api/courses/1/lectures/check-datetime/?day=2026-02-12&start_time=14:00:00" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Check date without specific time (uses midnight)
+curl -X GET "http://localhost:8000/api/courses/1/lectures/check-datetime/?day=2026-02-20" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 **Response Scenarios:**
 
-**Scenario 1: Number Already Exists - Will Trigger Shift**
+**Scenario 1: Date+Time Conflict - Cannot Create**
 ```json
 {
-  "lecture_number": 5,
+  "day": "2026-02-15",
+  "start_time": "10:00:00",
   "is_available": false,
-  "message": "Lecture number 5 already exists",
-  "action": "shift",
-  "action_description": "New lecture will be inserted at position 5. All lectures from 5 onwards will be shifted by +1.",
+  "message": "محاضرة موجودة بالفعل في 2026-02-15 في الوقت 10:00:00",
+  "action": "conflict",
+  "action_description": "Cannot create a lecture at the same date and time as an existing lecture.",
   "existing_lecture": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
+    "lecture_number": 5,
+    "title": "Tajweed Rules",
     "status": "scheduled",
-    "scheduled_at": "2026-02-10T10:00:00+02:00"
-  },
-  "affected_lectures": "Lectures 5 and above will be renumbered"
+    "instructor": "Ahmed Mohamed"
+  }
 }
 ```
 
-**Scenario 2: Number Available - Insert in Middle**
+**Scenario 2: Available - Will Insert in Middle (Triggers Renumbering)**
 ```json
 {
-  "lecture_number": 5,
+  "day": "2026-02-12",
+  "start_time": "14:00:00",
   "is_available": true,
-  "message": "Lecture number 5 is available (inserting in the middle)",
+  "message": "يمكن إنشاء محاضرة في 2026-02-12 في الوقت 14:00:00",
+  "calculated_lecture_number": 5,
   "action": "insert",
-  "action_description": "New lecture will be created at position 5. No other lectures will be affected.",
-  "max_existing_number": 7,
-  "note": "This lecture will be positioned between existing lectures (max lecture number is 7)"
+  "action_description": "New lecture will be inserted as lecture #5. All lectures from #5 onwards will be shifted by +1.",
+  "affected_lectures": "3 lecture(s) will be renumbered (lectures #5 to #7 will become #6 to #8).",
+  "total_lectures_after": 8,
+  "course_end_date_warning": null
 }
 ```
 
-**Scenario 3: Number Available - Append to End**
+**Scenario 3: Available - Will Append to End**
 ```json
 {
-  "lecture_number": 8,
+  "day": "2026-02-25",
+  "start_time": "10:00:00",
   "is_available": true,
-  "message": "Lecture number 8 is available (adding to the end)",
+  "message": "يمكن إنشاء محاضرة في 2026-02-25 في الوقت 10:00:00",
+  "calculated_lecture_number": 8,
   "action": "append",
-  "action_description": "New lecture will be added at the end. If lecture date is after course end date, the course end date will be automatically extended.",
-  "max_existing_number": 7,
-  "current_course_end_date": "2026-06-30",
-  "note": "Course end date may be updated if the new lecture date exceeds it"
+  "action_description": "New lecture will be added at the end as lecture #8.",
+  "affected_lectures": "No existing lectures will be renumbered.",
+  "total_lectures_after": 8,
+  "course_end_date_warning": "The lecture date (2026-02-25) is after the course end date (2026-02-20). The course end date will be automatically extended."
 }
 ```
 
-**Scenario 4: First Lecture in Course**
+**Scenario 4: Available - First Lecture**
 ```json
 {
-  "lecture_number": 1,
+  "day": "2026-02-08",
+  "start_time": "10:00:00",
   "is_available": true,
-  "message": "Lecture number 1 is available (first lecture)",
-  "action": "create",
-  "action_description": "This will be the first lecture in the course.",
-  "note": "No existing lectures to affect"
+  "message": "يمكن إنشاء محاضرة في 2026-02-08 في الوقت 10:00:00",
+  "calculated_lecture_number": 1,
+  "action": "append",
+  "action_description": "New lecture will be added at the end as lecture #1.",
+  "affected_lectures": "No existing lectures will be renumbered.",
+  "total_lectures_after": 1,
+  "course_end_date_warning": null
 }
 ```
 
 **Response Fields:**
 | Field | Type | Description |
 |-------|------|-------------|
-| `lecture_number` | integer | The number that was checked |
-| `is_available` | boolean | Whether the number is available |
-| `message` | string | Descriptive message about availability |
-| `action` | string | Action type: "shift", "insert", "append", or "create" |
+| `day` | date | The date that was checked |
+| `start_time` | time | The start time that was checked (null if not provided) |
+| `is_available` | boolean | Whether the date+time is available |
+| `message` | string | Descriptive message in Arabic |
+| `action` | string | Action type: "conflict", "insert", or "append" |
 | `action_description` | string | Detailed description of what will happen |
-| `existing_lecture` | object | Details of existing lecture (if number exists) |
-| `max_existing_number` | integer | Maximum existing lecture number |
-| `current_course_end_date` | string | Current course end date (for append action) |
-| `affected_lectures` | string | Description of affected lectures (for shift action) |
-| `note` | string | Additional notes or warnings |
+| `calculated_lecture_number` | integer | The lecture number that will be auto-assigned |
+| `existing_lecture` | object | Details of conflicting lecture (if conflict) |
+| `affected_lectures` | string | Description of lectures that will be renumbered |
+| `total_lectures_after` | integer | Total number of lectures after creation |
+| `course_end_date_warning` | string | Warning if date extends course (null if no issue) |
 
 **Action Types Explained:**
 
 | Action | When | What Happens |
 |--------|------|--------------|
-| `shift` | Number exists | Inserts new lecture, shifts all ≥ lectures by +1 |
-| `insert` | Number available in middle | Creates lecture without affecting others |
-| `append` | Number ≥ max+1 | Adds to end, may extend course end date |
-| `create` | First lecture | Creates first lecture in course |
+| `conflict` | Date+time already exists | Cannot create - duplicate lecture at same date+time |
+| `insert` | New lecture falls between existing ones | Inserts at calculated position, shifts subsequent lectures by +1 |
+| `append` | New lecture is after all existing ones | Adds to end, may extend course end date if needed |
 
 **Error Responses:**
 
-**400 Bad Request** - Missing lecture_number parameter:
+**400 Bad Request** - Missing day parameter:
 ```json
 {
-  "error": "lecture_number query parameter is required",
-  "detail": "Please provide a lecture_number in the query string."
+  "error": "day query parameter is required",
+  "detail": "Please provide a day in the query string (format: YYYY-MM-DD)."
 }
 ```
 
-**400 Bad Request** - Invalid lecture_number format:
+**400 Bad Request** - Invalid day format:
 ```json
 {
-  "error": "Invalid lecture_number",
-  "detail": "lecture_number must be a valid integer."
+  "error": "Invalid day format",
+  "detail": "day must be in format YYYY-MM-DD (e.g., 2026-02-15)."
+}
+```
+
+**400 Bad Request** - Invalid start_time format:
+```json
+{
+  "error": "Invalid start_time format",
+  "detail": "start_time must be in format HH:MM:SS (e.g., 10:00:00)."
 }
 ```
 
