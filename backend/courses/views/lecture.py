@@ -135,108 +135,149 @@ class LectureListCreateView(generics.ListCreateAPIView):
 
 class LectureNumberCheckView(APIView):
     """
-    API endpoint for checking lecture number availability
+    API endpoint for checking if a lecture can be created at a specific date and time
     
-    GET /api/courses/<course_id>/lectures/check-number/?lecture_number=8
+    GET /api/courses/<course_id>/lectures/check-datetime/?day=2026-02-15&start_time=10:00:00
     
     Always returns 200 OK with JSON body indicating:
     - is_available: true/false
     - message: descriptive message
-    - existing_lecture: details if number exists
-    - max_existing_number: if number is less than max
+    - existing_lecture: details if a lecture exists at that date+time
+    - calculated_lecture_number: the lecture number that will be assigned
     - action: what will happen when this lecture is added
     """
     permission_classes = [IsAuthenticated]
     
     def get(self, request, course_id):
-        """Check if a lecture number is available for the course"""
+        """Check if a lecture can be created at the specified date and time"""
+        from datetime import datetime as dt
+        
         # Validate course exists
         course = get_object_or_404(Course, pk=course_id)
         
-        # Get lecture_number from query params
-        lecture_number_str = request.query_params.get('lecture_number')
+        # Get day and start_time from query params
+        day_str = request.query_params.get('day')
+        start_time_str = request.query_params.get('start_time')
         
-        if not lecture_number_str:
+        if not day_str:
             return Response(
                 {
-                    'error': 'lecture_number query parameter is required',
-                    'detail': 'Please provide a lecture_number in the query string.'
+                    'error': 'day query parameter is required',
+                    'detail': 'Please provide a day in the query string (format: YYYY-MM-DD).'
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Parse date
         try:
-            lecture_number = int(lecture_number_str)
-        except ValueError:
+            from django.utils.dateparse import parse_date, parse_time
+            day = parse_date(day_str)
+            if not day:
+                raise ValueError("Invalid date format")
+        except (ValueError, TypeError):
             return Response(
                 {
-                    'error': 'Invalid lecture_number',
-                    'detail': 'lecture_number must be a valid integer.'
+                    'error': 'Invalid day format',
+                    'detail': 'day must be in format YYYY-MM-DD (e.g., 2026-02-15).'
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check if lecture number exists (only accepted lectures)
+        # Parse time (optional)
+        start_time = None
+        if start_time_str:
+            try:
+                start_time = parse_time(start_time_str)
+                if not start_time:
+                    raise ValueError("Invalid time format")
+            except (ValueError, TypeError):
+                return Response(
+                    {
+                        'error': 'Invalid start_time format',
+                        'detail': 'start_time must be in format HH:MM:SS (e.g., 10:00:00).'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        # Check if lecture already exists at this date+time (only accepted lectures)
         existing_lecture = Lecture.objects.filter(
             course=course,
-            lecture_number=lecture_number,
+            day=day,
+            start_time=start_time,
             is_accepted=True
         ).select_related('instructor__user').first()
         
-        # Get max existing lecture number (only accepted lectures)
-        max_number = Lecture.objects.filter(
-            course=course,
-            is_accepted=True
-        ).aggregate(Max('lecture_number'))['lecture_number__max']
-        
-        # Case 1: Number already exists - will trigger shifting
         if existing_lecture:
             return Response({
-                'lecture_number': lecture_number,
+                'day': day.isoformat(),
+                'start_time': start_time.isoformat() if start_time else None,
                 'is_available': False,
-                'message': f'Lecture number {lecture_number} already exists',
-                'action': 'shift',
-                'action_description': f'New lecture will be inserted at position {lecture_number}. All lectures from {lecture_number} onwards will be shifted by +1.',
+                'message': f'محاضرة موجودة بالفعل في {day} في الوقت {start_time or "midnight"}',
+                'action': 'conflict',
+                'action_description': 'Cannot create a lecture at the same date and time as an existing lecture.',
                 'existing_lecture': {
                     'id': str(existing_lecture.id),
+                    'lecture_number': existing_lecture.lecture_number,
+                    'title': existing_lecture.title,
                     'status': existing_lecture.status,
-                    'scheduled_at': existing_lecture.get_start_datetime().isoformat() if existing_lecture.get_start_datetime() else None
-                },
-                'affected_lectures': f'Lectures {lecture_number} and above will be renumbered'
+                    'instructor': existing_lecture.instructor.user.get_full_name() if existing_lecture.instructor and existing_lecture.instructor.user else None
+                }
             }, status=status.HTTP_200_OK)
         
-        # Case 2: Number is less than max existing number - will be inserted in the middle
-        if max_number is not None and lecture_number < max_number:
-            return Response({
-                'lecture_number': lecture_number,
-                'is_available': True,
-                'message': f'Lecture number {lecture_number} is available (inserting in the middle)',
-                'action': 'insert',
-                'action_description': f'New lecture will be created at position {lecture_number}. No other lectures will be affected.',
-                'max_existing_number': max_number,
-                'note': f'This lecture will be positioned between existing lectures (max lecture number is {max_number})'
-            }, status=status.HTTP_200_OK)
+        # Calculate where this lecture would be inserted
+        from django.utils import timezone
+        import datetime
         
-        # Case 3: Number is equal to or greater than max + 1 - adding to the end
-        if max_number is not None and lecture_number >= max_number + 1:
-            course_end_date = course.end_date.isoformat() if course.end_date else 'not set'
-            return Response({
-                'lecture_number': lecture_number,
-                'is_available': True,
-                'message': f'Lecture number {lecture_number} is available (adding to the end)',
-                'action': 'append',
-                'action_description': f'New lecture will be added at the end. If lecture date is after course end date, the course end date will be automatically extended.',
-                'max_existing_number': max_number,
-                'current_course_end_date': course_end_date,
-                'note': 'Course end date may be updated if the new lecture date exceeds it'
-            }, status=status.HTTP_200_OK)
+        new_lecture_dt = timezone.make_aware(
+            datetime.datetime.combine(day, start_time or datetime.time.min),
+            timezone.get_current_timezone()
+        )
         
-        # Case 4: No lectures exist yet - first lecture
+        # Get all accepted lectures ordered by datetime
+        existing_lectures = list(Lecture.objects.filter(
+            course=course,
+            is_accepted=True
+        ).order_by('day', 'start_time'))
+        
+        # Determine insert position
+        insert_position = None
+        lectures_to_shift = []
+        
+        for idx, lecture in enumerate(existing_lectures):
+            lecture_dt = lecture.get_start_datetime()
+            if new_lecture_dt < lecture_dt:
+                insert_position = idx
+                lectures_to_shift = existing_lectures[idx:]
+                break
+        
+        # Calculate the lecture number
+        if insert_position is None:
+            # Adding at the end
+            calculated_lecture_number = len(existing_lectures) + 1
+            action = 'append'
+            action_description = f'New lecture will be added at the end as lecture #{calculated_lecture_number}.'
+            affected_info = 'No existing lectures will be renumbered.'
+        else:
+            # Inserting in the middle
+            calculated_lecture_number = insert_position + 1
+            action = 'insert'
+            action_description = f'New lecture will be inserted as lecture #{calculated_lecture_number}. All lectures from #{calculated_lecture_number} onwards will be shifted by +1.'
+            affected_info = f'{len(lectures_to_shift)} lecture(s) will be renumbered (lectures #{calculated_lecture_number} to #{existing_lectures[-1].lecture_number} will become #{calculated_lecture_number + 1} to #{existing_lectures[-1].lecture_number + 1}).'
+        
+        # Check if date exceeds course end date
+        course_end_warning = None
+        if course.end_date and day > course.end_date:
+            course_end_warning = f'The lecture date ({day}) is after the course end date ({course.end_date}). The course end date will be automatically extended.'
+        
         return Response({
-            'lecture_number': lecture_number,
+            'day': day.isoformat(),
+            'start_time': start_time.isoformat() if start_time else None,
             'is_available': True,
-            'message': f'Lecture number {lecture_number} is available (first lecture)',
-            'action': 'create',
-            'action_description': 'This will be the first lecture in the course.',
-            'note': 'No existing lectures to affect'
+            'message': f'يمكن إنشاء محاضرة في {day} في الوقت {start_time or "midnight"}',
+            'calculated_lecture_number': calculated_lecture_number,
+            'action': action,
+            'action_description': action_description,
+            'affected_lectures': affected_info,
+            'total_lectures_after': len(existing_lectures) + 1,
+            'course_end_date_warning': course_end_warning
         }, status=status.HTTP_200_OK)

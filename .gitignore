@@ -4,3 +4,5 @@
 **/**.env
 **/code.txt
 backend/courses/migrations/0001_initial.py
+config.bat
+node_modules

@@ -173,6 +173,125 @@ class Lecture(models.Model):
 
     @classmethod
     @transaction.atomic
+    def add_lecture_by_datetime(cls, course, day, start_time=None, end_time=None, 
+                                instructor=None, title='', status=None, is_accepted=False):
+        """
+        Add a new lecture by date and time, automatically calculating the lecture number.
+        
+        The lecture number is determined by the chronological order of lectures.
+        If a lecture already exists at the same date+time, raises ValidationError.
+        If the new lecture falls between existing lectures, subsequent lectures are renumbered.
+        
+        Args:
+            course: Course instance
+            day: Date of the lecture
+            start_time: Start time (if None, uses midnight for comparison)
+            end_time: Optional end time
+            instructor: Optional instructor (defaults to course instructor)
+            title: Optional lecture title
+            status: Lecture status (defaults to ADDITIONAL for instructor-created lectures)
+            is_accepted: Whether the lecture is accepted (defaults to False for instructor-created)
+            
+        Returns:
+            Lecture instance
+            
+        Raises:
+            ValidationError: If a lecture already exists at the same date+time
+        """
+        if instructor is None:
+            instructor = course.instructor
+        
+        if status is None:
+            status = LectureStatus.ADDITIONAL
+        
+        # Check for duplicate date+time (only for accepted lectures)
+        existing_at_datetime = cls.objects.filter(
+            course=course,
+            day=day,
+            start_time=start_time,
+            is_accepted=True
+        ).first()
+        
+        if existing_at_datetime:
+            raise ValidationError(
+                f"A lecture already exists on {day} at {start_time or 'midnight'}. "
+                "Cannot create duplicate lectures at the same date and time."
+            )
+        
+        # Get all accepted lectures ordered by day and start_time
+        existing_lectures = list(cls.objects.filter(
+            course=course,
+            is_accepted=True
+        ).order_by('day', 'start_time'))
+        
+        # Determine the position where this lecture should be inserted
+        # Create datetime for comparison (use midnight if no start_time)
+        new_lecture_dt = timezone.make_aware(
+            datetime.datetime.combine(day, start_time or datetime.time.min),
+            timezone.get_current_timezone()
+        )
+        
+        insert_position = None
+        for idx, lecture in enumerate(existing_lectures):
+            lecture_dt = lecture.get_start_datetime()
+            if new_lecture_dt < lecture_dt:
+                insert_position = idx
+                break
+        
+        # If no position found, append at the end
+        if insert_position is None:
+            target_number = len(existing_lectures) + 1
+        else:
+            target_number = insert_position + 1
+            
+            # Shift all lectures from insert_position onwards
+            lectures_to_shift = cls.objects.filter(
+                course=course,
+                lecture_number__gte=target_number,
+                is_accepted=True
+            ).select_for_update().order_by('-lecture_number')
+            
+            # First pass: Move to temporary numbers
+            temp_offset = 1000000
+            temp_mapping = {}
+            for lecture in lectures_to_shift:
+                temp_number = temp_offset + lecture.lecture_number
+                temp_mapping[temp_number] = lecture.lecture_number
+                lecture.lecture_number = temp_number
+                lecture.save(update_fields=['lecture_number', 'updated_at'])
+            
+            # Second pass: Move to final positions
+            for lecture in cls.objects.filter(
+                course=course,
+                lecture_number__gte=temp_offset
+            ).order_by('lecture_number'):
+                original_number = temp_mapping[lecture.lecture_number]
+                lecture.lecture_number = original_number + 1
+                lecture.save(update_fields=['lecture_number', 'updated_at'])
+        
+        # Update course end_date if necessary
+        if course.end_date and day > course.end_date:
+            course.end_date = day
+            course.save(update_fields=['end_date', 'updated_at'])
+        
+        # Create the new lecture
+        new_lecture = cls(
+            course=course,
+            lecture_number=target_number,
+            day=day,
+            start_time=start_time,
+            end_time=end_time,
+            instructor=instructor,
+            title=title or f"Lecture {target_number}",
+            status=status,
+            is_accepted=is_accepted
+        )
+        new_lecture.save()
+        
+        return new_lecture
+
+    @classmethod
+    @transaction.atomic
     def add_lecture_with_shift(cls, course, lecture_data):
         """
         Add a new lecture and shift subsequent lectures if necessary.
