@@ -274,19 +274,18 @@ class TestDeleteLectureAttendanceSignal(EnrollmentSignalsTestCase):
 
     def test_does_not_affect_other_students_attendance(self):
         """Test that deleting one enrollment doesn't affect other students."""
-        # Create another student
+        # Create another student user (signal will auto-create StudentUser)
         other_user = CustomUser.objects.create_user(
             phone_number1='+201234567892',
             password='testpass123',
             first_name='Other',
             last_name='Student',
             gender='female',
+            role='student',  # This triggers signal to auto-create StudentUser
             dob=timezone.now().date() - timedelta(days=365*16)
         )
-        other_student = StudentUser.objects.create(
-            user=other_user,
-            image='defaults/user_default.png'
-        )
+        # Get the auto-created StudentUser
+        other_student = StudentUser.objects.get(user=other_user)
 
         # Create enrollments for both students
         enrollment1 = Enrollment.objects.create(

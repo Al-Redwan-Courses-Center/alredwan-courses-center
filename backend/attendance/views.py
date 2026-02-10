@@ -164,24 +164,7 @@ class FingerprintCheckInView(DeviceAuthenticationMixin, views.APIView):
 
         today = timezone.localdate()
 
-        # Find all attendance records for this instructor today
-        attendance_records = InstructorAttendance.objects.filter(
-            instructor=instructor,
-            date=today,
-            status__in=[AttendanceStatus.NOT_STARTED, AttendanceStatus.PENDING]
-        )
-
-        if not attendance_records.exists():
-            return Response(
-                {
-                    "error": "No attendance records found for today",
-                    "instructor": instructor.user.get_full_name(),
-                    "date": str(today)
-                },
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        # Check if already checked in
+        # Check if already checked in first
         already_checked_in = InstructorAttendance.objects.filter(
             instructor=instructor,
             date=today,
@@ -196,6 +179,23 @@ class FingerprintCheckInView(DeviceAuthenticationMixin, views.APIView):
                     "check_in_time": already_checked_in.check_in_time,
                 },
                 status=status.HTTP_200_OK
+            )
+
+        # Find all attendance records for this instructor today that need check-in
+        attendance_records = InstructorAttendance.objects.filter(
+            instructor=instructor,
+            date=today,
+            status__in=[AttendanceStatus.NOT_STARTED, AttendanceStatus.PENDING]
+        )
+
+        if not attendance_records.exists():
+            return Response(
+                {
+                    "error": "No attendance records found for today",
+                    "instructor": instructor.user.get_full_name(),
+                    "date": str(today)
+                },
+                status=status.HTTP_404_NOT_FOUND
             )
 
         # Mark all records as checked in

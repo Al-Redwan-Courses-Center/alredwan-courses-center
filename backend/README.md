@@ -456,25 +456,91 @@ dj test enrollments_payments.tests.test_api_enrollment_request \
 
 ## API Documentation
 
-All authentication endpoints are documented in this README under **Authentication (Djoser + JWT)**.
+### Quick Reference
 
-📚 **Authentication API Documentation:** [`docs/authentication.md`](docs/authentication.md)
+**Base URL:** `http://localhost:8000/api/`
 
-The detailed docs include:
+#### Courses API
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/courses/` | List all courses (with filters) | Required |
+| GET | `/api/courses/{id}/` | Get course by ID or slug | Public |
+| PUT/PATCH | `/api/courses/{id}/edit/` | Update course | Admin |
+| GET | `/api/courses/landingpagecourses/` | Featured courses for landing page | Public |
+| GET | `/api/courses/{id}/lectures/` | List course lectures | Required |
+| POST | `/api/courses/{id}/lectures/` | Create additional lecture | Admin/Instructor |
+| GET | `/api/courses/{id}/lectures/check-datetime/` | Check lecture availability | Required |
+| PUT/PATCH | `/api/courses/lectures/{id}/edit/` | Update lecture | Admin/Instructor |
+| GET | `/api/courses/{id}/ratings/` | Get course ratings | Required |
+
+#### Users API
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/users/instructors/` | List all instructors | Required |
+| GET | `/api/users/instructors/{id}/` | Get instructor details | Public |
+| GET | `/api/users/landingpageinstructors/` | Featured instructors | Public |
+| GET | `/api/users/students/` | List students | Admin |
+| GET | `/api/users/parents/` | List parents | Admin |
+
+#### Enrollment API
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/enrollment-requests/` | Create enrollment request | Parent/Student |
+| GET | `/api/enrollment-requests/my-requests/` | User's enrollment requests | Parent/Student |
+| POST | `/api/enrollment-requests/{id}/cancel/` | Cancel request | Owner |
+| GET | `/api/enrollment-requests/admin/` | List all requests | Admin |
+| POST | `/api/enrollment-requests/{id}/approve/` | Approve request | Admin |
+| POST | `/api/enrollment-requests/{id}/reject/` | Reject request | Admin |
+| POST | `/api/enrollment-requests/bulk-approve/` | Bulk approve | Admin |
+| GET | `/api/enrollments/my-enrollments/` | User's enrollments | Parent/Student |
+| GET | `/api/enrollments/instructor/` | Instructor's course enrollments | Instructor |
+
+#### Attendance API
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/attendance/check-in/` | Fingerprint check-in | Device ID |
+| POST | `/api/attendance/check-out/` | Fingerprint check-out | Device ID |
+| GET | `/api/attendance/today/` | Today's attendance | Admin |
+| GET | `/api/attendance/today/summary/` | Today's summary | Admin |
+| POST | `/api/attendance/{id}/rate/` | Rate attendance | Admin |
+| POST | `/api/attendance/{id}/manual-check-in/` | Manual check-in | Admin |
+| POST | `/api/attendance/{id}/manual-check-out/` | Manual check-out | Admin |
+| POST | `/api/attendance/{id}/mark-absent/` | Mark absent | Admin |
+| GET | `/api/attendance/date/{YYYY-MM-DD}/` | Attendance by date | Admin |
+| GET | `/api/attendance/instructor/{id}/` | Instructor history | Admin |
+| GET/POST | `/api/attendance/devices/` | Device management | Admin |
+| GET/POST | `/api/attendance/schedules/` | Schedule management | Admin |
+| POST | `/api/attendance/lecture/{id}/mark/` | Mark lecture attendance | Required |
+
+### Detailed Documentation
+
+📚 **Full API Documentation:** [`docs/api_documentation.md`](docs/api_documentation.md)
+- Courses API (list, detail, update, filters)
+- Users API (students, instructors, parents)
+- Complete request/response examples
+- Filter parameters and ordering options
+
+📚 **Authentication API Documentation:** [`users/docs/authentication.md`](users/docs/authentication.md)
 - Complete request/response examples
 - JavaScript/Axios code samples
 - Token management best practices
 - Error handling guide
 
 📚 **Enrollment API Documentation:** [`docs/enrollment_api.md`](docs/enrollment_api.md)
-
-The enrollment docs include:
-- User enrollment request endpoints (create, list, cancel)
-- Admin enrollment request management (approve, reject, bulk operations)
-- User enrollment viewing endpoints
-- Instructor enrollment viewing endpoints
+- User enrollment request endpoints
+- Admin enrollment management
 - Permission matrix for all endpoints
 - Test coverage details (107 tests)
+
+📚 **Attendance API Documentation:** [`attendance/docs/api.md`](attendance/docs/api.md)
+- Fingerprint device integration
+- Instructor attendance management
+- Manual check-in/check-out endpoints
+- WebSocket real-time updates
 
 ---
 
