@@ -20,6 +20,7 @@ This project supports both **local development** and **Docker deployment**. Migr
 - [WebSocket Endpoints](#websocket-endpoints)
 - [Cron Jobs](#cron-jobs)
 - [Testing](#testing)
+- [API Documentation](#api-documentation)
 - [Redis & Channels](#redis--channels)
 - [Common Issues](#common-issues)
 - [Team Rules](#team-rules-non-negotiable)
@@ -443,21 +444,37 @@ dj test -v 2
 
 # Run a specific test case
 dj test users.tests.TestCustomUser
+
+# Run enrollment API tests (107 tests)
+dj test enrollments_payments.tests.test_api_enrollment_request \
+       enrollments_payments.tests.test_api_admin_enrollment_request \
+       enrollments_payments.tests.test_api_enrollment \
+       enrollments_payments.tests.test_api_instructor_enrollment
 ```
 
 ---
 
-## Where Auth Docs Live (For Frontend Team)
+## API Documentation
 
 All authentication endpoints are documented in this README under **Authentication (Djoser + JWT)**.
 
-📚 **Detailed API documentation:** [`docs/authentication.md`](docs/authentication.md)
+📚 **Authentication API Documentation:** [`docs/authentication.md`](docs/authentication.md)
 
 The detailed docs include:
 - Complete request/response examples
 - JavaScript/Axios code samples
 - Token management best practices
 - Error handling guide
+
+📚 **Enrollment API Documentation:** [`docs/enrollment_api.md`](docs/enrollment_api.md)
+
+The enrollment docs include:
+- User enrollment request endpoints (create, list, cancel)
+- Admin enrollment request management (approve, reject, bulk operations)
+- User enrollment viewing endpoints
+- Instructor enrollment viewing endpoints
+- Permission matrix for all endpoints
+- Test coverage details (107 tests)
 
 ---
 
