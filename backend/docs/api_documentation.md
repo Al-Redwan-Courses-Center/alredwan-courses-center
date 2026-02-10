@@ -529,7 +529,12 @@ Mark attendance for a single student or child in a lecture.
 
 **Endpoint:** `POST /api/attendance/lecture/<lecture_id>/mark/`
 
-**Authentication:** Required (IsAuthenticated)
+**Authentication:** Required (Admin or Course Instructor only)
+
+**Permissions:** 
+- ✅ **Admins** can mark attendance for any lecture
+- ✅ **Course Instructors** can only mark attendance for their own courses
+- ❌ Other users cannot access this endpoint
 
 **Description:** Mark attendance for a single student or child using their unique code. The attendance record must already exist in the system before marking.
 
@@ -587,6 +592,13 @@ curl -X POST "http://localhost:8000/api/attendance/lecture/123/mark/" \
 
 **Error Responses:**
 
+**403 Forbidden** - Not authorized to mark attendance for this lecture:
+```json
+{
+  "error": "You do not have permission to mark attendance for this lecture."
+}
+```
+
 **404 Not Found** - Lecture not found:
 ```json
 {
@@ -628,7 +640,12 @@ Mark attendance for multiple students/children in a lecture at once.
 
 **Endpoint:** `POST /api/attendance/lecture/<lecture_id>/mark-bulk/`
 
-**Authentication:** Required (IsAuthenticated)
+**Authentication:** Required (Admin or Course Instructor only)
+
+**Permissions:** 
+- ✅ **Admins** can mark attendance for any lecture
+- ✅ **Course Instructors** can only mark attendance for their own courses
+- ❌ Other users cannot access this endpoint
 
 **Description:** Mark attendance for multiple students and/or children in a single request. This endpoint is optimized for scenarios where you need to mark attendance for many participants at once (e.g., scanning multiple QR codes, importing from a file, or batch processing). The request includes common metadata (marked_by, marked_via, marked_at) that applies to all attendances, plus individual data for each participant.
 
@@ -638,6 +655,7 @@ Mark attendance for multiple students/children in a lecture at once.
 - ✅ **Detailed summary**: Get complete information about what happened
 - ✅ **Flexible marking method**: Support for manual or QR scan
 - ✅ **Individual control**: Set rating, notes, and present status for each participant
+- ✅ **Permission-based access**: Only admins and course instructors can mark attendance
 
 **Path Parameters:**
 | Parameter | Type | Description |
@@ -842,6 +860,13 @@ curl -X POST "http://localhost:8000/api/attendance/lecture/123/mark-bulk/" \
 | `error` | string | Description of why it failed |
 
 **Error Responses:**
+
+**403 Forbidden** - Not authorized to mark attendance for this lecture:
+```json
+{
+  "error": "You do not have permission to mark attendance for this lecture."
+}
+```
 
 **404 Not Found** - Lecture not found:
 ```json

@@ -21,6 +21,7 @@ from .models import (
     CheckInMethod,
 )
 from .models.lecture_attendance import LectureAttendance
+from .permissions import IsAdminOrCourseInstructor
 from .serializers import (
     # Lecture attendance serializers
     MarkAttendanceSerializer,
@@ -47,6 +48,8 @@ class LectureAttendanceView(APIView):
     """
     API endpoint to mark attendance for a student or child.
     
+    Only admins and the course instructor can mark attendance.
+    
     POST /api/attendance/lecture/<lecture_id>/mark/
     
     Request body:
@@ -57,10 +60,28 @@ class LectureAttendanceView(APIView):
         "notes": "Optional notes"
     }
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminOrCourseInstructor]
     
     def post(self, request, lecture_id):
         """Mark attendance for a student or child using their code."""
+        from courses.models.lecture import Lecture
+        
+        # Get the lecture and check permissions
+        try:
+            lecture = Lecture.objects.select_related('course', 'course__instructor').get(id=lecture_id)
+        except Lecture.DoesNotExist:
+            return Response(
+                {'error': 'Lecture not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Check object-level permission (admin or course instructor)
+        if not self.permission_classes[0]().has_object_permission(request, self, lecture):
+            return Response(
+                {'error': 'You do not have permission to mark attendance for this lecture.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         # Add lecture_id to the request data
         data = request.data.copy()
         data['lecture_id'] = lecture_id
@@ -114,6 +135,8 @@ class BulkLectureAttendanceView(APIView):
     """
     API endpoint to mark attendance for multiple students/children in bulk.
     
+    Only admins and the course instructor can mark attendance.
+    
     POST /api/attendance/lecture/<lecture_id>/mark-bulk/
     
     Request body:
@@ -153,19 +176,26 @@ class BulkLectureAttendanceView(APIView):
         "failed_records": [...]
     }
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminOrCourseInstructor]
     
     def post(self, request, lecture_id):
         """Mark attendance for multiple students/children in bulk."""
         from courses.models.lecture import Lecture
         
-        # Get the lecture
+        # Get the lecture and check permissions
         try:
-            lecture = Lecture.objects.get(id=lecture_id)
+            lecture = Lecture.objects.select_related('course', 'course__instructor').get(id=lecture_id)
         except Lecture.DoesNotExist:
             return Response(
                 {'error': f'Lecture with id {lecture_id} not found.'},
                 status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Check object-level permission (admin or course instructor)
+        if not self.permission_classes[0]().has_object_permission(request, self, lecture):
+            return Response(
+                {'error': 'You do not have permission to mark attendance for this lecture.'},
+                status=status.HTTP_403_FORBIDDEN
             )
         
         # Validate the request data
