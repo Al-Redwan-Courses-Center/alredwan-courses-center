@@ -9,12 +9,27 @@ import { DataViewPagination } from "@/components/ui/data-view/DataViewPagination
 import { DataViewHeader } from "@/components/ui/data-view/DataViewRow";
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
-import { getOngoingEnrollments } from "@/dev-data/db";
+import {
+  getChildOngoingEnrollments,
+  getOngoingEnrollments,
+} from "@/dev-data/db";
 import { cn } from "@/lib/utils";
 import { Course } from "@/types/entities";
 
-export default function StudentMyCoursesView() {
-  const myActiveCourses = getOngoingEnrollments().map((e) => e.course);
+export default function StudentMyCoursesView({
+  childId = "",
+  role = "",
+}: {
+  childId?: string;
+  role?: string;
+}) {
+  let myActiveCourses: any[];
+
+  if (role === "parent") {
+    myActiveCourses = getChildOngoingEnrollments(childId).map((e) => e.course);
+  } else {
+    myActiveCourses = getOngoingEnrollments().map((e) => e.course);
+  }
 
   return (
     <DataView

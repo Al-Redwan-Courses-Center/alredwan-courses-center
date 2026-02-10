@@ -3,6 +3,7 @@ import ClockIcon from "@/components/icons/ClockIcon";
 import InstructorIcon from "@/components/icons/InstructorIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import Button from "@/components/ui/Button";
+import CopyToClipboardButton from "@/components/ui/CopyToClipboardButton";
 import { cn, formatDate, toHindiDigits } from "@/lib/utils";
 import { Course } from "@/types/entities";
 import { parseISO } from "date-fns";
@@ -23,9 +24,7 @@ export default function CourseHeader({ course }: { course: Course }) {
           {course?.title}
         </h2>
 
-        <Button variant="light" size="small" className="cursor-default!">
-          c1389403
-        </Button>
+        <CopyToClipboardButton>c1389403</CopyToClipboardButton>
       </div>
 
       <div className={dataPointWrapperStyles}>

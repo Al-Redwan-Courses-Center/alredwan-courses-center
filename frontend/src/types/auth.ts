@@ -13,7 +13,7 @@ export interface UserEntity {
   identity_type: string;
   address: string | null;
   location: string | null;
-  role: string;
+  role: "admin" | "parent" | "instructor" | "student";
   is_verified: boolean;
   date_joined: string;
   jwt_access_token: string;
@@ -39,6 +39,7 @@ export interface SignupInputs {
   last_name: string;
   dob: string;
   gender: "male" | "female";
+  role: "parent" | "student";
 
   phone_number2?: string;
   email?: string;

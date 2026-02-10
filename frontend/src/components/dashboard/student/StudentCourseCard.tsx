@@ -16,6 +16,8 @@ export default function StudentCourseCard({
   course: Course;
   index: number;
 }) {
+  console.log(course);
+
   const courseLecturesSubmitted = course.lectures
     .map((c) => c.status)
     .filter((s) => s === "submitted").length;

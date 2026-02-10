@@ -38,7 +38,9 @@ export async function getUser() {
   return session.user;
 }
 
-export async function protect(allowedRoles: string[]) {
+export async function protect(
+  allowedRoles: ("admin" | "parent" | "instructor" | "student")[],
+) {
   const { role } = await getUser();
 
   if (allowedRoles.includes(role)) return;

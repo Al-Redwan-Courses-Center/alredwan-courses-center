@@ -1,38 +1,67 @@
-import { getMyEnrollmentRequests, getOngoingEnrollments } from "@/dev-data/db";
-import EnrollmentCard from "@/components/dashboard/student/EnrollmentCard";
+import {
+  getChildEnrollmentRequests,
+  getChildOngoingEnrollments,
+  getMyChildById,
+  getMyEnrollmentRequests,
+  getOngoingEnrollments,
+} from "@/dev-data/db";
 import StudentCourseCard from "@/components/dashboard/student/StudentCourseCard";
 import StudentOverviewHeader from "@/components/dashboard/student/StudentOverviewHeader";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
 import { getUser } from "@/actions/auth";
+import EnrollmentCard from "@/components/dashboard/enrollments/EnrollmentCard";
+import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
 
-const statusWeights = {
-  pending: 1,
-  processing: 0,
-  rejected: 2,
-  accepted: 2,
-};
+export default async function StudentOverviewPage({
+  childId = "",
+}: {
+  childId?: string;
+}) {
+  const { first_name, role } = await getUser();
+  let myActiveCourses: any[], myEnrollments: any[], name: string;
 
-export default async function StudentOverviewPage() {
-  const { first_name } = await getUser();
+  if (role === "parent") {
+    myActiveCourses = getChildOngoingEnrollments(childId)
+      .map((e) => e.course)
+      .slice(0, 2);
 
-  const myActiveCourses = getOngoingEnrollments()
-    .map((e) => e.course)
-    .slice(0, 2);
+    myEnrollments = getChildEnrollmentRequests(childId).sort(
+      (a, b) =>
+        ENROLLMENT_REQUEST_STATUS_WEIGHTS[
+          a.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
+        ] -
+        ENROLLMENT_REQUEST_STATUS_WEIGHTS[
+          b.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
+        ],
+    );
 
-  const myEnrollments = getMyEnrollmentRequests().sort(
-    (a, b) =>
-      statusWeights[a.status as keyof typeof statusWeights] -
-      statusWeights[b.status as keyof typeof statusWeights],
-  );
+    name = getMyChildById(childId).name;
+  } else {
+    myActiveCourses = getOngoingEnrollments()
+      .map((e) => e.course)
+      .slice(0, 2);
+
+    myEnrollments = getMyEnrollmentRequests().sort(
+      (a, b) =>
+        ENROLLMENT_REQUEST_STATUS_WEIGHTS[
+          a.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
+        ] -
+        ENROLLMENT_REQUEST_STATUS_WEIGHTS[
+          b.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
+        ],
+    );
+
+    name = first_name;
+  }
 
   return (
     <div className="ps-16 pt-15 *:pe-16">
       <h3 className="text-olive-700 font-medad mb-8 text-6xl">
-        السلام عليكم يا {first_name}
+        السلام عليكم يا {name}
       </h3>
 
-      <StudentOverviewHeader />
+      <StudentOverviewHeader childId={childId} />
 
       <div className="[&>div]:separators-[7.25rem] [&>div]:border-olive-200 grid grid-cols-2 pe-0!">
         <div className="flex flex-col gap-6">

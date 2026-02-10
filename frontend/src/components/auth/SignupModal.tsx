@@ -16,9 +16,9 @@ export default function SignupModal() {
         </Button>
       </ModalTrigger>
 
-      <ModalContent className="max-h-7/10 max-w-1/2">
+      <ModalContent className="max-h-[90vh] max-w-20/45 overflow-y-auto">
         <ModalTitle>إنشاء حساب</ModalTitle>
-        <div className="flex max-h-full w-full flex-col items-center overflow-y-auto">
+        <div className="flex w-full flex-col items-center">
           <SignupForm />
         </div>
       </ModalContent>

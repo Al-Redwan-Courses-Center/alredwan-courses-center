@@ -28,7 +28,7 @@ export default async function InstructorsRow() {
 
   return (
     <div className="tablet:grid-cols-1 tablet:gap-40 grid w-full grid-cols-3 gap-20 text-[1.5rem] text-gray-600">
-      {instructors.map(({ instructor }, i) => {
+      {instructors.slice(0, 3).map(({ instructor }, i) => {
         const joinDate = new Date(instructor.joined_at);
         const yearsOfExp = differenceInCalendarYears(new Date(), joinDate);
 

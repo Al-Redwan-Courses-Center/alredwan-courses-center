@@ -512,43 +512,55 @@ const DAY_MAP: { [key: string]: number } = {
   السبت: 6,
 };
 
-// Guaranteed Participants for "Current User" stress test
+// Mock profiles for testing
 const student0 = STUDENTS[0];
-const child0 = CHILDREN[0]; // Belongs to Parent[0]
+const parent0 = PARENTS[0];
+const myChildren = CHILDREN.filter((c) => c.primary_parent.id === parent0.id);
+const childA = myChildren[0];
+const childB = myChildren[1];
 
 COURSES.forEach((course, courseIndex) => {
-  // 1. Guaranteed Enrollment for Mock Student and Parent (in first 7 courses)
+  // Guaranteed Active Enrollments
   if (courseIndex < 7) {
     course.enrollments.push({
-      id: `enr-guaranteed-st-${course.id}`,
+      id: `enr-g-st-${course.id}`,
       status: "active",
       enrolled_at: "2025-05-01T10:00:00Z",
       course,
       student: student0,
-      child: undefined,
     });
+  }
+  if (childA && courseIndex < 5) {
     course.enrollments.push({
-      id: `enr-guaranteed-pa-${course.id}`,
+      id: `enr-g-pa-a-${course.id}`,
       status: "active",
       enrolled_at: "2025-05-01T10:00:00Z",
       course,
-      student: undefined,
-      child: child0,
+      child: childA,
+    });
+  }
+  if (childB && courseIndex >= 5 && courseIndex < 7) {
+    course.enrollments.push({
+      id: `enr-g-pa-b-${course.id}`,
+      status: "active",
+      enrolled_at: "2025-05-01T10:00:00Z",
+      course,
+      child: childB,
     });
   }
 
-  // 2. Random Enrollment Logic
-  const targetEnrollment = RNG.int(
+  // Random Enrollments
+  const target = RNG.int(
     Math.floor(course.capacity * 0.3),
     Math.floor(course.capacity * 0.95),
   );
-  const selectedParticipants = RNG.pickMultiple(
-    [...STUDENTS, ...CHILDREN],
-    targetEnrollment,
-  );
-  selectedParticipants.forEach((p) => {
-    // Avoid double enrolling guaranteed participants
-    if (p.id === student0.id || p.id === child0.id) return;
+  RNG.pickMultiple([...STUDENTS, ...CHILDREN], target).forEach((p) => {
+    if (
+      p.id === student0.id ||
+      (childA && p.id === childA.id) ||
+      (childB && p.id === childB.id)
+    )
+      return;
     course.enrollments.push({
       id: `enr-${RNG.int(1, 99999)}`,
       status: RNG.bool(0.9) ? "active" : "dropped",
@@ -562,18 +574,18 @@ COURSES.forEach((course, courseIndex) => {
     (e) => e.status === "active",
   ).length;
 
+  // Lecture Generation
   const allowedDays = course.schedule.map((s) => DAY_MAP[s.day]);
-  let currentDate = new Date(course.start_date);
-  let lecturesGenerated = 0;
-  while (lecturesGenerated < course.stats.lectures) {
+  const currentDate = new Date(course.start_date);
+  let generated = 0;
+  while (generated < course.stats.lectures) {
     if (allowedDays.includes(currentDate.getDay())) {
-      lecturesGenerated++;
-      const lectureIsoDate = currentDate.toISOString().split("T")[0];
-      const isPast = lectureIsoDate < TODAY_DATE_ISO;
+      generated++;
+      const isPast = currentDate.toISOString().split("T")[0] < TODAY_DATE_ISO;
       const lecture = {
-        id: course.id * 100 + lecturesGenerated,
-        number: lecturesGenerated,
-        title: `المحاضرة ${lecturesGenerated}`,
+        id: course.id * 100 + generated,
+        number: generated,
+        title: `المحاضرة ${generated}`,
         date: currentDate.toISOString(),
         status: isPast ? "submitted" : "pending",
         course,
@@ -599,7 +611,7 @@ COURSES.forEach((course, courseIndex) => {
 });
 
 // ==========================================
-// 3. EXPORTS & CONFIGURATION
+// 3. EXPORTS & HELPERS
 // ==========================================
 
 export const MOCK_USER_PROFILES = {
@@ -609,11 +621,7 @@ export const MOCK_USER_PROFILES = {
   admin: { ...ADMINS[0], role: "admin" as const },
 };
 
-/** 
- * CHANGE THIS CONSTANT TO SWITCH DASHBOARDS:
- * 'instructor' | 'student' | 'parent' | 'admin'
- **/
-const ACTIVE_ROLE = "student";
+const ACTIVE_ROLE = "parent";
 export const CURRENT_USER = MOCK_USER_PROFILES[ACTIVE_ROLE];
 
 export const ENROLLMENTS = COURSES.flatMap((c) => c.enrollments);
@@ -621,55 +629,14 @@ export const ALL_LECTURES = COURSES.flatMap((c) => c.lectures);
 export const LECTURE_ATTENDANCES = ALL_LECTURES.flatMap((l) =>
   l.attendances.map((a: any) => ({ ...a, lecture: l })),
 );
-export const EXAMS = COURSES.flatMap((c) => c.exams);
 
-export const getLectureById = (id: number) =>
-  ALL_LECTURES.find((l) => l.id === id);
-export const getEnrollmentsByParticipantId = (id: number | string) =>
-  ENROLLMENTS.filter((enr) => enr.student?.id === id || enr.child?.id === id);
-export const getMyEnrollments = () => {
-  const role = (CURRENT_USER as any).role;
-  return ENROLLMENTS.filter((enr) =>
-    role === "student"
-      ? enr.student?.id === CURRENT_USER.id
-      : role === "parent"
-        ? enr.child?.primary_parent.id === CURRENT_USER.id
-        : role === "admin",
-  );
-};
-export const getOngoingEnrollments = () => {
-  const today = new Date(TODAY_DATE_ISO);
-  return getMyEnrollments().filter((enr) => {
-    if (enr.status !== "active") return false;
-    const start = new Date(enr.course.start_date),
-      end = enr.course.end_date ? new Date(enr.course.end_date) : null;
-    return today >= start && (end === null || today <= end);
-  });
-};
-
-export const getAttendanceRate = () => {
-  const role = (CURRENT_USER as any).role;
-  let myAttendances =
-    role === "student"
-      ? LECTURE_ATTENDANCES.filter((a) => a.student?.id === CURRENT_USER.id)
-      : role === "parent"
-        ? LECTURE_ATTENDANCES.filter(
-            (a) => a.child?.primary_parent.id === CURRENT_USER.id,
-          )
-        : [];
-  return myAttendances.length === 0
-    ? 0
-    : Math.round(
-        (myAttendances.filter((a) => a.present).length / myAttendances.length) *
-          100,
-      );
-};
-
+// Enrollment Requests
 export const ENROLLMENT_REQUESTS: any[] = [];
 ENROLLMENTS.forEach((enr) => {
   if (
     enr.student?.id === student0.id ||
-    (child0 && enr.child?.id === child0.id)
+    (childA && enr.child?.id === childA.id) ||
+    (childB && enr.child?.id === childB.id)
   ) {
     ENROLLMENT_REQUESTS.push({
       id: `req-acc-${enr.id}`,
@@ -678,20 +645,98 @@ ENROLLMENTS.forEach((enr) => {
       course: enr.course,
       student: enr.student,
       child: enr.child,
-      parent: enr.child ? PARENTS[0] : undefined,
+      parent: enr.child ? parent0 : undefined,
       price: enr.course.price,
     });
   }
 });
+if (childA) {
+  ENROLLMENT_REQUESTS.push({
+    id: "req-pa-a-p1",
+    status: "pending",
+    date: TODAY_DATE_ISO,
+    course: COURSES[7],
+    child: childA,
+    parent: parent0,
+    price: 1000,
+  });
+  ENROLLMENT_REQUESTS.push({
+    id: "req-pa-a-p2",
+    status: "processing",
+    date: TODAY_DATE_ISO,
+    course: COURSES[8],
+    child: childA,
+    parent: parent0,
+    price: 1000,
+  });
+}
+if (childB) {
+  ENROLLMENT_REQUESTS.push({
+    id: "req-pa-b-p1",
+    status: "pending",
+    date: TODAY_DATE_ISO,
+    course: COURSES[0],
+    child: childB,
+    parent: parent0,
+    price: 1500,
+  });
+  ENROLLMENT_REQUESTS.push({
+    id: "req-pa-b-p2",
+    status: "pending",
+    date: TODAY_DATE_ISO,
+    course: COURSES[1],
+    child: childB,
+    parent: parent0,
+    price: 2000,
+  });
+}
 
+// Helpers
+export const getLectureById = (id: number) =>
+  ALL_LECTURES.find((l) => l.id === id);
+export const getEnrollmentsByParticipantId = (id: number | string) =>
+  ENROLLMENTS.filter((e) => e.student?.id === id || e.child?.id === id);
+export const getMyEnrollments = () => {
+  const r = (CURRENT_USER as any).role;
+  return ENROLLMENTS.filter((e) =>
+    r === "student"
+      ? e.student?.id === CURRENT_USER.id
+      : r === "parent"
+        ? e.child?.primary_parent.id === CURRENT_USER.id
+        : r === "admin",
+  );
+};
+export const getOngoingEnrollments = () => {
+  const today = new Date(TODAY_DATE_ISO);
+  return getMyEnrollments().filter((e) => {
+    if (e.status !== "active") return false;
+    const s = new Date(e.course.start_date),
+      end = e.course.end_date ? new Date(e.course.end_date) : null;
+    return today >= s && (end === null || today <= end);
+  });
+};
+export const getAttendanceRate = () => {
+  const r = (CURRENT_USER as any).role;
+  const myA =
+    r === "student"
+      ? LECTURE_ATTENDANCES.filter((a) => a.student?.id === CURRENT_USER.id)
+      : r === "parent"
+        ? LECTURE_ATTENDANCES.filter(
+            (a) => a.child?.primary_parent.id === CURRENT_USER.id,
+          )
+        : [];
+  return myA.length === 0
+    ? 0
+    : Math.round((myA.filter((a) => a.present).length / myA.length) * 100);
+};
 export const getMyEnrollmentRequests = () => {
-  const role = (CURRENT_USER as any).role;
+  const r = (CURRENT_USER as any).role;
   return ENROLLMENT_REQUESTS.filter((req) =>
-    role === "student"
+    r === "student"
       ? req.student?.id === CURRENT_USER.id
-      : role === "parent"
+      : r === "parent"
         ? req.parent?.id === CURRENT_USER.id
-        : role === "admin",
+        : r === "admin",
   );
 };
 export const getPendingEnrollments = () =>
@@ -699,6 +744,48 @@ export const getPendingEnrollments = () =>
     ["pending", "processing"].includes(req.status),
   );
 
+// Parent Helpers
+export const getMyChildren = () => {
+  const r = (CURRENT_USER as any).role;
+  return r === "parent"
+    ? CHILDREN.filter((c) => c.primary_parent.id === CURRENT_USER.id)
+    : r === "admin"
+      ? CHILDREN
+      : [];
+};
+export const getMyChildById = (id: string) =>
+  getMyChildren().find((c) => c.id === id);
+export const getAllMyChildrenEnrollments = () =>
+  getMyChildren().flatMap((c) => getEnrollmentsByParticipantId(c.id));
+export const getAllMyChildrenEnrollmentRequests = () =>
+  getMyChildren().flatMap((c) =>
+    ENROLLMENT_REQUESTS.filter((req) => req.child?.id === c.id),
+  );
+export const getChildOngoingEnrollments = (id: string) => {
+  const today = new Date(TODAY_DATE_ISO);
+  return ENROLLMENTS.filter(
+    (e) =>
+      e.child?.id === id &&
+      e.status === "active" &&
+      today >= new Date(e.course.start_date) &&
+      (!e.course.end_date || today <= new Date(e.course.end_date)),
+  );
+};
+export const getChildPendingEnrollments = (id: string) =>
+  ENROLLMENT_REQUESTS.filter(
+    (req) =>
+      req.child?.id === id && ["pending", "processing"].includes(req.status),
+  );
+export const getChildEnrollmentRequests = (id: string) =>
+  ENROLLMENT_REQUESTS.filter((req) => req.child?.id === id);
+export const getChildAttendanceRate = (id: string) => {
+  const myA = LECTURE_ATTENDANCES.filter((a) => a.child?.id === id);
+  return myA.length === 0
+    ? 0
+    : Math.round((myA.filter((a) => a.present).length / myA.length) * 100);
+};
+
+// Other Exports
 export const TODAYS_SCHEDULE = COURSES.filter(
   (c) => c.instructor.id === CURRENT_USER.id,
 )
@@ -710,14 +797,13 @@ export const TODAYS_SCHEDULE = COURSES.filter(
     course_image: l.course.images.cover,
     start_time:
       l.course.schedule.find(
-        (s) => DAY_MAP[s.day] === new Date(l.date).getDay(),
+        (s: any) => DAY_MAP[s.day] === new Date(l.date).getDay(),
       )?.start || "10:00",
     end_time:
       l.course.schedule.find(
-        (s) => DAY_MAP[s.day] === new Date(l.date).getDay(),
+        (s: any) => DAY_MAP[s.day] === new Date(l.date).getDay(),
       )?.end || "12:00",
   }));
-
 export const MY_COURSES = COURSES.filter(
   (c) => c.instructor.id === CURRENT_USER.id,
 );

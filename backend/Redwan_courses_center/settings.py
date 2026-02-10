@@ -25,60 +25,61 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # Uses python-decouple: reads from .env file locally, or environment variables in Docker
-SECRET_KEY = config('DJANGO_SECRET_KEY')
+SECRET_KEY = config("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = config("DEBUG", default=False, cast=bool)
 
 # ALLOWED_HOSTS from comma-separated string
-ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='127.0.0.1', cast=Csv())
+ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", default="127.0.0.1", cast=Csv())
 
 
 # Application definition
 
 INSTALLED_APPS = [
     # "simpleui",  # MUST be first
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     "debug_toolbar",
-    'rest_framework',
-    'django_filters',
-    'djoser',
-    'django_crontab',
-    'channels',
-    'cloudinary_storage',
-    'cloudinary',
+    "rest_framework",
+    "django_filters",
+    "djoser",
+    "django_crontab",
+    "channels",
+    "cloudinary_storage",
+    "cloudinary",
     "users",
     "parents",
     "attendance",
     "core",
     "courses",
-    'enrollments_payments',
+    "enrollments_payments",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    # 'django.middleware.locale.LocaleMiddleware',  # ← ADD THIS
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "django.middleware.security.SecurityMiddleware",
     # white noise middleware
-    # 'whitenoise.middleware.WhiteNoiseMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    # 'django.middleware.locale.LocaleMiddleware',  # ← ADD THIS
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 
 def show_toolbar(request):
     # Don't show toolbar during tests
     import sys
-    if 'test' in sys.argv:
+
+    if "test" in sys.argv:
         return False
     return True
 
@@ -89,24 +90,24 @@ DEBUG_TOOLBAR_CONFIG = {
 }
 
 
-ROOT_URLCONF = 'Redwan_courses_center.urls'
+ROOT_URLCONF = "Redwan_courses_center.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR, os.path.join(BASE_DIR, 'templates')],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR, os.path.join(BASE_DIR, "templates")],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'Redwan_courses_center.wsgi.application'
+WSGI_APPLICATION = "Redwan_courses_center.wsgi.application"
 ASGI_APPLICATION = "core.asgi.application"
 
 
@@ -114,22 +115,22 @@ ASGI_APPLICATION = "core.asgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.{}'.format(
-            config('DATABASE_ENGINE', default='sqlite3')
+    "default": {
+        "ENGINE": "django.db.backends.{}".format(
+            config("DATABASE_ENGINE", default="sqlite3")
         ),
-        'NAME': config('DATABASE_NAME', default='db.sqlite3'),
-        'USER': config('DATABASE_USERNAME', default=''),
-        'PASSWORD': config('DATABASE_PASSWORD', default=''),
-        'HOST': config('DATABASE_HOST', default='127.0.0.1'),
-        'PORT': config('DATABASE_PORT', default=5432, cast=int),
+        "NAME": config("DATABASE_NAME", default="db.sqlite3"),
+        "USER": config("DATABASE_USERNAME", default=""),
+        "PASSWORD": config("DATABASE_PASSWORD", default=""),
+        "HOST": config("DATABASE_HOST", default="127.0.0.1"),
+        "PORT": config("DATABASE_PORT", default=5432, cast=int),
     }
 }
 INTERNAL_IPS = [
     # ...
     "127.0.0.1",
     "localhost",
-    "0.0.0.0"
+    "0.0.0.0",
     # ...
 ]
 
@@ -138,16 +139,16 @@ INTERNAL_IPS = [
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -172,27 +173,27 @@ TIME_ZONE = "Africa/Cairo"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Cloudinary Configuration
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default=''),
-    'API_KEY': config('CLOUDINARY_API_KEY', default=''),
-    'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
+    "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME", default=""),
+    "API_KEY": config("CLOUDINARY_API_KEY", default=""),
+    "API_SECRET": config("CLOUDINARY_API_SECRET", default=""),
 }
 
 # Configure Cloudinary
 cloudinary.config(
-    cloud_name=CLOUDINARY_STORAGE['CLOUD_NAME'],
-    api_key=CLOUDINARY_STORAGE['API_KEY'],
-    api_secret=CLOUDINARY_STORAGE['API_SECRET']
+    cloud_name=CLOUDINARY_STORAGE["CLOUD_NAME"],
+    api_key=CLOUDINARY_STORAGE["API_KEY"],
+    api_secret=CLOUDINARY_STORAGE["API_SECRET"],
 )
 
 # Use Cloudinary for media storage
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 """ # Specify simpleui's default theme, specify a filename, and the relative path is read from simpleui's theme directory
 SIMPLEUI_DEFAULT_THEME = 'admin.lte.css'
@@ -232,19 +233,19 @@ SIMPLEUI_ICON = {
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.CustomUser"
 
 CRONJOBS = [
     # Cron Format: minute hour day month weekday, 0 = Sunday here
     # Every Sunday at 00:05 AM - Generate attendance records for the week
-    ('5 0 * * 0', 'attendance.cron.generate_instructor_attendance_weekly'),
+    ("5 0 * * 0", "attendance.cron.generate_instructor_attendance_weekly"),
     # Every day at 23:59 - Mark absent for today
-    ('59 23 * * *', 'attendance.cron.mark_absent_daily'),
+    ("59 23 * * *", "attendance.cron.mark_absent_daily"),
     # Every day at 00:01 - Fallback to mark absent for yesterday
-    ('1 0 * * *', 'attendance.cron.mark_absent_for_yesterday'),
+    ("1 0 * * *", "attendance.cron.mark_absent_for_yesterday"),
     # Every day at 06:00 - Log today's expected attendance
-    ('0 6 * * *', 'attendance.cron.update_pending_to_not_started'),
+    ("0 6 * * *", "attendance.cron.update_pending_to_not_started"),
 ]
 
 
@@ -259,50 +260,45 @@ CHANNEL_LAYERS = {
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    'DEFAULT_PAGINATION_CLASS': 'core.utils.pagination.CustomPageNumberPagination',
-    'PAGE_SIZE': 10,
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.OrderingFilter'
+    "DEFAULT_PAGINATION_CLASS": "core.utils.pagination.CustomPageNumberPagination",
+    "PAGE_SIZE": 10,
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.OrderingFilter",
     ],
 }
 
 
 SIMPLE_JWT = {
-    'AUTH_HEADER_TYPES': ('JWT',),
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=99),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    "AUTH_HEADER_TYPES": ("JWT",),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=99),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
 
 
 # Djoser configuration for phone number authentication
 DJOSER = {
     # Use phone_number1 as the login field
-    'LOGIN_FIELD': 'phone_number1',
-
+    "LOGIN_FIELD": "phone_number1",
     # Require re_password on registration
-    'USER_CREATE_PASSWORD_RETYPE': True,
-
+    "USER_CREATE_PASSWORD_RETYPE": True,
     # Require current password and retype on password change
-    'SET_PASSWORD_RETYPE': True,
-
+    "SET_PASSWORD_RETYPE": True,
     # Custom serializers - IMPORTANT for security!
     # Prevents users from setting is_staff, is_superuser, role via API
-    'SERIALIZERS': {
-        'user_create': 'users.serializers.CustomUserCreateSerializer',
-        'user': 'users.serializers.CustomUserSerializer',
-        'current_user': 'users.serializers.CustomUserSerializer',
+    "SERIALIZERS": {
+        "user_create": "users.serializers.CustomUserCreateSerializer",
+        "user": "users.serializers.CustomUserSerializer",
+        "current_user": "users.serializers.CustomUserSerializer",
     },
-
     # Permissions
-    'PERMISSIONS': {
-        'user': ['rest_framework.permissions.IsAuthenticated'],
-        'user_list': ['rest_framework.permissions.IsAdminUser'],
+    "PERMISSIONS": {
+        "user": ["rest_framework.permissions.IsAuthenticated"],
+        "user_list": ["rest_framework.permissions.IsAdminUser"],
     },
-
     # Hide sensitive user IDs from non-admin users
-    'HIDE_USERS': True,
+    "HIDE_USERS": True,
 }

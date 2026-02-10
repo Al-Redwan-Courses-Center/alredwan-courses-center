@@ -58,7 +58,7 @@ export default function CourseDetailsForm({ course }: { course: Course }) {
 
   const currentWeekDay = weekdays.find((w) => String(w.day) === activeClockDay);
 
-  console.log(course);
+  // console.log(course);
 
   return (
     <form className="flex grow flex-col gap-10">

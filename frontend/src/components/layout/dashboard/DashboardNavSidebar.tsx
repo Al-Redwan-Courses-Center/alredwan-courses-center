@@ -56,6 +56,7 @@ const roleMap: Record<string, NavLink[]> = {
       className: "mb-auto",
     },
   ],
+
   parent: [
     {
       label: "نظرة عامة",
@@ -65,8 +66,22 @@ const roleMap: Record<string, NavLink[]> = {
 
     {
       label: "أطفالي",
-      href: "/dashboard/my-courses",
+      href: "/dashboard/my-children",
       icon: <PeopleIcon className="h-auto w-[2.4rem]" />,
+      nestedNavLinks: [
+        {
+          href: "",
+          label: "نظرة عامة",
+        },
+        {
+          label: "الدورات",
+          href: "courses",
+        },
+        {
+          label: "الملف الشخصي",
+          href: "profile",
+        },
+      ],
     },
 
     {
@@ -82,6 +97,7 @@ const roleMap: Record<string, NavLink[]> = {
       className: "mb-auto",
     },
   ],
+
   student: [
     {
       label: "نظرة عامة",

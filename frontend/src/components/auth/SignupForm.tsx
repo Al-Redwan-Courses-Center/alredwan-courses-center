@@ -2,11 +2,16 @@
 
 import { signUp } from "@/actions/auth";
 import Button from "@/components/ui/Button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
 import FieldSetInput from "@/components/ui/FieldSetInput";
 import { cn, toHindiDigits } from "@/lib/utils";
 import { SignupInputs } from "@/types/auth";
 import { signIn } from "next-auth/react";
-import { FocusEvent, ReactNode, useEffect } from "react";
+import { FocusEvent, ReactNode, useEffect, useState } from "react";
 import {
   FieldErrors,
   FieldValues,
@@ -22,13 +27,13 @@ function renderError<T extends FieldValues>(
   if (!errors || !errors[field]) return;
 
   return (
-    <span className="text-4xl text-red-800">
+    <span className="mt-1 text-2xl text-red-800">
       {errors[field].message?.toString()}
     </span>
   );
 }
 
-const inputWrapperStyles = cn("flex flex-col gap-4");
+const inputWrapperStyles = cn("flex flex-col gap-2");
 
 const fieldMap: Record<keyof SignupInputs, string> = {
   phone_number1: "رقم الهاتف الأول",
@@ -36,47 +41,21 @@ const fieldMap: Record<keyof SignupInputs, string> = {
   re_password: "تأكيد كلمة المرور",
   first_name: "الاسم الأول",
   last_name: "الاسم الأخير",
-  dob: "تاريخ الولادة",
+  dob: "تاريخ الميلاد",
   gender: "النوع",
-  phone_number2: "رقم الهاتف الأول",
+  role: "نوع الحساب",
+  phone_number2: "رقم الهاتف الثاني",
   email: "البريد الإلكتروني",
-  identity_number: "نوع الهوية",
-  identity_type: "رقم الهوية",
+  identity_number: "رقم الهوية",
+  identity_type: "نوع الهوية",
   address: "العنوان",
   location: "الموقع",
 };
 
-const onSubmit: SubmitHandler<SignupInputs> = async (data) => {
-  const { errors } = await signUp(data);
-
-  console.log(errors);
-
-  if (errors)
-    Object.entries(errors)?.forEach(([key, values]) => {
-      console.log(key, values);
-      toast.error(
-        `${fieldMap[key as keyof SignupInputs] || key}: ${values.join("\n")}`,
-      );
-    });
-  else {
-    toast.success("تم تسجيل حسابك بنجاح!\nسيتم توجيهك بعد قليل", {
-      duration: 5000,
-    });
-
-    setTimeout(async () => {
-      const res = await signIn("credentials", {
-        phone_number1: data.phone_number1,
-        password: data.password,
-        redirect: false,
-      });
-
-      if (res?.ok) return window.location.replace("/dashboard");
-      toast.error(res?.error || "حدث خطأ أثناء تسجيل الدخول! حاول مرة أخرى!");
-    }, 3000);
-  }
-};
-
 export default function SignupForm() {
+  const [countryCode, setCountryCode] = useState("20");
+  const [showCountryCodeList, setShowCountryCodeList] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -87,29 +66,66 @@ export default function SignupForm() {
     clearErrors,
   } = useForm<SignupInputs>({
     defaultValues: {
-      first_name: "مسعد",
-      last_name: "محمود",
-      phone_number1: "+201234567899",
-      dob: "2001-01-01",
-      identity_type: "nid",
-      password: "Subnautica455",
-      re_password: "Subnautica455",
+      first_name: "",
+      last_name: "",
+      phone_number1: "",
+      dob: "",
+      role: "student",
+      gender: "male",
+      password: "",
+      re_password: "",
     },
 
     shouldUnregister: true,
   });
 
   const genderValue = watch("gender");
-  const identityTypeValue = watch("identity_type");
+  const roleValue = watch("role");
+  // const identityTypeValue = watch("identity_type");
 
-  useEffect(() => {
-    setValue("identity_number", "");
-    clearErrors("identity_number");
-  }, [identityTypeValue, setValue, clearErrors]);
+  // useEffect(() => {
+  //   setValue("identity_number", "");
+  //   clearErrors("identity_number");
+  // }, [identityTypeValue, setValue, clearErrors]);
+
+  const onSubmit: SubmitHandler<SignupInputs> = async (data) => {
+    const formattedData = {
+      ...data,
+      phone_number1: `+${countryCode + data.phone_number1.replace(/^0+/, "")}`,
+      phone_number2: data.phone_number2
+        ? `+${countryCode + data.phone_number2.replace(/^0+/, "")}`
+        : undefined,
+    };
+
+    const { errors: apiErrors } = await signUp(formattedData);
+
+    if (apiErrors)
+      Object.entries(apiErrors)?.forEach(([key, values]) => {
+        toast.error(
+          `${fieldMap[key as keyof SignupInputs] || key}: ${values.join("\n")}`,
+        );
+      });
+    else {
+      toast.success("تم تسجيل حسابك بنجاح!\nسيتم توجيهك بعد قليل", {
+        duration: 5000,
+      });
+
+      setTimeout(async () => {
+        const res = await signIn("credentials", {
+          phone_number1: formattedData.phone_number1,
+          password: formattedData.password,
+          redirect: false,
+        });
+
+        if (res?.ok) return window.location.replace("/dashboard");
+        toast.error(res?.error || "حدث خطأ أثناء تسجيل الدخول! حاول مرة أخرى!");
+      }, 3000);
+    }
+  };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="mx-auto">
-      <div className="mb-10 flex w-200 flex-col gap-20">
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full">
+      <div className="grid grid-cols-2 gap-x-12 gap-y-8">
         {/* 
           MARK: FIRST NAME
         */}
@@ -133,9 +149,7 @@ export default function SignupForm() {
                   shouldValidate: true,
                 }),
             })}
-            fieldsetStyles={cn("border-2")}
           />
-
           {renderError<SignupInputs>(errors, "first_name")}
         </div>
 
@@ -162,10 +176,104 @@ export default function SignupForm() {
                   shouldValidate: true,
                 }),
             })}
-            fieldsetStyles={cn("border-2")}
           />
-
           {renderError<SignupInputs>(errors, "last_name")}
+        </div>
+
+        {/* 
+          MARK: PHONE 1
+        */}
+        <div className={cn(inputWrapperStyles)}>
+          <FieldSetInput
+            label="رقم الهاتف"
+            placeholder="01234567890"
+            button={
+              <DropdownMenu
+                open={showCountryCodeList}
+                onOpenChange={setShowCountryCodeList}
+              >
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="relative -top-2 rounded-lg p-2 text-3xl transition-colors hover:bg-gray-300"
+                    dir="ltr"
+                  >
+                    +{countryCode}
+                  </button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent className="relative z-1000 w-fit min-w-0 bg-gray-100 px-5">
+                  <ul className="w-fit text-center text-3xl [direction:ltr] [&>li]:w-full [&>li]:py-5 [&>li]:not-last:border-b">
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCountryCode("20");
+                          setShowCountryCodeList(false);
+                        }}
+                        className="rounded-lg p-2 transition-colors hover:bg-gray-300"
+                      >
+                        +20
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCountryCode("1");
+                          setShowCountryCodeList(false);
+                        }}
+                        className="rounded-lg p-2 transition-colors hover:bg-gray-300"
+                      >
+                        +1
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCountryCode("44");
+                          setShowCountryCodeList(false);
+                        }}
+                        className="rounded-lg p-2 transition-colors hover:bg-gray-300"
+                      >
+                        +44
+                      </button>
+                    </li>
+                  </ul>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            }
+            registerReturn={register("phone_number1", {
+              required: {
+                value: true,
+                message: "هذا الحقل إجباري",
+              },
+              pattern: {
+                value: /^[0-9]{10,14}$/,
+                message: "رقم الهاتف غير صحيح",
+              },
+            })}
+          />
+          {renderError<SignupInputs>(errors, "phone_number1")}
+        </div>
+
+        {/* 
+          MARK: PHONE 2
+        */}
+        <div className={cn(inputWrapperStyles)}>
+          <FieldSetInput
+            label="رقم الهاتف الثاني (اختياري)"
+            placeholder="01234567890"
+            registerReturn={register("phone_number2", {
+              pattern: {
+                value: /^[0-9]{10,14}$/,
+                message: "رقم الهاتف غير صحيح",
+              },
+            })}
+            inputStyles={cn("[direction:ltr]")}
+          />
+          {renderError<SignupInputs>(errors, "phone_number2")}
         </div>
 
         {/* 
@@ -178,184 +286,13 @@ export default function SignupForm() {
             placeholder="test1234@example.com"
             registerReturn={register("email", {
               pattern: {
-                value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z]+\.[a-zA-Z]{2,6}$/,
+                value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/,
                 message: "البريد الإلكتروني خاطئ",
               },
             })}
-            fieldsetStyles={cn("border-2")}
             inputStyles={cn("[direction:ltr]")}
           />
-
           {renderError<SignupInputs>(errors, "email")}
-        </div>
-
-        {/* 
-          MARK: IDENTITY
-        */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <label
-              htmlFor="nid"
-              className={cn(
-                "bg-gray-300 py-5 text-4xl",
-                identityTypeValue === "nid" && "bg-red-300",
-              )}
-            >
-              الرقم القومي
-            </label>
-            <label
-              htmlFor="passport"
-              className={cn(
-                "bg-gray-300 py-5 text-4xl",
-                identityTypeValue === "passport" && "bg-red-300",
-              )}
-            >
-              جواز السفر
-            </label>
-            <label
-              htmlFor="other"
-              className={cn(
-                "bg-gray-300 py-5 text-4xl",
-                identityTypeValue === "other" && "bg-red-300",
-              )}
-            >
-              أخرى
-            </label>
-
-            <input
-              type="radio"
-              id="nid"
-              value="nid"
-              {...register("identity_type")}
-              hidden
-            />
-            <input
-              type="radio"
-              id="passport"
-              value="passport"
-              {...register("identity_type")}
-              hidden
-            />
-            <input
-              type="radio"
-              id="other"
-              value="other"
-              {...register("identity_type")}
-              hidden
-            />
-          </div>
-
-          {(() => {
-            switch (identityTypeValue) {
-              case "nid": {
-                return (
-                  <div className={cn(inputWrapperStyles)}>
-                    <FieldSetInput
-                      label="الرقم القومي (اختياري)"
-                      placeholder="01234567890123"
-                      registerReturn={register("identity_number", {
-                        pattern: {
-                          value: /^\d{14}$/,
-                          message: "الرقم القومي خاطئ",
-                        },
-                      })}
-                      fieldsetStyles={cn("border-2")}
-                      inputStyles={cn("[direction:ltr]")}
-                    />
-
-                    {renderError<SignupInputs>(errors, "identity_number")}
-                  </div>
-                );
-              }
-
-              case "passport": {
-                return (
-                  <div className={cn(inputWrapperStyles)}>
-                    <FieldSetInput
-                      label="رقم جواز السفر (اختياري)"
-                      placeholder="01234567890123"
-                      registerReturn={register("identity_number", {
-                        pattern: {
-                          value: /^\d{14}$/,
-                          message: "الرقم القومي خاطئ",
-                        },
-                      })}
-                      fieldsetStyles={cn("border-2")}
-                      inputStyles={cn("[direction:ltr]")}
-                    />
-
-                    {renderError<SignupInputs>(errors, "identity_number")}
-                  </div>
-                );
-              }
-
-              case "other": {
-                return (
-                  <div className={cn(inputWrapperStyles)}>
-                    <FieldSetInput
-                      label="أخرى (اختياري)"
-                      placeholder="01234567890123"
-                      registerReturn={register("identity_number", {
-                        pattern: {
-                          value: /^\d{14}$/,
-                          message: "الرقم القومي خاطئ",
-                        },
-                      })}
-                      fieldsetStyles={cn("border-2")}
-                      inputStyles={cn("[direction:ltr]")}
-                    />
-
-                    {renderError<SignupInputs>(errors, "identity_number")}
-                  </div>
-                );
-              }
-            }
-          })()}
-        </div>
-
-        {/* 
-          MARK: PHONE 1
-        */}
-        <div className={cn(inputWrapperStyles)}>
-          <FieldSetInput
-            label="رقم الهاتف الأول"
-            placeholder="+201234567890"
-            registerReturn={register("phone_number1", {
-              required: {
-                value: true,
-                message: "هذا الحقل إجباري",
-              },
-
-              pattern: {
-                value: /^\+[1-9]\d{1,14}$/,
-                message: "رقم الهاتف خاطئ",
-              },
-            })}
-            fieldsetStyles={cn("border-2")}
-            inputStyles={cn("[direction:ltr]")}
-          />
-
-          {renderError<SignupInputs>(errors, "phone_number1")}
-        </div>
-
-        {/* 
-          MARK: PHONE 2
-        */}
-        <div className={cn(inputWrapperStyles)}>
-          <FieldSetInput
-            label="رقم الهاتف الثاني (اختياري)"
-            placeholder="+201234567890"
-            registerReturn={register("phone_number2", {
-              pattern: {
-                value: /^\+[1-9]\d{1,14}$/,
-                message: "رقم الهاتف خاطئ",
-              },
-            })}
-            fieldsetStyles={cn("border-2")}
-            inputStyles={cn("[direction:ltr]")}
-          />
-
-          {renderError<SignupInputs>(errors, "phone_number2")}
         </div>
 
         {/* 
@@ -379,11 +316,115 @@ export default function SignupForm() {
                   return "غير مسموح بتاريخ في المستقبل";
               },
             })}
-            fieldsetStyles={cn("border-2")}
             inputStyles={cn("[direction:ltr]")}
           />
-
           {renderError<SignupInputs>(errors, "dob")}
+        </div>
+
+        {/* 
+          MARK: GENDER
+        */}
+        <div className={cn(inputWrapperStyles)}>
+          <fieldset className="shadow-soft flex h-full items-center justify-around rounded-[2rem_0] bg-gray-50 px-10 py-4">
+            <legend className="ms-5 px-3 text-2xl font-bold">النوع</legend>
+            <div className="flex w-full gap-5">
+              <label
+                htmlFor="male"
+                className={cn(
+                  "flex-1 cursor-pointer rounded-lg py-2 text-center text-3xl transition-colors",
+                  genderValue === "male"
+                    ? "bg-olive-500 text-white"
+                    : "bg-gray-200 hover:bg-gray-300",
+                )}
+              >
+                ذكر
+              </label>
+              <input
+                type="radio"
+                id="male"
+                value="male"
+                hidden
+                {...register("gender", {
+                  required: { value: true, message: "هذا الحقل إجباري" },
+                })}
+              />
+
+              <label
+                htmlFor="female"
+                className={cn(
+                  "flex-1 cursor-pointer rounded-lg py-2 text-center text-3xl transition-colors",
+                  genderValue === "female"
+                    ? "bg-olive-500 text-white"
+                    : "bg-gray-200 hover:bg-gray-300",
+                )}
+              >
+                أنثى
+              </label>
+              <input
+                type="radio"
+                id="female"
+                value="female"
+                hidden
+                {...register("gender", {
+                  required: { value: true, message: "هذا الحقل إجباري" },
+                })}
+              />
+            </div>
+          </fieldset>
+          {renderError<SignupInputs>(errors, "gender")}
+        </div>
+
+        {/* 
+          MARK: ROLE
+        */}
+        <div className={cn(inputWrapperStyles)}>
+          <fieldset className="shadow-soft flex h-full items-center justify-around rounded-[2rem_0] bg-gray-50 px-10 py-4">
+            <legend className="ms-5 px-3 text-2xl font-bold">نوع الحساب</legend>
+            <div className="flex w-full gap-5">
+              <label
+                htmlFor="student"
+                className={cn(
+                  "flex-1 cursor-pointer rounded-lg py-2 text-center text-3xl transition-colors",
+                  roleValue === "student"
+                    ? "bg-olive-500 text-white"
+                    : "bg-gray-200 hover:bg-gray-300",
+                )}
+              >
+                طالب
+              </label>
+              <input
+                type="radio"
+                id="student"
+                value="student"
+                hidden
+                {...register("role", {
+                  required: { value: true, message: "هذا الحقل إجباري" },
+                })}
+              />
+
+              <label
+                htmlFor="parent"
+                className={cn(
+                  "flex-1 cursor-pointer rounded-lg py-2 text-center text-3xl transition-colors",
+                  roleValue === "parent"
+                    ? "bg-olive-500 text-white"
+                    : "bg-gray-200 hover:bg-gray-300",
+                )}
+              >
+                ولي أمر
+              </label>
+              <input
+                type="radio"
+                id="parent"
+                value="parent"
+                hidden
+                {...register("role", {
+                  required: { value: true, message: "هذا الحقل إجباري" },
+                })}
+              />
+            </div>
+          </fieldset>
+          {renderError<SignupInputs>(errors, "role")}
         </div>
 
         {/* 
@@ -409,9 +450,7 @@ export default function SignupForm() {
                   shouldValidate: true,
                 }),
             })}
-            fieldsetStyles={cn("border-2")}
           />
-
           {renderError<SignupInputs>(errors, "address")}
         </div>
 
@@ -433,61 +472,8 @@ export default function SignupForm() {
                   shouldValidate: true,
                 }),
             })}
-            fieldsetStyles={cn("border-2")}
           />
-
           {renderError<SignupInputs>(errors, "location")}
-        </div>
-
-        {/* 
-          MARK: GENDER
-        */}
-        <div className={cn(inputWrapperStyles)}>
-          <label
-            htmlFor="male"
-            className={cn(
-              genderValue === "male" && "bg-red-300",
-              "py-5 text-4xl",
-            )}
-          >
-            ذكر
-          </label>
-          <input
-            type="radio"
-            id="male"
-            value="male"
-            hidden
-            {...register("gender", {
-              required: {
-                value: true,
-                message: "هذا الحقل إجباري",
-              },
-            })}
-          />
-
-          <label
-            htmlFor="female"
-            className={cn(
-              genderValue === "female" && "bg-red-300",
-              "py-5 text-4xl",
-            )}
-          >
-            أنثى
-          </label>
-          <input
-            type="radio"
-            id="female"
-            value="female"
-            hidden
-            {...register("gender", {
-              required: {
-                value: true,
-                message: "هذا الحقل إجباري",
-              },
-            })}
-          />
-
-          {renderError<SignupInputs>(errors, "gender")}
         </div>
 
         {/* 
@@ -508,9 +494,7 @@ export default function SignupForm() {
                 message: "كلمة المرور قصيرة جداً!",
               },
             })}
-            fieldsetStyles={cn("border-2")}
           />
-
           {renderError<SignupInputs>(errors, "password")}
         </div>
 
@@ -530,14 +514,32 @@ export default function SignupForm() {
               validate: (data) =>
                 data === getValues("password") || "كلمات المرور غير متطابقة!",
             })}
-            fieldsetStyles={cn("border-2")}
           />
-
           {renderError<SignupInputs>(errors, "re_password")}
         </div>
       </div>
 
-      <Button type="submit">تسجيل جديد</Button>
+      {/* 
+        MARK: IDENTITY (Commented out)
+      */}
+      {/* 
+      <div className="flex flex-col gap-2 mt-8">
+        <div className="flex items-center justify-between">
+          ... identity radio buttons ...
+        </div>
+        {identityTypeValue && (
+          <div className={cn(inputWrapperStyles)}>
+            <FieldSetInput ... />
+          </div>
+        )}
+      </div>
+      */}
+
+      <div className="mt-12 flex justify-center">
+        <Button type="submit" className="w-1/2 py-6 text-4xl">
+          إنشاء الحساب
+        </Button>
+      </div>
     </form>
   );
 }

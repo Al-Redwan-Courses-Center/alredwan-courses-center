@@ -12,6 +12,8 @@ const statusMap = {
 };
 
 export default function EnrollmentCard({ enrollment }: { enrollment: any }) {
+  // console.log(enrollment.status);
+
   return (
     <div className="shadow-soft relative flex flex-col rounded-[2rem_0] bg-gray-50 py-6 ps-15 pe-22! text-2xl transition-colors hover:bg-gray-100">
       <div className="mb-5 flex items-center gap-4">
@@ -43,9 +45,11 @@ export default function EnrollmentCard({ enrollment }: { enrollment: any }) {
         </div>
       </div>
 
-      <button className="hover:text-olive-700 text-olive-300 absolute top-1/2 left-10 -translate-y-[50%] *:transition-colors">
-        <TrashIcon />
-      </button>
+      {enrollment.status === "pending" && (
+        <button className="hover:text-olive-700 text-olive-300 absolute top-1/2 left-10 -translate-y-[50%] *:transition-colors">
+          <TrashIcon />
+        </button>
+      )}
     </div>
   );
 }
