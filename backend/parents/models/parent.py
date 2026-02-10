@@ -11,6 +11,8 @@ from phonenumbers import parse, is_valid_number, format_number, PhoneNumberForma
 import random
 import string
 import uuid
+from cloudinary.models import CloudinaryField
+
 '''
 Module for Parent model that represents a parent user
 '''
@@ -64,12 +66,20 @@ class Child(ImageOptimizationMixin, models.Model):
     dob = models.DateField(_("تاريخ الميلاد"))
     unique_code = models.CharField(
         max_length=6, unique=True, editable=False, verbose_name=_("كود الطفل"))
-    image = models.ImageField(
-        upload_to=child_upload_path,
-        validators=[validate_image_size],
-        null=True, blank=True, verbose_name=_("الصورة الشخصية")
+    image = CloudinaryField(
+        'child_image',
+        blank=True,
+        null=True,
+        folder='children/profiles',
+        transformation={
+            'width': 400,
+            'height': 400,
+            'crop': 'thumb',
+            'gravity': 'face',  # Auto-detect and focus on face
+            'quality': 'auto:good',
+            'fetch_format': 'auto',
+        },
     )
-
     gender = models.CharField(
         max_length=10,
         choices=[("boy", "ولد"), ("girl", "بنت")],

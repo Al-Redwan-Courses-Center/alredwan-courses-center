@@ -9,6 +9,7 @@ from django.utils import timezone
 from .user import CustomUser
 import random
 import string
+from cloudinary.models import CloudinaryField
 
 
 def student_upload_path(instance, filename):
@@ -24,12 +25,19 @@ class StudentUser(ImageOptimizationMixin, models.Model):
     unique_code = models.CharField(
         max_length=6, unique=True, editable=False, verbose_name=_("كود الطالب"))
 
-    image = models.ImageField(
-        upload_to=student_upload_path,
-        validators=[validate_image_size],
-        null=True,
+    image = CloudinaryField(
+        'student_image',
         blank=True,
-        verbose_name=_("الصورة الشخصية")
+        null=True,
+        folder='students/profiles',
+        transformation={
+            'width': 400,
+            'height': 400,
+            'crop': 'thumb',
+            'gravity': 'face',  # Auto-detect and focus on face
+            'quality': 'auto:good',
+            'fetch_format': 'auto',
+        },
     )
 
     def generate_unique_code(self):
