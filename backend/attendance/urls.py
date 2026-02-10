@@ -3,7 +3,7 @@
 
 from django.urls import path, include
 from .consumers import InstructorAttendanceConsumer
-from .views import LectureAttendanceView
+from .views import LectureAttendanceView, BulkLectureAttendanceView
 
 # Include API urls from api_urls.py
 from .api_urls import urlpatterns as api_urlpatterns
@@ -12,6 +12,7 @@ from .api_urls import urlpatterns as api_urlpatterns
 urlpatterns = [
     # Lecture attendance endpoints
     path('lecture/<int:lecture_id>/mark/', LectureAttendanceView.as_view(), name='mark-attendance'),
+    path('lecture/<int:lecture_id>/mark-bulk/', BulkLectureAttendanceView.as_view(), name='mark-bulk-attendance'),
 ] + api_urlpatterns
 
 # WebSocket URL patterns
