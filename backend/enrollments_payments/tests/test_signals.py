@@ -75,12 +75,11 @@ class EnrollmentSignalsTestCase(TestCase):
             first_name='Test',
             last_name='Student',
             gender='male',
+            role='student',
             dob=timezone.now().date() - timedelta(days=365*15)
         )
-        self.student = StudentUser.objects.create(
-            user=self.student_user,
-            image='defaults/user_default.png'
-        )
+        # Signal auto-creates StudentUser profile
+        self.student = StudentUser.objects.get(user=self.student_user)
 
         # Create a parent and child for child enrollment tests
         self.parent_user = CustomUser.objects.create_user(
@@ -89,9 +88,11 @@ class EnrollmentSignalsTestCase(TestCase):
             first_name='Test',
             last_name='Parent',
             gender='male',
+            role='parent',
             dob=timezone.now().date() - timedelta(days=365*35)
         )
-        self.parent = Parent.objects.create(user=self.parent_user)
+        # Signal auto-creates Parent profile
+        self.parent = Parent.objects.get(user=self.parent_user)
         self.child = Child.objects.create(
             primary_parent=self.parent,
             first_name='Test',
