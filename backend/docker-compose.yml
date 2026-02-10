@@ -12,6 +12,19 @@ services:
    env_file:
      - .env
 
+ redis:
+   image: redis:7-alpine
+   container_name: redis
+   ports:
+     - "6379:6379"
+   volumes:
+     - redis_data:/data
+   healthcheck:
+     test: ["CMD", "redis-cli", "ping"]
+     interval: 10s
+     timeout: 5s
+     retries: 5
+
  django-web-app:
     build: .
     container_name: django-docker
@@ -19,6 +32,7 @@ services:
         - "8000:8000"
     depends_on:
         - db
+        - redis
     volumes:
         - .:/app
     environment:
@@ -50,3 +64,4 @@ services:
 volumes:
   postgres_data:
   pgadmin_data:
+  redis_data:

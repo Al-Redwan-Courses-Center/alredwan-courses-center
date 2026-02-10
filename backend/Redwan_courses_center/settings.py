@@ -76,6 +76,10 @@ MIDDLEWARE = [
 
 
 def show_toolbar(request):
+    # Don't show toolbar during tests
+    import sys
+    if 'test' in sys.argv:
+        return False
     return True
 
 
@@ -233,10 +237,14 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 CRONJOBS = [
     # Cron Format: minute hour day month weekday, 0 = Sunday here
-    # Every Sunday at 00:05 AM
+    # Every Sunday at 00:05 AM - Generate attendance records for the week
     ('5 0 * * 0', 'attendance.cron.generate_instructor_attendance_weekly'),
+    # Every day at 23:59 - Mark absent for today
     ('59 23 * * *', 'attendance.cron.mark_absent_daily'),
-
+    # Every day at 00:01 - Fallback to mark absent for yesterday
+    ('1 0 * * *', 'attendance.cron.mark_absent_for_yesterday'),
+    # Every day at 06:00 - Log today's expected attendance
+    ('0 6 * * *', 'attendance.cron.update_pending_to_not_started'),
 ]
 
 
@@ -256,6 +264,10 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'core.utils.pagination.CustomPageNumberPagination',
     'PAGE_SIZE': 10,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.OrderingFilter'
+    ],
 }
 
 

@@ -80,6 +80,17 @@ class Instructor(models.Model):
         blank=True,
         verbose_name=_("الفئات"),
     )
+
+    # Fingerprint device integration
+    fingerprint_id = models.CharField(
+        max_length=100,
+        unique=True,
+        null=True,
+        blank=True,
+        verbose_name=_("معرف البصمة"),
+        help_text=_("المعرف الفريد المستخدم من جهاز البصمة لتحديد هذا المعلم")
+    )
+
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.get_type_display()})"
 

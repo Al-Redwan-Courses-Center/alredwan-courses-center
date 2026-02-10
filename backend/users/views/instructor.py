@@ -4,9 +4,22 @@ from rest_framework import generics, filters
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 
-from users.models import Instructor
-from users.serializers import InstructorListSerializer, InstructorDetailSerializer
+from users.models import Instructor, LandingPageInstructor
+from users.serializers import InstructorListSerializer, InstructorDetailSerializer, LandingPageInstructorSerializer
 from core.utils.pagination import CustomPageNumberPagination
+
+
+class LandingPageInstructorListView(generics.ListAPIView):
+    """
+    API endpoint for listing featured instructors on landing page
+    GET /api/users/landingpageinstructors/
+    Returns instructors ordered by their display order
+    """
+    queryset = LandingPageInstructor.objects.select_related(
+        'instructor__user'
+    )
+    serializer_class = LandingPageInstructorSerializer
+    permission_classes = [AllowAny]
 
 
 class InstructorListView(generics.ListAPIView):

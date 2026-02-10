@@ -28,6 +28,6 @@ python3 manage.py collectstatic --noinput
 echo "Applying database migrations..."
 python3 manage.py migrate --noinput
 
-# Start server
+# Start server (Daphne for ASGI/WebSocket support)
 echo "Starting server..."
-exec python3 manage.py runserver 0.0.0.0:8000
+exec daphne -b 0.0.0.0 -p 8000 core.asgi:application

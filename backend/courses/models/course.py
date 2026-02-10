@@ -48,8 +48,10 @@ class Season(models.Model):
     season_type = models.CharField(
         max_length=32, choices=SeasonChoices.choices, verbose_name=_("نوع الموسم"))
     start_date = models.DateField(verbose_name=_("تاريخ البدء"))
-    end_date = models.DateField(null=True, blank=True, verbose_name=_("تاريخ الانتهاء"))
-    description = models.TextField(blank=True, null=True, verbose_name=_("الوصف"))
+    end_date = models.DateField(
+        null=True, blank=True, verbose_name=_("تاريخ الانتهاء"))
+    description = models.TextField(
+        blank=True, null=True, verbose_name=_("الوصف"))
     is_active = models.BooleanField(default=False, verbose_name=_("نشط"))
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
@@ -83,7 +85,8 @@ class Tag(models.Model):
     Tags model
     """
 
-    name = models.CharField(max_length=50, unique=True, verbose_name=_("اسم الفئة"))
+    name = models.CharField(max_length=50, unique=True,
+                            verbose_name=_("اسم الفئة"))
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name=_("تاريخ الإنشاء"))
 
@@ -97,6 +100,7 @@ class Tag(models.Model):
 
 # Model Course
 
+
 class Course(models.Model):
     """
     Course model
@@ -108,15 +112,16 @@ class Course(models.Model):
     # - folder: organizes images in 'courses/' folder
     # - transformation: resizes to max 800px width, auto quality, auto format (webp/avif)
     image = CloudinaryField(
-        'صورة الكورس', 
-        blank=True, 
+        'صورة الكورس',
+        blank=True,
         null=True,
         folder='courses',
         transformation={
             'width': 800,
             'crop': 'limit',  # Only downscale, never upscale
             'quality': 'auto:good',  # Automatic quality optimization
-            'fetch_format': 'auto',  # Auto-select best format (webp, avif, etc.)
+            # Auto-select best format (webp, avif, etc.)
+            'fetch_format': 'auto',
         },
     )
     start_date = models.DateField(verbose_name=_("تاريخ البدء"))
@@ -188,10 +193,10 @@ class Course(models.Model):
 
     def is_participant_eligible(self, participant) -> bool:
         """Check if a participant (StudentUser or Child) is eligible for this course.
-        
+
         Args:
             participant: Either a StudentUser or Child instance
-            
+
         Returns:
             bool: True if participant is eligible, False otherwise
         """
@@ -201,7 +206,7 @@ class Course(models.Model):
         # Check if participant is a Child (has no .user attribute)
         # or a StudentUser (has .user attribute)
         from parents.models import Child
-        
+
         if isinstance(participant, Child):
             # Child has get_age_on_date directly
             age = participant.get_age_on_date(self.start_date)
@@ -335,6 +340,49 @@ class Course(models.Model):
     def is_full(self):
         """Check if the course has reached capacity."""
         return self.enrolled_count >= self.capacity
+
+    @property
+    def average_rating(self):
+        """Calculate and return the average rating for the course.
+
+        Uses database aggregation for optimal performance instead of
+        loading all ratings into memory.
+        """
+        # Use annotated value if available (from queryset optimization)
+        if hasattr(self, '_average_rating'):
+            return self._average_rating
+
+        from django.db.models import Sum, Count
+        from users.models.student_instructor_rating import StudentCourseRating, ParentCourseRating
+
+        # Use database aggregation instead of loading all ratings into memory
+        student_stats = StudentCourseRating.objects.filter(course=self).aggregate(
+            total=Sum('rating'), count=Count('id')
+        )
+        parent_stats = ParentCourseRating.objects.filter(course=self).aggregate(
+            total=Sum('rating'), count=Count('id')
+        )
+
+        total_sum = (student_stats['total'] or 0) + \
+            (parent_stats['total'] or 0)
+        total_count = (student_stats['count'] or 0) + \
+            (parent_stats['count'] or 0)
+
+        if total_count == 0:
+            return None
+        return total_sum / total_count
+
+    @property
+    def rating_count(self):
+        """Return total number of ratings for this course."""
+        if hasattr(self, '_rating_count'):
+            return self._rating_count
+
+        from users.models.student_instructor_rating import StudentCourseRating, ParentCourseRating
+
+        student_count = StudentCourseRating.objects.filter(course=self).count()
+        parent_count = ParentCourseRating.objects.filter(course=self).count()
+        return student_count + parent_count
 
 
 class CourseSchedule(models.Model):
