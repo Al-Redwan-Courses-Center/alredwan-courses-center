@@ -304,17 +304,8 @@ class InstructorLectureCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lecture
         fields = [
-            'lecture_number', 'title', 'day', 'start_time', 
-            'end_time', 'instructor'
+            'title', 'day', 'start_time', 'end_time', 'instructor'
         ]
-    
-    def validate_lecture_number(self, value):
-        """Validate that lecture_number is positive"""
-        if value <= 0:
-            raise serializers.ValidationError(
-                "رقم المحاضرة يجب أن يكون عددًا صحيحًا موجبًا."
-            )
-        return value
     
     def validate(self, data):
         """Validate lecture data"""
@@ -332,24 +323,37 @@ class InstructorLectureCreateSerializer(serializers.ModelSerializer):
         if not course:
             raise serializers.ValidationError("Course is required in context")
         
+        # Check for duplicate date+time
+        existing_lecture = Lecture.objects.filter(
+            course=course,
+            day=data.get('day'),
+            start_time=start_time,
+            is_accepted=True
+        ).first()
+        
+        if existing_lecture:
+            raise serializers.ValidationError({
+                'day': f"محاضرة موجودة بالفعل في {data.get('day')} في الوقت {start_time or 'midnight'}. لا يمكن إنشاء محاضرات مكررة في نفس التاريخ والوقت.",
+                'start_time': "محاضرة موجودة بالفعل في هذا الوقت."
+            })
+        
         return data
     
     def create(self, validated_data):
-        """Create additional lecture using add_lecture_with_shift method - always shifts existing lectures"""
+        """Create additional lecture using add_lecture_by_datetime method - automatically calculates lecture number"""
         course = self.context.get('course')
         instructor = validated_data.get('instructor') or course.instructor
         
-        # Always use add_lecture_with_shift to handle conflicts properly
-        lecture_data = {
-            'lecture_number': validated_data['lecture_number'],
-            'day': validated_data['day'],
-            'start_time': validated_data.get('start_time'),
-            'end_time': validated_data.get('end_time'),
-            'instructor': instructor,
-            'title': validated_data.get('title', ''),
-            'status': LectureStatus.ADDITIONAL,
-            'is_accepted': False
-        }
-        lecture = Lecture.add_lecture_with_shift(course, lecture_data)
+        # Use add_lecture_by_datetime to handle automatic lecture numbering
+        lecture = Lecture.add_lecture_by_datetime(
+            course=course,
+            day=validated_data['day'],
+            start_time=validated_data.get('start_time'),
+            end_time=validated_data.get('end_time'),
+            instructor=instructor,
+            title=validated_data.get('title', ''),
+            status=LectureStatus.ADDITIONAL,
+            is_accepted=False
+        )
         
         return lecture
