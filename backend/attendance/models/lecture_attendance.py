@@ -25,7 +25,7 @@ class LectureAttendance(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(10)],
         null=True,
         blank=True,
-        default=5
+        default=None
     )
     notes = models.TextField(null=True, blank=True)
     marked_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,

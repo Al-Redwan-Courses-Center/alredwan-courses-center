@@ -270,7 +270,9 @@ class TodayAttendanceAPITest(BaseAPITestCase):
         response = self.client.get('/api/attendance/today/')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        # Handle paginated response
+        results = response.data.get('results', response.data)
+        self.assertEqual(len(results), 1)
 
 
 class TodaySummaryAPITest(BaseAPITestCase):
@@ -503,7 +505,9 @@ class AttendanceByDateAPITest(BaseAPITestCase):
             f'/api/attendance/date/{today.strftime("%Y-%m-%d")}/')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        # Handle paginated response
+        results = response.data.get('results', response.data)
+        self.assertEqual(len(results), 1)
 
     def test_invalid_date_format(self):
         """Test handling of invalid date format"""
@@ -512,7 +516,9 @@ class AttendanceByDateAPITest(BaseAPITestCase):
         response = self.client.get('/api/attendance/date/invalid-date/')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
+        # Handle paginated response
+        results = response.data.get('results', response.data)
+        self.assertEqual(len(results), 0)
 
 
 class InstructorHistoryAPITest(BaseAPITestCase):
@@ -535,4 +541,6 @@ class InstructorHistoryAPITest(BaseAPITestCase):
             f'/api/attendance/instructor/{self.instructor.id}/')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 5)
+        # Handle paginated response
+        results = response.data.get('results', response.data)
+        self.assertEqual(len(results), 5)
