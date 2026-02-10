@@ -73,7 +73,7 @@ class MarkAttendanceSerializer(serializers.Serializer):
         
         if participant_type == 'child':
             try:
-                participant = Child.objects.get(code=code)
+                participant = Child.objects.get(unique_code=code)
                 # Get or check the attendance record
                 attendance = LectureAttendance.objects.filter(
                     lecture=lecture,
@@ -84,7 +84,7 @@ class MarkAttendanceSerializer(serializers.Serializer):
         
         elif participant_type == 'student':
             try:
-                participant = StudentUser.objects.get(code=code)
+                participant = StudentUser.objects.get(unique_code=code)
                 # Get or check the attendance record
                 attendance = LectureAttendance.objects.filter(
                     lecture=lecture,
@@ -153,9 +153,9 @@ class LectureAttendanceSerializer(serializers.ModelSerializer):
     def get_participant_code(self, obj):
         """Get the code of the participant."""
         if obj.child:
-            return obj.child.code
+            return obj.child.unique_code
         elif obj.student:
-            return obj.student.code
+            return obj.student.unique_code
         return None
     
     def get_marked_by_name(self, obj):
@@ -244,7 +244,7 @@ class BulkMarkAttendanceSerializer(serializers.Serializer):
                 
                 if participant_type == 'child':
                     try:
-                        participant = Child.objects.get(code=code)
+                        participant = Child.objects.get(unique_code=code)
                         attendance = LectureAttendance.objects.filter(
                             lecture=lecture,
                             child=participant
@@ -259,7 +259,7 @@ class BulkMarkAttendanceSerializer(serializers.Serializer):
                 
                 elif participant_type == 'student':
                     try:
-                        participant = StudentUser.objects.get(code=code)
+                        participant = StudentUser.objects.get(unique_code=code)
                         attendance = LectureAttendance.objects.filter(
                             lecture=lecture,
                             student=participant

@@ -22,8 +22,8 @@ class IsAdminOrCourseInstructor(permissions.BasePermission):
         if request.user.is_staff or request.user.is_superuser:
             return True
         
-        # Check if user is an instructor
-        if hasattr(request.user, 'instructor'):
+        # Check if user is an instructor (correct related_name is 'instructor_profile')
+        if hasattr(request.user, 'instructor_profile'):
             return True
         
         return False
@@ -37,9 +37,9 @@ class IsAdminOrCourseInstructor(permissions.BasePermission):
         if request.user.is_staff or request.user.is_superuser:
             return True
         
-        # Check if user is the course instructor
-        if hasattr(request.user, 'instructor'):
+        # Check if user is the course instructor (correct related_name is 'instructor_profile')
+        if hasattr(request.user, 'instructor_profile'):
             # Check if this instructor teaches this course
-            return obj.course.instructor == request.user.instructor
+            return obj.course.instructor == request.user.instructor_profile
         
         return False

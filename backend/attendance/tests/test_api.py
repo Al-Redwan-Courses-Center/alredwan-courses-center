@@ -8,6 +8,7 @@ These tests cover:
 - Rating functionality
 - Manual check-in/check-out
 - Attendance listing and filtering
+- Lecture attendance marking (single and bulk)
 """
 from django.test import TestCase
 from django.urls import reverse
@@ -17,8 +18,10 @@ from rest_framework import status
 from datetime import timedelta, time
 from decimal import Decimal
 
-from users.models import CustomUser, Instructor
-from courses.models import Season
+from users.models import CustomUser, Instructor, StudentUser
+from courses.models import Season, Course, Tag
+from courses.models.lecture import Lecture, LectureStatus
+from parents.models import Parent, Child
 from attendance.models import (
     InstructorAttendance,
     SupervisorSchedule,
@@ -27,6 +30,7 @@ from attendance.models import (
     AttendanceType,
     CheckInMethod,
 )
+from attendance.models.lecture_attendance import LectureAttendance
 
 
 class BaseAPITestCase(TestCase):
@@ -544,3 +548,818 @@ class InstructorHistoryAPITest(BaseAPITestCase):
         # Handle paginated response
         results = response.data.get('results', response.data)
         self.assertEqual(len(results), 5)
+
+
+class LectureAttendanceBaseTestCase(BaseAPITestCase):
+    """Base test case for lecture attendance with additional setup"""
+
+    @classmethod
+    def setUpTestData(cls):
+        """Set up test data for lecture attendance tests"""
+        super().setUpTestData()
+
+        # Create instructor user
+        cls.instructor_user = CustomUser.objects.create_user(
+            phone_number1='+201000000010',
+            password='instructorpass123',
+            first_name='Course',
+            last_name='Instructor',
+            email='instructor@test.com',
+            dob='1985-05-15',
+            gender='male'
+        )
+        cls.course_instructor = Instructor.objects.create(
+            user=cls.instructor_user,
+            monthly_salary=6000.00,
+            type='normal'
+        )
+
+        # Create another instructor user (for permission tests)
+        cls.other_instructor_user = CustomUser.objects.create_user(
+            phone_number1='+201000000011',
+            password='instructorpass456',
+            first_name='Other',
+            last_name='Instructor',
+            email='other@test.com',
+            dob='1986-06-16',
+            gender='male'
+        )
+        cls.other_instructor = Instructor.objects.create(
+            user=cls.other_instructor_user,
+            monthly_salary=6000.00,
+            type='normal'
+        )
+
+        # Create course
+        cls.course = Course.objects.create(
+            name='Test Quran Course',
+            description='Test course for attendance',
+            start_date=timezone.localdate() - timedelta(days=7),
+            end_date=timezone.localdate() + timedelta(days=30),
+            num_lectures=10,
+            capacity=20,
+            price=500.00,
+            is_active=True,
+            season=cls.season,
+            instructor=cls.course_instructor,
+            for_adults=False,
+            min_age=8,
+            max_age=15
+        )
+
+        # Create another course for permission tests
+        cls.other_course = Course.objects.create(
+            name='Other Course',
+            description='Another test course',
+            start_date=timezone.localdate() - timedelta(days=7),
+            end_date=timezone.localdate() + timedelta(days=30),
+            num_lectures=10,
+            capacity=20,
+            price=500.00,
+            is_active=True,
+            season=cls.season,
+            instructor=cls.other_instructor,
+            for_adults=False,
+            min_age=8,
+            max_age=15
+        )
+
+        # Create lecture - use COMPLETED status to avoid past date validation
+        cls.lecture = Lecture.objects.create(
+            course=cls.course,
+            lecture_number=1,
+            title='Test Lecture 1',
+            day=timezone.localdate(),
+            start_time=time(10, 0),
+            end_time=time(12, 0),
+            instructor=cls.course_instructor,
+            status=LectureStatus.COMPLETED,  # Use COMPLETED to allow past dates
+            is_accepted=True
+        )
+
+        # Create lecture for other course
+        cls.other_lecture = Lecture.objects.create(
+            course=cls.other_course,
+            lecture_number=1,
+            title='Other Lecture 1',
+            day=timezone.localdate(),
+            start_time=time(10, 0),
+            end_time=time(12, 0),
+            instructor=cls.other_instructor,
+            status=LectureStatus.COMPLETED,  # Use COMPLETED to allow past dates
+            is_accepted=True
+        )
+
+        # Create student user
+        cls.student_user = CustomUser.objects.create_user(
+            phone_number1='+201000000020',
+            password='studentpass123',
+            first_name='Ahmed',
+            last_name='Ali',
+            email='student@test.com',
+            dob='2010-01-15',
+            gender='male',
+            role='student'
+        )
+        # StudentUser is auto-created by signal, just get it
+        cls.student = cls.student_user.student_profile
+        # Set the unique_code manually for testing
+        cls.student.unique_code = 'M64793'
+        cls.student.save()
+
+        # Create another student
+        cls.student_user2 = CustomUser.objects.create_user(
+            phone_number1='+201000000021',
+            password='studentpass456',
+            first_name='Mohammed',
+            last_name='Hassan',
+            email='student2@test.com',
+            dob='2011-02-20',
+            gender='male',
+            role='student'
+        )
+        # StudentUser is auto-created by signal, just get it
+        cls.student2 = cls.student_user2.student_profile
+        # Set the unique_code manually for testing
+        cls.student2.unique_code = 'M54321'
+        cls.student2.save()
+
+        # Create parent user
+        cls.parent_user = CustomUser.objects.create_user(
+            phone_number1='+201000000030',
+            password='parentpass123',
+            first_name='Parent',
+            last_name='Test',
+            email='parent@test.com',
+            dob='1980-03-10',
+            gender='male',
+            role='parent'
+        )
+        # Parent is auto-created by signal, just get it
+        cls.parent = cls.parent_user.parent_profile
+
+        # Create child with correct field name
+        cls.child = Child.objects.create(
+            primary_parent=cls.parent,
+            first_name='Fatima',
+            last_name='Ahmed',
+            dob='2012-05-10',
+            gender='girl'
+        )
+        # Set the code manually for testing
+        cls.child.unique_code = 'C12345'
+        cls.child.save()
+
+        # Create another child
+        cls.child2 = Child.objects.create(
+            primary_parent=cls.parent,
+            first_name='Sara',
+            last_name='Ahmed',
+            dob='2013-06-15',
+            gender='girl'
+        )
+        # Set the code manually for testing
+        cls.child2.unique_code = 'C67890'
+        cls.child2.save()
+
+    def setUp(self):
+        """Set up for each test"""
+        super().setUp()
+        LectureAttendance.objects.all().delete()
+
+
+class LectureAttendanceMarkSingleAPITest(LectureAttendanceBaseTestCase):
+    """Tests for marking single lecture attendance"""
+
+    def test_mark_attendance_success_as_admin(self):
+        """Test successful attendance marking by admin"""
+        # Create attendance record
+        attendance = LectureAttendance.objects.create(
+            lecture=self.lecture,
+            student=self.student
+        )
+
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark/',
+            {
+                'code': 'M64793',
+                'participant_type': 'student',
+                'rating': 8,
+                'notes': 'Good performance today'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], 'Attendance marked successfully')
+        self.assertEqual(response.data['lecture_id'], self.lecture.id)
+        self.assertIsNotNone(response.data['attendance'])
+        self.assertEqual(response.data['attendance']['rating'], 8)
+        self.assertTrue(response.data['attendance']['present'])
+        self.assertEqual(response.data['attendance']['notes'], 'Good performance today')
+
+        # Verify database
+        attendance.refresh_from_db()
+        self.assertTrue(attendance.present)
+        self.assertEqual(attendance.rating, 8)
+        self.assertEqual(attendance.marked_by, self.admin_user)
+        self.assertIsNotNone(attendance.marked_at)
+
+    def test_mark_attendance_success_as_course_instructor(self):
+        """Test successful attendance marking by course instructor"""
+        # Create attendance record
+        attendance = LectureAttendance.objects.create(
+            lecture=self.lecture,
+            student=self.student
+        )
+
+        self.client.force_authenticate(user=self.instructor_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark/',
+            {
+                'code': 'M64793',
+                'participant_type': 'student',
+                'rating': 9,
+                'notes': 'Excellent work'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], 'Attendance marked successfully')
+
+        # Verify database
+        attendance.refresh_from_db()
+        self.assertTrue(attendance.present)
+        self.assertEqual(attendance.rating, 9)
+        self.assertEqual(attendance.marked_by, self.instructor_user)
+
+    def test_mark_attendance_forbidden_for_other_instructor(self):
+        """Test that other instructors cannot mark attendance"""
+        # Create attendance record
+        LectureAttendance.objects.create(
+            lecture=self.lecture,
+            student=self.student
+        )
+
+        self.client.force_authenticate(user=self.other_instructor_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark/',
+            {
+                'code': 'M64793',
+                'participant_type': 'student',
+                'rating': 8,
+                'notes': 'Good'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn('permission', response.data['error'].lower())
+
+    def test_mark_attendance_forbidden_for_regular_user(self):
+        """Test that regular users cannot mark attendance"""
+        # Create attendance record
+        LectureAttendance.objects.create(
+            lecture=self.lecture,
+            student=self.student
+        )
+
+        self.client.force_authenticate(user=self.student_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark/',
+            {
+                'code': 'M64793',
+                'participant_type': 'student',
+                'rating': 8,
+                'notes': 'Good'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_mark_attendance_requires_authentication(self):
+        """Test that authentication is required"""
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark/',
+            {
+                'code': 'M64793',
+                'participant_type': 'student',
+                'rating': 8
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_mark_attendance_lecture_not_found(self):
+        """Test marking attendance for non-existent lecture"""
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            '/api/attendance/lecture/99999/mark/',
+            {
+                'code': 'M64793',
+                'participant_type': 'student',
+                'rating': 8
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_mark_attendance_student_not_found(self):
+        """Test marking attendance for non-existent student"""
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark/',
+            {
+                'code': 'M99999',
+                'participant_type': 'student',
+                'rating': 8
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # The error is returned in non_field_errors, not 'code'
+        self.assertIn('non_field_errors', response.data)
+        self.assertIn('not found', str(response.data['non_field_errors'][0]).lower())
+
+    def test_mark_attendance_no_record_exists(self):
+        """Test marking attendance when no record exists"""
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark/',
+            {
+                'code': 'M64793',
+                'participant_type': 'student',
+                'rating': 8
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('non_field_errors', response.data)
+
+    def test_mark_attendance_invalid_rating(self):
+        """Test marking attendance with invalid rating"""
+        LectureAttendance.objects.create(
+            lecture=self.lecture,
+            student=self.student
+        )
+
+        self.client.force_authenticate(user=self.admin_user)
+        
+        # Rating too high
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark/',
+            {
+                'code': 'M64793',
+                'participant_type': 'student',
+                'rating': 15
+            },
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Rating too low
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark/',
+            {
+                'code': 'M64793',
+                'participant_type': 'student',
+                'rating': 0
+            },
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_mark_attendance_missing_required_fields(self):
+        """Test marking attendance with missing required fields"""
+        LectureAttendance.objects.create(
+            lecture=self.lecture,
+            student=self.student
+        )
+
+        self.client.force_authenticate(user=self.admin_user)
+        
+        # Missing code
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark/',
+            {
+                'participant_type': 'student',
+                'rating': 8
+            },
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Missing rating
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark/',
+            {
+                'code': 'M64793',
+                'participant_type': 'student'
+            },
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_mark_attendance_for_child(self):
+        """Test marking attendance for a child"""
+        # Create attendance record for child
+        attendance = LectureAttendance.objects.create(
+            lecture=self.lecture,
+            child=self.child
+        )
+
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark/',
+            {
+                'code': 'C12345',
+                'participant_type': 'child',
+                'rating': 10,
+                'notes': 'Outstanding participation'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['attendance']['rating'], 10)
+
+        # Verify database
+        attendance.refresh_from_db()
+        self.assertTrue(attendance.present)
+        self.assertEqual(attendance.rating, 10)
+
+
+class LectureAttendanceBulkMarkAPITest(LectureAttendanceBaseTestCase):
+    """Tests for bulk lecture attendance marking"""
+
+    def test_bulk_mark_all_successful_as_admin(self):
+        """Test successful bulk attendance marking by admin"""
+        # Create attendance records
+        LectureAttendance.objects.create(lecture=self.lecture, student=self.student)
+        LectureAttendance.objects.create(lecture=self.lecture, student=self.student2)
+        LectureAttendance.objects.create(lecture=self.lecture, child=self.child)
+        LectureAttendance.objects.create(lecture=self.lecture, child=self.child2)
+
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark-bulk/',
+            {
+                'marked_via': 'qr_scan',
+                'attendances': [
+                    {
+                        'code': 'M64793',
+                        'participant_type': 'student',
+                        'rating': 8,
+                        'notes': 'Good performance',
+                        'present': True
+                    },
+                    {
+                        'code': 'M54321',
+                        'participant_type': 'student',
+                        'rating': 7,
+                        'notes': 'Needs improvement',
+                        'present': True
+                    },
+                    {
+                        'code': 'C12345',
+                        'participant_type': 'child',
+                        'rating': 9,
+                        'notes': 'Excellent',
+                        'present': True
+                    },
+                    {
+                        'code': 'C67890',
+                        'participant_type': 'child',
+                        'rating': 10,
+                        'notes': 'Outstanding',
+                        'present': True
+                    }
+                ]
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], 'Bulk attendance marking completed')
+        self.assertEqual(response.data['summary']['total_received'], 4)
+        self.assertEqual(response.data['summary']['successful'], 4)
+        self.assertEqual(response.data['summary']['failed'], 0)
+        self.assertEqual(response.data['summary']['marked_via'], 'qr_scan')
+        self.assertEqual(len(response.data['successful_records']), 4)
+        self.assertEqual(len(response.data['failed_records']), 0)
+
+    def test_bulk_mark_success_as_course_instructor(self):
+        """Test successful bulk marking by course instructor"""
+        # Create attendance records
+        LectureAttendance.objects.create(lecture=self.lecture, student=self.student)
+        LectureAttendance.objects.create(lecture=self.lecture, child=self.child)
+
+        self.client.force_authenticate(user=self.instructor_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark-bulk/',
+            {
+                'marked_via': 'manual',
+                'attendances': [
+                    {
+                        'code': 'M64793',
+                        'participant_type': 'student',
+                        'rating': 8,
+                        'present': True
+                    },
+                    {
+                        'code': 'C12345',
+                        'participant_type': 'child',
+                        'rating': 9,
+                        'present': True
+                    }
+                ]
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['summary']['successful'], 2)
+
+    def test_bulk_mark_forbidden_for_other_instructor(self):
+        """Test that other instructors cannot bulk mark attendance"""
+        LectureAttendance.objects.create(lecture=self.lecture, student=self.student)
+
+        self.client.force_authenticate(user=self.other_instructor_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark-bulk/',
+            {
+                'attendances': [
+                    {
+                        'code': 'M64793',
+                        'participant_type': 'student',
+                        'rating': 8,
+                        'present': True
+                    }
+                ]
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_bulk_mark_partial_success(self):
+        """Test bulk marking with partial success (some fail)"""
+        # Only create attendance for one student
+        LectureAttendance.objects.create(lecture=self.lecture, student=self.student)
+
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark-bulk/',
+            {
+                'attendances': [
+                    {
+                        'code': 'M64793',
+                        'participant_type': 'student',
+                        'rating': 8,
+                        'present': True
+                    },
+                    {
+                        'code': 'M99999',  # Non-existent student
+                        'participant_type': 'student',
+                        'rating': 7,
+                        'present': True
+                    },
+                    {
+                        'code': 'C88888',  # Non-existent child
+                        'participant_type': 'child',
+                        'rating': 9,
+                        'present': True
+                    }
+                ]
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_207_MULTI_STATUS)
+        self.assertEqual(response.data['summary']['total_received'], 3)
+        self.assertEqual(response.data['summary']['successful'], 1)
+        self.assertEqual(response.data['summary']['failed'], 2)
+        self.assertEqual(len(response.data['successful_records']), 1)
+        self.assertEqual(len(response.data['failed_records']), 2)
+
+    def test_bulk_mark_empty_attendances(self):
+        """Test bulk marking with empty attendances array"""
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark-bulk/',
+            {
+                'attendances': []
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_bulk_mark_missing_attendances_field(self):
+        """Test bulk marking without attendances field"""
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark-bulk/',
+            {
+                'marked_via': 'manual'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_bulk_mark_invalid_marked_via(self):
+        """Test bulk marking with invalid marked_via"""
+        LectureAttendance.objects.create(lecture=self.lecture, student=self.student)
+
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark-bulk/',
+            {
+                'marked_via': 'invalid_method',
+                'attendances': [
+                    {
+                        'code': 'M64793',
+                        'participant_type': 'student',
+                        'rating': 8,
+                        'present': True
+                    }
+                ]
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_bulk_mark_lecture_not_found(self):
+        """Test bulk marking for non-existent lecture"""
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            '/api/attendance/lecture/99999/mark-bulk/',
+            {
+                'attendances': [
+                    {
+                        'code': 'M64793',
+                        'participant_type': 'student',
+                        'rating': 8,
+                        'present': True
+                    }
+                ]
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_bulk_mark_requires_authentication(self):
+        """Test that bulk marking requires authentication"""
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark-bulk/',
+            {
+                'attendances': [
+                    {
+                        'code': 'M64793',
+                        'participant_type': 'student',
+                        'rating': 8,
+                        'present': True
+                    }
+                ]
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_bulk_mark_with_notes(self):
+        """Test bulk marking with notes for each attendance"""
+        LectureAttendance.objects.create(lecture=self.lecture, student=self.student)
+        LectureAttendance.objects.create(lecture=self.lecture, student=self.student2)
+
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark-bulk/',
+            {
+                'attendances': [
+                    {
+                        'code': 'M64793',
+                        'participant_type': 'student',
+                        'rating': 8,
+                        'notes': 'Great participation',
+                        'present': True
+                    },
+                    {
+                        'code': 'M54321',
+                        'participant_type': 'student',
+                        'rating': 7,
+                        'notes': 'Could improve focus',
+                        'present': True
+                    }
+                ]
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['summary']['successful'], 2)
+
+        # Verify notes were saved
+        att1 = LectureAttendance.objects.get(lecture=self.lecture, student=self.student)
+        att2 = LectureAttendance.objects.get(lecture=self.lecture, student=self.student2)
+        self.assertEqual(att1.notes, 'Great participation')
+        self.assertEqual(att2.notes, 'Could improve focus')
+
+    def test_bulk_mark_absent_attendances(self):
+        """Test bulk marking with absent attendances"""
+        LectureAttendance.objects.create(lecture=self.lecture, student=self.student)
+        LectureAttendance.objects.create(lecture=self.lecture, student=self.student2)
+
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark-bulk/',
+            {
+                'attendances': [
+                    {
+                        'code': 'M64793',
+                        'participant_type': 'student',
+                        'rating': 8,
+                        'present': True
+                    },
+                    {
+                        'code': 'M54321',
+                        'participant_type': 'student',
+                        'rating': 1,
+                        'notes': 'Absent',
+                        'present': False
+                    }
+                ]
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['summary']['successful'], 2)
+
+        # Verify present/absent status
+        att1 = LectureAttendance.objects.get(lecture=self.lecture, student=self.student)
+        att2 = LectureAttendance.objects.get(lecture=self.lecture, student=self.student2)
+        self.assertTrue(att1.present)
+        self.assertFalse(att2.present)
+
+    def test_bulk_mark_invalid_rating_in_batch(self):
+        """Test bulk marking with invalid rating in one item"""
+        LectureAttendance.objects.create(lecture=self.lecture, student=self.student)
+
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark-bulk/',
+            {
+                'attendances': [
+                    {
+                        'code': 'M64793',
+                        'participant_type': 'student',
+                        'rating': 15,  # Invalid
+                        'present': True
+                    }
+                ]
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_bulk_mark_mixed_participants(self):
+        """Test bulk marking with mixed students and children"""
+        LectureAttendance.objects.create(lecture=self.lecture, student=self.student)
+        LectureAttendance.objects.create(lecture=self.lecture, student=self.student2)
+        LectureAttendance.objects.create(lecture=self.lecture, child=self.child)
+        LectureAttendance.objects.create(lecture=self.lecture, child=self.child2)
+
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark-bulk/',
+            {
+                'marked_via': 'manual',
+                'attendances': [
+                    {'code': 'M64793', 'participant_type': 'student', 'rating': 8, 'present': True},
+                    {'code': 'C12345', 'participant_type': 'child', 'rating': 9, 'present': True},
+                    {'code': 'M54321', 'participant_type': 'student', 'rating': 7, 'present': True},
+                    {'code': 'C67890', 'participant_type': 'child', 'rating': 10, 'present': True}
+                ]
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['summary']['successful'], 4)
+        self.assertEqual(response.data['summary']['failed'], 0)
+
+        # Verify all were marked
+        self.assertEqual(LectureAttendance.objects.filter(
+            lecture=self.lecture, present=True).count(), 4)
