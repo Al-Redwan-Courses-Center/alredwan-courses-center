@@ -9,10 +9,11 @@ http://localhost:8000/api
 
 ## Table of Contents
 1. [Courses Endpoints](../courses/docs/courses_api.md)
-2. [Users Endpoints](../users/docs/users_api.md)
-3. [Attendance Endpoints](../attendance/docs/attendance_api.md)
-4. [Response Format](#response-format)
-5. [Error Handling](#error-handling)
+2. [Lecture Ednpoints](../courses//docs/lectures_api.md)
+3. [Users Endpoints](../users/docs/users_api.md)
+4. [Attendance Endpoints](../attendance/docs/attendance_api.md)
+5. [Response Format](#response-format)
+6. [Error Handling](#error-handling)
 
 ---
 
