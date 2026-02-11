@@ -11,9 +11,10 @@ http://localhost:8000/api
 1. [Courses Endpoints](../courses/docs/courses_api.md)
 2. [Lecture Ednpoints](../courses//docs/lectures_api.md)
 3. [Users Endpoints](../users/docs/users_api.md)
-4. [Attendance Endpoints](../attendance/docs/attendance_api.md)
-5. [Response Format](#response-format)
-6. [Error Handling](#error-handling)
+4. [Parents & Childreen Endpoints](../parents/docs/parent_api.md)
+5. [Attendance Endpoints](../attendance/docs/attendance_api.md)
+6. [Response Format](#response-format)
+7. [Error Handling](#error-handling)
 
 ---
 
