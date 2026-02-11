@@ -13,8 +13,9 @@ http://localhost:8000/api
 3. [Users Endpoints](../users/docs/users_api.md)
 4. [Parents & Childreen Endpoints](../parents/docs/parent_api.md)
 5. [Attendance Endpoints](../attendance/docs/attendance_api.md)
-6. [Response Format](#response-format)
-7. [Error Handling](#error-handling)
+6. [Enrollment Endpoints](../enrollments_payments/docs/enrollment_api.md)
+7. [Response Format](#response-format)
+8. [Error Handling](#error-handling)
 
 ---
 
