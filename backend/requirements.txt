@@ -42,3 +42,5 @@ urllib3==2.5.0
 arabic-reshaper==3.0.0
 python-bidi==0.4.2
 whitenoise==6.11.0
+gunicorn==23.0.0
+dj-database-url==2.3.0

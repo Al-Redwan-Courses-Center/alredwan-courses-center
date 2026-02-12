@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 from decouple import config, Csv
 import cloudinary
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,6 +33,11 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 
 # ALLOWED_HOSTS from comma-separated string
 ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", default="127.0.0.1", cast=Csv())
+
+# Render.com deployment: Add the external hostname
+RENDER_EXTERNAL_HOSTNAME = config("RENDER_EXTERNAL_HOSTNAME", default=None)
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
 # Application definition
@@ -114,18 +120,32 @@ ASGI_APPLICATION = "core.asgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.{}".format(
-            config("DATABASE_ENGINE", default="sqlite3")
-        ),
-        "NAME": config("DATABASE_NAME", default="db.sqlite3"),
-        "USER": config("DATABASE_USERNAME", default=""),
-        "PASSWORD": config("DATABASE_PASSWORD", default=""),
-        "HOST": config("DATABASE_HOST", default="127.0.0.1"),
-        "PORT": config("DATABASE_PORT", default=5432, cast=int),
+# Check for Render's DATABASE_URL first (production)
+DATABASE_URL = config("DATABASE_URL", default=None)
+
+if DATABASE_URL:
+    # Render provides DATABASE_URL - parse it with dj-database-url
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    # Local development - use individual env vars
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.{}".format(
+                config("DATABASE_ENGINE", default="sqlite3")
+            ),
+            "NAME": config("DATABASE_NAME", default="db.sqlite3"),
+            "USER": config("DATABASE_USERNAME", default=""),
+            "PASSWORD": config("DATABASE_PASSWORD", default=""),
+            "HOST": config("DATABASE_HOST", default="127.0.0.1"),
+            "PORT": config("DATABASE_PORT", default=5432, cast=int),
+        }
+    }
 INTERNAL_IPS = [
     # ...
     "127.0.0.1",
@@ -177,6 +197,9 @@ STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# WhiteNoise configuration for serving static files in production
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Cloudinary Configuration
 CLOUDINARY_STORAGE = {
@@ -253,7 +276,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379)],  # in Docker
+            "hosts": [config("REDIS_URL", default="redis://redis:6379")],
         },
     },
 }
@@ -302,3 +325,30 @@ DJOSER = {
     # Hide sensitive user IDs from non-admin users
     "HIDE_USERS": True,
 }
+
+# Production Security Settings
+if not DEBUG:
+    # HTTPS/SSL settings
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    
+    # HSTS settings
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+    # Cookie settings
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    
+    # Additional security headers
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = "DENY"
+    
+    # CSRF trusted origins for Render
+    CSRF_TRUSTED_ORIGINS = config(
+        "CSRF_TRUSTED_ORIGINS",
+        default="",
+        cast=Csv()
+    )

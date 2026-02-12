@@ -1,0 +1,45 @@
+databases:
+  - name: redwan-courses-db
+    plan: free
+    databaseName: redwan_courses_center
+    user: redwan_admin
+
+services:
+  - type: redis
+    name: redwan-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+
+  - type: web
+    name: redwan-courses-api
+    runtime: python
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn Redwan_courses_center.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: redwan-courses-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: redwan-redis
+          type: redis
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      # Cloudinary - set these manually in Render dashboard
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
