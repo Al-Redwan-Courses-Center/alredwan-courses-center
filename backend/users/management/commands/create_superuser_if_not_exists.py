@@ -30,7 +30,7 @@ class Command(BaseCommand):
         User.objects.create_superuser(
             phone_number1=phone,
             password=password,
-            name=name,
+            first_name=name,
         )
         
         self.stdout.write(
