@@ -9,6 +9,7 @@ services:
     name: redwan-redis
     plan: free
     maxmemoryPolicy: allkeys-lru
+    ipAllowList: []  # Allow only internal Render services
 
   - type: web
     name: redwan-courses-api
