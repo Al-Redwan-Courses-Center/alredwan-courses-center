@@ -50,10 +50,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "debug_toolbar",
     "rest_framework",
     "django_filters",
     "djoser",
+    'corsheaders',
     "django_crontab",
     "channels",
     "cloudinary_storage",
@@ -78,22 +78,12 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 
-def show_toolbar(request):
-    # Don't show toolbar during tests
-    import sys
+CSRF_TRUSTED_ORIGINS = ['*']
 
-    if "test" in sys.argv:
-        return False
-    return True
-
-
-DEBUG_TOOLBAR_CONFIG = {
-    "SHOW_TOOLBAR_CALLBACK": show_toolbar,
-    "IS_RUNNING_TESTS": False,  # Allow tests to run with debug toolbar installed
-}
 
 
 ROOT_URLCONF = "Redwan_courses_center.urls"
