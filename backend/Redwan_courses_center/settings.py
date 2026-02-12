@@ -81,12 +81,8 @@ MIDDLEWARE = [
 ]
 
 
-# CORS settings
-CORS_ALLOWED_ORIGINS = config(
-    "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:3000,http://127.0.0.1:3000",
-    cast=Csv()
-)
+# CORS settings - Allow all origins for API testing (no frontend yet)
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "Redwan_courses_center.urls"
@@ -339,9 +335,12 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = "DENY"
     
-    # CSRF trusted origins for Render
-    CSRF_TRUSTED_ORIGINS = config(
-        "CSRF_TRUSTED_ORIGINS",
-        default="",
-        cast=Csv()
-    )
+    # CSRF trusted origins for Render - build from RENDER_EXTERNAL_HOSTNAME
+    if RENDER_EXTERNAL_HOSTNAME:
+        CSRF_TRUSTED_ORIGINS = [f"https://{RENDER_EXTERNAL_HOSTNAME}"]
+    else:
+        CSRF_TRUSTED_ORIGINS = config(
+            "CSRF_TRUSTED_ORIGINS",
+            default="https://localhost",
+            cast=Csv()
+        )
