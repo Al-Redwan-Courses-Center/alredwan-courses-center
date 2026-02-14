@@ -18,7 +18,7 @@ from rest_framework import status
 from datetime import timedelta, time
 from decimal import Decimal
 
-from users.models import CustomUser, Instructor, StudentUser
+from users.models import CustomUser, Instructor
 from courses.models import Season, Course, Tag
 from courses.models.lecture import Lecture, LectureStatus
 from parents.models import Parent, Child
