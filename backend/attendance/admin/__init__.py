@@ -2,3 +2,5 @@ from .attendance_cron_log import AttendanceCronLogAdmin
 from .device import AttendanceDeviceAdmin
 from .lecture_attendance import LectureAttendanceAdmin
 from .instructor_attendance import InstructorAttendanceAdmin
+from .supervisor_schedule import SupervisorScheduleAdmin
+from .fingerprint_scan_log import FingerprintScanLogAdmin

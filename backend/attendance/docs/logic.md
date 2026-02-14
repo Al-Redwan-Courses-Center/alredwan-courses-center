@@ -12,8 +12,10 @@ This document explains the internal logic, data models, and business rules of th
   - [SupervisorSchedule](#supervisorschedule)
   - [AttendanceDevice](#attendancedevice)
   - [AttendanceCronLog](#attendancecronlog)
+  - [FingerprintScanLog](#fingerprintscanlog)
 - [Enums](#enums)
 - [Business Logic](#business-logic)
+  - [Unified Scan Logic](#unified-scan-logic)
   - [Attendance Generation](#attendance-generation)
   - [Check-in Logic](#check-in-logic)
   - [Check-out Logic](#check-out-logic)
@@ -116,6 +118,32 @@ class AttendanceCronLog(models.Model):
     details = TextField()
 ```
 
+### FingerprintScanLog
+
+Log of all fingerprint scans from devices for audit trail and debugging.
+
+```python
+class FingerprintScanLog(models.Model):
+    attendance = ForeignKey(InstructorAttendance, null=True)  # May be null if creation failed
+    instructor = ForeignKey(Instructor)
+    scan_time = DateTimeField()           # Actual scan time (may differ from received_time for offline sync)
+    received_time = DateTimeField()       # When server received the scan
+    device = ForeignKey(AttendanceDevice)
+    action = CharField(choices=ScanAction.choices)  # check_in, check_out, re_entry, ignored, auto_created
+    is_processed = BooleanField()         # Whether this scan was applied to attendance
+    notes = TextField(null=True)          # Reason for ignoring, etc.
+    device_sequence = IntegerField(null=True)  # For offline sync ordering
+```
+
+**ScanAction Choices:**
+| Action | Description |
+|--------|-------------|
+| `check_in` | Normal check-in |
+| `check_out` | Normal check-out |
+| `re_entry` | Return after already checked out |
+| `ignored` | Rapid duplicate scan (< 2 minutes) |
+| `auto_created` | Attendance was auto-created on this scan |
+
 ---
 
 ## Enums
@@ -152,6 +180,67 @@ class CheckInMethod(models.TextChoices):
 ---
 
 ## Business Logic
+
+### Unified Scan Logic
+
+The unified scan endpoint (`/api/attendance/scan/`) is the recommended way to handle fingerprint devices that don't distinguish between check-in and check-out actions.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                   Unified Fingerprint Scan Flow                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Fingerprint Scan Received                                      │
+│           │                                                      │
+│           ▼                                                      │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ Is there a scan in last 2 minutes?                      │   │
+│  │   YES → Log as IGNORED, return "too soon"               │   │
+│  │   NO  → Continue                                         │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│           │                                                      │
+│           ▼                                                      │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ Any attendance records for today?                       │   │
+│  │   NO  → AUTO-CREATE based on schedules/lectures         │   │
+│  │         If none found, create general supervision       │   │
+│  │         Mark as checked-in, log as AUTO_CREATED         │   │
+│  │   YES → Continue                                         │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│           │                                                      │
+│           ▼                                                      │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ Has any record NOT been checked in?                     │   │
+│  │   YES → CHECK-IN all pending records                    │   │
+│  │         Log as CHECK_IN                                  │   │
+│  │   NO  → Continue                                         │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│           │                                                      │
+│           ▼                                                      │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ Has any record been checked-in but NOT out?             │   │
+│  │   YES → CHECK-OUT all pending records                   │   │
+│  │         Log as CHECK_OUT                                 │   │
+│  │   NO  → Continue                                         │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│           │                                                      │
+│           ▼                                                      │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ All records already checked out?                        │   │
+│  │   YES → RE-ENTRY (clear check_out_time)                 │   │
+│  │         Log as RE_ENTRY                                  │   │
+│  │         (Allows instructor to return after break)       │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Key Features:**
+- **Auto-create attendance**: No need for pre-generated records
+- **Duplicate prevention**: Rapid scans (< 2 min) are ignored
+- **Re-entry support**: Instructors can leave and return
+- **Offline sync**: Device can send timestamp for delayed processing
+- **Full audit trail**: Every scan is logged
 
 ### Attendance Generation
 

@@ -15,8 +15,9 @@ This document provides detailed information about the instructor attendance syst
 - [Status Flow](#status-flow)
 - [Rating System](#rating-system)
 - [Endpoints](#endpoints)
-  - [Fingerprint Check-in](#1-fingerprint-check-in)
-  - [Fingerprint Check-out](#2-fingerprint-check-out)
+  - [Unified Fingerprint Scan (Recommended)](#0-unified-fingerprint-scan-recommended)
+  - [Fingerprint Check-in (Legacy)](#1-fingerprint-check-in-legacy)
+  - [Fingerprint Check-out (Legacy)](#2-fingerprint-check-out-legacy)
   - [Today's Attendance List](#3-todays-attendance-list)
   - [Today's Summary](#4-todays-summary)
   - [Attendance Detail](#5-attendance-detail)
@@ -28,6 +29,7 @@ This document provides detailed information about the instructor attendance syst
   - [Instructor History](#11-instructor-history)
   - [Device Management](#12-device-management)
   - [Schedule Management](#13-schedule-management)
+  - [Scan Logs](#14-scan-logs)
 - [WebSocket Real-time Updates](#websocket-real-time-updates)
 - [Error Handling](#error-handling)
 - [Best Practices](#best-practices)
@@ -148,9 +150,165 @@ Each gets a separate attendance record with independent rating.
 
 ## Endpoints
 
-### 1. Fingerprint Check-in
+### 0. Unified Fingerprint Scan (Recommended)
+
+**⭐ This is the RECOMMENDED endpoint for fingerprint devices that don't distinguish between check-in and check-out actions.**
+
+The system intelligently determines the action based on the current attendance state.
+
+| Property | Value |
+|----------|-------|
+| **URL** | `/api/attendance/scan/` |
+| **Method** | `POST` |
+| **Auth Required** | No (uses device_id) |
+
+**Request Body:**
+
+```json
+{
+  "fingerprint_id": "FP123456",
+  "device_id": "DEVICE001",
+  "timestamp": "2026-02-14T08:30:00+02:00"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `fingerprint_id` | string | Yes | Unique fingerprint ID from device |
+| `device_id` | string | Yes | ID of the attendance device |
+| `timestamp` | datetime | No | Device timestamp (for offline sync). Defaults to server time |
+
+**Logic Flow:**
+
+```
+Fingerprint Scan
+      │
+      ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Is there a recent scan (< 2 minutes)?                          │
+│   YES → Return "Scan ignored - too soon" (prevent duplicates)  │
+│   NO  → Continue...                                            │
+└─────────────────────────────────────────────────────────────────┘
+      │
+      ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Are there attendance records for today?                        │
+│   NO  → AUTO-CREATE based on schedules/lectures and CHECK-IN   │
+│   YES → Continue...                                            │
+└─────────────────────────────────────────────────────────────────┘
+      │
+      ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Is instructor checked in?                                      │
+│   NO  → CHECK-IN (mark as PRESENT or LATE)                     │
+│   YES → Is checked out?                                        │
+│         NO  → CHECK-OUT                                        │
+│         YES → RE-ENTRY (clear check-out, allow return)         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Response - Check-in (200 OK):**
+
+```json
+{
+  "message": "Check-in successful",
+  "action": "check_in",
+  "instructor": "محمد أحمد",
+  "scan_time": "2026-02-14T08:30:00+02:00",
+  "check_in_time": "2026-02-14T08:30:00+02:00",
+  "records": [
+    {
+      "id": 123,
+      "type": "lecture",
+      "status": "present"
+    }
+  ]
+}
+```
+
+**Response - Check-out (200 OK):**
+
+```json
+{
+  "message": "Check-out successful",
+  "action": "check_out",
+  "instructor": "محمد أحمد",
+  "scan_time": "2026-02-14T14:30:00+02:00",
+  "check_out_time": "2026-02-14T14:30:00+02:00",
+  "records": [
+    {
+      "id": 123,
+      "type": "lecture",
+      "check_out_time": "2026-02-14T14:30:00+02:00"
+    }
+  ]
+}
+```
+
+**Response - Auto-create and Check-in (201 Created):**
+
+```json
+{
+  "message": "Auto-created attendance and checked in",
+  "action": "auto_create_check_in",
+  "instructor": "محمد أحمد",
+  "scan_time": "2026-02-14T08:30:00+02:00",
+  "records": [
+    {
+      "id": 125,
+      "type": "supervision",
+      "status": "present",
+      "auto_created": true
+    }
+  ]
+}
+```
+
+**Response - Re-entry (200 OK):**
+
+```json
+{
+  "message": "Re-entry recorded - check-out cleared",
+  "action": "re_entry",
+  "instructor": "محمد أحمد",
+  "scan_time": "2026-02-14T15:30:00+02:00",
+  "records": [
+    {
+      "id": 123,
+      "type": "lecture",
+      "status": "present",
+      "re_entry": true
+    }
+  ]
+}
+```
+
+**Response - Ignored (Too Soon) (200 OK):**
+
+```json
+{
+  "message": "Scan ignored - too soon after last scan",
+  "instructor": "محمد أحمد",
+  "last_scan": "2026-02-14T08:30:00+02:00",
+  "min_interval_seconds": 120
+}
+```
+
+**Error Responses:**
+
+| Code | Response | Cause |
+|------|----------|-------|
+| 400 | `{"fingerprint_id": ["No instructor found with this fingerprint ID."]}` | Invalid fingerprint |
+| 400 | `{"device_id": ["Invalid or inactive device."]}` | Invalid/inactive device |
+| 400 | `{"error": "No active season found"}` | No active season to create attendance |
+
+---
+
+### 1. Fingerprint Check-in (Legacy)
 
 Check in an instructor using fingerprint device.
+
+> **Note:** Consider using the [Unified Fingerprint Scan](#0-unified-fingerprint-scan-recommended) endpoint instead. This endpoint requires pre-created attendance records and won't auto-create them.
 
 | Property | Value |
 |----------|-------|
@@ -216,9 +374,11 @@ Check in an instructor using fingerprint device.
 
 ---
 
-### 2. Fingerprint Check-out
+### 2. Fingerprint Check-out (Legacy)
 
 Check out an instructor using fingerprint device.
+
+> **Note:** Consider using the [Unified Fingerprint Scan](#0-unified-fingerprint-scan-recommended) endpoint instead.
 
 | Property | Value |
 |----------|-------|
@@ -663,6 +823,39 @@ Manage supervisor schedules.
 | 6 | السبت (Saturday) |
 
 **Single Schedule:** `/api/attendance/schedules/{id}/` (GET, PATCH, DELETE)
+
+---
+
+### 14. Scan Logs
+
+View fingerprint scan logs for audit trail and debugging.
+
+| Property | Value |
+|----------|-------|
+| **URL** | `/Al-Redwan-superadmin-dashboard/attendance/fingerprintscanlog/` |
+| **Method** | Web Admin Interface |
+| **Auth Required** | ✅ Admin Login |
+
+**Description:**
+
+The `FingerprintScanLog` model tracks every fingerprint scan from devices, including:
+- Check-ins
+- Check-outs
+- Re-entries (returning after check-out)
+- Ignored scans (rapid duplicates)
+- Auto-created attendance records
+
+**Use Cases:**
+- Debugging device issues
+- Audit trail for attendance disputes
+- Tracking unusual patterns (e.g., rapid scanning)
+- Verifying offline sync data
+
+**Admin Interface Features:**
+- Filter by action type, device, date
+- Search by instructor name
+- Color-coded action display
+- View scan time vs. received time (for offline sync)
 
 ---
 

@@ -8,6 +8,10 @@ app_name = 'attendance'
 
 urlpatterns = [
     # Fingerprint device endpoints (no auth required - device uses device_id)
+    # RECOMMENDED: Use /scan/ for devices that don't distinguish check-in/out
+    path('scan/', views.UnifiedFingerprintScanView.as_view(),
+         name='fingerprint-scan'),
+    # Legacy endpoints (still supported for devices that specify action)
     path('check-in/', views.FingerprintCheckInView.as_view(),
          name='fingerprint-check-in'),
     path('check-out/', views.FingerprintCheckOutView.as_view(),

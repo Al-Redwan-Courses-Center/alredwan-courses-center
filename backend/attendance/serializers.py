@@ -225,6 +225,79 @@ class FingerprintCheckOutSerializer(FingerprintCheckInSerializer):
     pass  # Same validation as check-in
 
 
+class FingerprintScanSerializer(serializers.Serializer):
+    """
+    Unified serializer for fingerprint scans from devices.
+    
+    The device just captures fingerprints without specifying if it's check-in or check-out.
+    The system will intelligently determine the action based on current state.
+    
+    Logic:
+    1. No attendance record for today → Auto-create and check-in
+    2. Has record but not checked-in → Check-in  
+    3. Checked-in but not out → Check-out
+    4. Already checked out → Re-entry (creates new scan log, updates check-out to null)
+    """
+    fingerprint_id = serializers.CharField(
+        max_length=100,
+        help_text=_("The unique fingerprint ID from the device")
+    )
+    device_id = serializers.CharField(
+        max_length=50,
+        help_text=_("The ID of the attendance device")
+    )
+    timestamp = serializers.DateTimeField(
+        required=False,
+        help_text=_("Optional timestamp from device (for offline sync). Defaults to server time if not provided.")
+    )
+
+    def validate_fingerprint_id(self, value):
+        """Validate that the fingerprint_id maps to an instructor."""
+        try:
+            instructor = Instructor.objects.get(fingerprint_id=value)
+            self.context['instructor'] = instructor
+        except Instructor.DoesNotExist:
+            raise serializers.ValidationError(
+                _("No instructor found with this fingerprint ID.")
+            )
+        return value
+
+    def validate_device_id(self, value):
+        """Validate that the device exists and is active."""
+        try:
+            device = AttendanceDevice.objects.get(device_id=value, is_active=True)
+            self.context['device'] = device
+        except AttendanceDevice.DoesNotExist:
+            raise serializers.ValidationError(
+                _("Invalid or inactive device.")
+            )
+        return value
+
+
+class FingerprintScanLogSerializer(serializers.ModelSerializer):
+    """Serializer for fingerprint scan log entries."""
+    
+    instructor_name = serializers.CharField(
+        source='attendance.instructor.user.get_full_name',
+        read_only=True
+    )
+    
+    class Meta:
+        from .models import FingerprintScanLog
+        model = FingerprintScanLog
+        fields = [
+            'id',
+            'attendance',
+            'instructor_name',
+            'scan_time',
+            'device',
+            'action',
+            'is_processed',
+            'notes',
+        ]
+        read_only_fields = ['id', 'scan_time']
+
+
 class InstructorAttendanceSerializer(serializers.ModelSerializer):
     """Serializer for InstructorAttendance model."""
 
