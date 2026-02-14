@@ -63,7 +63,7 @@ class LectureInline(admin.TabularInline):
 @admin.register(Instructor)
 class InstructorAdmin(admin.ModelAdmin):
     list_display = ('get_full_name', 'get_type',
-                    'get_monthly_salary', 'get_phone', 'get_tags_display', 'get_joined_date')
+                    'get_monthly_salary', 'get_phone', 'get_tags_display', 'get_joined_date', 'fingerprint_id')
     list_filter = ('type', 'tags', 'joined_date')
     search_fields = ('user__first_name', 'user__last_name',
                      'user__phone_number1')
@@ -73,7 +73,7 @@ class InstructorAdmin(admin.ModelAdmin):
     inlines = [SupervisorScheduleInline, InstructorAttendanceInline, LectureInline]
     fieldsets = (
         ('معلومات المدرس', {
-         'fields': ('user', 'type', 'bio', 'monthly_salary')}),
+         'fields': ('user', 'type', 'bio', 'monthly_salary', 'fingerprint_id')}),
         ('الفئات', {'fields': ('tags',)}),
         ('الصور', {'fields': ('image', 'nid_front', 'nid_back'),
                    'classes': ('collapse',)}),
