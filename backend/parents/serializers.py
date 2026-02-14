@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Serializers for Parents app"""
 from rest_framework import serializers
-from .models.parent import Child, Parent
+from .models.parent import Child
 from django.utils.translation import gettext_lazy as _
 
 
