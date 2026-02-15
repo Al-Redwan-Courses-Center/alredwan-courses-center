@@ -125,19 +125,27 @@ The lecture number is automatically calculated based on the date and time of the
 }
 ```
 
+**Minimal example (only required fields):**
+```json
+{
+  "day": "2026-02-20"
+}
+```
+
 #### Request Fields
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `title` | String | Yes | Lecture title |
-| `day` | Date | Yes | Lecture date (YYYY-MM-DD) |
-| `start_time` | Time | Yes | Start time (HH:MM:SS) |
-| `end_time` | Time | Yes | End time (HH:MM:SS) |
-| `instructor` | UUID | No | Instructor ID (defaults to course instructor) |
+| `day` | Date | **Yes** | Lecture date (YYYY-MM-DD) - only required field |
+| `title` | String | No | Lecture title (auto-generated if omitted: "Lecture #N") |
+| `start_time` | Time | No | Start time (HH:MM:SS) - defaults to null if omitted |
+| `end_time` | Time | No | End time (HH:MM:SS) - defaults to null if omitted |
+| `instructor` | UUID | No | Instructor ID (defaults to course instructor if omitted) |
 
 #### Validation Rules
-- `start_time` must be before `end_time`
-- Cannot create duplicate lectures at the same date and time
+- If both `start_time` and `end_time` are provided, `start_time` must be before `end_time`
+- Cannot create duplicate lectures at the same date and time (for accepted lectures)
 - Automatically calculates lecture number based on chronological position
+- If `title` is omitted, automatically generates title like "Lecture 12"
 
 #### Response (201 Created)
 ```json
