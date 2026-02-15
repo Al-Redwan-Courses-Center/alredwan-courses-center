@@ -73,7 +73,7 @@ class MarkAttendanceSerializer(serializers.Serializer):
         
         if participant_type == 'child':
             try:
-                participant = Child.objects.get(code=code)
+                participant = Child.objects.get(unique_code=code)
                 # Get or check the attendance record
                 attendance = LectureAttendance.objects.filter(
                     lecture=lecture,
@@ -84,7 +84,7 @@ class MarkAttendanceSerializer(serializers.Serializer):
         
         elif participant_type == 'student':
             try:
-                participant = StudentUser.objects.get(code=code)
+                participant = StudentUser.objects.get(unique_code=code)
                 # Get or check the attendance record
                 attendance = LectureAttendance.objects.filter(
                     lecture=lecture,
@@ -153,9 +153,9 @@ class LectureAttendanceSerializer(serializers.ModelSerializer):
     def get_participant_code(self, obj):
         """Get the code of the participant."""
         if obj.child:
-            return obj.child.code
+            return obj.child.unique_code
         elif obj.student:
-            return obj.student.code
+            return obj.student.unique_code
         return None
     
     def get_marked_by_name(self, obj):
@@ -163,6 +163,142 @@ class LectureAttendanceSerializer(serializers.ModelSerializer):
         if obj.marked_by:
             return obj.marked_by.get_full_name() or obj.marked_by.username
         return None
+
+
+# Bulk Attendance Serializers
+
+class BulkAttendanceItemSerializer(serializers.Serializer):
+    """Serializer for individual attendance item in bulk request."""
+    
+    code = serializers.CharField(
+        max_length=50,
+        help_text="The unique code of the student or child"
+    )
+    participant_type = serializers.ChoiceField(
+        choices=['student', 'child'],
+        help_text="Type of participant: 'student' or 'child'"
+    )
+    rating = serializers.IntegerField(
+        min_value=1,
+        max_value=10,
+        required=True,
+        help_text="Rating from 1 to 10"
+    )
+    notes = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        default="",
+        help_text="Optional notes about the attendance"
+    )
+    present = serializers.BooleanField(
+        default=True,
+        help_text="Whether the participant was present (default: True)"
+    )
+
+
+class BulkMarkAttendanceSerializer(serializers.Serializer):
+    """Serializer for bulk marking attendance."""
+    
+    marked_via = serializers.ChoiceField(
+        choices=['manual', 'qr_scan'],
+        default='manual',
+        help_text="Method used to mark attendance"
+    )
+    attendances = serializers.ListField(
+        child=BulkAttendanceItemSerializer(),
+        min_length=1,
+        help_text="List of attendance records to mark"
+    )
+
+    def validate(self, data):
+        """Validate the bulk attendance request."""
+        lecture = self.context.get('lecture')
+        if not lecture:
+            raise serializers.ValidationError("Lecture context is required.")
+        
+        # Check if marking is allowed for this lecture (unless user is admin)
+        request = self.context.get('request')
+        user = request.user if request else None
+        
+        if user and not user.is_staff:  # Non-admin users must respect time window
+            if not LectureAttendance.can_mark_now(lecture):
+                raise serializers.ValidationError(
+                    "Attendance can only be marked within the allowed time window "
+                    "(from 24 hours before lecture start until 24 hours after)."
+                )
+        
+        # Validate that all codes exist and have attendance records
+        attendances_data = data.get('attendances', [])
+        validated_items = []
+        errors = []
+        
+        for idx, item in enumerate(attendances_data):
+            code = item.get('code')
+            participant_type = item.get('participant_type')
+            
+            try:
+                # Find the participant
+                participant = None
+                attendance = None
+                
+                if participant_type == 'child':
+                    try:
+                        participant = Child.objects.get(unique_code=code)
+                        attendance = LectureAttendance.objects.filter(
+                            lecture=lecture,
+                            child=participant
+                        ).first()
+                    except Child.DoesNotExist:
+                        errors.append({
+                            'index': idx,
+                            'code': code,
+                            'error': f"Child with code '{code}' not found."
+                        })
+                        continue
+                
+                elif participant_type == 'student':
+                    try:
+                        participant = StudentUser.objects.get(unique_code=code)
+                        attendance = LectureAttendance.objects.filter(
+                            lecture=lecture,
+                            student=participant
+                        ).first()
+                    except StudentUser.DoesNotExist:
+                        errors.append({
+                            'index': idx,
+                            'code': code,
+                            'error': f"Student with code '{code}' not found."
+                        })
+                        continue
+                
+                if not attendance:
+                    errors.append({
+                        'index': idx,
+                        'code': code,
+                        'error': f"No attendance record found for this {participant_type} in this lecture."
+                    })
+                    continue
+                
+                # Store validated attendance record with its data
+                validated_items.append({
+                    'attendance': attendance,
+                    'participant': participant,
+                    'data': item
+                })
+                
+            except Exception as e:
+                errors.append({
+                    'index': idx,
+                    'code': code,
+                    'error': str(e)
+                })
+        
+        # Store results in context
+        self.context['validated_items'] = validated_items
+        self.context['validation_errors'] = errors
+        
+        return data
 
 
 # =============================================================================

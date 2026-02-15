@@ -23,10 +23,12 @@ from .models import (
     ScanAction,
 )
 from .models.lecture_attendance import LectureAttendance
+from .permissions import IsAdminOrCourseInstructor
 from .serializers import (
     # Lecture attendance serializers
     MarkAttendanceSerializer,
     LectureAttendanceSerializer,
+    BulkMarkAttendanceSerializer,
     # Instructor attendance serializers
     InstructorAttendanceSerializer,
     InstructorAttendanceListSerializer,
@@ -50,6 +52,8 @@ class LectureAttendanceView(APIView):
     """
     API endpoint to mark attendance for a student or child.
     
+    Only admins and the course instructor can mark attendance.
+    
     POST /api/attendance/lecture/<lecture_id>/mark/
     
     Request body:
@@ -60,10 +64,28 @@ class LectureAttendanceView(APIView):
         "notes": "Optional notes"
     }
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminOrCourseInstructor]
     
     def post(self, request, lecture_id):
         """Mark attendance for a student or child using their code."""
+        from courses.models.lecture import Lecture
+        
+        # Get the lecture and check permissions
+        try:
+            lecture = Lecture.objects.select_related('course', 'course__instructor').get(id=lecture_id)
+        except Lecture.DoesNotExist:
+            return Response(
+                {'error': 'Lecture not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Check object-level permission (admin or course instructor)
+        if not self.permission_classes[0]().has_object_permission(request, self, lecture):
+            return Response(
+                {'error': 'You do not have permission to mark attendance for this lecture.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         # Add lecture_id to the request data
         data = request.data.copy()
         data['lecture_id'] = lecture_id
@@ -111,6 +133,173 @@ class LectureAttendanceView(APIView):
                 {'error': f'Failed to mark attendance: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class BulkLectureAttendanceView(APIView):
+    """
+    API endpoint to mark attendance for multiple students/children in bulk.
+    
+    Only admins and the course instructor can mark attendance.
+    
+    POST /api/attendance/lecture/<lecture_id>/mark-bulk/
+    
+    Request body:
+    {
+        "marked_via": "manual",  // or "qr_scan"
+        "attendances": [
+            {
+                "code": "M64793",
+                "participant_type": "student",
+                "rating": 8,
+                "notes": "Good performance",
+                "present": true
+            },
+            {
+                "code": "C12345",
+                "participant_type": "child",
+                "rating": 9,
+                "notes": "Excellent",
+                "present": true
+            }
+        ]
+    }
+    
+    Response:
+    {
+        "message": "Bulk attendance marking completed",
+        "lecture_id": 123,
+        "summary": {
+            "total_received": 10,
+            "successful": 8,
+            "failed": 2,
+            "marked_by": "John Doe",
+            "marked_via": "manual",
+            "marked_at": "2026-02-10T10:30:00Z"
+        },
+        "successful_records": [...],
+        "failed_records": [...]
+    }
+    """
+    permission_classes = [IsAdminOrCourseInstructor]
+    
+    def post(self, request, lecture_id):
+        """Mark attendance for multiple students/children in bulk."""
+        from courses.models.lecture import Lecture
+        
+        # Get the lecture and check permissions
+        try:
+            lecture = Lecture.objects.select_related('course', 'course__instructor').get(id=lecture_id)
+        except Lecture.DoesNotExist:
+            return Response(
+                {'error': f'Lecture with id {lecture_id} not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Check object-level permission (admin or course instructor)
+        if not self.permission_classes[0]().has_object_permission(request, self, lecture):
+            return Response(
+                {'error': 'You do not have permission to mark attendance for this lecture.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Validate the request data
+        serializer = BulkMarkAttendanceSerializer(
+            data=request.data,
+            context={'request': request, 'lecture': lecture}
+        )
+        
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        validated_data = serializer.validated_data
+        validated_items = serializer.context.get('validated_items', [])
+        validation_errors = serializer.context.get('validation_errors', [])
+        
+        marked_via = validated_data.get('marked_via', 'manual')
+        marked_at = timezone.now()
+        
+        # Process all validated attendance records
+        successful_records = []
+        failed_records = []
+        
+        try:
+            with transaction.atomic():
+                for item in validated_items:
+                    attendance = item['attendance']
+                    participant = item['participant']
+                    data = item['data']
+                    
+                    try:
+                        # Set rating and notes
+                        attendance.rating = data['rating']
+                        attendance.notes = data.get('notes', '')
+                        
+                        # Mark attendance
+                        attendance.mark(
+                            present=data.get('present', True),
+                            marked_by_user=request.user,
+                            marked_via=marked_via
+                        )
+                        
+                        # Add to successful records
+                        successful_records.append({
+                            'code': data['code'],
+                            'participant_type': data['participant_type'],
+                            'participant_name': (
+                                participant.first_name if hasattr(participant, 'first_name')
+                                else participant.user.get_full_name() if hasattr(participant, 'user')
+                                else 'Unknown'
+                            ),
+                            'rating': data['rating'],
+                            'present': data.get('present', True),
+                            'attendance_id': attendance.id
+                        })
+                        
+                    except Exception as e:
+                        failed_records.append({
+                            'code': data['code'],
+                            'participant_type': data['participant_type'],
+                            'error': f'Failed to mark attendance: {str(e)}'
+                        })
+                
+                # Add validation errors to failed records
+                failed_records.extend(validation_errors)
+        
+        except Exception as e:
+            return Response(
+                {'error': f'Transaction failed: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+        # Prepare summary
+        total_received = len(validated_data.get('attendances', []))
+        summary = {
+            'total_received': total_received,
+            'successful': len(successful_records),
+            'failed': len(failed_records),
+            'marked_by': request.user.get_full_name() or request.user.username,
+            'marked_via': marked_via,
+            'marked_at': marked_at.isoformat()
+        }
+        
+        response_status = status.HTTP_200_OK if len(successful_records) > 0 else status.HTTP_400_BAD_REQUEST
+        
+        if len(failed_records) > 0 and len(successful_records) > 0:
+            response_status = status.HTTP_207_MULTI_STATUS
+        
+        return Response(
+            {
+                'message': 'Bulk attendance marking completed',
+                'lecture_id': lecture_id,
+                'summary': summary,
+                'successful_records': successful_records,
+                'failed_records': failed_records
+            },
+            status=response_status
+        )
 
 
 # =============================================================================

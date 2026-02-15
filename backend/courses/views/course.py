@@ -135,7 +135,10 @@ class CourseUpdateView(generics.UpdateAPIView):
     API endpoint for updating course information
     PUT/PATCH /api/courses/{id}/edit/
     
-    Authentication required: Admin or course instructor only
+    Permissions:
+    - Admins: Full access to all courses
+    - Supervisors: Full access to all courses
+    - Instructors: Only access to courses they are assigned to teach
     """
     queryset = Course.objects.select_related('instructor', 'season').prefetch_related('tags', 'schedules')
     serializer_class = CourseUpdateSerializer
