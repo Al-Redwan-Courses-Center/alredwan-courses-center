@@ -128,12 +128,15 @@ Mark attendance for multiple students/children in a lecture at once.
 **Description:** Mark attendance for multiple students and/or children in a single request. This endpoint is optimized for scenarios where you need to mark attendance for many participants at once (e.g., scanning multiple QR codes, importing from a file, or batch processing). The request includes common metadata (marked_by, marked_via, marked_at) that applies to all attendances, plus individual data for each participant.
 
 **Key Features:**
-- ✅ **Transaction-safe**: All or nothing for database integrity
-- ✅ **Partial success handling**: Returns both successful and failed records
-- ✅ **Detailed summary**: Get complete information about what happened
+- ⚠️ **Partial success handling**: Some records may succeed while others fail - returns both arrays
+- ✅ **Individual record processing**: Each attendance is validated and marked independently
+- ⚠️ **No rollback on partial failure**: Successfully marked records are persisted even if others fail
+- ✅ **Detailed summary**: Get complete information about what succeeded and what failed
 - ✅ **Flexible marking method**: Support for manual or QR scan
 - ✅ **Individual control**: Set rating, notes, and present status for each participant
 - ✅ **Permission-based access**: Only admins and course instructors can mark attendance
+
+**Important:** Unlike a true atomic "all-or-nothing" transaction, this endpoint uses **partial commit**. If 8 out of 10 records succeed, those 8 WILL be saved to the database, and only the 2 failures will be reported in `failed_records`. Your client application MUST handle both success and failure arrays and should NOT retry successful records.
 
 **Path Parameters:**
 | Parameter | Type | Description |
