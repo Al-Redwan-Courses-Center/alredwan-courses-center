@@ -41,6 +41,7 @@ export default function ChildCard({
   index: number;
   child: any;
 }) {
+  // TODO(api): Child-level enrollments/attendance are not available yet.
   const activeCourses = getChildOngoingEnrollments(child.id);
   const pendingEnrollments = getChildPendingEnrollments(child.id);
   const attendanceRate = getChildAttendanceRate(child.id);

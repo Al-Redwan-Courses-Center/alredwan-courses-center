@@ -4,6 +4,7 @@ import Button from "@/components/ui/Button";
 import PhoneIcon from "@/components/icons/PhoneIcon";
 import WhatsappIcon from "@/components/icons/WhatsappIcon";
 import EmailIcon from "@/components/icons/EmailIcon";
+import SectionDivider from "@/components/landing-page/SectionDivider";
 
 export default function CallToActionSection() {
   return (
@@ -54,6 +55,8 @@ export default function CallToActionSection() {
           </li>
         </ul>
       </div>
+
+      <SectionDivider startColor="#D2DBC8" endColor="#2E4238" />
     </section>
   );
 }

@@ -98,8 +98,18 @@ class LectureAttendance(models.Model):
             raise ValidationError("Rating must be between 1.00 and 10.00.")
 
     def save(self, *args, **kwargs):
-        """Ensure clean() runs and updated fields set properly."""
-        self.full_clean()
+        """Ensure clean() runs only when marking attendance, not during initial creation."""
+        # Only run full_clean if we're marking attendance (present is not None)
+        # This allows creating pending attendance records without validation errors
+        if self.present is not None or self.rating is not None:
+            self.full_clean()
+        else:
+            # For initial creation, only validate participant selection
+            has_child = self.child is not None
+            has_student = self.student is not None
+            if has_child == has_student:
+                raise ValidationError(
+                    "Exactly one of 'child' or 'student' must be set.")
         super().save(*args, **kwargs)
 
     # ---- Business helper methods ----

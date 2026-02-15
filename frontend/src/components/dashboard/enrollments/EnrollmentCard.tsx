@@ -12,13 +12,15 @@ const statusMap = {
 };
 
 export default function EnrollmentCard({ enrollment }: { enrollment: any }) {
-  // console.log(enrollment.status);
+  const courseTitle = enrollment.course?.title ?? enrollment.course_name;
+  const createdAt = parseISO(enrollment.created_at ?? enrollment.date);
+  const displayPrice = enrollment.price ?? enrollment.course_price;
 
   return (
     <div className="shadow-soft relative flex flex-col rounded-[2rem_0] bg-gray-50 py-6 ps-15 pe-22! text-2xl transition-colors hover:bg-gray-100">
       <div className="mb-5 flex items-center gap-4">
         <span className="text-[1.6rem] font-bold">
-          {enrollment.course.title}
+          {courseTitle}
         </span>
 
         <span
@@ -35,13 +37,12 @@ export default function EnrollmentCard({ enrollment }: { enrollment: any }) {
         <CalendarIcon className="text-olive-300 me-3 aspect-square h-8 w-auto" />
         <span className="me-3">تم الطلب في</span>
         <span className="me-10 font-bold">
-          {formatDate(parseISO(enrollment.date))} -{" "}
-          {formatTime(format(enrollment.date, "HH:mm"))}
+          {formatDate(createdAt)} - {formatTime(format(createdAt, "HH:mm"))}
         </span>
 
         <div className="flex items-center gap-3">
           <MoneyIcon className="text-olive-300 aspect-square h-8 w-auto" />
-          <span className="font-bold">{enrollment.price} جنيه</span>
+          <span className="font-bold">{displayPrice} جنيه</span>
         </div>
       </div>
 

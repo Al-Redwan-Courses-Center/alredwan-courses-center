@@ -10,7 +10,7 @@ import WhyUsSection from "@/components/landing-page/WhyUsSection";
 
 export default async function Home() {
   return (
-    <main className="tablet:[&>section]:p-28 [&_h2>span]:text-beige-500 [&>section]:px-128 [&>section]:py-28">
+    <main className="tablet:[&>section]:p-28 mobile-lg:[&>section]:px-15! [&_h2>span]:text-beige-500 [&>section]:px-128 [&>section]:py-28">
       <HeroSection />
       <StatisticsSection />
       <WhyUsSection />

@@ -44,7 +44,7 @@ export default function TestimonialsSlider({
       <button
         className={cn(
           navigationButtonStyles,
-          "swiper-next tablet:-left-20 -left-30",
+          "swiper-next mobile-lg:-left-10 tablet:-left-20 -left-30",
         )}
       >
         {">"}
@@ -102,7 +102,7 @@ export default function TestimonialsSlider({
       <button
         className={cn(
           navigationButtonStyles,
-          "swiper-prev tablet:-right-20 -right-30",
+          "swiper-prev mobile-lg:-right-10 tablet:-right-20 -right-30",
         )}
       >
         {"<"}

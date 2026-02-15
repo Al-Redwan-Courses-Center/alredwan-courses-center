@@ -2,7 +2,7 @@ import PictureGrid from "@/components/landing-page/PictureGrid";
 
 export default function ActivitiesSection() {
   return (
-    <section className="flex flex-col items-center px-28!">
+    <section className="mobile-lg:px-15! flex flex-col items-center px-28!">
       <div className="title-block">
         <h2>
           أنشطتنا <span>المتنوعة</span>

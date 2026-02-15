@@ -1,19 +1,27 @@
 import { getUser } from "@/actions/auth";
+import {
+  getMyEnrollmentRequests,
+  getMyEnrollments,
+} from "@/actions/enrollments";
 import EnrollmentsList from "@/components/dashboard/enrollments/EnrollmentsList";
 import ChildCard from "@/components/dashboard/parent/ChildCard";
 import ParentOverviewHeader from "@/components/dashboard/parent/ParentOverviewHeader";
 import Button from "@/components/ui/Button";
-import {
-  getAllMyChildrenEnrollmentRequests,
-  getMyChildren,
-} from "@/dev-data/db";
+import { getMyChildren } from "@/dev-data/db";
 import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
 import Link from "next/link";
 
 export default async function ParentOverviewPage() {
   const { first_name } = await getUser();
+  // TODO(api): Replace mock children with a real parent-children endpoint.
   const myChildren = getMyChildren();
-  const allEnrollments = getAllMyChildrenEnrollmentRequests().sort(
+
+  const [allEnrollments, allParentEnrollments] = await Promise.all([
+    getMyEnrollmentRequests(),
+    getMyEnrollments(),
+  ]);
+
+  const sortedEnrollments = allEnrollments.sort(
     (a, b) =>
       ENROLLMENT_REQUEST_STATUS_WEIGHTS[
         a.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
@@ -23,13 +31,29 @@ export default async function ParentOverviewPage() {
       ],
   );
 
+  const pendingEnrollmentsCount = allEnrollments.filter(
+    (enrollment) => enrollment.status === "pending",
+  ).length;
+
+  const totalPaid = allParentEnrollments.reduce((acc, enrollment) => {
+    const paid = Number.parseFloat(enrollment.amount_paid || "0");
+    return acc + (Number.isNaN(paid) ? 0 : paid);
+  }, 0);
+
+  console.log(allEnrollments);
+  console.log(allParentEnrollments);
+
   return (
     <div className="ps-16 pt-15 *:pe-16">
       <h3 className="text-olive-700 font-medad mb-8 text-6xl">
         السلام عليكم يا {first_name}
       </h3>
 
-      <ParentOverviewHeader myChildren={myChildren} />
+      <ParentOverviewHeader
+        myChildrenCount={myChildren.length}
+        pendingEnrollmentsCount={pendingEnrollmentsCount}
+        totalPaid={totalPaid}
+      />
 
       <div className="[&>div]:separators-[7.25rem] [&>div]:border-olive-200 grid grid-cols-2 pe-0!">
         <div className="flex flex-col gap-6">
@@ -55,7 +79,7 @@ export default async function ParentOverviewPage() {
         </div>
 
         <EnrollmentsList
-          enrollments={allEnrollments}
+          enrollments={sortedEnrollments}
           listStyles="max-h-[calc(100dvh-55rem)]"
         />
       </div>

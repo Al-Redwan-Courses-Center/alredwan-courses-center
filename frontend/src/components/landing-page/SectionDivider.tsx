@@ -11,8 +11,6 @@ export default function SectionDivider({
 }) {
   return (
     <svg
-      width="1123"
-      height="280"
       viewBox="0 0 1123 279"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

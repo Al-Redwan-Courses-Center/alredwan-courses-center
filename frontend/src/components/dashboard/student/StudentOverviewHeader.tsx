@@ -3,14 +3,15 @@ import CheckBadgeIcon from "@/components/icons/CheckBadgeIcon";
 import PendingTransactionIcon from "@/components/icons/PendingTransactionIcon";
 import { cn } from "@/lib/utils";
 import {
-  getAttendanceRate,
   getChildAttendanceRate,
   getChildOngoingEnrollments,
   getChildPendingEnrollments,
-  getOngoingEnrollments,
-  getPendingEnrollments,
 } from "@/dev-data/db";
 import { getUser } from "@/actions/auth";
+import {
+  getMyEnrollmentRequests,
+  getMyEnrollments,
+} from "@/actions/enrollments";
 
 const dataPointWrapperStyles = cn(
   "text-olive-300 not-first:border-olive-200 separators-[4.25rem] grid grid-cols-[auto_1fr] grid-rows-2 gap-x-7 gap-y-4 text-4xl font-bold",
@@ -29,13 +30,26 @@ export default async function StudentOverviewHeader({
   let myActiveCourses: any[], myPendingCourses: any[], attendanceRate: number;
 
   if (role === "parent") {
+    // TODO(api): Child-specific enrollment data is not available yet.
     myActiveCourses = getChildOngoingEnrollments(childId);
     myPendingCourses = getChildPendingEnrollments(childId);
     attendanceRate = getChildAttendanceRate(childId);
   } else {
-    myActiveCourses = getOngoingEnrollments();
-    myPendingCourses = getPendingEnrollments();
-    attendanceRate = getAttendanceRate();
+    const [enrollments, requests] = await Promise.all([
+      getMyEnrollments(),
+      getMyEnrollmentRequests(),
+    ]);
+    myActiveCourses = enrollments.filter((e) => e.status === "active");
+    myPendingCourses = requests.filter((e) => e.status === "pending");
+    // TODO(api): Replace with real attendance rate endpoint.
+    attendanceRate = enrollments.length
+      ? Math.round(
+          enrollments.reduce(
+            (acc, enrollment) => acc + (enrollment.completion_percentage || 0),
+            0,
+          ) / enrollments.length,
+        )
+      : 0;
   }
 
   return (

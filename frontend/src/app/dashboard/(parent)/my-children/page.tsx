@@ -3,6 +3,7 @@ import { getMyChildren } from "@/dev-data/db";
 import { Fragment } from "react/jsx-runtime";
 
 export default function Page() {
+  // TODO(api): Replace mock children list with a real parent-children endpoint.
   const myChildren = getMyChildren();
 
   return (

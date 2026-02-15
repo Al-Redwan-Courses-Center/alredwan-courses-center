@@ -1,4 +1,6 @@
+import StudentAllCoursesView from "@/components/dashboard/student/StudentAllCoursesView";
 import { Metadata } from "next";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "الدورات",
@@ -6,8 +8,10 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="content-center py-150 text-center text-8xl font-bold">
-      Courses Page
+    <div className="mx-auto max-h-full w-fit pt-10 pb-50">
+      <Suspense fallback={null}>
+        <StudentAllCoursesView />
+      </Suspense>
     </div>
   );
 }

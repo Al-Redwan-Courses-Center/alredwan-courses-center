@@ -1,48 +1,34 @@
+import { getLandingPageInstructors } from "@/actions/landing";
 import InstructorProfile from "@/assets/instructor-profile.png";
-import { LANDING_PAGE_INSTRUCTORS } from "@/dev-data/db";
 import { cn, getArabicPlural, toHindiDigits } from "@/lib/utils";
 import Image from "next/image";
 import { differenceInCalendarYears } from "date-fns";
 
-const straight = cn("rounded-tr-[19rem] rounded-bl-[19rem]");
-const reversed = cn("rounded-tl-[19rem] rounded-br-[19rem]");
+const straight = cn("rounded-[0_19rem]");
+const reversed = cn("rounded-[19rem_0]");
 
 export default async function InstructorsRow() {
-  const {
-    data: { instructors },
-  }: {
-    status: string;
-    data: { instructors: (typeof LANDING_PAGE_INSTRUCTORS)[number][] };
-  } = await new Promise((resolve) =>
-    setTimeout(
-      () =>
-        resolve({
-          status: "success",
-          data: {
-            instructors: LANDING_PAGE_INSTRUCTORS,
-          },
-        }),
-      1500,
-    ),
-  );
+  const instructors = await getLandingPageInstructors();
+
+  if (instructors.length <= 0) return null;
 
   return (
     <div className="tablet:grid-cols-1 tablet:gap-40 grid w-full grid-cols-3 gap-20 text-[1.5rem] text-gray-600">
       {instructors.slice(0, 3).map(({ instructor }, i) => {
-        const joinDate = new Date(instructor.joined_at);
+        const joinDate = new Date(instructor.joined_date);
         const yearsOfExp = differenceInCalendarYears(new Date(), joinDate);
 
         return (
           <div
             key={instructor.id}
             className={cn(
-              "shadow-soft relative min-h-151 bg-[linear-gradient(181deg,#FFF_3.72%,#93A494_180.46%)] px-10 py-16",
+              "shadow-soft mobile-lg:px-5 relative min-h-151 bg-[linear-gradient(181deg,#FFF_3.72%,#93A494_180.46%)] px-10 py-16",
               i % 2 === 0 ? straight : reversed,
             )}
           >
             <div
               className={cn(
-                "absolute bottom-0 left-0 flex w-full justify-end overflow-clip",
+                "absolute bottom-0 left-0 flex w-full justify-end overflow-clip rounded-t-none!",
                 i % 2 === 0 ? straight : reversed,
               )}
               draggable="false"
@@ -50,7 +36,7 @@ export default async function InstructorsRow() {
               <Image
                 src={InstructorProfile}
                 alt={instructor.name + "Picture"}
-                className="relative z-20 w-130 object-cover"
+                className="mobile-lg:-left-30 relative z-20 w-130 object-cover"
                 draggable="false"
               />
             </div>
@@ -60,8 +46,8 @@ export default async function InstructorsRow() {
                 <h4 className="text-olive-500 text-[2.8rem] font-bold">
                   {instructor.name}
                 </h4>
-                <p className="text-beige-500 text-[1.8rem]">
-                  {instructor.job_title}
+                <p className="text-beige-500 max-w-80 text-[1.8rem]">
+                  {instructor.bio}
                 </p>
               </div>
 

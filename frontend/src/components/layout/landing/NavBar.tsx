@@ -1,18 +1,17 @@
-import NavLink from "@/components/ui/navigation/NavLink";
-import Button from "@/components/ui/Button";
-import Image from "next/image";
-import Logo from "@/assets/logo.svg";
-import { getServerSession } from "next-auth";
 import { authConfig } from "@/app/api/auth/[...nextauth]/route";
+import Logo from "@/assets/logo.svg";
+import AuthModal from "@/components/auth/AuthModal";
 import LogoutButton from "@/components/auth/LogoutButton";
-import LoginModal from "@/components/auth/LoginModal";
 import SignupModal from "@/components/auth/SignupModal";
+import NavLink from "@/components/ui/navigation/NavLink";
+import { getServerSession } from "next-auth";
+import Image from "next/image";
 
 export default async function NavBar() {
   const session = await getServerSession(authConfig);
 
   return (
-    <nav className="shadow-soft tablet:hidden sticky top-0 z-100 flex h-26 w-full items-center justify-between bg-gray-100/80 px-128 backdrop-blur-md">
+    <nav className="shadow-soft tablet:hidden sticky top-0 z-1000 flex h-26 w-full items-center justify-between bg-gray-100/80 px-128 backdrop-blur-md">
       {!!session?.user ? (
         <div className="tablet:hidden grid content-center">
           <LogoutButton variant="primary" size="small">
@@ -21,7 +20,7 @@ export default async function NavBar() {
         </div>
       ) : (
         <div className="tablet:hidden grid grid-cols-2 items-center gap-4">
-          <LoginModal />
+          <AuthModal />
           <SignupModal />
         </div>
       )}

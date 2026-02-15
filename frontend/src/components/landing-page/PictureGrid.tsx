@@ -10,11 +10,11 @@ import Image9 from "@/assets/image-grid/image-9.jpg";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
-const baseStyles = cn("border-[2rem] border-white");
+const baseStyles = cn("mobile-lg:border-6 border-[2rem] border-white");
 
 export default function PictureGrid() {
   return (
-    <div className="tablet:origin-top-left tablet:scale-40 tablet:h-120 tablet:-left-[3.5%] relative grid aspect-[2.58] h-auto w-full">
+    <div className="relative grid aspect-[2.58] h-auto w-full">
       <Image
         src={Image1}
         alt="Activity Image"

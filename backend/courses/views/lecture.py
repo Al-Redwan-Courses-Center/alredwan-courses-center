@@ -63,9 +63,13 @@ class LectureListCreateView(generics.ListCreateAPIView):
     
     POST /api/courses/<course_id>/lectures/
     Creates a new ADDITIONAL lecture with is_accepted=False (requires approval)
-    All users (Admin/Supervisor/Instructor) create additional lectures
+    
+    Permissions:
+    - Admins: Full access to all courses
+    - Supervisors: Full access to all courses
+    - Instructors: Only access to courses they are assigned to teach
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminOrCourseInstructor]
     pagination_class = CustomPageNumberPagination
     filterset_class = LectureFilter
     filter_backends = [filters.DjangoFilterBackend]
@@ -96,26 +100,6 @@ class LectureListCreateView(generics.ListCreateAPIView):
     
     def create(self, request, *args, **kwargs):
         """Create a new additional lecture with validation"""
-        course_id = self.kwargs.get('course_id')
-        course = get_object_or_404(Course, pk=course_id)
-        
-        # Check permissions - admin, supervisor, or instructor of this course
-        user = request.user
-        is_authorized = (
-            user.role in ['admin', 'supervisor'] or
-            (hasattr(user, 'instructor_profile') and 
-             user.instructor_profile == course.instructor)
-        )
-        
-        if not is_authorized:
-            return Response(
-                {
-                    'error': 'You do not have permission to create lectures for this course.',
-                    'detail': 'Only administrators, supervisors, or the course instructor can create lectures.'
-                },
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
@@ -147,7 +131,7 @@ class LectureNumberCheckView(APIView):
     - calculated_lecture_number: the lecture number that will be assigned
     - action: what will happen when this lecture is added
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminOrCourseInstructor]
     
     def get(self, request, course_id):
         """Check if a lecture can be created at the specified date and time"""

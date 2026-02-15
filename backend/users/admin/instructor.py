@@ -66,7 +66,7 @@ class InstructorAdmin(admin.ModelAdmin):
                     'get_monthly_salary', 'get_phone', 'get_tags_display', 'get_joined_date', 'fingerprint_id')
     list_filter = ('type', 'tags', 'joined_date')
     search_fields = ('user__first_name', 'user__last_name',
-                     'user__phone_number1')
+                     'user__phone_number1', 'fingerprint_id')
     list_select_related = ('user',)
     prefetch_related = ('tags',)
     filter_horizontal = ('tags',)

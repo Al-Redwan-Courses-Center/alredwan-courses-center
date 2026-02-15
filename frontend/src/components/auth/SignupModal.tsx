@@ -1,27 +1,20 @@
-import SignupForm from "@/components/auth/SignupForm";
+"use client";
+
+import AuthModal from "@/components/auth/AuthModal";
 import Button from "@/components/ui/Button";
-import {
-  Modal,
-  ModalContent,
-  ModalTitle,
-  ModalTrigger,
-} from "@/components/ui/Modal";
+import { ReactNode } from "react";
 
-export default function SignupModal() {
+export default function SignupModal({ trigger }: { trigger?: ReactNode }) {
   return (
-    <Modal>
-      <ModalTrigger asChild>
-        <Button variant="secondary" size="small">
-          إنشاء حساب
-        </Button>
-      </ModalTrigger>
-
-      <ModalContent className="max-h-[90vh] max-w-20/45 overflow-y-auto">
-        <ModalTitle>إنشاء حساب</ModalTitle>
-        <div className="flex w-full flex-col items-center">
-          <SignupForm />
-        </div>
-      </ModalContent>
-    </Modal>
+    <AuthModal
+      defaultMode="signup"
+      trigger={
+        trigger || (
+          <Button variant="secondary" size="small">
+            إنشاء حساب
+          </Button>
+        )
+      }
+    />
   );
 }

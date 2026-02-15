@@ -19,23 +19,29 @@ from .models import (
     AttendanceStatus,
     AttendanceType,
     CheckInMethod,
+    FingerprintScanLog,
+    ScanAction,
 )
 from .models.lecture_attendance import LectureAttendance
+from .permissions import IsAdminOrCourseInstructor
 from .serializers import (
     # Lecture attendance serializers
     MarkAttendanceSerializer,
     LectureAttendanceSerializer,
+    BulkMarkAttendanceSerializer,
     # Instructor attendance serializers
     InstructorAttendanceSerializer,
     InstructorAttendanceListSerializer,
     FingerprintCheckInSerializer,
     FingerprintCheckOutSerializer,
+    FingerprintScanSerializer,
     RateInstructorSerializer,
     AttendanceDeviceSerializer,
     SupervisorScheduleSerializer,
     TodayAttendanceSummarySerializer,
 )
 from users.models import Instructor
+from courses.models import Season
 
 
 # =============================================================================
@@ -45,6 +51,8 @@ from users.models import Instructor
 class LectureAttendanceView(APIView):
     """
     API endpoint to mark attendance for a student or child.
+    
+    Only admins and the course instructor can mark attendance.
     
     POST /api/attendance/lecture/<lecture_id>/mark/
     
@@ -56,10 +64,28 @@ class LectureAttendanceView(APIView):
         "notes": "Optional notes"
     }
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminOrCourseInstructor]
     
     def post(self, request, lecture_id):
         """Mark attendance for a student or child using their code."""
+        from courses.models.lecture import Lecture
+        
+        # Get the lecture and check permissions
+        try:
+            lecture = Lecture.objects.select_related('course', 'course__instructor').get(id=lecture_id)
+        except Lecture.DoesNotExist:
+            return Response(
+                {'error': 'Lecture not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Check object-level permission (admin or course instructor)
+        if not self.permission_classes[0]().has_object_permission(request, self, lecture):
+            return Response(
+                {'error': 'You do not have permission to mark attendance for this lecture.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         # Add lecture_id to the request data
         data = request.data.copy()
         data['lecture_id'] = lecture_id
@@ -107,6 +133,173 @@ class LectureAttendanceView(APIView):
                 {'error': f'Failed to mark attendance: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class BulkLectureAttendanceView(APIView):
+    """
+    API endpoint to mark attendance for multiple students/children in bulk.
+    
+    Only admins and the course instructor can mark attendance.
+    
+    POST /api/attendance/lecture/<lecture_id>/mark-bulk/
+    
+    Request body:
+    {
+        "marked_via": "manual",  // or "qr_scan"
+        "attendances": [
+            {
+                "code": "M64793",
+                "participant_type": "student",
+                "rating": 8,
+                "notes": "Good performance",
+                "present": true
+            },
+            {
+                "code": "C12345",
+                "participant_type": "child",
+                "rating": 9,
+                "notes": "Excellent",
+                "present": true
+            }
+        ]
+    }
+    
+    Response:
+    {
+        "message": "Bulk attendance marking completed",
+        "lecture_id": 123,
+        "summary": {
+            "total_received": 10,
+            "successful": 8,
+            "failed": 2,
+            "marked_by": "John Doe",
+            "marked_via": "manual",
+            "marked_at": "2026-02-10T10:30:00Z"
+        },
+        "successful_records": [...],
+        "failed_records": [...]
+    }
+    """
+    permission_classes = [IsAdminOrCourseInstructor]
+    
+    def post(self, request, lecture_id):
+        """Mark attendance for multiple students/children in bulk."""
+        from courses.models.lecture import Lecture
+        
+        # Get the lecture and check permissions
+        try:
+            lecture = Lecture.objects.select_related('course', 'course__instructor').get(id=lecture_id)
+        except Lecture.DoesNotExist:
+            return Response(
+                {'error': f'Lecture with id {lecture_id} not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Check object-level permission (admin or course instructor)
+        if not self.permission_classes[0]().has_object_permission(request, self, lecture):
+            return Response(
+                {'error': 'You do not have permission to mark attendance for this lecture.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Validate the request data
+        serializer = BulkMarkAttendanceSerializer(
+            data=request.data,
+            context={'request': request, 'lecture': lecture}
+        )
+        
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        validated_data = serializer.validated_data
+        validated_items = serializer.context.get('validated_items', [])
+        validation_errors = serializer.context.get('validation_errors', [])
+        
+        marked_via = validated_data.get('marked_via', 'manual')
+        marked_at = timezone.now()
+        
+        # Process all validated attendance records
+        successful_records = []
+        failed_records = []
+        
+        try:
+            with transaction.atomic():
+                for item in validated_items:
+                    attendance = item['attendance']
+                    participant = item['participant']
+                    data = item['data']
+                    
+                    try:
+                        # Set rating and notes
+                        attendance.rating = data['rating']
+                        attendance.notes = data.get('notes', '')
+                        
+                        # Mark attendance
+                        attendance.mark(
+                            present=data.get('present', True),
+                            marked_by_user=request.user,
+                            marked_via=marked_via
+                        )
+                        
+                        # Add to successful records
+                        successful_records.append({
+                            'code': data['code'],
+                            'participant_type': data['participant_type'],
+                            'participant_name': (
+                                participant.first_name if hasattr(participant, 'first_name')
+                                else participant.user.get_full_name() if hasattr(participant, 'user')
+                                else 'Unknown'
+                            ),
+                            'rating': data['rating'],
+                            'present': data.get('present', True),
+                            'attendance_id': attendance.id
+                        })
+                        
+                    except Exception as e:
+                        failed_records.append({
+                            'code': data['code'],
+                            'participant_type': data['participant_type'],
+                            'error': f'Failed to mark attendance: {str(e)}'
+                        })
+                
+                # Add validation errors to failed records
+                failed_records.extend(validation_errors)
+        
+        except Exception as e:
+            return Response(
+                {'error': f'Transaction failed: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+        # Prepare summary
+        total_received = len(validated_data.get('attendances', []))
+        summary = {
+            'total_received': total_received,
+            'successful': len(successful_records),
+            'failed': len(failed_records),
+            'marked_by': request.user.get_full_name() or request.user.username,
+            'marked_via': marked_via,
+            'marked_at': marked_at.isoformat()
+        }
+        
+        response_status = status.HTTP_200_OK if len(successful_records) > 0 else status.HTTP_400_BAD_REQUEST
+        
+        if len(failed_records) > 0 and len(successful_records) > 0:
+            response_status = status.HTTP_207_MULTI_STATUS
+        
+        return Response(
+            {
+                'message': 'Bulk attendance marking completed',
+                'lecture_id': lecture_id,
+                'summary': summary,
+                'successful_records': successful_records,
+                'failed_records': failed_records
+            },
+            status=response_status
+        )
 
 
 # =============================================================================
@@ -306,6 +499,312 @@ class FingerprintCheckOutView(DeviceAuthenticationMixin, views.APIView):
             },
             status=status.HTTP_200_OK
         )
+
+
+class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
+    """
+    Unified endpoint for fingerprint device scans.
+    
+    POST /api/attendance/scan/
+    {
+        "fingerprint_id": "FP123456",
+        "device_id": "DEVICE001",
+        "timestamp": "2026-02-14T08:30:00+02:00"  // Optional, for offline sync
+    }
+    
+    This is the RECOMMENDED endpoint for fingerprint devices that don't distinguish
+    between check-in and check-out actions.
+    
+    Logic:
+    1. No attendance record for today → Auto-create based on schedule/lecture and check-in
+    2. Has record but not checked-in → Check-in
+    3. Checked-in but not out → Check-out
+    4. Already checked out → Re-entry (clears check-out, logs as re-entry)
+    5. Rapid scans (< 2 min) → Ignored as duplicates
+    
+    All scans are logged to FingerprintScanLog for audit trail.
+    """
+    
+    # Minimum time between scans (in seconds) to prevent rapid duplicates
+    MIN_SCAN_INTERVAL_SECONDS = 120  # 2 minutes
+    
+    def post(self, request):
+        serializer = FingerprintScanSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        fingerprint_id = serializer.validated_data['fingerprint_id']
+        device_id = serializer.validated_data['device_id']
+        scan_time = serializer.validated_data.get('timestamp', timezone.now())
+        
+        # Get instructor and device from serializer context
+        instructor = serializer.context.get('instructor')
+        if not instructor:
+            instructor = get_object_or_404(Instructor, fingerprint_id=fingerprint_id)
+        
+        device = serializer.context.get('device')
+        if not device:
+            device = self.get_device(device_id)
+        
+        today = timezone.localdate()
+        
+        # Check for rapid duplicate scans
+        recent_scans = FingerprintScanLog.objects.filter(
+            instructor=instructor,
+            scan_time__gte=timezone.now() - timezone.timedelta(seconds=self.MIN_SCAN_INTERVAL_SECONDS)
+        ).exclude(action=ScanAction.IGNORED)
+        
+        if recent_scans.exists():
+            last_scan = recent_scans.first()
+            # Log as ignored
+            FingerprintScanLog.objects.create(
+                instructor=instructor,
+                attendance=last_scan.attendance,
+                scan_time=scan_time,
+                device=device,
+                action=ScanAction.IGNORED,
+                is_processed=False,
+                notes=f"تم تجاهل البصمة - تكرار خلال {self.MIN_SCAN_INTERVAL_SECONDS} ثانية"
+            )
+            return Response(
+                {
+                    "message": "Scan ignored - too soon after last scan",
+                    "instructor": instructor.user.get_full_name(),
+                    "last_scan": last_scan.scan_time,
+                    "min_interval_seconds": self.MIN_SCAN_INTERVAL_SECONDS,
+                },
+                status=status.HTTP_200_OK
+            )
+        
+        # Get or create attendance records for today
+        attendance_records = InstructorAttendance.objects.filter(
+            instructor=instructor,
+            date=today
+        )
+        
+        action_taken = None
+        response_data = {
+            "instructor": instructor.user.get_full_name(),
+            "scan_time": scan_time,
+            "records": [],
+        }
+        
+        # CASE 1: No attendance records exist - auto-create based on schedules/lectures
+        if not attendance_records.exists():
+            created_records = self._auto_create_attendance(instructor, today, device)
+            if created_records:
+                action_taken = ScanAction.AUTO_CREATED
+                for record in created_records:
+                    record.mark_checked_in(device=device, method=CheckInMethod.FINGERPRINT)
+                    response_data["records"].append({
+                        "id": record.id,
+                        "type": record.attendance_type,
+                        "status": record.status,
+                        "auto_created": True,
+                    })
+                response_data["message"] = "Auto-created attendance and checked in"
+                response_data["action"] = "auto_create_check_in"
+                
+                # Log the scan
+                for record in created_records:
+                    FingerprintScanLog.objects.create(
+                        instructor=instructor,
+                        attendance=record,
+                        scan_time=scan_time,
+                        device=device,
+                        action=ScanAction.AUTO_CREATED,
+                        is_processed=True,
+                        notes="تم إنشاء سجل الحضور تلقائياً وتسجيل الدخول"
+                    )
+                
+                return Response(response_data, status=status.HTTP_201_CREATED)
+            else:
+                # No schedules or lectures found - create a general attendance record
+                season = Season.objects.filter(is_active=True).first()
+                if not season:
+                    return Response(
+                        {
+                            "error": "No active season found",
+                            "instructor": instructor.user.get_full_name(),
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                record = InstructorAttendance.objects.create(
+                    instructor=instructor,
+                    date=today,
+                    attendance_type=AttendanceType.SUPERVISION,
+                    status=AttendanceStatus.NOT_STARTED,
+                    season=season
+                )
+                record.mark_checked_in(device=device, method=CheckInMethod.FINGERPRINT)
+                
+                FingerprintScanLog.objects.create(
+                    instructor=instructor,
+                    attendance=record,
+                    scan_time=scan_time,
+                    device=device,
+                    action=ScanAction.AUTO_CREATED,
+                    is_processed=True,
+                    notes="تم إنشاء سجل حضور عام (بدون جدول)"
+                )
+                
+                response_data["message"] = "Auto-created general attendance and checked in"
+                response_data["action"] = "auto_create_check_in"
+                response_data["records"] = [{
+                    "id": record.id,
+                    "type": record.attendance_type,
+                    "status": record.status,
+                    "auto_created": True,
+                }]
+                return Response(response_data, status=status.HTTP_201_CREATED)
+        
+        # Check current state of attendance records
+        not_checked_in = attendance_records.filter(check_in_time__isnull=True)
+        checked_in_not_out = attendance_records.filter(
+            check_in_time__isnull=False,
+            check_out_time__isnull=True
+        )
+        checked_out = attendance_records.filter(check_out_time__isnull=False)
+        
+        # CASE 2: Has records not checked in → Check-in
+        if not_checked_in.exists():
+            for record in not_checked_in:
+                record.mark_checked_in(device=device, method=CheckInMethod.FINGERPRINT)
+                response_data["records"].append({
+                    "id": record.id,
+                    "type": record.attendance_type,
+                    "status": record.status,
+                })
+                FingerprintScanLog.objects.create(
+                    instructor=instructor,
+                    attendance=record,
+                    scan_time=scan_time,
+                    device=device,
+                    action=ScanAction.CHECK_IN,
+                    is_processed=True
+                )
+            response_data["message"] = "Check-in successful"
+            response_data["action"] = "check_in"
+            response_data["check_in_time"] = scan_time
+            return Response(response_data, status=status.HTTP_200_OK)
+        
+        # CASE 3: Checked in but not out → Check-out
+        if checked_in_not_out.exists():
+            for record in checked_in_not_out:
+                try:
+                    record.mark_checked_out(device=device, method=CheckInMethod.FINGERPRINT)
+                    response_data["records"].append({
+                        "id": record.id,
+                        "type": record.attendance_type,
+                        "check_out_time": record.check_out_time,
+                    })
+                    FingerprintScanLog.objects.create(
+                        instructor=instructor,
+                        attendance=record,
+                        scan_time=scan_time,
+                        device=device,
+                        action=ScanAction.CHECK_OUT,
+                        is_processed=True
+                    )
+                except ValidationError as e:
+                    return Response(
+                        {"error": str(e)},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            response_data["message"] = "Check-out successful"
+            response_data["action"] = "check_out"
+            response_data["check_out_time"] = scan_time
+            return Response(response_data, status=status.HTTP_200_OK)
+        
+        # CASE 4: Already checked out → Re-entry (clear check-out)
+        if checked_out.exists():
+            for record in checked_out:
+                record.check_out_time = None
+                record.check_out_device = None
+                record.check_out_method = None
+                record.save()
+                record.broadcast_update()
+                response_data["records"].append({
+                    "id": record.id,
+                    "type": record.attendance_type,
+                    "status": record.status,
+                    "re_entry": True,
+                })
+                FingerprintScanLog.objects.create(
+                    instructor=instructor,
+                    attendance=record,
+                    scan_time=scan_time,
+                    device=device,
+                    action=ScanAction.RE_ENTRY,
+                    is_processed=True,
+                    notes="إعادة دخول - تم مسح وقت الخروج السابق"
+                )
+            response_data["message"] = "Re-entry recorded - check-out cleared"
+            response_data["action"] = "re_entry"
+            return Response(response_data, status=status.HTTP_200_OK)
+        
+        # Fallback - should not reach here
+        return Response(
+            {"error": "Unexpected state"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+    def _auto_create_attendance(self, instructor, date, device):
+        """
+        Auto-create attendance records based on instructor's schedules and lectures.
+        
+        Returns list of created InstructorAttendance records.
+        """
+        from courses.models import Lecture
+        
+        season = Season.objects.filter(is_active=True).first()
+        if not season:
+            return []
+        
+        created_records = []
+        weekday = date.weekday()
+        
+        # Check supervisor schedules for today
+        schedules = SupervisorSchedule.objects.filter(
+            instructor=instructor,
+            day_of_week=weekday
+        )
+        
+        for schedule in schedules:
+            record, created = InstructorAttendance.objects.get_or_create(
+                instructor=instructor,
+                schedule=schedule,
+                date=date,
+                defaults={
+                    "attendance_type": AttendanceType.SUPERVISION,
+                    "status": AttendanceStatus.NOT_STARTED,
+                    "season": season
+                }
+            )
+            if created:
+                created_records.append(record)
+        
+        # Check lectures for today
+        lectures = Lecture.objects.filter(
+            instructor=instructor,
+            day=date
+        )
+        
+        for lecture in lectures:
+            record, created = InstructorAttendance.objects.get_or_create(
+                instructor=instructor,
+                lecture=lecture,
+                defaults={
+                    "date": date,
+                    "attendance_type": AttendanceType.LECTURE,
+                    "status": AttendanceStatus.NOT_STARTED,
+                    "season": season
+                }
+            )
+            if created:
+                created_records.append(record)
+        
+        return created_records
 
 
 class TodayAttendanceListView(generics.ListAPIView):
