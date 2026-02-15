@@ -795,6 +795,51 @@ class LectureAttendanceMarkSingleAPITest(LectureAttendanceBaseTestCase):
         self.assertEqual(attendance.rating, 9)
         self.assertEqual(attendance.marked_by, self.instructor_user)
 
+    def test_mark_attendance_success_as_supervisor(self):
+        """Test that supervisors can mark attendance for any course"""
+        # Create supervisor
+        supervisor_user = CustomUser.objects.create_user(
+            phone_number1='+201000000099',
+            password='supervisorpass123',
+            first_name='Super',
+            last_name='Visor',
+            email='supervisor@test.com',
+            dob='1984-04-14',
+            gender='male'
+        )
+        supervisor = Instructor.objects.create(
+            user=supervisor_user,
+            monthly_salary=8000.00,
+            type='supervisor'
+        )
+
+        # Create attendance record
+        attendance = LectureAttendance.objects.create(
+            lecture=self.lecture,
+            student=self.student
+        )
+
+        self.client.force_authenticate(user=supervisor_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark/',
+            {
+                'code': 'M64793',
+                'participant_type': 'student',
+                'rating': 9,
+                'notes': 'Supervisor marked attendance'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], 'Attendance marked successfully')
+
+        # Verify database
+        attendance.refresh_from_db()
+        self.assertTrue(attendance.present)
+        self.assertEqual(attendance.rating, 9)
+        self.assertEqual(attendance.marked_by, supervisor_user)
+
     def test_mark_attendance_forbidden_for_other_instructor(self):
         """Test that other instructors cannot mark attendance"""
         # Create attendance record
@@ -1086,6 +1131,55 @@ class LectureAttendanceBulkMarkAPITest(LectureAttendanceBaseTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['summary']['successful'], 2)
+
+    def test_bulk_mark_success_as_supervisor(self):
+        """Test that supervisors can bulk mark attendance for any course"""
+        # Create supervisor
+        supervisor_user = CustomUser.objects.create_user(
+            phone_number1='+201000000098',
+            password='supervisorpass123',
+            first_name='Super',
+            last_name='Visor',
+            email='supervisor2@test.com',
+            dob='1984-04-14',
+            gender='male'
+        )
+        supervisor = Instructor.objects.create(
+            user=supervisor_user,
+            monthly_salary=8000.00,
+            type='supervisor'
+        )
+
+        # Create attendance records
+        LectureAttendance.objects.create(lecture=self.lecture, student=self.student)
+        LectureAttendance.objects.create(lecture=self.lecture, child=self.child)
+
+        self.client.force_authenticate(user=supervisor_user)
+        response = self.client.post(
+            f'/api/attendance/lecture/{self.lecture.id}/mark-bulk/',
+            {
+                'marked_via': 'qr_scan',
+                'attendances': [
+                    {
+                        'code': 'M64793',
+                        'participant_type': 'student',
+                        'rating': 8,
+                        'present': True
+                    },
+                    {
+                        'code': 'C12345',
+                        'participant_type': 'child',
+                        'rating': 9,
+                        'present': True
+                    }
+                ]
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['summary']['successful'], 2)
+        self.assertEqual(response.data['summary']['marked_by'], supervisor_user.get_full_name())
 
     def test_bulk_mark_forbidden_for_other_instructor(self):
         """Test that other instructors cannot bulk mark attendance"""
