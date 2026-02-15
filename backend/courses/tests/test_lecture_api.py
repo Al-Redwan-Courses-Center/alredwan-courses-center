@@ -71,6 +71,22 @@ class LectureAPIBaseTestCase(TestCase):
             type='normal'
         )
 
+        # Create supervisor user
+        cls.supervisor_user = CustomUser.objects.create_user(
+            phone_number1='+201000000012',
+            password='supervisorpass123',
+            first_name='Super',
+            last_name='Visor',
+            email='supervisor@test.com',
+            dob='1984-04-14',
+            gender='male'
+        )
+        cls.supervisor = Instructor.objects.create(
+            user=cls.supervisor_user,
+            monthly_salary=8000.00,
+            type='supervisor'
+        )
+
         # Create regular user
         cls.regular_user = CustomUser.objects.create_user(
             phone_number1='+201000000020',
@@ -192,12 +208,11 @@ class LectureListAPITest(LectureAPIBaseTestCase):
         self.assertEqual(len(response.data['results']), 1)
 
     def test_list_lectures_forbidden_for_other_instructor(self):
-        """Test that other instructors CAN list lectures (permission allows any instructor)"""
+        """Test that other instructors cannot list lectures for courses they don't teach"""
         self.client.force_authenticate(user=self.other_instructor_user)
         response = self.client.get(f'/api/courses/{self.course.id}/lectures/')
-        # Note: Current implementation allows any instructor to list lectures
-        # This is a permission issue that should be fixed in the permission class
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Fixed: Other instructors should NOT have access to courses they don't teach
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_list_lectures_forbidden_for_regular_user(self):
         """Test that regular users cannot list lectures"""
@@ -442,7 +457,7 @@ class LectureCreateAPITest(LectureAPIBaseTestCase):
         self.assertFalse(response.data['is_accepted'])
 
     def test_create_lecture_forbidden_for_other_instructor(self):
-        """Test that other instructors CAN create lectures (permission allows any instructor)"""
+        """Test that other instructors cannot create lectures for courses they don't teach"""
         self.client.force_authenticate(user=self.other_instructor_user)
         response = self.client.post(
             f'/api/courses/{self.course.id}/lectures/',
@@ -455,9 +470,8 @@ class LectureCreateAPITest(LectureAPIBaseTestCase):
             format='json'
         )
 
-        # Note: Current implementation allows any instructor to create lectures
-        # This is a permission issue that should be fixed in the permission class
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # Fixed: Other instructors should NOT have access to courses they don't teach
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_lecture_forbidden_for_regular_user(self):
         """Test that regular users cannot create lectures"""
@@ -855,15 +869,14 @@ class LectureCheckDateTimeAPITest(LectureAPIBaseTestCase):
         self.assertIn('is_available', response.data)
 
     def test_check_datetime_forbidden_for_other_instructor(self):
-        """Test that other instructors CAN check datetime (permission allows any instructor)"""
+        """Test that other instructors cannot check datetime for courses they don't teach"""
         self.client.force_authenticate(user=self.other_instructor_user)
         response = self.client.get(
             f'/api/courses/{self.course.id}/lectures/check-datetime/?day={(self.today + timedelta(days=5)).isoformat()}&start_time=10:00:00'
         )
 
-        # Note: Current implementation allows any instructor to check datetime
-        # This is a permission issue that should be fixed in the permission class
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Fixed: Other instructors should NOT have access to courses they don't teach
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_check_datetime_missing_day_parameter(self):
         """Test checking datetime without day parameter"""
@@ -1129,3 +1142,75 @@ class LectureCheckDateTimeAPITest(LectureAPIBaseTestCase):
         self.assertEqual(response.data['calculated_lecture_number'], 1)
         self.assertEqual(response.data['action'], 'append')
         self.assertEqual(response.data['total_lectures_after'], 1)
+
+
+class LectureSupervisorPermissionTest(LectureAPIBaseTestCase):
+    """Tests for supervisor permissions - supervisors should have access to all courses"""
+
+    def test_supervisor_can_list_any_course_lectures(self):
+        """Test that supervisors can list lectures for any course (not just their own)"""
+        Lecture.objects.create(
+            course=self.course,
+            lecture_number=1,
+            title='Lecture 1',
+            day=self.today + timedelta(days=1),
+            start_time=time(10, 0),
+            end_time=time(12, 0),
+            instructor=self.course_instructor,
+            status=LectureStatus.SCHEDULED,
+            is_accepted=True
+        )
+
+        self.client.force_authenticate(user=self.supervisor_user)
+        response = self.client.get(f'/api/courses/{self.course.id}/lectures/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+
+    def test_supervisor_can_create_lecture_for_any_course(self):
+        """Test that supervisors can create lectures for any course"""
+        self.client.force_authenticate(user=self.supervisor_user)
+        response = self.client.post(
+            f'/api/courses/{self.course.id}/lectures/',
+            {
+                'day': (self.today + timedelta(days=5)).isoformat(),
+                'start_time': '14:00:00',
+                'end_time': '16:00:00',
+                'title': 'Supervisor Created Lecture'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['title'], 'Supervisor Created Lecture')
+
+    def test_supervisor_can_check_datetime_for_any_course(self):
+        """Test that supervisors can check datetime for any course"""
+        self.client.force_authenticate(user=self.supervisor_user)
+        response = self.client.get(
+            f'/api/courses/{self.course.id}/lectures/check-datetime/?day={(self.today + timedelta(days=5)).isoformat()}&start_time=10:00:00'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('is_available', response.data)
+
+    def test_supervisor_can_access_other_instructors_courses(self):
+        """Test that supervisors can access courses taught by other instructors"""
+        Lecture.objects.create(
+            course=self.other_course,
+            lecture_number=1,
+            title='Other Course Lecture',
+            day=self.today + timedelta(days=1),
+            start_time=time(10, 0),
+            end_time=time(12, 0),
+            instructor=self.other_instructor,
+            status=LectureStatus.SCHEDULED,
+            is_accepted=True
+        )
+
+        self.client.force_authenticate(user=self.supervisor_user)
+        response = self.client.get(f'/api/courses/{self.other_course.id}/lectures/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['title'], 'Other Course Lecture')

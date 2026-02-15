@@ -63,7 +63,11 @@ class LectureListCreateView(generics.ListCreateAPIView):
     
     POST /api/courses/<course_id>/lectures/
     Creates a new ADDITIONAL lecture with is_accepted=False (requires approval)
-    All users (Admin/Supervisor/Instructor) create additional lectures
+    
+    Permissions:
+    - Admins: Full access to all courses
+    - Supervisors: Full access to all courses
+    - Instructors: Only access to courses they are assigned to teach
     """
     permission_classes = [IsAdminOrCourseInstructor]
     pagination_class = CustomPageNumberPagination
