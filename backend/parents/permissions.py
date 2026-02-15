@@ -58,6 +58,9 @@ class IsAdmin(permissions.BasePermission):
 class IsInstructorOrSupervisor(permissions.BasePermission):
     """
     Permission to only allow instructors or supervisors.
+    
+    - Supervisors: Full access (checked via instructor_profile.type == 'supervisor')
+    - Regular Instructors: Full access
     """
     
     def has_permission(self, request, view):
@@ -68,10 +71,7 @@ class IsInstructorOrSupervisor(permissions.BasePermission):
         
         # Check if user has instructor profile
         if hasattr(request.user, 'instructor_profile'):
-            return True
-        
-        # Check if user role is supervisor
-        if request.user.role == 'supervisor':
+            # Both supervisors and regular instructors have access
             return True
         
         return False
@@ -80,7 +80,10 @@ class IsInstructorOrSupervisor(permissions.BasePermission):
 class IsAdminOrInstructorOrSupervisor(permissions.BasePermission):
     """
     Permission to allow admins, instructors, or supervisors.
-    Combines IsAdmin and IsInstructorOrSupervisor permissions.
+    
+    - Admins: Full access (staff or superuser)
+    - Supervisors: Full access (checked via instructor_profile.type == 'supervisor')
+    - Regular Instructors: Full access
     """
     
     def has_permission(self, request, view):
@@ -93,12 +96,8 @@ class IsAdminOrInstructorOrSupervisor(permissions.BasePermission):
         if request.user.is_staff or request.user.is_superuser:
             return True
         
-        # Check if user has instructor profile
+        # Check if user has instructor profile (includes both supervisors and regular instructors)
         if hasattr(request.user, 'instructor_profile'):
-            return True
-        
-        # Check if user role is supervisor
-        if request.user.role == 'supervisor':
             return True
         
         return False

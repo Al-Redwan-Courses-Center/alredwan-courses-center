@@ -50,15 +50,24 @@ class ChildCreateView(generics.CreateAPIView):
 class ChildListView(generics.ListAPIView):
     """
     API endpoint to list all children of the authenticated parent.
-    Returns both primary children and extra children.
+    Returns both primary children (where parent is primary_parent) and 
+    extra children (where parent is linked as secondary parent via ChildParents).
     """
     serializer_class = ChildDetailSerializer
     permission_classes = [permissions.IsAuthenticated, IsParent]
     
     def get_queryset(self):
-        """Return children where the user is the primary parent."""
+        """Return children where the user is either the primary parent or a secondary parent."""
+        from django.db.models import Q
+        
         parent = self.request.user.parent_profile
-        return Child.objects.filter(primary_parent=parent)
+        
+        # Return children where parent is either:
+        # 1. The primary parent (primary_parent=parent)
+        # 2. A secondary parent (linked via ChildParents - extra_parents relationship)
+        return Child.objects.filter(
+            Q(primary_parent=parent) | Q(extra_parents__parent=parent)
+        ).distinct()  # Use distinct() to avoid duplicates if parent is linked multiple ways
 
 
 class ChildDetailView(generics.RetrieveAPIView):
