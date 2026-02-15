@@ -8,13 +8,7 @@ import { toHindiDigits } from "@/lib/utils";
 
 export default function Footer() {
   return (
-    <footer className="relative bg-[linear-gradient(180deg,#D2DBC8_0%,#FFF_100%)] px-53 py-18 pb-14">
-      <SectionDivider
-        startColor="#D2DBC8"
-        endColor="#2E4238"
-        className="tablet:-top-47 -top-112"
-      />
-
+    <footer className="mobile-lg:px-15 relative bg-[linear-gradient(180deg,#D2DBC8_0%,#FFF_100%)] px-53 py-18 pb-14">
       <div className="text-olive-500 tablet:grid-cols-2 tablet:gap-30 grid grid-cols-3 grid-rows-[auto_1fr] text-[1.6rem] [&_h3]:mb-9 [&_h3]:text-[1.8rem] [&_h3]:font-bold [&>div:not(:last-of-type)>h3]:pr-11">
         <div>
           <h3>معلومات التواصل</h3>

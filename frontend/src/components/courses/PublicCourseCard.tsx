@@ -4,35 +4,33 @@ import CalendarIcon from "@/components/icons/CalendarIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import Button from "@/components/ui/Button";
 import ItemCard from "@/components/ui/ItemCard";
-import { LANDING_PAGE_COURSES } from "@/dev-data/db";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
+import { CourseListItem } from "@/types/entities";
 import { parseISO } from "date-fns";
 import Image from "next/image";
 
 export default function PublicCourseCard({
-  course,
+  course: course,
   index,
 }: {
-  course: (typeof LANDING_PAGE_COURSES)[number]["course"];
+  course: CourseListItem;
   index: number;
 }) {
   const startDate = parseISO(course.start_date);
   // const endDate = parseISO(course.start_date);
-  const lectureCount = course.lectures.length;
+  const lectureCount = course.num_lectures;
   const isEven = index % 2 === 0;
 
   return (
     <ItemCard
       cardHeader={
-        <div className="relative h-full">
-          <Image
-            src={course.images.cover}
-            fill
-            alt="Template Course Image"
-            draggable="false"
-            className="object-cover"
-          />
-        </div>
+        <Image
+          src={course.image || CourseImage}
+          fill
+          alt="Template Course Image"
+          draggable="false"
+          className="object-cover"
+        />
       }
       cardFooter={
         <div
@@ -62,10 +60,8 @@ export default function PublicCourseCard({
       }
       index={index}
     >
-      <h3 className="mb-3 text-[1.28rem] font-bold">{course.title}</h3>
-      <p className="mb-5">
-        دورات شامل لتعلم تلاوة القرآن الكريم وأحكام التجويد
-      </p>
+      <h3 className="mb-3 text-[1.28rem] font-bold">{course.name}</h3>
+      <p className="mb-5">{course.description}</p>
 
       <div className="mb-5 grid grid-cols-[repeat(auto-fill,minmax(5rem,auto))] items-center gap-2">
         {course.tags.map((tag, i) => (
@@ -104,7 +100,7 @@ export default function PublicCourseCard({
           <span>
             الأماكن المتاحة:{" "}
             <span className="font-bold">
-              {toHindiDigits(course.capacity - course.enrollments_count)}
+              {toHindiDigits(course.available_spots)}
             </span>{" "}
             من {toHindiDigits(course.capacity)}
           </span>

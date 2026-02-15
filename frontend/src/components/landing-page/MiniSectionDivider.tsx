@@ -1,15 +1,14 @@
 export default function MiniSectionDivider() {
   return (
     <svg
-      width="804"
-      height="231"
       viewBox="0 0 804 231"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="absolute bottom-0 left-0 z-20"
+      className="mobile-lg:w-dvw absolute bottom-0 left-0 z-20 w-[40dvw]"
     >
       <g filter="url(#filter0_d_4090_4158)">
         <path
+          className="w-full"
           d="M-157 231.573C-156.179 158.207 -88.2794 93.1443 17.345 66.2677C130.323 37.5192 241.662 63.8609 257.405 67.7472C279.576 73.2252 296.927 79.4106 311.905 86.2343C373.436 114.271 414.567 144.046 424.289 151.401C462.647 180.417 544.887 213.509 737 232C439 231.858 141 231.711 -157 231.569V231.573Z"
           fill="url(#paint0_linear_4090_4158)"
         />

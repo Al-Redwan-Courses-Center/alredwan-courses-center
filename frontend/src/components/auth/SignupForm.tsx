@@ -125,7 +125,7 @@ export default function SignupForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full">
-      <div className="grid grid-cols-2 gap-x-12 gap-y-8">
+      <div className="tablet:grid-cols-1 grid grid-cols-2 gap-x-12 gap-y-8">
         {/* 
           MARK: FIRST NAME
         */}
@@ -536,7 +536,7 @@ export default function SignupForm() {
       */}
 
       <div className="mt-12 flex justify-center">
-        <Button type="submit" className="w-1/2 py-6 text-4xl">
+        <Button type="submit" className="tablet:w-auto w-1/2 py-6 text-4xl">
           إنشاء الحساب
         </Button>
       </div>

@@ -13,7 +13,15 @@ export default function EnrollmentsList({
   wrapperStyles?: string;
 }) {
   const childNames = [
-    ...new Set(enrollments.map((e) => e.child.name.split(" ")[0])),
+    ...new Set(
+      enrollments
+        .map((e) => {
+          if (e.child?.name) return e.child.name.split(" ")[0];
+          if (e.participant_name) return e.participant_name.split(" ")[0];
+          return null;
+        })
+        .filter(Boolean),
+    ),
   ];
 
   return (

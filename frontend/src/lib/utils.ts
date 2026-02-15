@@ -10,7 +10,7 @@ export function cn(...inputs: ClassNameValue[]) {
 export { cva };
 
 export function toHindiDigits(num: number | string): string {
-  const westernToHindi: Record<string, string> = {
+  const westernToHindiDigits: Record<string, string> = {
     "0": "٠",
     "1": "١",
     "2": "٢",
@@ -23,9 +23,11 @@ export function toHindiDigits(num: number | string): string {
     "9": "٩",
   };
 
-  return num
+  const number = Number.isInteger(+num) ? (+num).toFixed(0) : (+num).toFixed(2);
+
+  return number
     .toString()
-    .replace(/[0-9]/g, (digit) => westernToHindi[digit] || digit);
+    .replace(/[0-9]/g, (digit) => westernToHindiDigits[digit] || digit);
 }
 
 export function formatDate(date: Date) {

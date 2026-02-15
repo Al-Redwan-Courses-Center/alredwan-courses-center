@@ -10,22 +10,23 @@ import FieldSetInput from "@/components/ui/FieldSetInput";
 import { LoginInputs } from "@/types/auth";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
-import Link from "next/link";
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 
 export default function LoginForm({
   callbackUrl,
+  onSwitchToSignup,
 }: {
   callbackUrl?: string | null;
+  onSwitchToSignup?: () => void;
 }) {
   const [countryCode, setCountryCode] = useState("20");
   const [showCountryCodeList, setShowCountryCodeList] = useState(false);
   const { register, handleSubmit } = useForm<LoginInputs>({
     defaultValues: {
-      phone_number1: "01234567899",
-      password: "Subnautica455",
+      phone_number1: "01287282654",
+      password: "password123",
     },
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -153,12 +154,23 @@ export default function LoginForm({
           تسجيل الدخول
         </Button>
 
-        <Link
+        {/* <Link
           href="#"
           className="text-olive-900 hover:text-olive-300 self-center text-2xl font-bold underline transition-colors"
         >
           نسيت كلمة المرور؟
-        </Link>
+        </Link> */}
+
+        <div className="flex flex-col">
+          <span className="self-center text-2xl">ليس لديك حساب؟</span>
+          <button
+            type="button"
+            onClick={() => onSwitchToSignup?.()}
+            className="text-olive-900 hover:text-olive-300 self-center text-2xl font-bold underline transition-colors"
+          >
+            سجل حساب جديد الآن
+          </button>
+        </div>
       </div>
     </form>
   );

@@ -11,6 +11,8 @@ export default function ChildRow({
   child: any;
   index: number;
 }) {
+  // TODO(api): Enrollment requests do not include child identifiers yet.
+  // Keep mock child-scoped requests until the API exposes child_id.
   const enrollments = getChildEnrollmentRequests(child.id).sort(
     (a, b) =>
       ENROLLMENT_REQUEST_STATUS_WEIGHTS[

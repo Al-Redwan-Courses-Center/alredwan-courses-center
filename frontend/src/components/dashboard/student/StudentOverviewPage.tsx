@@ -1,8 +1,8 @@
+import { getMyEnrollmentRequests } from "@/actions/enrollments";
 import {
   getChildEnrollmentRequests,
   getChildOngoingEnrollments,
   getMyChildById,
-  getMyEnrollmentRequests,
   getOngoingEnrollments,
 } from "@/dev-data/db";
 import StudentCourseCard from "@/components/dashboard/student/StudentCourseCard";
@@ -22,6 +22,7 @@ export default async function StudentOverviewPage({
   let myActiveCourses: any[], myEnrollments: any[], name: string;
 
   if (role === "parent") {
+    // TODO(api): Child-specific enrollments are not available yet.
     myActiveCourses = getChildOngoingEnrollments(childId)
       .map((e) => e.course)
       .slice(0, 2);
@@ -36,13 +37,16 @@ export default async function StudentOverviewPage({
         ],
     );
 
+    // TODO(api): Replace mock child details when the API provides child info.
     name = getMyChildById(childId).name;
   } else {
+    // TODO(api): Replace mock active courses once course detail endpoints are wired.
     myActiveCourses = getOngoingEnrollments()
       .map((e) => e.course)
       .slice(0, 2);
 
-    myEnrollments = getMyEnrollmentRequests().sort(
+    const requests = await getMyEnrollmentRequests();
+    myEnrollments = requests.sort(
       (a, b) =>
         ENROLLMENT_REQUEST_STATUS_WEIGHTS[
           a.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS

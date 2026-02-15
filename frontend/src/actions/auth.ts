@@ -5,6 +5,8 @@ import apiClient from "@/lib/axios";
 import { SignupInputs, UserEntity } from "@/types/auth";
 import axios from "axios";
 import { getServerSession, Session } from "next-auth";
+import { decode, JWT } from "next-auth/jwt";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function signUp(data: SignupInputs) {
@@ -46,4 +48,37 @@ export async function protect(
   if (allowedRoles.includes(role)) return;
 
   redirect("/dashboard");
+}
+
+export async function getServerJwtToken() {
+  const cookieStore = await cookies();
+
+  const tokenCookie =
+    cookieStore.get("__Secure-next-auth.session-token") ||
+    cookieStore.get("next-auth.session-token");
+
+  if (!tokenCookie) {
+    console.error("No Token Cookie Found!");
+    return null;
+  }
+
+  try {
+    const decodedToken = await decode({
+      token: tokenCookie.value,
+      secret: process.env.NEXTAUTH_SECRET!,
+    });
+
+    return decodedToken as JWT &
+      UserEntity & {
+        sub: string;
+        iat: number;
+        jti: string;
+        exp: number;
+        jwt_access_token: string;
+        jwt_refresh_token: string;
+      };
+  } catch (error) {
+    console.error("Token Decryption Failed:", error);
+    return null;
+  }
 }

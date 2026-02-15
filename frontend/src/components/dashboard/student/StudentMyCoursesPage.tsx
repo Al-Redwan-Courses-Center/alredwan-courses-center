@@ -12,6 +12,7 @@ export default async function StudentMyCoursesPage({
   let name: string;
 
   if (role === "parent") {
+    // TODO(api): Replace mock child details when the API provides child info.
     name = getMyChildById(childId).name;
   } else {
     name = first_name;
