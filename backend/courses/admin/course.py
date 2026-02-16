@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.db.models import Count, Q
 
 from courses.models import Course
+from core.utils import ExcelExportMixin
 from .base import ArabicLabelsMixin, OptimizedQuerysetMixin
 from .filters import ActiveStatusFilter, CapacityStatusFilter, DateRangeFilter
 from .actions import activate_selected, deactivate_selected, duplicate_selected
@@ -16,7 +17,7 @@ from .inlines import CourseScheduleInline, LectureInline, ExamInline, CourseEnro
 
 
 @admin.register(Course)
-class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+class CourseAdmin(ExcelExportMixin, ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
     """Admin configuration for Course model with enhanced UX."""
 
     select_related_fields = ['instructor', 'instructor__user', 'season']
@@ -42,6 +43,9 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
     ordering = ('-start_date', 'name')
     save_on_top = True
     actions = [activate_selected, deactivate_selected, duplicate_selected]
+    
+    # Excel export configuration
+    excel_filename = 'courses'
 
     # Inlines for related models
     inlines = [CourseScheduleInline, LectureInline, CourseEnrollmentInline]
