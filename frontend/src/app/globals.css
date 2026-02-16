@@ -58,8 +58,8 @@
   @apply relative flex flex-col items-center px-53!;
 }
 
-@custom-variant mobile (@media (max-width: 360px));
 @custom-variant tablet (@media (max-width: 900px));
+@custom-variant mobile (@media (max-width: 360px));
 
 body {
   font-family: var(--font-messiri), Arial, Helvetica, sans-serif;

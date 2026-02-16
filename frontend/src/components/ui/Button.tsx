@@ -28,7 +28,7 @@ export interface ButtonProps extends BaseProps, ComponentProps<"button"> {
 }
 
 const buttonStyles = cva(
-  "shadow-button-secondary inline-block text-center font-bold transition-colors",
+  "shadow-button-secondary inline-block text-center font-bold transition-all",
   {
     variants: {
       intent: {
@@ -41,12 +41,19 @@ const buttonStyles = cva(
         light: cn(
           "shadow-soft rounded-[2rem_0] bg-gray-50 font-semibold text-gray-600 transition-colors hover:bg-gray-100",
         ),
+        danger: cn(
+          "shadow-soft rounded-[0.8rem_0] border-2 border-red-400 bg-white text-red-600 hover:bg-red-50 hover:shadow-md",
+        ),
+        ghost: cn(
+          "shadow-soft rounded-[0.8rem_0] border-2 border-gray-400 bg-white text-gray-600 hover:bg-gray-50 hover:shadow-md",
+        ),
       },
 
       size: {
         small: cn("px-12 py-4 text-xl"),
         medium: cn("px-13 py-6 text-3xl"),
         wide: cn("w-105 px-10 py-4 text-[1.8rem]"),
+        compact: cn("px-5 py-3 text-base"),
       },
     },
 

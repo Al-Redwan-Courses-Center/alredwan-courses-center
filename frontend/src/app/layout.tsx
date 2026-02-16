@@ -40,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="ar">
       <body
-        className={`${medad.variable} ${messiri.variable} grid min-h-dvh antialiased`}
+        className={`${medad.variable} ${messiri.variable} min-h-dvh antialiased`}
         dir="rtl"
       >
         <ToastProvider />
