@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.db.models import Count
+from core.utils import ExcelExportMixin
 from ..models.instructor import Instructor
 from attendance.models import SupervisorSchedule, InstructorAttendance
 from courses.models import Lecture
@@ -61,7 +62,7 @@ class LectureInline(admin.TabularInline):
 
 
 @admin.register(Instructor)
-class InstructorAdmin(admin.ModelAdmin):
+class InstructorAdmin(ExcelExportMixin, admin.ModelAdmin):
     list_display = ('get_full_name', 'get_type',
                     'get_monthly_salary', 'get_phone', 'get_tags_display', 'get_joined_date', 'fingerprint_id')
     list_filter = ('type', 'tags', 'joined_date')
@@ -79,6 +80,9 @@ class InstructorAdmin(admin.ModelAdmin):
                    'classes': ('collapse',)}),
     )
     autocomplete_fields = ('user',)
+
+    # Excel export configuration
+    excel_filename = 'instructors'
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

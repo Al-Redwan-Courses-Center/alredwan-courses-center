@@ -5,6 +5,7 @@ from django.db.models import Count, Sum, Q
 from django.urls import reverse
 from django.contrib import messages
 from django.http import HttpResponse
+from core.utils import ExcelExportMixin
 
 from ..models import Parent, Child, ChildParents, ParentLinkRequest
 from ..utils.card_generator import generate_children_pdf
@@ -275,7 +276,7 @@ class HasEnrollmentsFilter(admin.SimpleListFilter):
 # =============================================================================
 
 @admin.register(Parent)
-class ParentAdmin(admin.ModelAdmin):
+class ParentAdmin(ExcelExportMixin, admin.ModelAdmin):
     """Enhanced Admin for Parent model."""
     list_display = (
         'get_full_name', 'get_phone', 'get_email',
@@ -300,6 +301,9 @@ class ParentAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
         }),
     )
+
+    # Excel export configuration
+    excel_filename = 'parents'
 
     def get_inlines(self, request, obj):
         """Dynamically set inlines with correct model references."""
