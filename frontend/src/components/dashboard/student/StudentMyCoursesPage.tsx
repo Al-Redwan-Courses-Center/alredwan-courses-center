@@ -1,6 +1,7 @@
 import { getUser } from "@/actions/auth";
+import { getStudentCourses } from "@/actions/courses";
 import StudentMyCoursesView from "@/components/dashboard/student/StudentMyCoursesView";
-import { getMyChildById } from "@/dev-data/db";
+import { getChildOngoingEnrollments, getMyChildById } from "@/dev-data/db";
 import { Suspense } from "react";
 
 export default async function StudentMyCoursesPage({
@@ -9,12 +10,14 @@ export default async function StudentMyCoursesPage({
   childId?: string;
 }) {
   const { first_name, role } = await getUser();
-  let name: string;
+  let myActiveCourses, name: string;
 
   if (role === "parent") {
     // TODO(api): Replace mock child details when the API provides child info.
+    myActiveCourses = getChildOngoingEnrollments(childId).map((e) => e.course);
     name = getMyChildById(childId).name;
   } else {
+    myActiveCourses = await getStudentCourses();
     name = first_name;
   }
 
@@ -26,7 +29,7 @@ export default async function StudentMyCoursesPage({
 
       <div className="max-h-full w-full">
         <Suspense fallback={null}>
-          <StudentMyCoursesView childId={childId} role={role} />
+          <StudentMyCoursesView courses={myActiveCourses} />
         </Suspense>
       </div>
     </div>

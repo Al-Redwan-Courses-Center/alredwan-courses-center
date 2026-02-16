@@ -90,46 +90,26 @@ export interface CourseListItem {
   rating_count: number;
 }
 
+export interface CourseScheduleDetail {
+  id: number;
+  weekday: number;
+  weekday_display: string;
+  start_time: string;
+  end_time: string;
+}
+
+export interface CourseDetail extends Omit<
+  CourseListItem,
+  "average_rating" | "rating_count"
+> {
+  schedules: CourseScheduleDetail[];
+}
+
 export interface LandingPageCourse {
   id: number;
   order: number;
   created_at: string;
   course: CourseListItem;
-}
-
-export interface EnrollmentRequestListItem {
-  id: string;
-  course: number;
-  course_name: string;
-  course_price: string;
-  participant_name: string | null;
-  price: string | null;
-  status: "pending" | "processing" | "rejected" | "accepted";
-  status_display: string;
-  payment_method: string | null;
-  created_at: string;
-  expires_at: string | null;
-  notes?: string | null;
-}
-
-export interface EnrollmentListItem {
-  id: string;
-  course: number;
-  course_name: string;
-  course_price: string;
-  course_start_date: string;
-  course_end_date: string | null;
-  course_instructor: string | null;
-  participant_name: string | null;
-  participant_type: "child" | "student" | null;
-  status: string;
-  status_display: string;
-  enrolled_at: string;
-  completed_at: string | null;
-  amount_paid: string;
-  remaining_amount: string;
-  payment_status: "fully_paid" | "partial" | "unpaid";
-  completion_percentage: number;
 }
 
 export interface Parent {
@@ -189,6 +169,51 @@ export interface EnrollmentRequest {
   notes?: string;
 }
 
+export interface EnrollmentRequestListItem {
+  id: string;
+  course: number;
+  course_name: string;
+  course_price: string;
+  participant_name: string | null;
+  price: string | null;
+  status: "pending" | "processing" | "rejected" | "accepted";
+  status_display: string;
+  payment_method: string | null;
+  created_at: string;
+  expires_at: string | null;
+  notes?: string | null;
+}
+
+export interface EnrollmentListItem {
+  id: string;
+  course: number;
+  course_name: string;
+  course_price: string;
+  course_start_date: string;
+  course_end_date: string | null;
+  course_instructor: string | null;
+  participant_name: string | null;
+  participant_type: "child" | "student" | null;
+  status: string;
+  status_display: string;
+  enrolled_at: string;
+  completed_at: string | null;
+  amount_paid: string;
+  remaining_amount: string;
+  payment_status: "fully_paid" | "partial" | "unpaid";
+  completion_percentage: number;
+}
+
+export interface EnrollmentProgress {
+  total_lectures: number;
+  expected_lectures: number;
+  completed_lectures: number;
+  percentage: number;
+  end_date_passed: boolean;
+  course_end_date: string;
+  is_completable: boolean;
+}
+
 export interface LectureAttendance {
   id: number | string;
   present: boolean;
@@ -212,6 +237,26 @@ export interface Lecture {
   course_image?: string;
   start_time?: string;
   end_time?: string;
+}
+
+export interface LectureListItem {
+  id: number;
+  lecture_number: number;
+  title: string;
+  day: string;
+  scheduled_at: string;
+  start_time: string;
+  end_time: string;
+  instructor: {
+    id: number;
+    full_name: string;
+  };
+  status: string;
+  status_display: string;
+  is_accepted: true;
+  attendance_taken: false;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ExamResult {

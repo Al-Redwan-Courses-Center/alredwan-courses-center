@@ -9,31 +9,19 @@ import { DataViewPagination } from "@/components/ui/data-view/DataViewPagination
 import { DataViewHeader } from "@/components/ui/data-view/DataViewRow";
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
-import {
-  getChildOngoingEnrollments,
-  getOngoingEnrollments,
-} from "@/dev-data/db";
 import { cn } from "@/lib/utils";
-import { Course } from "@/types/entities";
+import { CourseDetail } from "@/types/entities";
 
 export default function StudentMyCoursesView({
-  childId = "",
-  role = "",
+  courses,
 }: {
+  courses: CourseDetail[];
   childId?: string;
   role?: string;
 }) {
-  let myActiveCourses: any[];
-
-  if (role === "parent") {
-    myActiveCourses = getChildOngoingEnrollments(childId).map((e) => e.course);
-  } else {
-    myActiveCourses = getOngoingEnrollments().map((e) => e.course);
-  }
-
   return (
     <DataView
-      data={myActiveCourses}
+      data={courses}
       maxItemsPerPage={8}
       gridLayout={cn(
         "grid-cols-[minmax(0,0.5fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)_minmax(0,0.5fr)]",
@@ -72,9 +60,12 @@ export default function StudentMyCoursesView({
         render={{
           table: () => null,
 
-          cards: (item: Course, index) => (
-            <StudentCourseCard course={item} index={index} key={item.id} />
-          ),
+          cards: (
+            item: CourseDetail & {
+              course_progress: number;
+            },
+            index,
+          ) => <StudentCourseCard course={item} index={index} key={item.id} />,
         }}
       />
 

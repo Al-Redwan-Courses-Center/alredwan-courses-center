@@ -1,3 +1,4 @@
+import CourseImage from "@/assets/course-img.jpg";
 import BookIcon from "@/components/icons/BookIcon";
 import CalendarIcon from "@/components/icons/CalendarIcon";
 import ClockIcon from "@/components/icons/ClockIcon";
@@ -5,7 +6,7 @@ import Button from "@/components/ui/Button";
 import ItemCard from "@/components/ui/ItemCard";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
-import { Course } from "@/types/entities";
+import { CourseDetail } from "@/types/entities";
 import { parseISO } from "date-fns";
 import Image from "next/image";
 
@@ -13,25 +14,16 @@ export default function StudentCourseCard({
   course,
   index,
 }: {
-  course: Course;
+  course: CourseDetail & { course_progress: number };
   index: number;
 }) {
-  console.log(course);
-
-  const courseLecturesSubmitted = course.lectures
-    .map((c) => c.status)
-    .filter((s) => s === "submitted").length;
-  const courseProgress = Math.round(
-    (courseLecturesSubmitted / course.lectures.length) * 100,
-  );
-
   return (
     <ItemCard
       index={index}
       cardHeader={
         <div>
           <Image
-            src={course.images.cover}
+            src={course.image || CourseImage}
             alt="Course Image"
             fill
             className="object-cover"
@@ -45,14 +37,14 @@ export default function StudentCourseCard({
             index % 2 === 0 ? "justify-end" : "",
           )}
         >
-          <Button size="small">عرض الدورة</Button>
+          <Button size="small" href={`/dashboard/my-courses/${course.id}/`}>
+            عرض الدورة
+          </Button>
         </div>
       }
     >
-      <h3 className="mb-3 text-[1.28rem] font-bold">{course.title}</h3>
-      <p className="mb-5">
-        دورات شامل لتعلم تلاوة القرآن الكريم وأحكام التجويد
-      </p>
+      <h3 className="mb-3 text-[1.28rem] font-bold">{course.name}</h3>
+      <p className="mb-5">{course.description}</p>
 
       <div className="courses-center mb-5 grid grid-cols-[repeat(auto-fill,minmax(5rem,auto))] gap-2">
         {course.tags.map((tag, i) => (
@@ -72,8 +64,7 @@ export default function StudentCourseCard({
         <li>
           <CalendarIcon />
           <span>
-            يبدأ: 
-            {formatDate(parseISO(course.start_date)).replaceAll("-", "/")}
+            يبدأ: {formatDate(parseISO(course.start_date)).replaceAll("-", "/")}
           </span>
         </li>
 
@@ -81,8 +72,8 @@ export default function StudentCourseCard({
           <li>
             <BookIcon />
             <span>
-              {toHindiDigits(12)}{" "}
-              {getArabicPlural(12, {
+              {toHindiDigits(course.num_lectures)}{" "}
+              {getArabicPlural(course.num_lectures, {
                 singular: "محاضرة",
                 twofer: "محاضرتان",
                 plural: "محاضرات",
@@ -93,7 +84,9 @@ export default function StudentCourseCard({
 
         <li>
           <CalendarIcon />
-          <span>{course.schedule.map((s) => s.day).join(" \\ ")}</span>
+          <span>
+            {course.schedules.map((s) => s.weekday_display).join(" \\ ")}
+          </span>
         </li>
 
         <li>
@@ -103,8 +96,8 @@ export default function StudentCourseCard({
       </ul>
 
       <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
-        <ProgressBar className="h-4" progress={courseProgress} />
-        <span className="font-bold">{courseProgress}% تقدم</span>
+        <ProgressBar className="h-4" progress={course.course_progress} />
+        <span className="font-bold">{course.course_progress}% تقدم</span>
       </div>
     </ItemCard>
   );
