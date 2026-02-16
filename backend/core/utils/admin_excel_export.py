@@ -24,6 +24,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from datetime import datetime, date, time
+import re
 
 
 class ExcelExportMixin:
@@ -76,6 +77,28 @@ class ExcelExportMixin:
         
         return super().changelist_view(request, extra_context)
     
+    def clean_sheet_name(self, name):
+        """
+        Clean sheet name by removing invalid characters for Excel.
+        Excel sheet names cannot contain: / \ ? * [ ] :
+        and must be 31 characters or less.
+        """
+        # Remove invalid characters
+        invalid_chars = r'[/\\?*\[\]:]'
+        clean_name = re.sub(invalid_chars, '_', str(name))
+        
+        # Trim to 31 characters (Excel limit)
+        clean_name = clean_name[:31]
+        
+        # Remove leading/trailing spaces and underscores
+        clean_name = clean_name.strip(' _')
+        
+        # If empty after cleaning, use default name
+        if not clean_name:
+            clean_name = 'Export'
+        
+        return clean_name
+    
     def direct_export_to_excel(self, request):
         """
         Direct export handler that doesn't require item selection.
@@ -99,9 +122,9 @@ class ExcelExportMixin:
         wb = Workbook()
         ws = wb.active
         
-        # Set worksheet title
+        # Set worksheet title with cleaned name
         model_name = self.model._meta.verbose_name_plural
-        ws.title = str(model_name)[:31]  # Excel sheet name limit
+        ws.title = self.clean_sheet_name(model_name)
         
         # Get fields to export
         fields = self.get_export_fields()
@@ -204,9 +227,9 @@ class ExcelExportMixin:
         wb = Workbook()
         ws = wb.active
         
-        # Set worksheet title
+        # Set worksheet title with cleaned name
         model_name = self.model._meta.verbose_name_plural
-        ws.title = str(model_name)[:31]  # Excel sheet name limit
+        ws.title = self.clean_sheet_name(model_name)
         
         # Get fields to export
         fields = self.get_export_fields()

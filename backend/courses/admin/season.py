@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
 from django.db.models import Count
 
+from core.utils import ExcelExportMixin
 from courses.models import Season
 from .base import ArabicLabelsMixin, OptimizedQuerysetMixin
 from .filters import ActiveStatusFilter
@@ -14,7 +15,7 @@ from .actions import activate_selected, deactivate_selected, duplicate_selected
 
 
 @admin.register(Season)
-class SeasonAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+class SeasonAdmin(ExcelExportMixin, ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
     """Admin configuration for Season model."""
 
     list_display = (
@@ -29,6 +30,9 @@ class SeasonAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
     ordering = ('-start_date',)
     actions = [activate_selected, deactivate_selected, duplicate_selected]
     save_on_top = True
+
+    # Excel export configuration
+    excel_filename = 'seasons'
 
     fieldsets = (
         (_('معلومات الموسم'), {
