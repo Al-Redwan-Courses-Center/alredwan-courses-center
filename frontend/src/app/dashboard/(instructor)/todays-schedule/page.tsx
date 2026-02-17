@@ -1,5 +1,4 @@
 import { getUser, protect } from "@/actions/auth";
-import { getInstructorTodaysLectures } from "@/actions/lectures";
 import TodaysLecturesTable from "@/components/lectures/TodaysLecturesTable";
 import { TODAYS_SCHEDULE } from "@/dev-data/db";
 import { Metadata } from "next";
@@ -13,8 +12,6 @@ export default async function Page() {
   await protect(["instructor"]);
 
   const { first_name } = await getUser();
-
-  await getInstructorTodaysLectures();
 
   return (
     <div className="px-16 pt-15">

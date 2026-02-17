@@ -20,6 +20,7 @@ export interface UserEntity {
   jwt_refresh_token: string;
   exp: number;
   error?: string;
+  instructor_id?: string;
 }
 
 export type UserSession = (Session | null) & {

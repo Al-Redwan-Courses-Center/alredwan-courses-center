@@ -1,5 +1,3 @@
-import { getServerJwtToken } from "@/actions/auth";
-import { getInstructorCourses } from "@/actions/courses";
 import { getAuthApiClient } from "@/lib/auth-api";
 import { PaginatedResponse } from "@/types/config";
 import { LectureListItem } from "@/types/entities";
@@ -10,50 +8,67 @@ export async function getLecturesByCourseId(courseId: string) {
     const apiClient = await getAuthApiClient();
 
     const { data } = await apiClient.get<PaginatedResponse<LectureListItem>>(
-      `/courses/${courseId}/lectures/?page_size=100`,
+      `/api/courses/${courseId}/lectures/?page_size=100`,
     );
 
-    console.log(data);
-
-    const lectures = Array.isArray(data) ? data : data.results;
+    const lectures = Array.isArray(data)
+      ? (data as LectureListItem[])
+      : data.results;
 
     return lectures;
-  } catch (err) {
-    if (isAxiosError(err)) {
+  } catch (error) {
+    if (isAxiosError(error)) {
       console.error(
         "Failed to get lectures: ",
-        err.response?.data ?? err.message,
+        error.response?.data ?? error.message,
       );
     } else {
-      console.error("Failed to get lectures: ", err);
+      console.error("Failed to get lectures: ", error);
     }
 
     return [];
   }
 }
 
-export async function getInstructorTodaysLectures() {
+export async function getLectureById(lectureId: string) {
   try {
-    const { id, ...rest } = (await getServerJwtToken()) || {};
-
-    if (!id) return [];
-    console.log(rest);
-
-    const coursesIds = (await getInstructorCourses(id)).map((c) => c.id);
-
-    const lectures = await Promise.all(
-      coursesIds.map((id) => getLecturesByCourseId(String(id))),
-    );
-  } catch (err) {
-    if (isAxiosError(err)) {
+    const apiClient = await getAuthApiClient();
+  } catch (error) {
+    if (isAxiosError(error)) {
       console.error(
-        "Failed to get today's lectures: ",
-        err.response?.data ?? err.message,
+        "Failed to get lecture: ",
+        error.response?.data ?? error.message,
       );
     } else {
-      console.error("Failed to get today's lectures: ", err);
+      console.error("Failed to get lecture: ", error);
     }
 
-    return [];
+    return null;
   }
 }
+
+// export async function getInstructorTodaysLectures() {
+//   try {
+//     const { id, ...rest } = (await getServerJwtToken()) || {};
+
+//     if (!id) return [];
+//     console.log(rest);
+
+//     const coursesIds = (await getInstructorCourses(id)).map((c) => c.id);
+
+//     const lectures = await Promise.all(
+//       coursesIds.map((id) => getLecturesByCourseId(String(id))),
+//     );
+//   } catch (err) {
+//     if (isAxiosError(err)) {
+//       console.error(
+//         "Failed to get today's lectures: ",
+//         err.response?.data ?? err.message,
+//       );
+//     } else {
+//       console.error("Failed to get today's lectures: ", err);
+//     }
+
+//     return [];
+//   }
+// }

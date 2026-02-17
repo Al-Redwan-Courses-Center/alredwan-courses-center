@@ -32,11 +32,11 @@ export default async function HeroSection() {
           </Button>
 
           {!!session?.user ? (
-            <Button variant="secondary" size="medium" href="/dashboard">
+            <Button variant="secondary" size="medium" href="/dashboard" revert>
               لوحة التحكم
             </Button>
           ) : (
-            <Button variant="secondary" size="medium" href="/signup">
+            <Button variant="secondary" size="medium" href="/signup" revert>
               سجل الآن
             </Button>
           )}

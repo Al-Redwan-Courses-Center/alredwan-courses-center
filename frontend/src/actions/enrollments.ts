@@ -6,8 +6,9 @@ import {
   EnrollmentListItem,
   EnrollmentProgress,
   EnrollmentRequestListItem,
+  InstructorEnrollmentListItem,
 } from "@/types/entities";
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 
 export async function getMyEnrollmentRequests(): Promise<
   EnrollmentRequestListItem[]
@@ -79,5 +80,29 @@ export async function getEnrollmentProgressById(
     }
 
     return null;
+  }
+}
+
+export async function getInstructorEnrollmentsByCourseId(courseId: string) {
+  try {
+    const apiClient = await getAuthApiClient();
+    const {
+      data: { results },
+    } = await apiClient.get<PaginatedResponse<InstructorEnrollmentListItem>>(
+      `/api/instructor/courses/${courseId}/enrollments?page_size=100`,
+    );
+
+    return results;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      console.error(
+        "Failed to get course enrollments: ",
+        error.response?.data ?? error.message,
+      );
+    } else {
+      console.error("Failed to get course enrollments: ", error);
+    }
+
+    return [];
   }
 }

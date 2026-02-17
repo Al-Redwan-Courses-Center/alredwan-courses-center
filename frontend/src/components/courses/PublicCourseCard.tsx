@@ -57,6 +57,7 @@ export default function PublicCourseCard({
           <Button
             variant="secondary"
             size="small"
+            revert
             href="#"
             className="px-0 text-[1.125rem]"
           >

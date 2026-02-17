@@ -19,7 +19,7 @@ export default async function NavBar() {
           </LogoutButton>
         </div>
       ) : (
-        <div className="tablet:hidden grid grid-cols-2 items-center gap-4">
+        <div className="tablet:hidden grid grid-cols-2 items-stretch gap-4">
           <AuthModal />
           <SignupModal />
         </div>

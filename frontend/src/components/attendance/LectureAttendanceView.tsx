@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/data-view/DataViewRow";
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import { cn, persistInLocalStorage, toHindiDigits } from "@/lib/utils";
-import { Child, Lecture, LectureAttendance, Student } from "@/types/entities";
+import { Child, LectureListItem, Student } from "@/types/entities";
 import { isToday } from "date-fns";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -27,10 +27,12 @@ export default function LectureAttendanceView({
   courseId,
   lecture,
 }: {
-  students: (Child | Student | undefined)[];
+  students: {
+    participant_name: string;
+  }[];
   attendances: LectureAttendance[];
   courseId: string;
-  lecture: Lecture;
+  lecture: LectureListItem;
 }) {
   const isEditable = isToday(lecture.date);
   const localStorageKey = `attendance-${courseId}-${lecture.id}`;
@@ -116,7 +118,7 @@ export default function LectureAttendanceView({
   return (
     <DataView
       gridLayout={cn("grid-cols-[0.25fr_1fr_1.5fr_1fr_1fr_1fr_1fr_2fr_1fr]")}
-      data={students as (Student | Child)[]}
+      data={students}
       filterConfig={filterConfig}
       sortConfig={sortConfig}
       maxItemsPerPage={9999}

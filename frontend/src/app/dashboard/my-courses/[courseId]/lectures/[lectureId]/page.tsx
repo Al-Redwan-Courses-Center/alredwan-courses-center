@@ -1,12 +1,13 @@
+import { getCourseById } from "@/actions/courses";
+import { getInstructorEnrollmentsByCourseId } from "@/actions/enrollments";
+import { getLecturesByCourseId } from "@/actions/lectures";
 import AddLectureNotesInput from "@/components/attendance/AddLectureNotesInput";
 import LectureAttendanceView from "@/components/attendance/LectureAttendanceView";
 import ClockIcon from "@/components/icons/ClockIcon";
 import CommentIcon from "@/components/icons/CommentIcon";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
 import { getLectureById } from "@/dev-data/db";
 import { cn, formatTime, getWeekDay } from "@/lib/utils";
-import { Lecture } from "@/types/entities";
 import { parseISO } from "date-fns";
 
 const dataPointWrapperStyles = cn(
@@ -20,13 +21,19 @@ const dataPointIconStyles = cn(
 export default async function Page({
   params,
 }: {
-  params: Promise<{ lectureId: string }>;
+  params: Promise<{ lectureId: string; courseId: string }>;
 }) {
-  const { lectureId } = await params;
-  const { course, ...lecture } = getLectureById(+lectureId) as Lecture;
-  const weekday = getWeekDay(parseISO(lecture.date).getDay());
-  const { start: startHour, end: endHour } =
-    course.schedule.find((s) => s.day === weekday) || {};
+  const { lectureId, courseId } = await params;
+  // const { course, ...lecture } = getLectureById(+lectureId);
+  const lecture = (await getLecturesByCourseId(courseId)).find(
+    (lec) => lec.id === +lectureId,
+  );
+  const enrollments = (await getInstructorEnrollmentsByCourseId(courseId)).map(
+    ({ participant_name, participant_type }) => ({
+      participant_name,
+      participant_type,
+    }),
+  );
 
   return (
     <div className="flex flex-col pt-4">
@@ -34,10 +41,10 @@ export default async function Page({
         <div className="col-span-full flex items-center justify-between">
           <div className="flex flex-col pt-5">
             <span className="text-olive-300 text-xl font-bold">
-              {course?.title}
+              {enrollments[0].course_name}
             </span>
             <h2 className="text-olive-500 text-[4rem] font-bold">
-              {lecture.title}
+              {lecture?.title}
             </h2>
           </div>
 
@@ -50,7 +57,8 @@ export default async function Page({
           <ClockIcon className={dataPointIconStyles} />
           <span className="self-end">المواعيد</span>
           <span className="text-olive-500">
-            من {formatTime(startHour)} إلي {formatTime(endHour)}
+            من {formatTime(lecture?.start_time)} إلي{" "}
+            {formatTime(lecture?.end_time)}
           </span>
         </div>
 
@@ -68,8 +76,8 @@ export default async function Page({
       <LectureAttendanceView
         students={course.enrollments.map((e) => e.child ?? e.student) || []}
         attendances={lecture.attendances || []}
-        courseId={String(course.id)}
-        lecture={{ ...lecture, course }}
+        courseId={courseId}
+        lecture={lecture}
       />
     </div>
   );

@@ -18,7 +18,7 @@ export default function GoalsSection() {
           <Button variant="primary" href="/contact-us">
             اتصل بنا الآن
           </Button>
-          <Button variant="secondary" href="/courses">
+          <Button revert variant="secondary" href="/courses">
             تعرف على مناهجنا
           </Button>
         </div>

@@ -34,7 +34,10 @@ services:
   #     - pgadmin_data:/var/lib/pgadmin
 
   redwan-backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile_Slim
+      target: dev
     env_file:
       - ./backend/.env
     container_name: redwan-backend
@@ -43,6 +46,8 @@ services:
         condition: service_healthy
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend:/app
     healthcheck:
       test:
         [
@@ -55,25 +60,21 @@ services:
       start_period: 10s
 
   redwan-frontend:
-    develop:
-      watch:
-        - action: sync
-          path: ./frontend
-          target: /app
-          ignore:
-            - node_modules/
     stdin_open: true
     tty: true
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-      target: dev-windows
+      dockerfile: Dockerfile_Slim
+      target: dev
     container_name: redwan-frontend
     depends_on:
       redwan-backend:
         condition: service_healthy
     ports:
       - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /home/alyeldeen/.local/share/pnpm/store/v10:/app/.pnpm-store/v10
 
 volumes:
   postgres_data:

@@ -43,12 +43,12 @@ export async function getAllCourses(): Promise<CourseListItem[]> {
 }
 
 export async function getInstructorCourses(
-  instructorId: string,
+  instructorId: string | undefined,
 ): Promise<CourseListItem[]> {
+  if (!instructorId) return [];
+
   try {
     const apiClient = await getAuthApiClient();
-
-    console.log(`/api/courses/?page_size=100&instructor=${instructorId}`);
 
     const { data } = await apiClient.get<
       PaginatedResponse<CourseListItem> | CourseListItem[]

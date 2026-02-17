@@ -33,6 +33,7 @@ function PreAuthModal({
   const [mode, setMode] = useState<AuthMode>(
     searchParams.get("login") === "true" ? "login" : defaultMode,
   );
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
     if (isOpen || callbackUrl)
@@ -75,6 +76,7 @@ function PreAuthModal({
     <Modal
       open={isOpen}
       onOpenChange={(open) => {
+        if (!open && isLoggingIn) return;
         setIsOpen(open);
         if (open) setMode(defaultMode);
       }}
@@ -99,6 +101,13 @@ function PreAuthModal({
           mode === "login" ? "max-w-1/4" : "mobile-lg:max-h-9/10 max-w-1/2",
           "tablet:max-w-8/10 max-h-7/10",
         )}
+        showCloseButton={!isLoggingIn}
+        onEscapeKeyDown={(event) => {
+          if (isLoggingIn) event.preventDefault();
+        }}
+        onInteractOutside={(event) => {
+          if (isLoggingIn) event.preventDefault();
+        }}
       >
         <ModalTitle>
           <div className="flex flex-col items-start gap-10">
@@ -122,16 +131,18 @@ function PreAuthModal({
           <LoginForm
             callbackUrl={callbackUrl}
             onSwitchToSignup={() => setMode("signup")}
+            onLoadingChange={setIsLoggingIn}
           />
         ) : (
           <div className="flex max-h-full w-full flex-col items-center overflow-auto">
             <SignupForm />
+            <span className="mt-6 text-2xl">لديك حساب بالفعل؟</span>
             <button
               type="button"
               onClick={() => setMode("login")}
-              className="text-olive-900 hover:text-olive-300 mt-6 text-2xl font-bold underline transition-colors"
+              className="text-olive-900 hover:text-olive-300 text-2xl font-bold underline transition-colors"
             >
-              لديك حساب بالفعل؟ سجل دخولك
+              سجل دخولك الآن
             </button>
           </div>
         )}

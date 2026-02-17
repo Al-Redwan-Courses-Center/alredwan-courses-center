@@ -33,7 +33,7 @@ export default function CallToActionSection() {
             سجل الآن
           </Button>
 
-          <Button variant="secondary" size="medium" href="/signup">
+          <Button variant="secondary" size="medium" revert href="/signup">
             جرب درس تجريبي
           </Button>
         </div>

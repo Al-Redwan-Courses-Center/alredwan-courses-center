@@ -1,7 +1,7 @@
+import { getCourseById } from "@/actions/courses";
+import { getLecturesByCourseId } from "@/actions/lectures";
 import CourseHeader from "@/components/courses/CourseHeader";
 import CourseLecturesView from "@/components/courses/CourseLecturesView";
-import { COURSES } from "@/dev-data/db";
-import { Course, Lecture } from "@/types/entities";
 
 export default async function page({
   params,
@@ -10,16 +10,14 @@ export default async function page({
 }) {
   const { courseId } = await params;
 
-  const course = COURSES.find((c) => c.id === +courseId);
+  const course = await getCourseById(courseId);
+  const lectures = await getLecturesByCourseId(courseId);
 
   return (
     <div className="flex flex-col px-16 pt-4">
-      <CourseHeader course={course as Course} />
+      <CourseHeader course={course} />
 
-      <CourseLecturesView
-        lectures={course?.lectures as Lecture[]}
-        course={course as Course}
-      />
+      <CourseLecturesView lectures={lectures} course={course} />
     </div>
   );
 }

@@ -10,26 +10,36 @@ import FieldSetInput from "@/components/ui/FieldSetInput";
 import { LoginInputs } from "@/types/auth";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 
 export default function LoginForm({
   callbackUrl,
   onSwitchToSignup,
+  onLoadingChange,
 }: {
   callbackUrl?: string | null;
   onSwitchToSignup?: () => void;
+  onLoadingChange?: (loading: boolean) => void;
 }) {
   const [countryCode, setCountryCode] = useState("20");
   const [showCountryCodeList, setShowCountryCodeList] = useState(false);
-  const { register, handleSubmit } = useForm<LoginInputs>({
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<LoginInputs>({
     defaultValues: {
-      phone_number1: "01287282654",
-      password: "password123",
+      phone_number1: "01010000001",
+      password: "Test@1234",
     },
   });
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    onLoadingChange?.(isSubmitting);
+  }, [isSubmitting, onLoadingChange]);
 
   const onSubmit: SubmitHandler<LoginInputs> = async (credentials) => {
     const res = await signIn("credentials", {
@@ -39,7 +49,7 @@ export default function LoginForm({
 
     if (res?.ok) {
       // if (pathname === "/") {
-      toast.success("مرحباً!");
+      toast.success("السلام عليكم و رحمة الله و بركاته");
       // router.refresh();
       // } else
       window.location.replace(callbackUrl || "/dashboard");
@@ -150,7 +160,12 @@ export default function LoginForm({
       </div>
 
       <div className="flex flex-col gap-5">
-        <Button type="submit" variant="primary" onClick={() => {}}>
+        <Button
+          type="submit"
+          variant="primary"
+          loading={isSubmitting}
+          className="h-20"
+        >
           تسجيل الدخول
         </Button>
 

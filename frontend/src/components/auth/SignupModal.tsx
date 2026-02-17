@@ -10,7 +10,7 @@ export default function SignupModal({ trigger }: { trigger?: ReactNode }) {
       defaultMode="signup"
       trigger={
         trigger || (
-          <Button variant="secondary" size="small">
+          <Button variant="secondary" size="small" revert>
             إنشاء حساب
           </Button>
         )

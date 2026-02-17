@@ -21,13 +21,15 @@ export type StatusColors = VariantProps<typeof badgeStyles>["color"];
 
 export default function StatusBadge({
   color = "gray",
+  className,
   children,
 }: {
   color?: VariantProps<typeof badgeStyles>["color"];
+  className?: string;
   children: ReactNode;
 }) {
   return (
-    <div className={cn(badgeStyles({ color }), "status-badge")}>
+    <div className={cn(badgeStyles({ color }), "status-badge", className)}>
       <Dot className="h-auto w-3" />
       {children}
     </div>
