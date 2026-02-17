@@ -4,15 +4,29 @@ Live attendance updates for the admin dashboard via Django Channels + Redis.
 
 ---
 
+## Server Architecture
+
+The backend runs two separate servers:
+
+| Server | Port | Protocol | Purpose |
+|--------|------|----------|---------|
+| **Gunicorn** | 8000 | HTTP/REST | Standard API requests |
+| **Uvicorn** | 8001 | WebSocket/ASGI | Real-time connections |
+
+---
+
 ## Connection
 
 ```
-ws://<host>/ws/attendance/?token=<jwt_access_token>
+ws://<host>:8001/ws/attendance/?token=<jwt_access_token>
 ```
+
+> **Note:** WebSocket connections use port **8001**, not 8000.
 
 | | |
 |--|--|
 | **Protocol** | WebSocket |
+| **Port** | 8001 |
 | **Auth** | JWT access token (query string) |
 | **Required Role** | Admin / Staff |
 
