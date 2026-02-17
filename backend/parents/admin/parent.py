@@ -363,9 +363,10 @@ class ParentAdmin(ExcelExportMixin, admin.ModelAdmin):
     def get_total_payments(self, obj):
         total = getattr(obj, 'total_payments', None) or 0
         if total > 0:
+            formatted_total = f"{total:,.0f}"
             return format_html(
-                '<span style="color: #5cb85c; font-weight: bold;">{:,.0f} ج.م</span>',
-                total
+                '<span style="color: #5cb85c; font-weight: bold;">{} ج.م</span>',
+                formatted_total
             )
         return format_html('<span style="color: #999;">0</span>')
     get_total_payments.short_description = 'إجمالي المدفوعات'
@@ -392,6 +393,7 @@ class ParentAdmin(ExcelExportMixin, admin.ModelAdmin):
         total_paid = obj.payments.filter(status='paid').aggregate(
             Sum('amount'))['amount__sum'] or 0
         pending_payments = obj.payments.filter(status='pending').count()
+        formatted_total_paid = f"{total_paid:,.0f}"
 
         return format_html(
             '''
@@ -406,7 +408,7 @@ class ParentAdmin(ExcelExportMixin, admin.ModelAdmin):
                     <div style="color: #666;">أطفال إضافيين</div>
                 </div>
                 <div style="text-align: center; padding: 10px;">
-                    <div style="font-size: 24px; font-weight: bold; color: #5cb85c;">{:,.0f} ج.م</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #5cb85c;">{} ج.م</div>
                     <div style="color: #666;">إجمالي المدفوعات</div>
                 </div>
                 <div style="text-align: center; padding: 10px;">
@@ -415,7 +417,7 @@ class ParentAdmin(ExcelExportMixin, admin.ModelAdmin):
                 </div>
             </div>
             ''',
-            children_count, extra_children, total_paid,
+            children_count, extra_children, formatted_total_paid,
             '#d9534f' if pending_payments > 0 else '#5cb85c', pending_payments
         )
     get_summary_card.short_description = 'ملخص الحساب'
