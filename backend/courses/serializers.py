@@ -186,6 +186,14 @@ class CourseUpdateSerializer(serializers.ModelSerializer):
         return data
 
 
+class LectureCourseSerializer(serializers.ModelSerializer):
+    """Minimal course serializer for lecture responses"""
+    
+    class Meta:
+        model = Course
+        fields = ['id', 'name']
+
+
 class LectureInstructorSerializer(serializers.ModelSerializer):
     """Minimal instructor serializer for lecture responses"""
     full_name = serializers.SerializerMethodField()
@@ -202,6 +210,7 @@ class LectureInstructorSerializer(serializers.ModelSerializer):
 
 class LectureListSerializer(serializers.ModelSerializer):
     """Serializer for listing lectures"""
+    course = LectureCourseSerializer(read_only=True)
     instructor = LectureInstructorSerializer(read_only=True)
     scheduled_at = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -210,7 +219,7 @@ class LectureListSerializer(serializers.ModelSerializer):
         model = Lecture
         fields = [
             'id', 'lecture_number', 'title', 'day', 'scheduled_at',
-            'start_time', 'end_time', 'instructor', 'status', 
+            'start_time', 'end_time', 'instructor', 'course', 'status', 
             'status_display', 'is_accepted', 'attendance_taken', 
             'created_at', 'updated_at'
         ]

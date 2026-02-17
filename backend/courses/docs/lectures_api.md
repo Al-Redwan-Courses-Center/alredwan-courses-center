@@ -9,6 +9,7 @@ This document describes the API endpoints for managing lectures within courses. 
 1. [List & Create Lectures](#1-list--create-lectures)
 2. [Check Lecture DateTime Availability](#2-check-lecture-datetime-availability)
 3. [Update Lecture](#3-update-lecture)
+4. [Get Today's Lectures](#4-get-todays-lectures)
 
 ---
 
@@ -427,6 +428,299 @@ Updates lecture information. Supports partial updates (PATCH) or full updates (P
   "detail": "Not found."
 }
 ```
+
+---
+
+## 4. Get Today's Lectures
+
+### Endpoint
+```
+GET /api/courses/lectures/today/
+```
+
+### Authentication
+Required: Admin, Supervisor, or Instructor
+
+### Description
+Returns all lectures (both accepted and pending approval) scheduled for today. The behavior depends on the user's role:
+
+**Role-Based Behavior:**
+- **Regular Instructors**: Returns only their own lectures scheduled for today
+- **Admins/Supervisors**: Returns all lectures for all instructors scheduled for today
+
+**Features:**
+- Returns all lectures for the current day, regardless of acceptance status
+- Ordered by start_time first, then lecture_number
+- Automatically uses the current date (no date parameter needed)
+- Includes a `user_role` field in response to indicate which view is being returned
+
+### Query Parameters
+None required - automatically uses today's date.
+
+### Example Request
+```bash
+GET /api/courses/lectures/today/
+Authorization: Bearer <token>
+```
+
+### Response (200 OK) - Regular Instructor
+When accessed by a regular instructor, returns only their lectures:
+```json
+{
+  "date": "2026-02-16",
+  "count": 2,
+  "user_role": "instructor",
+  "lectures": [
+    {
+      "id": "uuid-1",
+      "lecture_number": 5,
+      "title": "Introduction to Python",
+      "day": "2026-02-16",
+      "scheduled_at": "2026-02-16T09:00:00+02:00",
+      "start_time": "09:00:00",
+      "end_time": "11:00:00",
+      "instructor": {
+        "id": "instructor-uuid",
+        "full_name": "John Doe"
+      },
+      "course": {
+        "id": "course-uuid-1",
+        "name": "Python Programming"
+      },
+      "status": "scheduled",
+      "status_display": "Scheduled",
+      "is_accepted": true,
+      "attendance_taken": false,
+      "created_at": "2026-01-15T08:30:00Z",
+      "updated_at": "2026-01-15T08:30:00Z"
+    },
+    {
+      "id": "uuid-2",
+      "lecture_number": 8,
+      "title": "Advanced Data Structures",
+      "day": "2026-02-16",
+      "scheduled_at": "2026-02-16T14:00:00+02:00",
+      "start_time": "14:00:00",
+      "end_time": "16:00:00",
+      "instructor": {
+        "id": "instructor-uuid",
+        "full_name": "John Doe"
+      },
+      "course": {
+        "id": "course-uuid-2",
+        "name": "Data Structures"
+      },
+      "status": "scheduled",
+      "status_display": "Scheduled",
+      "is_accepted": true,
+      "attendance_taken": false,
+      "created_at": "2026-01-20T10:15:00Z",
+      "updated_at": "2026-01-20T10:15:00Z"
+    }
+  ]
+}
+```
+
+### Response (200 OK) - Admin/Supervisor
+When accessed by an admin or supervisor, returns all lectures from all instructors:
+```json
+{
+  "date": "2026-02-16",
+  "count": 5,
+  "user_role": "admin/supervisor",
+  "lectures": [
+    {
+      "id": "uuid-1",
+      "lecture_number": 5,
+      "title": "Introduction to Python",
+      "day": "2026-02-16",
+      "scheduled_at": "2026-02-16T09:00:00+02:00",
+      "start_time": "09:00:00",
+      "end_time": "11:00:00",
+      "instructor": {
+        "id": "instructor-uuid-1",
+        "full_name": "John Doe"
+      },
+      "course": {
+        "id": "course-uuid-1",
+        "name": "Python Programming"
+      },
+      "status": "scheduled",
+      "status_display": "Scheduled",
+      "is_accepted": true,
+      "attendance_taken": false,
+      "created_at": "2026-01-15T08:30:00Z",
+      "updated_at": "2026-01-15T08:30:00Z"
+    },
+    {
+      "id": "uuid-2",
+      "lecture_number": 3,
+      "title": "Database Design",
+      "day": "2026-02-16",
+      "scheduled_at": "2026-02-16T10:00:00+02:00",
+      "start_time": "10:00:00",
+      "end_time": "12:00:00",
+      "instructor": {
+        "id": "instructor-uuid-2",
+        "full_name": "Jane Smith"
+      },
+      "course": {
+        "id": "course-uuid-3",
+        "name": "Database Systems"
+      },
+      "status": "scheduled",
+      "status_display": "Scheduled",
+      "is_accepted": true,
+      "attendance_taken": false,
+      "created_at": "2026-01-18T09:00:00Z",
+      "updated_at": "2026-01-18T09:00:00Z"
+    },
+    {
+      "id": "uuid-3",
+      "lecture_number": 8,
+      "title": "Advanced Data Structures",
+      "day": "2026-02-16",
+      "scheduled_at": "2026-02-16T14:00:00+02:00",
+      "start_time": "14:00:00",
+      "end_time": "16:00:00",
+      "instructor": {
+        "id": "instructor-uuid-1",
+        "full_name": "John Doe"
+      },
+      "course": {
+        "id": "course-uuid-2",
+        "name": "Data Structures"
+      },
+      "status": "scheduled",
+      "status_display": "Scheduled",
+      "is_accepted": true,
+      "attendance_taken": false,
+      "created_at": "2026-01-20T10:15:00Z",
+      "updated_at": "2026-01-20T10:15:00Z"
+    },
+    {
+      "id": "uuid-4",
+      "lecture_number": 7,
+      "title": "Web Development Basics",
+      "day": "2026-02-16",
+      "scheduled_at": "2026-02-16T15:00:00+02:00",
+      "start_time": "15:00:00",
+      "end_time": "17:00:00",
+      "instructor": {
+        "id": "instructor-uuid-3",
+        "full_name": "Ahmed Ali"
+      },
+      "course": {
+        "id": "course-uuid-4",
+        "name": "Web Development"
+      },
+      "status": "scheduled",
+      "status_display": "Scheduled",
+      "is_accepted": true,
+      "attendance_taken": true,
+      "created_at": "2026-01-22T11:30:00Z",
+      "updated_at": "2026-02-16T16:00:00Z"
+    },
+    {
+      "id": "uuid-5",
+      "lecture_number": 12,
+      "title": "Extra Review Session",
+      "day": "2026-02-16",
+      "scheduled_at": "2026-02-16T18:00:00+02:00",
+      "start_time": "18:00:00",
+      "end_time": "20:00:00",
+      "instructor": {
+        "id": "instructor-uuid-1",
+        "full_name": "John Doe"
+      },
+      "course": {
+        "id": "course-uuid-1",
+        "name": "Python Programming"
+      },
+      "status": "additional",
+      "status_display": "Additional",
+      "is_accepted": false,
+      "attendance_taken": false,
+      "created_at": "2026-02-15T15:30:00Z",
+      "updated_at": "2026-02-15T15:30:00Z"
+    }
+  ]
+}
+```
+
+### Response Fields
+| Field | Type | Description |
+|-------|------|-------------|
+| `date` | Date | Today's date (YYYY-MM-DD) |
+| `count` | Integer | Total number of lectures returned |
+| `user_role` | String | Either "instructor" or "admin/supervisor" indicating the view type |
+| `lectures` | Array | Array of lecture objects (see lecture fields below) |
+
+**Lecture Object Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Unique lecture identifier |
+| `lecture_number` | Integer | Sequential lecture number |
+| `title` | String | Lecture title |
+| `day` | Date | Lecture date (will always be today) |
+| `scheduled_at` | DateTime | ISO 8601 datetime for lecture start |
+| `start_time` | Time | Lecture start time (HH:MM:SS) |
+| `end_time` | Time | Lecture end time (HH:MM:SS) |
+| `instructor` | Object | Instructor details (id, full_name) |
+| `course` | Object | Course details (id, name) |
+| `status` | String | Lecture status code |
+| `status_display` | String | Human-readable status |
+| `is_accepted` | Boolean | Whether lecture is approved |
+| `attendance_taken` | Boolean | Whether attendance has been recorded |
+| `created_at` | DateTime | Creation timestamp |
+| `updated_at` | DateTime | Last update timestamp |
+
+### Response (200 OK - No Lectures)
+If there are no lectures scheduled for today:
+```json
+{
+  "date": "2026-02-16",
+  "count": 0,
+  "user_role": "instructor",
+  "lectures": []
+}
+```
+
+### Error Responses
+
+**403 Forbidden - Not Authorized**
+```json
+{
+  "error": "Not authorized",
+  "detail": "You must be an instructor, admin, or supervisor to access this endpoint."
+}
+```
+
+**401 Unauthorized - Not Authenticated**
+```json
+{
+  "detail": "Authentication credentials were not provided."
+}
+```
+
+### Use Cases
+
+1. **Daily Schedule Check (Instructors)**: Instructors can quickly see their own lectures for the day when they log in
+2. **Daily Overview (Admins/Supervisors)**: Admins and supervisors can monitor all lectures happening today across all instructors
+3. **Attendance Tracking**: Identify which lectures still need attendance to be taken
+4. **Pending Approval**: See which additional lectures are still waiting for approval
+5. **Time Management**: View lecture times to plan the day effectively
+6. **Resource Allocation**: Admins can see the full schedule to manage resources and handle conflicts
+
+### Notes
+- This endpoint returns **all** lectures for today, including those with `is_accepted=False` (pending approval)
+- This differs from the course-specific lecture list endpoint which only returns accepted lectures
+- The endpoint automatically uses the server's current date/time to determine "today"
+- Lectures are ordered by `start_time` first, then by `lecture_number`
+- No pagination is applied since daily lectures are typically a manageable number
+- The `user_role` field helps frontend applications determine how to display the data
+- Regular instructors will only see their own lectures even if they try to access the endpoint
+- Admins and supervisors automatically get the full view of all lectures
 
 ---
 

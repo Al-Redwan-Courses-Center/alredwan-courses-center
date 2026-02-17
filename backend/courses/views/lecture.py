@@ -7,10 +7,11 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db.models import Max
 from django_filters import rest_framework as filters
+from django.utils import timezone
 
 from courses.models import Course, Lecture
 from courses.serializers import LectureListSerializer, InstructorLectureCreateSerializer, LectureUpdateSerializer
-from courses.permissions import IsAdminOrCourseInstructor
+from courses.permissions import IsAdminOrCourseInstructor, IsAdminOrInstructorOrSupervisor
 from core.utils.pagination import CustomPageNumberPagination
 
 
@@ -301,3 +302,67 @@ class LectureUpdateView(generics.UpdateAPIView):
             'attendance_taken': instance.attendance_taken,
             'updated_at': instance.updated_at,
         })
+
+
+class InstructorTodayLecturesView(APIView):
+    """
+    API endpoint for getting today's lectures
+    
+    GET /api/courses/lectures/today/
+    
+    Behavior based on user role:
+    - Regular Instructors: Returns only their own lectures scheduled for today
+    - Admins/Supervisors: Returns all lectures for all instructors scheduled for today
+    
+    Returns all lectures (accepted and pending) ordered by start_time, then lecture_number.
+    
+    Authentication required: Admin, Supervisor, or Instructor
+    """
+    permission_classes = [IsAdminOrInstructorOrSupervisor]
+    
+    def get(self, request):
+        """Get today's lectures based on user role"""
+        # Get today's date
+        today = timezone.now().date()
+        
+        # Determine if user is admin/supervisor or regular instructor
+        is_admin_or_supervisor = (
+            request.user.is_staff or 
+            request.user.is_superuser or 
+            (hasattr(request.user, 'instructor_profile') and 
+             request.user.instructor_profile.type == 'supervisor')
+        )
+        
+        # Build query based on user role
+        if is_admin_or_supervisor:
+            # Admin/Supervisor: Get all lectures for today
+            lectures = Lecture.objects.filter(
+                day=today
+            ).select_related(
+                'course',
+                'instructor__user'
+            ).order_by('start_time', 'lecture_number')
+            
+            user_role = 'admin/supervisor'
+        else:
+            # Regular Instructor: Get only their own lectures
+            instructor_profile = request.user.instructor_profile
+            lectures = Lecture.objects.filter(
+                instructor=instructor_profile,
+                day=today
+            ).select_related(
+                'course',
+                'instructor__user'
+            ).order_by('start_time', 'lecture_number')
+            
+            user_role = 'instructor'
+        
+        # Serialize the lectures
+        serializer = LectureListSerializer(lectures, many=True)
+        
+        return Response({
+            'date': today.isoformat(),
+            'count': lectures.count(),
+            'user_role': user_role,
+            'lectures': serializer.data
+        }, status=status.HTTP_200_OK)

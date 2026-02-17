@@ -9,6 +9,7 @@ from .views import (
     LandingPageCourseListView,
     LectureListCreateView,
     LectureNumberCheckView,
+    InstructorTodayLecturesView,
     CourseRatingsView,
 )
 
@@ -22,6 +23,7 @@ urlpatterns = [
     path('<str:pk>/', CourseDetailView.as_view(), name='course-detail'),
     path('<int:pk>/edit/', CourseUpdateView.as_view(), name='course-edit'),
     path('lectures/<int:pk>/edit/', LectureUpdateView.as_view(), name='lecture-edit'),
+    path('lectures/today/', InstructorTodayLecturesView.as_view(), name='instructor-today-lectures'),
     
     # Lecture endpoints
     path('<str:course_id>/lectures/', LectureListCreateView.as_view(), name='lecture-list-create'),

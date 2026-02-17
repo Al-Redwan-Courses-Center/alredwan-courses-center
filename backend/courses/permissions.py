@@ -3,6 +3,36 @@
 from rest_framework import permissions
 
 
+class IsAdminOrInstructorOrSupervisor(permissions.BasePermission):
+    """
+    Permission to only allow admins, supervisors, or any instructor.
+    
+    - Admins (staff/superuser) have full access
+    - Supervisors have full access
+    - Regular instructors have access
+    
+    This permission does NOT validate course-specific access.
+    Use IsAdminOrCourseInstructor for course-specific permissions.
+    """
+    
+    def has_permission(self, request, view):
+        """Check if user is authenticated and is an admin, supervisor, or instructor."""
+        # User must be authenticated
+        if not request.user or not request.user.is_authenticated:
+            return False
+        
+        # Admins have full access
+        if request.user.is_staff or request.user.is_superuser:
+            return True
+        
+        # Check if user has an instructor profile
+        if not hasattr(request.user, 'instructor_profile'):
+            return False
+        
+        # Any instructor (including supervisors) has access
+        return True
+
+
 class IsAdminOrCourseInstructor(permissions.BasePermission):
     """
     Permission to only allow admins, supervisors, or the specific course instructor.
