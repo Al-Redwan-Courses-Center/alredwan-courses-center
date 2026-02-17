@@ -9,13 +9,14 @@ from django.urls import reverse
 from django.utils import timezone
 
 from courses.models import Lecture
+from core.utils import ExcelExportMixin
 from .base import ArabicLabelsMixin, OptimizedQuerysetMixin
 from .filters import LectureDateRangeFilter
 from .actions import mark_lectures_completed, mark_lectures_cancelled, reschedule_next_week
 
 
 @admin.register(Lecture)
-class LectureAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+class LectureAdmin(ExcelExportMixin, ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
     """Admin configuration for Lecture model with enhanced UX."""
 
     select_related_fields = [
@@ -46,6 +47,10 @@ class LectureAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
         'course', 'instructor', 'course__season',
         'instructor__user', 'course__instructor__user', 'course__instructor'
     )
+    
+    # Excel export configuration
+    excel_filename = 'lectures'
+    # excel_export_exclude = []  # Optional: exclude specific fields
 
     fieldsets = (
         (_('معلومات المحاضرة'), {

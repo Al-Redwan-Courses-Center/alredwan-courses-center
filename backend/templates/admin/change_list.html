@@ -1,0 +1,17 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+    
+    {# Only show Export to Excel button if the admin class has ExcelExportMixin #}
+    {% if cl.model_admin.excel_filename or cl.model_admin.excel_export_fields %}
+    <li>
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'export' %}{{ key }}={{ value }}&{% endif %}{% endfor %}export=excel" 
+           class="button" 
+           style="background-color: #28a745; color: white; padding: 10px 15px; border-radius: 4px; text-decoration: none; display: inline-block;">
+            <span style="font-size: 16px;">📊</span> {% trans "تصدير إلى Excel" %}
+        </a>
+    </li>
+    {% endif %}
+{% endblock %}

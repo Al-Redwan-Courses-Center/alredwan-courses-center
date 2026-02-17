@@ -1,9 +1,12 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
+from django.utils.html import format_html
+from core.utils import ExcelExportMixin
 from ..models.instructor_attendance import InstructorAttendance
 
 
 @admin.register(InstructorAttendance)
-class InstructorAttendanceAdmin(admin.ModelAdmin):
+class InstructorAttendanceAdmin(ExcelExportMixin, admin.ModelAdmin):
     list_display = ('get_instructor', 'get_date', 'get_status',
                     'get_check_in_time', 'get_check_out_time', 'get_rating', 'get_rated_by')
     list_filter = ('status', 'date', 'season', 'check_in_method')
@@ -19,6 +22,9 @@ class InstructorAttendanceAdmin(admin.ModelAdmin):
         ('المحاضرة والجدول', {'fields': ('lecture', 'schedule')}),
         ('التقييم', {'fields': ('rating', 'rated_by', 'notes')}),
     )
+
+    # Excel export configuration
+    excel_filename = 'instructor_attendance'
 
     def get_instructor(self, obj):
         return obj.instructor

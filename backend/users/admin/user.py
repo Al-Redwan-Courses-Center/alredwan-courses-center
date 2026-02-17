@@ -1,10 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from core.utils import ExcelExportMixin
 from ..models.user import CustomUser
 
 
 @admin.register(CustomUser)
-class UserAdmin(BaseUserAdmin):
+class UserAdmin(ExcelExportMixin, BaseUserAdmin):
     list_display = ('get_full_name_display', 'get_phone_number1', 'get_phone_number2', 'get_role',
                     'get_gender', 'get_date_joined', 'get_is_verified', 'get_is_active')
     list_filter = ('role', 'is_verified', 'is_active',
@@ -27,6 +28,9 @@ class UserAdmin(BaseUserAdmin):
             'fields': ('phone_number1', 'phone_number2', 'password1', 'password2', 'first_name', 'last_name', 'dob', 'gender', 'role'),
         }),
     )
+
+    # Excel export configuration
+    excel_filename = 'users'
 
     def get_full_name_display(self, obj):
         return obj.get_full_name() or obj.phone_number1

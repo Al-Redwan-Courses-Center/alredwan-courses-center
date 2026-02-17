@@ -7,13 +7,14 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
 from django.db.models import Count
 
+from core.utils import ExcelExportMixin
 from courses.models import Tag
 from .base import ArabicLabelsMixin
 from .inlines import TagCourseInline, TagInstructorInline
 
 
 @admin.register(Tag)
-class TagAdmin(ArabicLabelsMixin, admin.ModelAdmin):
+class TagAdmin(ExcelExportMixin, ArabicLabelsMixin, admin.ModelAdmin):
     """Admin configuration for Tag model."""
 
     list_display = ('name', 'get_courses_count', 'get_instructors_count', 'created_at')
@@ -22,6 +23,9 @@ class TagAdmin(ArabicLabelsMixin, admin.ModelAdmin):
     ordering = ('name',)
     inlines = [TagCourseInline, TagInstructorInline]
     prefetch_related_fields = ['courses', 'courses__instructor', 'courses__instructor__user']
+
+    # Excel export configuration
+    excel_filename = 'tags'
 
     @admin.display(description=_('عدد الدورات'), ordering='courses_count')
     def get_courses_count(self, obj):

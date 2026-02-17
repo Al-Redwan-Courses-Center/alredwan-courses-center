@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.db.models import Count
 from django import forms
 
+from core.utils import ExcelExportMixin
 from enrollments_payments.models.enrollment_request import (
     EnrollmentRequest, 
     EnrollmentRequestStatus,
@@ -218,7 +219,7 @@ def extend_expiry(modeladmin, request, queryset):
 # Admin Configuration
 # =============================================================================
 @admin.register(EnrollmentRequest)
-class EnrollmentRequestAdmin(admin.ModelAdmin):
+class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
     """Enhanced admin configuration for EnrollmentRequest model."""
     
     # List display configuration
@@ -259,6 +260,9 @@ class EnrollmentRequestAdmin(admin.ModelAdmin):
     
     # Actions
     actions = [approve_selected, reject_selected, mark_processing, extend_expiry]
+    
+    # Excel export configuration
+    excel_filename = 'enrollment_requests'
     
     # =========================================================================
     # Dynamic Fieldsets - Different for Add vs Edit
