@@ -1501,7 +1501,7 @@ class LectureAttendanceDetailAPITest(LectureAttendanceBaseTestCase):
         """Test getting lecture attendance details as admin"""
         from django.utils import timezone
         now = timezone.now()
-        
+
         # Create attendance records
         LectureAttendance.objects.create(
             lecture=self.lecture,
