@@ -6,6 +6,7 @@ from .views import (
     CourseDetailView,
     CourseUpdateView,
     LectureUpdateView,
+    LectureDetailView,
     LandingPageCourseListView,
     LectureListCreateView,
     LectureNumberCheckView,
@@ -22,10 +23,15 @@ urlpatterns = [
     path('<str:pk>/ratings/', CourseRatingsView.as_view(), name='course-ratings'),
     path('<str:pk>/', CourseDetailView.as_view(), name='course-detail'),
     path('<int:pk>/edit/', CourseUpdateView.as_view(), name='course-edit'),
-    path('lectures/<int:pk>/edit/', LectureUpdateView.as_view(), name='lecture-edit'),
-    path('lectures/today/', InstructorTodayLecturesView.as_view(), name='instructor-today-lectures'),
-    
+    path('lectures/<int:pk>/edit/',
+         LectureUpdateView.as_view(), name='lecture-edit'),
+    path('lectures/<int:pk>/', LectureDetailView.as_view(), name='lecture-detail'),
+    path('lectures/today/', InstructorTodayLecturesView.as_view(),
+         name='instructor-today-lectures'),
+
     # Lecture endpoints
-    path('<str:course_id>/lectures/', LectureListCreateView.as_view(), name='lecture-list-create'),
-    path('<str:course_id>/lectures/check-datetime/', LectureNumberCheckView.as_view(), name='lecture-check-datetime'),
+    path('<str:course_id>/lectures/',
+         LectureListCreateView.as_view(), name='lecture-list-create'),
+    path('<str:course_id>/lectures/check-datetime/',
+         LectureNumberCheckView.as_view(), name='lecture-check-datetime'),
 ]
