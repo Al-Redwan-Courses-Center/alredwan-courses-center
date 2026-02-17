@@ -28,6 +28,7 @@ from .serializers import (
     # Lecture attendance serializers
     MarkAttendanceSerializer,
     LectureAttendanceSerializer,
+    LectureAttendanceDetailSerializer,
     BulkMarkAttendanceSerializer,
     # Instructor attendance serializers
     InstructorAttendanceSerializer,
@@ -51,11 +52,11 @@ from courses.models import Season
 class LectureAttendanceView(APIView):
     """
     API endpoint to mark attendance for a student or child.
-    
+
     Only admins and the course instructor can mark attendance.
-    
+
     POST /api/attendance/lecture/<lecture_id>/mark/
-    
+
     Request body:
     {
         "code": "M64793",
@@ -65,58 +66,59 @@ class LectureAttendanceView(APIView):
     }
     """
     permission_classes = [IsAdminOrCourseInstructor]
-    
+
     def post(self, request, lecture_id):
         """Mark attendance for a student or child using their code."""
         from courses.models.lecture import Lecture
-        
+
         # Get the lecture and check permissions
         try:
-            lecture = Lecture.objects.select_related('course', 'course__instructor').get(id=lecture_id)
+            lecture = Lecture.objects.select_related(
+                'course', 'course__instructor').get(id=lecture_id)
         except Lecture.DoesNotExist:
             return Response(
                 {'error': 'Lecture not found.'},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
+
         # Check object-level permission (admin or course instructor)
         if not self.permission_classes[0]().has_object_permission(request, self, lecture):
             return Response(
                 {'error': 'You do not have permission to mark attendance for this lecture.'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
+
         # Add lecture_id to the request data
         data = request.data.copy()
         data['lecture_id'] = lecture_id
-        
+
         serializer = MarkAttendanceSerializer(
             data=data,
             context={'request': request}
         )
-        
+
         if not serializer.is_valid():
             return Response(
                 serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         # Get the validated data and attendance record
         validated_data = serializer.validated_data
         attendance = serializer.context['attendance']
-        
+
         try:
             with transaction.atomic():
                 # Set rating and notes before marking
                 attendance.rating = validated_data['rating']
                 attendance.notes = validated_data.get('notes', '')
-                
+
                 # Use the model's mark() method to mark as present (attended)
                 attendance.mark(
                     present=True,
                     marked_by_user=request.user
                 )
-            
+
             # Return the updated attendance record
             response_serializer = LectureAttendanceSerializer(attendance)
             return Response(
@@ -127,7 +129,7 @@ class LectureAttendanceView(APIView):
                 },
                 status=status.HTTP_200_OK
             )
-            
+
         except Exception as e:
             return Response(
                 {'error': f'Failed to mark attendance: {str(e)}'},
@@ -138,11 +140,11 @@ class LectureAttendanceView(APIView):
 class BulkLectureAttendanceView(APIView):
     """
     API endpoint to mark attendance for multiple students/children in bulk.
-    
+
     Only admins and the course instructor can mark attendance.
-    
+
     POST /api/attendance/lecture/<lecture_id>/mark-bulk/
-    
+
     Request body:
     {
         "marked_via": "manual",  // or "qr_scan"
@@ -163,7 +165,7 @@ class BulkLectureAttendanceView(APIView):
             }
         ]
     }
-    
+
     Response:
     {
         "message": "Bulk attendance marking completed",
@@ -181,69 +183,70 @@ class BulkLectureAttendanceView(APIView):
     }
     """
     permission_classes = [IsAdminOrCourseInstructor]
-    
+
     def post(self, request, lecture_id):
         """Mark attendance for multiple students/children in bulk."""
         from courses.models.lecture import Lecture
-        
+
         # Get the lecture and check permissions
         try:
-            lecture = Lecture.objects.select_related('course', 'course__instructor').get(id=lecture_id)
+            lecture = Lecture.objects.select_related(
+                'course', 'course__instructor').get(id=lecture_id)
         except Lecture.DoesNotExist:
             return Response(
                 {'error': f'Lecture with id {lecture_id} not found.'},
                 status=status.HTTP_404_NOT_FOUND
             )
-        
+
         # Check object-level permission (admin or course instructor)
         if not self.permission_classes[0]().has_object_permission(request, self, lecture):
             return Response(
                 {'error': 'You do not have permission to mark attendance for this lecture.'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
+
         # Validate the request data
         serializer = BulkMarkAttendanceSerializer(
             data=request.data,
             context={'request': request, 'lecture': lecture}
         )
-        
+
         if not serializer.is_valid():
             return Response(
                 serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         validated_data = serializer.validated_data
         validated_items = serializer.context.get('validated_items', [])
         validation_errors = serializer.context.get('validation_errors', [])
-        
+
         marked_via = validated_data.get('marked_via', 'manual')
         marked_at = timezone.now()
-        
+
         # Process all validated attendance records
         successful_records = []
         failed_records = []
-        
+
         try:
             with transaction.atomic():
                 for item in validated_items:
                     attendance = item['attendance']
                     participant = item['participant']
                     data = item['data']
-                    
+
                     try:
                         # Set rating and notes
                         attendance.rating = data['rating']
                         attendance.notes = data.get('notes', '')
-                        
+
                         # Mark attendance
                         attendance.mark(
                             present=data.get('present', True),
                             marked_by_user=request.user,
                             marked_via=marked_via
                         )
-                        
+
                         # Add to successful records
                         successful_records.append({
                             'code': data['code'],
@@ -257,23 +260,23 @@ class BulkLectureAttendanceView(APIView):
                             'present': data.get('present', True),
                             'attendance_id': attendance.id
                         })
-                        
+
                     except Exception as e:
                         failed_records.append({
                             'code': data['code'],
                             'participant_type': data['participant_type'],
                             'error': f'Failed to mark attendance: {str(e)}'
                         })
-                
+
                 # Add validation errors to failed records
                 failed_records.extend(validation_errors)
-        
+
         except Exception as e:
             return Response(
                 {'error': f'Transaction failed: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
+
         # Prepare summary
         total_received = len(validated_data.get('attendances', []))
         summary = {
@@ -284,12 +287,13 @@ class BulkLectureAttendanceView(APIView):
             'marked_via': marked_via,
             'marked_at': marked_at.isoformat()
         }
-        
-        response_status = status.HTTP_200_OK if len(successful_records) > 0 else status.HTTP_400_BAD_REQUEST
-        
+
+        response_status = status.HTTP_200_OK if len(
+            successful_records) > 0 else status.HTTP_400_BAD_REQUEST
+
         if len(failed_records) > 0 and len(successful_records) > 0:
             response_status = status.HTTP_207_MULTI_STATUS
-        
+
         return Response(
             {
                 'message': 'Bulk attendance marking completed',
@@ -300,6 +304,98 @@ class BulkLectureAttendanceView(APIView):
             },
             status=response_status
         )
+
+
+class LectureAttendanceDetailView(APIView):
+    """
+    API endpoint to get detailed attendance for a specific lecture.
+
+    Returns all attendance records for the lecture with full participant details
+    including name, image, age, gender, rating, notes, and attendance status.
+
+    Only admins and the course instructor can view this data.
+
+    GET /api/attendance/lecture/<lecture_id>/details/
+
+    Response:
+    {
+        "lecture_id": 123,
+        "lecture_title": "Lecture 1 - Introduction",
+        "course_name": "Quran Memorization",
+        "total_enrolled": 15,
+        "present_count": 12,
+        "absent_count": 3,
+        "attendance_rate": 80.0,
+        "attendances": [
+            {
+                "id": 1,
+                "participant_name": "أحمد",
+                "participant_full_name": "أحمد محمد",
+                "participant_type": "child",
+                "participant_code": "M12345",
+                "participant_image": "https://res.cloudinary.com/.../image.jpg",
+                "participant_age": 12,
+                "participant_gender": "boy",
+                "present": true,
+                "rating": 8,
+                "notes": "ممتاز",
+                "marked_at": "2025-01-15T10:30:00Z"
+            },
+            ...
+        ]
+    }
+    """
+    permission_classes = [IsAdminOrCourseInstructor]
+
+    def get(self, request, lecture_id):
+        """Get detailed attendance records for a lecture."""
+        from courses.models.lecture import Lecture
+
+        # Get the lecture with related data
+        try:
+            lecture = Lecture.objects.select_related(
+                'course', 'course__instructor'
+            ).get(id=lecture_id)
+        except Lecture.DoesNotExist:
+            return Response(
+                {'error': 'Lecture not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Check object-level permission (admin or course instructor)
+        if not self.permission_classes[0]().has_object_permission(request, self, lecture):
+            return Response(
+                {'error': 'You do not have permission to view attendance for this lecture.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get all attendance records for this lecture with related data
+        attendances = LectureAttendance.objects.filter(
+            lecture=lecture
+        ).select_related(
+            'child', 'student', 'student__user', 'marked_by'
+        ).order_by('-present', 'child__first_name', 'student__user__first_name')
+
+        # Calculate statistics
+        total_enrolled = attendances.count()
+        present_count = attendances.filter(present=True).count()
+        absent_count = total_enrolled - present_count
+        attendance_rate = (present_count / total_enrolled *
+                           100) if total_enrolled > 0 else 0
+
+        # Serialize the attendance records
+        serializer = LectureAttendanceDetailSerializer(attendances, many=True)
+
+        return Response({
+            'lecture_id': lecture.id,
+            'lecture_title': lecture.title,
+            'course_name': lecture.course.name if lecture.course else None,
+            'total_enrolled': total_enrolled,
+            'present_count': present_count,
+            'absent_count': absent_count,
+            'attendance_rate': round(attendance_rate, 1),
+            'attendances': serializer.data
+        }, status=status.HTTP_200_OK)
 
 
 # =============================================================================
@@ -504,55 +600,56 @@ class FingerprintCheckOutView(DeviceAuthenticationMixin, views.APIView):
 class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
     """
     Unified endpoint for fingerprint device scans.
-    
+
     POST /api/attendance/scan/
     {
         "fingerprint_id": "FP123456",
         "device_id": "DEVICE001",
         "timestamp": "2026-02-14T08:30:00+02:00"  // Optional, for offline sync
     }
-    
+
     This is the RECOMMENDED endpoint for fingerprint devices that don't distinguish
     between check-in and check-out actions.
-    
+
     Logic:
     1. No attendance record for today → Auto-create based on schedule/lecture and check-in
     2. Has record but not checked-in → Check-in
     3. Checked-in but not out → Check-out
     4. Already checked out → Re-entry (clears check-out, logs as re-entry)
     5. Rapid scans (< 2 min) → Ignored as duplicates
-    
+
     All scans are logged to FingerprintScanLog for audit trail.
     """
-    
+
     # Minimum time between scans (in seconds) to prevent rapid duplicates
     MIN_SCAN_INTERVAL_SECONDS = 120  # 2 minutes
-    
+
     def post(self, request):
         serializer = FingerprintScanSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         fingerprint_id = serializer.validated_data['fingerprint_id']
         device_id = serializer.validated_data['device_id']
         scan_time = serializer.validated_data.get('timestamp', timezone.now())
-        
+
         # Get instructor and device from serializer context
         instructor = serializer.context.get('instructor')
         if not instructor:
-            instructor = get_object_or_404(Instructor, fingerprint_id=fingerprint_id)
-        
+            instructor = get_object_or_404(
+                Instructor, fingerprint_id=fingerprint_id)
+
         device = serializer.context.get('device')
         if not device:
             device = self.get_device(device_id)
-        
+
         today = timezone.localdate()
-        
+
         # Check for rapid duplicate scans
         recent_scans = FingerprintScanLog.objects.filter(
             instructor=instructor,
             scan_time__gte=timezone.now() - timezone.timedelta(seconds=self.MIN_SCAN_INTERVAL_SECONDS)
         ).exclude(action=ScanAction.IGNORED)
-        
+
         if recent_scans.exists():
             last_scan = recent_scans.first()
             # Log as ignored
@@ -574,27 +671,29 @@ class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
                 },
                 status=status.HTTP_200_OK
             )
-        
+
         # Get or create attendance records for today
         attendance_records = InstructorAttendance.objects.filter(
             instructor=instructor,
             date=today
         )
-        
+
         action_taken = None
         response_data = {
             "instructor": instructor.user.get_full_name(),
             "scan_time": scan_time,
             "records": [],
         }
-        
+
         # CASE 1: No attendance records exist - auto-create based on schedules/lectures
         if not attendance_records.exists():
-            created_records = self._auto_create_attendance(instructor, today, device)
+            created_records = self._auto_create_attendance(
+                instructor, today, device)
             if created_records:
                 action_taken = ScanAction.AUTO_CREATED
                 for record in created_records:
-                    record.mark_checked_in(device=device, method=CheckInMethod.FINGERPRINT)
+                    record.mark_checked_in(
+                        device=device, method=CheckInMethod.FINGERPRINT)
                     response_data["records"].append({
                         "id": record.id,
                         "type": record.attendance_type,
@@ -603,7 +702,7 @@ class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
                     })
                 response_data["message"] = "Auto-created attendance and checked in"
                 response_data["action"] = "auto_create_check_in"
-                
+
                 # Log the scan
                 for record in created_records:
                     FingerprintScanLog.objects.create(
@@ -615,7 +714,7 @@ class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
                         is_processed=True,
                         notes="تم إنشاء سجل الحضور تلقائياً وتسجيل الدخول"
                     )
-                
+
                 return Response(response_data, status=status.HTTP_201_CREATED)
             else:
                 # No schedules or lectures found - create a general attendance record
@@ -628,7 +727,7 @@ class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
                         },
                         status=status.HTTP_400_BAD_REQUEST
                     )
-                
+
                 record = InstructorAttendance.objects.create(
                     instructor=instructor,
                     date=today,
@@ -636,8 +735,9 @@ class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
                     status=AttendanceStatus.NOT_STARTED,
                     season=season
                 )
-                record.mark_checked_in(device=device, method=CheckInMethod.FINGERPRINT)
-                
+                record.mark_checked_in(
+                    device=device, method=CheckInMethod.FINGERPRINT)
+
                 FingerprintScanLog.objects.create(
                     instructor=instructor,
                     attendance=record,
@@ -647,7 +747,7 @@ class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
                     is_processed=True,
                     notes="تم إنشاء سجل حضور عام (بدون جدول)"
                 )
-                
+
                 response_data["message"] = "Auto-created general attendance and checked in"
                 response_data["action"] = "auto_create_check_in"
                 response_data["records"] = [{
@@ -657,7 +757,7 @@ class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
                     "auto_created": True,
                 }]
                 return Response(response_data, status=status.HTTP_201_CREATED)
-        
+
         # Check current state of attendance records
         not_checked_in = attendance_records.filter(check_in_time__isnull=True)
         checked_in_not_out = attendance_records.filter(
@@ -665,11 +765,12 @@ class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
             check_out_time__isnull=True
         )
         checked_out = attendance_records.filter(check_out_time__isnull=False)
-        
+
         # CASE 2: Has records not checked in → Check-in
         if not_checked_in.exists():
             for record in not_checked_in:
-                record.mark_checked_in(device=device, method=CheckInMethod.FINGERPRINT)
+                record.mark_checked_in(
+                    device=device, method=CheckInMethod.FINGERPRINT)
                 response_data["records"].append({
                     "id": record.id,
                     "type": record.attendance_type,
@@ -687,12 +788,13 @@ class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
             response_data["action"] = "check_in"
             response_data["check_in_time"] = scan_time
             return Response(response_data, status=status.HTTP_200_OK)
-        
+
         # CASE 3: Checked in but not out → Check-out
         if checked_in_not_out.exists():
             for record in checked_in_not_out:
                 try:
-                    record.mark_checked_out(device=device, method=CheckInMethod.FINGERPRINT)
+                    record.mark_checked_out(
+                        device=device, method=CheckInMethod.FINGERPRINT)
                     response_data["records"].append({
                         "id": record.id,
                         "type": record.attendance_type,
@@ -715,7 +817,7 @@ class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
             response_data["action"] = "check_out"
             response_data["check_out_time"] = scan_time
             return Response(response_data, status=status.HTTP_200_OK)
-        
+
         # CASE 4: Already checked out → Re-entry (clear check-out)
         if checked_out.exists():
             for record in checked_out:
@@ -742,34 +844,34 @@ class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
             response_data["message"] = "Re-entry recorded - check-out cleared"
             response_data["action"] = "re_entry"
             return Response(response_data, status=status.HTTP_200_OK)
-        
+
         # Fallback - should not reach here
         return Response(
             {"error": "Unexpected state"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-    
+
     def _auto_create_attendance(self, instructor, date, device):
         """
         Auto-create attendance records based on instructor's schedules and lectures.
-        
+
         Returns list of created InstructorAttendance records.
         """
         from courses.models import Lecture
-        
+
         season = Season.objects.filter(is_active=True).first()
         if not season:
             return []
-        
+
         created_records = []
         weekday = date.weekday()
-        
+
         # Check supervisor schedules for today
         schedules = SupervisorSchedule.objects.filter(
             instructor=instructor,
             day_of_week=weekday
         )
-        
+
         for schedule in schedules:
             record, created = InstructorAttendance.objects.get_or_create(
                 instructor=instructor,
@@ -783,13 +885,13 @@ class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
             )
             if created:
                 created_records.append(record)
-        
+
         # Check lectures for today
         lectures = Lecture.objects.filter(
             instructor=instructor,
             day=date
         )
-        
+
         for lecture in lectures:
             record, created = InstructorAttendance.objects.get_or_create(
                 instructor=instructor,
@@ -803,7 +905,7 @@ class UnifiedFingerprintScanView(DeviceAuthenticationMixin, views.APIView):
             )
             if created:
                 created_records.append(record)
-        
+
         return created_records
 
 
