@@ -72,6 +72,7 @@ class CustomUserSerializer(UserSerializer):
 
     Security: Prevents users from modifying sensitive fields.
     """
+    instructor_id = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
         model = CustomUser
@@ -91,6 +92,7 @@ class CustomUserSerializer(UserSerializer):
             'role',
             'is_verified',
             'date_joined',
+            'instructor_id',
         )
         read_only_fields = (
             'id',
@@ -98,7 +100,14 @@ class CustomUserSerializer(UserSerializer):
             'role',           # Only admins can change role
             'is_verified',    # Only admins can verify users
             'date_joined',
+            'instructor_id',
         )
+
+    def get_instructor_id(self, obj):
+        """Return instructor ID if user has an instructor profile, otherwise None"""
+        if hasattr(obj, 'instructor_profile') and obj.instructor_profile:
+            return obj.instructor_profile.id
+        return None
 
 
 class InstructorSerializer(serializers.ModelSerializer):
