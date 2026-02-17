@@ -1,4 +1,4 @@
-# 📋 Attendance API
+# 📋 Attendance API Documentation
 
 Instructor attendance tracking (fingerprint devices, manual entry, ratings) and student lecture attendance.
 
@@ -13,6 +13,7 @@ Instructor attendance tracking (fingerprint devices, manual entry, ratings) and 
 5. [Device Management](#device-management)
 6. [Schedule Management](#schedule-management)
 7. [Student Lecture Attendance](#student-lecture-attendance)
+8. [Quick Reference](#quick-reference)
 
 ---
 
@@ -45,9 +46,46 @@ NOT_STARTED → PENDING → PRESENT (on time) or LATE (after grace period) or AB
 
 ## Fingerprint Device Endpoints
 
-> These don't require JWT — they authenticate via `device_id`.
+> These endpoints don't require JWT — they authenticate via `device_id`.
 
-### Check-in
+### Unified Scan (Recommended)
+
+The **recommended** endpoint for fingerprint devices that don't distinguish between check-in and check-out.
+
+| | |
+|--|--|
+| **URL** | `POST /api/attendance/scan/` |
+| **Auth** | No (uses device_id) |
+
+```json
+{
+  "fingerprint_id": "FP123456",
+  "device_id": "DEVICE001",
+  "timestamp": "2026-02-14T08:30:00+02:00"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `fingerprint_id` | string | Yes | Unique fingerprint ID from device |
+| `device_id` | string | Yes | Hardware device ID |
+| `timestamp` | datetime | No | For offline sync (defaults to current time) |
+
+**Logic:**
+
+| Scenario | Action | Code |
+|----------|--------|------|
+| No attendance record for today | Auto-create from schedule + check-in | 201 |
+| Has record, not checked in | Check-in | 200 |
+| Checked in, not checked out | Check-out | 200 |
+| Already checked out | Re-entry (clears check-out) | 200 |
+| Rapid scan (< 2 min since last) | Ignored as duplicate | 200 |
+
+All scans are logged to `FingerprintScanLog` for audit trail.
+
+---
+
+### Check-in (Legacy)
 
 | | |
 |--|--|
@@ -69,6 +107,7 @@ NOT_STARTED → PENDING → PRESENT (on time) or LATE (after grace period) or AB
 | `method` | string | No | `fingerprint`, `rfid`, `qr_code`, `manual` |
 
 **Success (200):**
+
 ```json
 {
   "message": "Check-in successful",
@@ -84,6 +123,7 @@ NOT_STARTED → PENDING → PRESENT (on time) or LATE (after grace period) or AB
 **Already checked in:** Returns `{"message": "Already checked in", ...}`
 
 **Errors:**
+
 | Code | Cause |
 |------|-------|
 | 400 | Invalid fingerprint or inactive device |
@@ -91,7 +131,7 @@ NOT_STARTED → PENDING → PRESENT (on time) or LATE (after grace period) or AB
 
 ---
 
-### Check-out
+### Check-out (Legacy)
 
 | | |
 |--|--|
@@ -101,6 +141,7 @@ NOT_STARTED → PENDING → PRESENT (on time) or LATE (after grace period) or AB
 Same request body as check-in.
 
 **Success (200):**
+
 ```json
 {
   "message": "Check-out successful",
@@ -122,6 +163,8 @@ Same request body as check-in.
 |--|--|
 | **URL** | `GET /api/attendance/today/` |
 | **Auth** | ✅ Admin |
+
+**Response (200):**
 
 ```json
 [
@@ -150,6 +193,8 @@ Same request body as check-in.
 | **URL** | `GET /api/attendance/today/summary/` |
 | **Auth** | ✅ Admin |
 
+**Response (200):**
+
 ```json
 {
   "date": "2026-02-05",
@@ -173,6 +218,17 @@ Same request body as check-in.
 | | |
 |--|--|
 | **URL** | `GET /api/attendance/date/{YYYY-MM-DD}/` |
+| **Auth** | ✅ Admin |
+
+Returns same format as Today's Attendance for the specified date.
+
+---
+
+### Attendance Detail
+
+| | |
+|--|--|
+| **URL** | `GET/PUT/PATCH /api/attendance/{id}/` |
 | **Auth** | ✅ Admin |
 
 ---
@@ -256,6 +312,7 @@ Same request body as check-in.
 | **Auth** | ✅ Admin |
 
 **Create:**
+
 ```json
 {
   "device_id": "DEVICE002",
@@ -278,6 +335,7 @@ Manage weekly supervisor schedules.
 | **Auth** | ✅ Admin |
 
 **Create:**
+
 ```json
 {
   "instructor": 1,
@@ -305,6 +363,7 @@ Manage weekly supervisor schedules.
 Marks attendance for a single student/child in a lecture.
 
 **Request Body:**
+
 ```json
 {
   "code": "M64793",
@@ -319,7 +378,7 @@ Marks attendance for a single student/child in a lecture.
 | `code` | string | Yes | Unique code of the student or child |
 | `participant_type` | string | Yes | `student` or `child` |
 | `rating` | integer | Yes | Rating from 1 to 10 |
-| `notes` | string | No | Optional notes about attendance |
+| `notes` | string | No | Optional notes |
 
 ---
 
@@ -330,9 +389,8 @@ Marks attendance for a single student/child in a lecture.
 | **URL** | `POST /api/attendance/lecture/{lecture_id}/mark-bulk/` |
 | **Auth** | ✅ Required (Admin or Course Instructor) |
 
-Marks attendance for multiple students/children at once.
-
 **Request Body:**
+
 ```json
 {
   "marked_via": "manual",
@@ -364,9 +422,10 @@ Marks attendance for multiple students/children at once.
 | **URL** | `GET /api/attendance/lecture/{lecture_id}/details/` |
 | **Auth** | ✅ Required (Admin or Course Instructor) |
 
-Returns detailed attendance for all enrolled students/children in a lecture, including their personal information.
+Returns detailed attendance for all enrolled students/children, including personal information.
 
 **Response (200):**
+
 ```json
 {
   "lecture_id": 123,
@@ -402,31 +461,32 @@ Returns detailed attendance for all enrolled students/children in a lecture, inc
 }
 ```
 
+**Summary Fields:**
+
 | Field | Type | Description |
 |-------|------|-------------|
 | `lecture_id` | integer | ID of the lecture |
 | `lecture_title` | string | Title of the lecture |
 | `course_name` | string | Name of the course |
-| `total_enrolled` | integer | Total number of students/children enrolled |
-| `present_count` | integer | Number of participants marked present |
-| `absent_count` | integer | Number of participants not present |
-| `attendance_rate` | float | Percentage of attendance (0-100) |
-| `attendances` | array | List of attendance records |
+| `total_enrolled` | integer | Total enrolled students/children |
+| `present_count` | integer | Participants marked present |
+| `absent_count` | integer | Participants not present |
+| `attendance_rate` | float | Attendance percentage (0-100) |
 
 **Attendance Record Fields:**
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `participant_name` | string | First name of the participant |
-| `participant_full_name` | string | Full name of the participant |
+| `participant_name` | string | First name |
+| `participant_full_name` | string | Full name |
 | `participant_type` | string | `child` or `student` |
 | `participant_code` | string | Unique code (e.g., M12345) |
-| `participant_image` | string/null | URL to participant's profile image |
+| `participant_image` | string/null | Profile image URL |
 | `participant_age` | integer/null | Current age in years |
 | `participant_gender` | string | `boy`/`girl` for children, gender for students |
 | `present` | boolean | Whether participant was present |
 | `rating` | integer/null | Rating from 1-10 (if marked) |
-| `notes` | string | Optional notes about attendance |
+| `notes` | string | Optional notes |
 | `marked_via` | string | Method used: `manual`, `qr_scan` |
 | `marked_at` | datetime/null | When attendance was marked |
 
@@ -443,11 +503,12 @@ Returns detailed attendance for all enrolled students/children in a lecture, inc
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| POST | `/api/attendance/check-in/` | Fingerprint check-in | Device ID |
-| POST | `/api/attendance/check-out/` | Fingerprint check-out | Device ID |
+| POST | `/api/attendance/scan/` | Unified fingerprint scan | Device ID |
+| POST | `/api/attendance/check-in/` | Fingerprint check-in (legacy) | Device ID |
+| POST | `/api/attendance/check-out/` | Fingerprint check-out (legacy) | Device ID |
 | GET | `/api/attendance/today/` | Today's attendance | Admin |
 | GET | `/api/attendance/today/summary/` | Today's summary | Admin |
-| GET | `/api/attendance/{id}/` | Attendance detail | Admin |
+| GET/PUT/PATCH | `/api/attendance/{id}/` | Attendance detail / update | Admin |
 | POST | `/api/attendance/{id}/rate/` | Rate attendance | Admin |
 | POST | `/api/attendance/{id}/manual-check-in/` | Manual check-in | Admin |
 | POST | `/api/attendance/{id}/manual-check-out/` | Manual check-out | Admin |
@@ -455,7 +516,9 @@ Returns detailed attendance for all enrolled students/children in a lecture, inc
 | GET | `/api/attendance/date/{YYYY-MM-DD}/` | By date | Admin |
 | GET | `/api/attendance/instructor/{id}/` | Instructor history | Admin |
 | GET/POST | `/api/attendance/devices/` | Device management | Admin |
+| GET/PATCH/DELETE | `/api/attendance/devices/{id}/` | Device detail | Admin |
 | GET/POST | `/api/attendance/schedules/` | Schedule management | Admin |
+| GET/PATCH/DELETE | `/api/attendance/schedules/{id}/` | Schedule detail | Admin |
 | POST | `/api/attendance/lecture/{id}/mark/` | Mark lecture attendance | Admin/Instructor |
 | POST | `/api/attendance/lecture/{id}/mark-bulk/` | Bulk mark attendance | Admin/Instructor |
 | GET | `/api/attendance/lecture/{id}/details/` | Lecture attendance details | Admin/Instructor |

@@ -168,6 +168,79 @@ Returns only **accepted** lectures (`is_accepted=True`), ordered by `lecture_num
 
 ---
 
+### Get Lecture Detail
+
+| | |
+|--|--|
+| **URL** | `GET /api/courses/lectures/{id}/` |
+| **Auth** | ✅ Required (Admin, Supervisor, or Instructor) |
+
+Returns detailed information about a specific lecture, including full course details.
+
+**Response:**
+```json
+{
+  "id": 123,
+  "lecture_number": 5,
+  "title": "Introduction to Tajweed Rules",
+  "day": "2026-02-15",
+  "scheduled_at": "2026-02-15T10:00:00+02:00",
+  "start_time": "10:00:00",
+  "end_time": "12:00:00",
+  "duration_minutes": 120,
+  "instructor": {
+    "id": 3,
+    "full_name": "Ahmed Mohamed"
+  },
+  "course": {
+    "id": 1,
+    "name": "Quran Memorization - Beginner",
+    "slug": "quran-memorization-beginner",
+    "description": "Complete Quran memorization course",
+    "start_date": "2026-02-01",
+    "end_date": "2026-06-30",
+    "num_lectures": 40,
+    "capacity": 20,
+    "price": "500.00",
+    "is_active": true,
+    "season": { "id": 1, "name": "Winter 2026" },
+    "instructor": { "id": 3, "name": "Ahmed Mohamed" },
+    "tags": [{ "id": 1, "name": "Quran" }],
+    "for_adults": false,
+    "min_age": 8,
+    "max_age": 15,
+    "enrolled_count": 15,
+    "available_spots": 5,
+    "is_full": false
+  },
+  "status": "scheduled",
+  "status_display": "مجدولة",
+  "is_accepted": true,
+  "attendance_taken": false,
+  "created_at": "2026-01-15T10:30:00Z",
+  "updated_at": "2026-01-15T10:30:00Z"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer | Unique lecture ID |
+| `lecture_number` | integer | Sequential lecture number in course |
+| `title` | string | Lecture title |
+| `day` | date | Lecture date (`YYYY-MM-DD`) |
+| `scheduled_at` | datetime | ISO 8601 datetime with timezone |
+| `start_time` | time | Start time (`HH:MM:SS`) |
+| `end_time` | time | End time (`HH:MM:SS`) |
+| `duration_minutes` | integer | Duration in minutes (nullable) |
+| `instructor` | object | Instructor `{id, full_name}` |
+| `course` | object | Full course details |
+| `status` | string | `scheduled`, `completed`, `cancelled`, `additional` |
+| `status_display` | string | Localized status name |
+| `is_accepted` | boolean | Whether lecture is approved |
+| `attendance_taken` | boolean | Whether attendance was recorded |
+
+---
+
 ### Create Additional Lecture
 
 | | |
@@ -346,7 +419,9 @@ Returns aggregated stats + individual ratings from students and parents:
 | GET | `/api/courses/{id}/lectures/` | List lectures | Required |
 | POST | `/api/courses/{id}/lectures/` | Create additional lecture | Admin/Instructor |
 | GET | `/api/courses/{id}/lectures/check-datetime/` | Check availability | Required |
+| GET | `/api/courses/lectures/{id}/` | Lecture detail | Required |
 | PUT/PATCH | `/api/courses/lectures/{id}/edit/` | Update lecture | Admin/Instructor |
+| GET | `/api/courses/lectures/today/` | Today's lectures | Instructor/Admin |
 | GET | `/api/courses/{id}/ratings/` | Course ratings | Required |
 | GET | `/api/users/instructors/` | List instructors | Required |
 | GET | `/api/users/instructors/{id}/` | Instructor detail | Public |
