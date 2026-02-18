@@ -24,7 +24,7 @@ from users.models import Instructor, StudentUser
 
 class MarkAttendanceSerializer(serializers.Serializer):
     """Serializer for marking attendance for a student or child."""
-    
+
     lecture_id = serializers.IntegerField(
         help_text="ID of the lecture"
     )
@@ -63,14 +63,14 @@ class MarkAttendanceSerializer(serializers.Serializer):
         lecture = self.context.get('lecture')
         code = data.get('code')
         participant_type = data.get('participant_type')
-        
+
         if not lecture:
             raise serializers.ValidationError("Invalid lecture.")
-        
+
         # Find the participant based on type and code
         participant = None
         attendance = None
-        
+
         if participant_type == 'child':
             try:
                 participant = Child.objects.get(unique_code=code)
@@ -80,8 +80,9 @@ class MarkAttendanceSerializer(serializers.Serializer):
                     child=participant
                 ).first()
             except Child.DoesNotExist:
-                raise serializers.ValidationError(f"Child with code '{code}' not found.")
-        
+                raise serializers.ValidationError(
+                    f"Child with code '{code}' not found.")
+
         elif participant_type == 'student':
             try:
                 participant = StudentUser.objects.get(unique_code=code)
@@ -91,41 +92,43 @@ class MarkAttendanceSerializer(serializers.Serializer):
                     student=participant
                 ).first()
             except StudentUser.DoesNotExist:
-                raise serializers.ValidationError(f"Student with code '{code}' not found.")
-        
+                raise serializers.ValidationError(
+                    f"Student with code '{code}' not found.")
+
         if not attendance:
             raise serializers.ValidationError(
                 f"No attendance record found for this {participant_type} in this lecture. "
                 "The attendance record must be created first."
             )
-        
+
         # Store for later use
         self.context['attendance'] = attendance
         self.context['participant'] = participant
-        
+
         # Check if marking is allowed for this lecture (unless user is admin)
         request = self.context.get('request')
         user = request.user if request else None
-        
+
         if user and not user.is_staff:  # Non-admin users must respect time window
             if not LectureAttendance.can_mark_now(lecture):
                 raise serializers.ValidationError(
                     "Attendance can only be marked within the allowed time window "
                     "(from 24 hours before lecture start until 24 hours after)."
                 )
-        
+
         return data
 
 
 class LectureAttendanceSerializer(serializers.ModelSerializer):
     """Serializer for reading LectureAttendance records."""
-    
+
     participant_name = serializers.SerializerMethodField()
     participant_type = serializers.SerializerMethodField()
     participant_code = serializers.SerializerMethodField()
-    lecture_title = serializers.CharField(source='lecture.title', read_only=True)
+    lecture_title = serializers.CharField(
+        source='lecture.title', read_only=True)
     marked_by_name = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = LectureAttendance
         fields = [
@@ -137,7 +140,7 @@ class LectureAttendanceSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id', 'marked_by', 'marked_at', 'created_at', 'updated_at'
         ]
-    
+
     def get_participant_name(self, obj):
         """Get the name of the participant (child or student)."""
         if obj.child:
@@ -145,11 +148,11 @@ class LectureAttendanceSerializer(serializers.ModelSerializer):
         elif obj.student and obj.student.user:
             return obj.student.user.get_full_name() or obj.student.user.username
         return "Unknown"
-    
+
     def get_participant_type(self, obj):
         """Get the type of participant."""
         return "child" if obj.child else "student"
-    
+
     def get_participant_code(self, obj):
         """Get the code of the participant."""
         if obj.child:
@@ -157,7 +160,97 @@ class LectureAttendanceSerializer(serializers.ModelSerializer):
         elif obj.student:
             return obj.student.unique_code
         return None
-    
+
+    def get_marked_by_name(self, obj):
+        """Get the name of the user who marked the attendance."""
+        if obj.marked_by:
+            return obj.marked_by.get_full_name() or obj.marked_by.username
+        return None
+
+
+class LectureAttendanceDetailSerializer(serializers.ModelSerializer):
+    """
+    Detailed serializer for LectureAttendance records.
+    Includes full participant information: name, image, age, code, gender.
+    """
+
+    participant_name = serializers.SerializerMethodField()
+    participant_full_name = serializers.SerializerMethodField()
+    participant_type = serializers.SerializerMethodField()
+    participant_code = serializers.SerializerMethodField()
+    participant_image = serializers.SerializerMethodField()
+    participant_age = serializers.SerializerMethodField()
+    participant_gender = serializers.SerializerMethodField()
+    lecture_title = serializers.CharField(
+        source='lecture.title', read_only=True)
+    marked_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LectureAttendance
+        fields = [
+            'id', 'lecture', 'lecture_title',
+            'participant_name', 'participant_full_name', 'participant_type',
+            'participant_code', 'participant_image', 'participant_age', 'participant_gender',
+            'present', 'rating', 'notes', 'marked_by', 'marked_by_name',
+            'marked_via', 'marked_at', 'created_at', 'updated_at'
+        ]
+        read_only_fields = fields
+
+    def get_participant_name(self, obj):
+        """Get the first name of the participant (child or student)."""
+        if obj.child:
+            return obj.child.first_name
+        elif obj.student and obj.student.user:
+            return obj.student.user.first_name
+        return None
+
+    def get_participant_full_name(self, obj):
+        """Get the full name of the participant."""
+        if obj.child:
+            return f"{obj.child.first_name} {obj.child.last_name}"
+        elif obj.student and obj.student.user:
+            return obj.student.user.get_full_name()
+        return None
+
+    def get_participant_type(self, obj):
+        """Get the type of participant."""
+        return "child" if obj.child else "student"
+
+    def get_participant_code(self, obj):
+        """Get the code of the participant."""
+        if obj.child:
+            return obj.child.unique_code
+        elif obj.student:
+            return obj.student.unique_code
+        return None
+
+    def get_participant_image(self, obj):
+        """Get the image URL of the participant."""
+        if obj.child and obj.child.image:
+            return obj.child.image.url
+        elif obj.student and obj.student.image:
+            return obj.student.image.url
+        return None
+
+    def get_participant_age(self, obj):
+        """Get the current age of the participant."""
+        from django.utils import timezone
+        today = timezone.now().date()
+
+        if obj.child:
+            return obj.child.get_age_on_date(today)
+        elif obj.student and obj.student.user:
+            return obj.student.user.get_age_on_date(today)
+        return None
+
+    def get_participant_gender(self, obj):
+        """Get the gender of the participant."""
+        if obj.child:
+            return obj.child.gender
+        elif obj.student and obj.student.user:
+            return obj.student.user.gender
+        return None
+
     def get_marked_by_name(self, obj):
         """Get the name of the user who marked the attendance."""
         if obj.marked_by:
@@ -169,7 +262,7 @@ class LectureAttendanceSerializer(serializers.ModelSerializer):
 
 class BulkAttendanceItemSerializer(serializers.Serializer):
     """Serializer for individual attendance item in bulk request."""
-    
+
     code = serializers.CharField(
         max_length=50,
         help_text="The unique code of the student or child"
@@ -199,7 +292,7 @@ class BulkAttendanceItemSerializer(serializers.Serializer):
 
 class BulkMarkAttendanceSerializer(serializers.Serializer):
     """Serializer for bulk marking attendance."""
-    
+
     marked_via = serializers.ChoiceField(
         choices=['manual', 'qr_scan'],
         default='manual',
@@ -216,32 +309,32 @@ class BulkMarkAttendanceSerializer(serializers.Serializer):
         lecture = self.context.get('lecture')
         if not lecture:
             raise serializers.ValidationError("Lecture context is required.")
-        
+
         # Check if marking is allowed for this lecture (unless user is admin)
         request = self.context.get('request')
         user = request.user if request else None
-        
+
         if user and not user.is_staff:  # Non-admin users must respect time window
             if not LectureAttendance.can_mark_now(lecture):
                 raise serializers.ValidationError(
                     "Attendance can only be marked within the allowed time window "
                     "(from 24 hours before lecture start until 24 hours after)."
                 )
-        
+
         # Validate that all codes exist and have attendance records
         attendances_data = data.get('attendances', [])
         validated_items = []
         errors = []
-        
+
         for idx, item in enumerate(attendances_data):
             code = item.get('code')
             participant_type = item.get('participant_type')
-            
+
             try:
                 # Find the participant
                 participant = None
                 attendance = None
-                
+
                 if participant_type == 'child':
                     try:
                         participant = Child.objects.get(unique_code=code)
@@ -256,7 +349,7 @@ class BulkMarkAttendanceSerializer(serializers.Serializer):
                             'error': f"Child with code '{code}' not found."
                         })
                         continue
-                
+
                 elif participant_type == 'student':
                     try:
                         participant = StudentUser.objects.get(unique_code=code)
@@ -271,7 +364,7 @@ class BulkMarkAttendanceSerializer(serializers.Serializer):
                             'error': f"Student with code '{code}' not found."
                         })
                         continue
-                
+
                 if not attendance:
                     errors.append({
                         'index': idx,
@@ -279,25 +372,25 @@ class BulkMarkAttendanceSerializer(serializers.Serializer):
                         'error': f"No attendance record found for this {participant_type} in this lecture."
                     })
                     continue
-                
+
                 # Store validated attendance record with its data
                 validated_items.append({
                     'attendance': attendance,
                     'participant': participant,
                     'data': item
                 })
-                
+
             except Exception as e:
                 errors.append({
                     'index': idx,
                     'code': code,
                     'error': str(e)
                 })
-        
+
         # Store results in context
         self.context['validated_items'] = validated_items
         self.context['validation_errors'] = errors
-        
+
         return data
 
 
@@ -364,10 +457,10 @@ class FingerprintCheckOutSerializer(FingerprintCheckInSerializer):
 class FingerprintScanSerializer(serializers.Serializer):
     """
     Unified serializer for fingerprint scans from devices.
-    
+
     The device just captures fingerprints without specifying if it's check-in or check-out.
     The system will intelligently determine the action based on current state.
-    
+
     Logic:
     1. No attendance record for today → Auto-create and check-in
     2. Has record but not checked-in → Check-in  
@@ -384,7 +477,8 @@ class FingerprintScanSerializer(serializers.Serializer):
     )
     timestamp = serializers.DateTimeField(
         required=False,
-        help_text=_("Optional timestamp from device (for offline sync). Defaults to server time if not provided.")
+        help_text=_(
+            "Optional timestamp from device (for offline sync). Defaults to server time if not provided.")
     )
 
     def validate_fingerprint_id(self, value):
@@ -401,7 +495,8 @@ class FingerprintScanSerializer(serializers.Serializer):
     def validate_device_id(self, value):
         """Validate that the device exists and is active."""
         try:
-            device = AttendanceDevice.objects.get(device_id=value, is_active=True)
+            device = AttendanceDevice.objects.get(
+                device_id=value, is_active=True)
             self.context['device'] = device
         except AttendanceDevice.DoesNotExist:
             raise serializers.ValidationError(
@@ -412,12 +507,12 @@ class FingerprintScanSerializer(serializers.Serializer):
 
 class FingerprintScanLogSerializer(serializers.ModelSerializer):
     """Serializer for fingerprint scan log entries."""
-    
+
     instructor_name = serializers.CharField(
         source='attendance.instructor.user.get_full_name',
         read_only=True
     )
-    
+
     class Meta:
         from .models import FingerprintScanLog
         model = FingerprintScanLog
