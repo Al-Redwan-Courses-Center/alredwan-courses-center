@@ -1,14 +1,11 @@
-import { getCourseById } from "@/actions/courses";
-import { getInstructorEnrollmentsByCourseId } from "@/actions/enrollments";
-import { getLecturesByCourseId } from "@/actions/lectures";
+import { getLectureAttendance } from "@/actions/attendances";
+import { getLectureById } from "@/actions/lectures";
 import AddLectureNotesInput from "@/components/attendance/AddLectureNotesInput";
 import LectureAttendanceView from "@/components/attendance/LectureAttendanceView";
 import ClockIcon from "@/components/icons/ClockIcon";
 import CommentIcon from "@/components/icons/CommentIcon";
 import Button from "@/components/ui/Button";
-import { getLectureById } from "@/dev-data/db";
-import { cn, formatTime, getWeekDay } from "@/lib/utils";
-import { parseISO } from "date-fns";
+import { cn, formatTime } from "@/lib/utils";
 
 const dataPointWrapperStyles = cn(
   "text-olive-300 grid grid-cols-[auto_1fr] grid-rows-2 gap-x-5 gap-y-2 text-xl font-bold",
@@ -24,16 +21,17 @@ export default async function Page({
   params: Promise<{ lectureId: string; courseId: string }>;
 }) {
   const { lectureId, courseId } = await params;
-  // const { course, ...lecture } = getLectureById(+lectureId);
-  const lecture = (await getLecturesByCourseId(courseId)).find(
-    (lec) => lec.id === +lectureId,
-  );
-  const enrollments = (await getInstructorEnrollmentsByCourseId(courseId)).map(
-    ({ participant_name, participant_type }) => ({
-      participant_name,
-      participant_type,
-    }),
-  );
+  const [
+    lecture,
+    lectureAttendance,
+    // enrollments
+  ] = await Promise.all([
+    getLectureById(lectureId),
+    getLectureAttendance(lectureId),
+    // await getInstructorEnrollmentsByCourseId(courseId),
+  ]);
+
+  const { attendances } = lectureAttendance || {};
 
   return (
     <div className="flex flex-col pt-4">
@@ -41,7 +39,7 @@ export default async function Page({
         <div className="col-span-full flex items-center justify-between">
           <div className="flex flex-col pt-5">
             <span className="text-olive-300 text-xl font-bold">
-              {enrollments[0].course_name}
+              {lecture?.course.name}
             </span>
             <h2 className="text-olive-500 text-[4rem] font-bold">
               {lecture?.title}
@@ -74,8 +72,8 @@ export default async function Page({
       </div>
 
       <LectureAttendanceView
-        students={course.enrollments.map((e) => e.child ?? e.student) || []}
-        attendances={lecture.attendances || []}
+        // students={course.enrollments.map((e) => e.child ?? e.student) || []}
+        attendances={attendances || []}
         courseId={courseId}
         lecture={lecture}
       />

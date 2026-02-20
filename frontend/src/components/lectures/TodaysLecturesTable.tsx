@@ -12,17 +12,17 @@ import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
 import { cn, formatTime, toHindiDigits } from "@/lib/utils";
-import { Lecture } from "@/types/entities";
 import Link from "next/link";
 import { DataViewPagination } from "../ui/data-view/DataViewPagination";
 import { DataViewHeader, DataViewRow } from "../ui/data-view/DataViewRow";
+import { TodaysLectureListItem } from "@/types/config";
 
 const { sortConfig, filterConfig, statusMap } = lecturesViewConfig;
 
 export default function TodaysLecturesTable({
-  todaysLectures,
+  todaysLectures = [],
 }: {
-  todaysLectures: any[];
+  todaysLectures?: TodaysLectureListItem[];
 }) {
   return (
     <DataView
@@ -49,9 +49,9 @@ export default function TodaysLecturesTable({
         <DataViewCell></DataViewCell>
       </DataViewHeader>
 
-      <DataViewBody
+      <DataViewBody<TodaysLectureListItem>
         render={{
-          table: (lecture: Lecture, i: number) => {
+          table: (lecture, i) => {
             const { label, color } = statusMap[lecture.status];
 
             return (
@@ -60,7 +60,7 @@ export default function TodaysLecturesTable({
                   {toHindiDigits(i + 1)}
                 </DataViewCell>
                 <DataViewCell>{lecture.title}</DataViewCell>
-                <DataViewCell>{lecture.course_title}</DataViewCell>
+                <DataViewCell>{lecture.course.name}</DataViewCell>
                 <DataViewCell className="font-bold">
                   {formatTime(lecture.start_time)}
                 </DataViewCell>

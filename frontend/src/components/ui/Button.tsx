@@ -14,6 +14,7 @@ interface BaseProps {
   variant?: VariantProps<typeof buttonStyles>["variant"];
   revert?: boolean;
   size?: VariantProps<typeof buttonStyles>["size"];
+  disabled?: boolean;
   icon?: ReactNode;
 }
 
@@ -58,8 +59,12 @@ export const buttonStyles = cva(
       },
 
       loading: {
-        true: cn("pointer-events-none bg-gray-300 py-3"),
+        true: cn("pointer-events-none bg-gray-300! py-3"),
         false: "",
+      },
+
+      disabled: {
+        true: cn("bg-gray-450! pointer-events-none text-gray-950"),
       },
     },
 
@@ -87,6 +92,7 @@ export default function Button({
   size = "medium",
   revert = false,
   loading = false,
+  disabled = false,
   className,
   icon = null,
   type = "button",
@@ -99,6 +105,7 @@ export default function Button({
       size,
       revert,
       loading,
+      disabled,
     }),
     className,
   );

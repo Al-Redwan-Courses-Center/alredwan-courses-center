@@ -9,6 +9,7 @@ import {
   ModalTitle,
   ModalTrigger,
 } from "@/components/ui/Modal";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -17,11 +18,13 @@ export default function AddNoteModal({
   uniqueId,
   onSave,
   notes = "",
+  disabled = false,
 }: {
   name: string;
   uniqueId: string;
   onSave: (n: string) => void;
   notes?: string;
+  disabled?: boolean;
 }) {
   const [note, setNote] = useState(notes);
   const [isOpen, setIsOpen] = useState(false);
@@ -38,8 +41,11 @@ export default function AddNoteModal({
       }}
     >
       <ModalTrigger asChild>
-        <button>
-          <NotepadIcon />
+        <button
+          disabled={disabled}
+          className={cn(disabled && "pointer-events-none")}
+        >
+          <NotepadIcon className={cn(disabled && "text-gray-450")} />
         </button>
       </ModalTrigger>
 
@@ -66,6 +72,8 @@ export default function AddNoteModal({
             <Button
               size="small"
               onClick={() => {
+                if (disabled) return;
+
                 onSave(note);
                 setIsOpen(false);
                 toast.success("تمت إضافة الملاحظات بنجاح!", {

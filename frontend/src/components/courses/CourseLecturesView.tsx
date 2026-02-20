@@ -100,9 +100,11 @@ export default function CourseLecturesView({
                       <TrashIcon />
                     </button>
 
-                    <button>
+                    <Link
+                      href={`/dashboard/my-courses/${course?.id}/lectures/`}
+                    >
                       <EditIcon />
-                    </button>
+                    </Link>
 
                     <Link
                       href={`/dashboard/my-courses/${course?.id}/lectures/${lecture.id}`}

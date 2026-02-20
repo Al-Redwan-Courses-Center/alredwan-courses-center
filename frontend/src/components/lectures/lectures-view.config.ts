@@ -3,42 +3,43 @@ import {
   DataViewSortConfig,
   StatusMap,
 } from "@/types/components";
-import { Lecture } from "@/types/entities";
+import { TodaysLectureListItem } from "@/types/config";
 import { parse } from "date-fns";
 
-const headers = ["م", "المحاضرة", "الدورة", "البداية", "النهاية", "الحالة", ""];
-
-const statusWeights = {
-  submitted: 1,
-  pending: 0,
+const statusWeights: Record<TodaysLectureListItem["status"], number> = {
+  scheduled: 0,
+  additional: 1,
+  completed: 2,
+  cancelled: 3,
 };
 
-const sortConfig: DataViewSortConfig<Lecture> = {
+const sortConfig: DataViewSortConfig<TodaysLectureListItem> = {
   lecture: {
-    sortFn: (a: Lecture, b: Lecture) => a.title.localeCompare(b.title),
-    label: headers[1],
+    sortFn: (a: TodaysLectureListItem, b: TodaysLectureListItem) =>
+      a.title.localeCompare(b.title),
+    label: "المحاضرة",
   },
   course: {
-    sortFn: (a: Lecture, b: Lecture) =>
-      (a.course_title || "").localeCompare(b.course_title || ""),
-    label: headers[2],
+    sortFn: (a: TodaysLectureListItem, b: TodaysLectureListItem) =>
+      a.course.name.localeCompare(b.course.name),
+    label: "الدورة",
   },
   startTime: {
-    sortFn: (a: Lecture, b: Lecture) =>
-      parse(a.start_time || "", "HH:mm", new Date()).getTime() -
-      parse(b.start_time || "", "HH:mm", new Date()).getTime(),
-    label: headers[3],
+    sortFn: (a: TodaysLectureListItem, b: TodaysLectureListItem) =>
+      parse(a.start_time, "HH:mm", new Date()).getTime() -
+      parse(b.start_time, "HH:mm", new Date()).getTime(),
+    label: "البداية",
   },
   endTime: {
-    sortFn: (a: Lecture, b: Lecture) =>
-      parse(a.end_time || "", "HH:mm", new Date()).getTime() -
-      parse(b.end_time || "", "HH:mm", new Date()).getTime(),
-    label: headers[4],
+    sortFn: (a: TodaysLectureListItem, b: TodaysLectureListItem) =>
+      parse(a.end_time, "HH:mm", new Date()).getTime() -
+      parse(b.end_time, "HH:mm", new Date()).getTime(),
+    label: "النهاية",
   },
   status: {
-    sortFn: (a: Lecture, b: Lecture) =>
+    sortFn: (a: TodaysLectureListItem, b: TodaysLectureListItem) =>
       statusWeights[a.status] - statusWeights[b.status],
-    label: headers[5],
+    label: "الحالة",
   },
 };
 
@@ -54,12 +55,20 @@ const filterConfig: DataViewFilterConfig = {
   },
 };
 
-const statusMap: StatusMap<any> = {
-  submitted: {
+const statusMap: StatusMap<TodaysLectureListItem> = {
+  completed: {
     label: "تم التسجيل",
     color: "green",
   },
-  pending: {
+  scheduled: {
+    label: "غير مسجلة",
+    color: "gray",
+  },
+  additional: {
+    label: "غير مسجلة",
+    color: "gray",
+  },
+  cancelled: {
     label: "غير مسجلة",
     color: "gray",
   },

@@ -1,3 +1,5 @@
+import { LectureAttendanceDetail, LectureListItem } from "./entities";
+
 export interface JSONResponse<T> {
   status: string;
   data: T;
@@ -12,3 +14,17 @@ export interface PaginatedResponse<T> {
   page_size: number;
   results: T[];
 }
+
+export interface TodaysLecturesResponse {
+  date: string;
+  count: number;
+  user_role: "instructor" | "admin/supervisor";
+  lectures: TodaysLectureListItem[];
+}
+
+export type TodaysLectureListItem = LectureListItem & {
+  course: {
+    id: number;
+    name: string;
+  };
+};

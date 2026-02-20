@@ -1,6 +1,8 @@
+"use server";
+
 import { getAuthApiClient } from "@/lib/auth-api";
-import { PaginatedResponse } from "@/types/config";
-import { LectureListItem } from "@/types/entities";
+import { PaginatedResponse, TodaysLecturesResponse } from "@/types/config";
+import { LectureDetail, LectureListItem } from "@/types/entities";
 import { isAxiosError } from "axios";
 
 export async function getLecturesByCourseId(courseId: string) {
@@ -33,6 +35,12 @@ export async function getLecturesByCourseId(courseId: string) {
 export async function getLectureById(lectureId: string) {
   try {
     const apiClient = await getAuthApiClient();
+
+    const { data } = await apiClient.get<LectureDetail>(
+      `/api/courses/lectures/${lectureId}/`,
+    );
+
+    return data;
   } catch (error) {
     if (isAxiosError(error)) {
       console.error(
@@ -47,28 +55,24 @@ export async function getLectureById(lectureId: string) {
   }
 }
 
-// export async function getInstructorTodaysLectures() {
-//   try {
-//     const { id, ...rest } = (await getServerJwtToken()) || {};
+export async function getInstructorTodaysLectures() {
+  try {
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.get<TodaysLecturesResponse>(
+      "/api/courses/lectures/today/",
+    );
 
-//     if (!id) return [];
-//     console.log(rest);
+    return data;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      console.error(
+        "Failed to get today's lectures: ",
+        error.response?.data ?? error.message,
+      );
+    } else {
+      console.error("Failed to get today's lectures: ", error);
+    }
 
-//     const coursesIds = (await getInstructorCourses(id)).map((c) => c.id);
-
-//     const lectures = await Promise.all(
-//       coursesIds.map((id) => getLecturesByCourseId(String(id))),
-//     );
-//   } catch (err) {
-//     if (isAxiosError(err)) {
-//       console.error(
-//         "Failed to get today's lectures: ",
-//         err.response?.data ?? err.message,
-//       );
-//     } else {
-//       console.error("Failed to get today's lectures: ", err);
-//     }
-
-//     return [];
-//   }
-// }
+    return null;
+  }
+}
