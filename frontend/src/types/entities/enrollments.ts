@@ -81,3 +81,17 @@ export interface EnrollmentProgress {
   course_end_date: string;
   is_completable: boolean;
 }
+
+export interface EnrollmentRequestCreateBody {
+  course: string | number;
+  child?: string;
+  price?: number;
+  payment_method?:
+    | "cash"
+    | "card"
+    | "bank_transfer"
+    | "instapay"
+    | "vodafone_cash"
+    | "other";
+  notes?: string;
+}
