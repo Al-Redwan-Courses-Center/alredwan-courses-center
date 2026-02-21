@@ -13,7 +13,8 @@ Instructor attendance tracking (fingerprint devices, manual entry, ratings) and 
 5. [Device Management](#device-management)
 6. [Schedule Management](#schedule-management)
 7. [Student Lecture Attendance](#student-lecture-attendance)
-8. [Quick Reference](#quick-reference)
+8. [Time Restrictions](#time-restrictions)
+9. [Quick Reference](#quick-reference)
 
 ---
 
@@ -353,6 +354,22 @@ Manage weekly supervisor schedules.
 
 ## Student Lecture Attendance
 
+### Time Restrictions Overview
+
+Lecture attendance marking has time-based restrictions to ensure data integrity:
+
+| User Type | Past Lectures | Future Lectures | Window |
+|-----------|---------------|-----------------|--------|
+| Regular Instructor | ⏱️ 24h window | ❌ Blocked | Lecture start → +24h |
+| Admin/Supervisor | ✅ Any time | ❌ Blocked | No restriction |
+| Superuser | ✅ Any time | ✅ Allowed | No restriction |
+
+**Admin/Supervisor Detection:**
+- `is_superuser = True`
+- `is_staff = True`
+- `role` field = `admin` or `supervisor`
+- `instructor_profile.type` = `supervisor`
+
 ### Mark Lecture Attendance
 
 | | |
@@ -361,6 +378,8 @@ Manage weekly supervisor schedules.
 | **Auth** | ✅ Required (Admin or Course Instructor) |
 
 Marks attendance for a single student/child in a lecture.
+
+**Time Restrictions Apply:** See [Time Restrictions Overview](#time-restrictions-overview) above.
 
 **Request Body:**
 
@@ -388,6 +407,8 @@ Marks attendance for a single student/child in a lecture.
 |--|--|
 | **URL** | `POST /api/attendance/lecture/{lecture_id}/mark-bulk/` |
 | **Auth** | ✅ Required (Admin or Course Instructor) |
+
+**Time Restrictions Apply:** See [Time Restrictions Overview](#time-restrictions-overview) above.
 
 **Request Body:**
 
@@ -431,9 +452,18 @@ Returns detailed attendance for all enrolled students/children, including person
   "lecture_id": 123,
   "lecture_title": "Lecture 1 - Introduction",
   "course_name": "Quran Memorization",
+  "lecture_date": "2026-02-20",
+  "lecture_start_time": "09:00:00",
+  "is_future_lecture": false,
+  "is_attendance_submittable": true,
+  "is_editable": true,
+  "submission_deadline": "2026-02-21T09:00:00+02:00",
+  "user_can_bypass_deadline": false,
+  "user_can_mark_future_lectures": false,
   "total_enrolled": 15,
   "present_count": 12,
   "absent_count": 3,
+  "not_marked_count": 0,
   "attendance_rate": 80.0,
   "attendances": [
     {
@@ -468,9 +498,18 @@ Returns detailed attendance for all enrolled students/children, including person
 | `lecture_id` | integer | ID of the lecture |
 | `lecture_title` | string | Title of the lecture |
 | `course_name` | string | Name of the course |
+| `lecture_date` | string | Date of the lecture |
+| `lecture_start_time` | string | Start time of the lecture |
+| `is_future_lecture` | boolean | Whether the lecture hasn't started yet |
+| `is_attendance_submittable` | boolean | Whether the current user can submit attendance |
+| `is_editable` | boolean | Whether the current user can edit attendance |
+| `submission_deadline` | datetime/null | Deadline for instructors (null for admins or future lectures) |
+| `user_can_bypass_deadline` | boolean | Whether current user bypasses time restrictions |
+| `user_can_mark_future_lectures` | boolean | Whether current user can mark future lectures |
 | `total_enrolled` | integer | Total enrolled students/children |
 | `present_count` | integer | Participants marked present |
 | `absent_count` | integer | Participants not present |
+| `not_marked_count` | integer | Participants not yet marked |
 | `attendance_rate` | float | Attendance percentage (0-100) |
 
 **Attendance Record Fields:**
@@ -496,6 +535,65 @@ Returns detailed attendance for all enrolled students/children, including person
 |------|-------------|
 | 404 | Lecture not found |
 | 403 | User is not admin or course instructor |
+| 403 | Attendance marking window has expired (for instructors after 24h) |
+| 403 | Cannot mark attendance for future lectures (non-superusers) |
+
+---
+
+## Time Restrictions
+
+### Lecture Attendance Time Window
+
+Lecture attendance can only be marked within specific time windows based on user role.
+
+### For Regular Instructors
+
+- **Window Start:** Lecture start time
+- **Window End:** 24 hours after lecture start
+- **Future Lectures:** ❌ Not allowed
+
+**Error Response (Window Expired):**
+
+```json
+{
+  "error": "Attendance marking window has expired.",
+  "details": "Attendance can only be marked within 24 hours after the lecture.",
+  "lecture_start": "2026-02-10T09:00:00+02:00",
+  "window_end": "2026-02-11T09:00:00+02:00"
+}
+```
+
+**Error Response (Future Lecture):**
+
+```json
+{
+  "error": "Cannot mark attendance for future lectures.",
+  "details": "Only super administrators can mark attendance for lectures that have not started yet.",
+  "lecture_start": "2026-02-20T09:00:00+02:00",
+  "current_time": "2026-02-15T10:30:00+02:00"
+}
+```
+
+### For Admins/Supervisors
+
+- **Past Lectures:** ✅ No time restriction
+- **Future Lectures:** ❌ Not allowed
+
+### For Superusers (`is_superuser=True`)
+
+- **Past Lectures:** ✅ No time restriction
+- **Future Lectures:** ✅ Allowed
+
+### User Role Detection
+
+The system checks the following attributes to determine admin/supervisor status:
+
+| Attribute | Value | Effect |
+|-----------|-------|--------|
+| `is_superuser` | `True` | Full access (past & future lectures) |
+| `is_staff` | `True` | Admin access (bypass time window for past) |
+| `role` | `admin` or `supervisor` | Admin access |
+| `instructor_profile.type` | `supervisor` | Admin access |
 
 ---
 

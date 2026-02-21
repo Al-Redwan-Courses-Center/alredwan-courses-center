@@ -484,7 +484,7 @@ class ChildAdmin(admin.ModelAdmin):
 
     def get_unique_code_badge(self, obj):
         return format_html(
-            '<code style="background-color: #f5f5f5; padding: 3px 8px; '
+            '<code style="background-color: #264b5d; padding: 3px 8px; '
             'border-radius: 4px; font-family: monospace; font-weight: bold;">{}</code>',
             obj.unique_code
         )
