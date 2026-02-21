@@ -1,5 +1,21 @@
 # Attendance API Documentation
 
+## Time Restrictions
+
+The attendance system enforces time-based restrictions to ensure data integrity:
+
+| User Type | Past Lectures (within 24h) | Past Lectures (after 24h) | Future Lectures |
+|-----------|---------------------------|--------------------------|-----------------|
+| **Instructors** | ✅ Can mark | ❌ Cannot mark | ❌ Cannot mark |
+| **Admins/Supervisors** | ✅ Can mark | ✅ Can mark | ❌ Cannot mark |
+| **Superusers** | ✅ Can mark | ✅ Can mark | ✅ Can mark |
+
+**Role Detection:** The system checks for admin/supervisor status using:
+1. `is_superuser=True` → Superuser (full access)
+2. `is_staff=True` → Admin
+3. `role='admin'` or `role='supervisor'` → Based on role field
+4. `instructor_profile.type='supervisor'` → Supervisor instructor
+
 ## Attendance Endpoints
 
 ### 1. Mark Single Attendance
@@ -13,6 +29,11 @@ Mark attendance for a single student or child in a lecture.
 - ✅ **Admins** can mark attendance for any lecture
 - ✅ **Course Instructors** can only mark attendance for their own courses
 - ❌ Other users cannot access this endpoint
+
+**Time Restrictions:**
+- ✅ **Instructors**: Can mark within 24 hours after lecture start
+- ✅ **Admins/Supervisors**: No time restriction for past lectures
+- ⚠️ **Future Lectures**: Only superusers (`is_superuser=True`) can mark attendance
 
 **Description:** Mark attendance for a single student or child using their unique code. The attendance record must already exist in the system before marking.
 
@@ -74,6 +95,26 @@ curl -X POST "http://localhost:8000/api/attendance/lecture/123/mark/" \
 ```json
 {
   "error": "You do not have permission to mark attendance for this lecture."
+}
+```
+
+**403 Forbidden** - Time window expired (for instructors):
+```json
+{
+  "error": "Attendance marking window has expired.",
+  "details": "Attendance can only be marked within 24 hours after the lecture.",
+  "lecture_start": "2026-02-20T09:00:00+02:00",
+  "window_end": "2026-02-21T09:00:00+02:00"
+}
+```
+
+**403 Forbidden** - Future lecture (only superusers allowed):
+```json
+{
+  "error": "Cannot mark attendance for future lectures.",
+  "details": "Only super administrators can mark attendance for lectures that have not started yet.",
+  "lecture_start": "2026-02-25T09:00:00+02:00",
+  "current_time": "2026-02-21T10:30:00+02:00"
 }
 ```
 
@@ -463,3 +504,101 @@ markBulkAttendance(123, attendances, 'qr_scan')
   });
 }
 ```
+
+---
+
+### 3. Get Lecture Attendance Details
+Get detailed attendance information for a specific lecture including all participants.
+
+**Endpoint:** `GET /api/attendance/lecture/<lecture_id>/details/`
+
+**Authentication:** Required (Admin or Course Instructor only)
+
+**Permissions:** 
+- ✅ **Admins** can view attendance for any lecture
+- ✅ **Course Instructors** can only view attendance for their own courses
+- ❌ Other users cannot access this endpoint
+
+**Description:** Returns all attendance records for a lecture with full participant details, including real-time information about whether the current user can submit or edit attendance.
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `lecture_id` | integer | Lecture ID |
+
+**Example Request:**
+```bash
+curl -X GET "http://localhost:8000/api/attendance/lecture/123/details/" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Example Response:**
+```json
+{
+  "lecture_id": 123,
+  "lecture_title": "Lecture 1 - Introduction",
+  "course_name": "Quran Memorization",
+  "lecture_date": "2026-02-20",
+  "lecture_start_time": "09:00:00",
+  "is_future_lecture": false,
+  "is_attendance_submittable": true,
+  "is_editable": true,
+  "submission_deadline": "2026-02-21T09:00:00+02:00",
+  "user_can_bypass_deadline": false,
+  "user_can_mark_future_lectures": false,
+  "total_enrolled": 15,
+  "present_count": 12,
+  "absent_count": 3,
+  "not_marked_count": 0,
+  "attendance_rate": 80.0,
+  "attendances": [
+    {
+      "id": 1,
+      "participant_name": "أحمد",
+      "participant_full_name": "أحمد محمد",
+      "participant_type": "child",
+      "participant_code": "M12345",
+      "participant_image": "https://res.cloudinary.com/.../image.jpg",
+      "participant_age": 12,
+      "participant_gender": "boy",
+      "present": true,
+      "rating": 8,
+      "notes": "ممتاز",
+      "marked_at": "2026-02-20T10:30:00Z"
+    }
+  ]
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `lecture_id` | integer | ID of the lecture |
+| `lecture_title` | string | Title of the lecture |
+| `course_name` | string | Name of the course |
+| `lecture_date` | string | Date of the lecture (YYYY-MM-DD) |
+| `lecture_start_time` | string | Start time of the lecture (HH:MM:SS) |
+| `is_future_lecture` | boolean | True if lecture hasn't started yet |
+| `is_attendance_submittable` | boolean | True if current user can submit new attendance |
+| `is_editable` | boolean | True if current user can edit existing attendance |
+| `submission_deadline` | string/null | ISO datetime when window closes (null for admins or future lectures) |
+| `user_can_bypass_deadline` | boolean | True if user is admin/supervisor |
+| `user_can_mark_future_lectures` | boolean | True if user is superuser |
+| `total_enrolled` | integer | Total participants enrolled in the lecture |
+| `present_count` | integer | Number marked as present |
+| `absent_count` | integer | Number marked as absent |
+| `not_marked_count` | integer | Number not yet marked |
+| `attendance_rate` | float | Percentage of present (0-100) |
+| `attendances` | array | List of attendance records |
+
+**Permission Logic for `is_attendance_submittable` and `is_editable`:**
+
+| Lecture Type | User Type | `is_attendance_submittable` | `is_editable` |
+|--------------|-----------|---------------------------|--------------|
+| Future | Superuser | ✅ true | ✅ true |
+| Future | Admin/Supervisor | ❌ false | ❌ false |
+| Future | Instructor | ❌ false | ❌ false |
+| Past (within 24h) | Any authorized user | ✅ true | ✅ true |
+| Past (after 24h) | Admin/Supervisor | ✅ true | ✅ true |
+| Past (after 24h) | Instructor | ❌ false | ❌ false |
