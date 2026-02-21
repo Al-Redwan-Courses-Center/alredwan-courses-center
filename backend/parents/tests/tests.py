@@ -145,7 +145,7 @@ class ChildListViewTest(ParentChildBaseTestCase):
         # Handle paginated response
         results = response.data.get('results', response.data)
         self.assertEqual(len(results), 2)
-        
+
         codes = [child['unique_code'] for child in results]
         self.assertIn(primary_child.unique_code, codes)
         self.assertIn(secondary_child.unique_code, codes)
@@ -179,7 +179,7 @@ class ChildListViewTest(ParentChildBaseTestCase):
         # Handle paginated response
         results = response.data.get('results', response.data)
         self.assertEqual(len(results), 2)
-        
+
         codes = [child['unique_code'] for child in results]
         self.assertIn(child1.unique_code, codes)
         self.assertIn(child2.unique_code, codes)
@@ -243,7 +243,7 @@ class ChildListViewTest(ParentChildBaseTestCase):
             dob='2010-01-01',
             gender='boy'
         )
-        
+
         # Child 2: Current parent is secondary
         child2 = Child.objects.create(
             primary_parent=self.other_parent,
@@ -253,7 +253,7 @@ class ChildListViewTest(ParentChildBaseTestCase):
             gender='girl'
         )
         ChildParents.objects.create(child=child2, parent=self.parent)
-        
+
         # Child 3: Current parent is primary, has secondary parent too
         child3 = Child.objects.create(
             primary_parent=self.parent,
@@ -263,7 +263,7 @@ class ChildListViewTest(ParentChildBaseTestCase):
             gender='boy'
         )
         ChildParents.objects.create(child=child3, parent=self.secondary_parent)
-        
+
         # Child 4: Neither primary nor secondary for current parent (should not appear)
         child4 = Child.objects.create(
             primary_parent=self.other_parent,
@@ -281,7 +281,7 @@ class ChildListViewTest(ParentChildBaseTestCase):
         # Handle paginated response
         results = response.data.get('results', response.data)
         self.assertEqual(len(results), 3)  # Only child1, child2, child3
-        
+
         codes = [child['unique_code'] for child in results]
         self.assertIn(child1.unique_code, codes)
         self.assertIn(child2.unique_code, codes)
@@ -309,7 +309,7 @@ class ChildCreateViewTest(ParentChildBaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['first_name'], 'Ahmed')
         self.assertIsNotNone(response.data['unique_code'])
-        
+
         # Verify child was created with correct primary parent
         child = Child.objects.get(id=response.data['id'])
         self.assertEqual(child.primary_parent, self.parent)
@@ -439,7 +439,8 @@ class ChildDeleteViewTest(ParentChildBaseTestCase):
         )
 
         self.client.force_authenticate(user=self.parent_user)
-        response = self.client.delete(f'/api/parents/children/{child.id}/delete/')
+        response = self.client.delete(
+            f'/api/parents/children/{child.id}/delete/')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(Child.objects.filter(id=child.id).exists())
@@ -455,7 +456,8 @@ class ChildDeleteViewTest(ParentChildBaseTestCase):
         )
 
         self.client.force_authenticate(user=self.parent_user)
-        response = self.client.delete(f'/api/parents/children/{child.id}/delete/')
+        response = self.client.delete(
+            f'/api/parents/children/{child.id}/delete/')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(Child.objects.filter(id=child.id).exists())
