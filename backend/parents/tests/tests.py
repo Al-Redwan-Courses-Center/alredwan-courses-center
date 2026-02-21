@@ -394,7 +394,7 @@ class ChildUpdateViewTest(ParentChildBaseTestCase):
 
         self.client.force_authenticate(user=self.parent_user)
         response = self.client.patch(
-            f'/api/parents/children/{child.id}/edit/',
+            f'/api/parents/children/{child.id}/update/',
             {'first_name': 'Mohammed'},
             format='json'
         )
@@ -417,7 +417,7 @@ class ChildUpdateViewTest(ParentChildBaseTestCase):
 
         self.client.force_authenticate(user=self.parent_user)
         response = self.client.patch(
-            f'/api/parents/children/{child.id}/edit/',
+            f'/api/parents/children/{child.id}/update/',
             {'first_name': 'NewName'},
             format='json'
         )
