@@ -6,7 +6,7 @@ from attendance.models.lecture_attendance import LectureAttendance
 
 
 @admin.register(LectureAttendance)
-class LectureAttendanceAdmin(ExcelExportMixin, admin.ModelAdmin):
+class LectureAttendanceAdmin(admin.ModelAdmin, ExcelExportMixin):
     list_display = ('get_lecture', 'get_participant', 'get_present',
                     'get_rating', 'get_marked_by', 'get_marked_via', 'get_marked_at')
     list_filter = ('present', 'lecture__course', 'marked_via', 'marked_at')

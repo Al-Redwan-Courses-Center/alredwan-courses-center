@@ -4,7 +4,7 @@ from attendance.models.attendance_cron_log import AttendanceCronLog
 
 
 @admin.register(AttendanceCronLog)
-class AttendanceCronLogAdmin(ExcelExportMixin, admin.ModelAdmin):
+class AttendanceCronLogAdmin(admin.ModelAdmin, ExcelExportMixin):
     list_display = ["job_name", "timestamp", "details"]
     list_filter = ["job_name", "timestamp"]
     search_fields = ["job_name", "details"]

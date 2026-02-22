@@ -17,7 +17,7 @@ from .inlines import CourseScheduleInline, LectureInline, ExamInline, CourseEnro
 
 
 @admin.register(Course)
-class CourseAdmin(ExcelExportMixin, ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
     """Admin configuration for Course model with enhanced UX."""
 
     select_related_fields = ['instructor', 'instructor__user', 'season']
