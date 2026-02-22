@@ -219,7 +219,7 @@ def void_payments(modeladmin, request, queryset):
 # Payment Admin Configuration
 # =============================================================================
 @admin.register(Payment)
-class PaymentAdmin(ExcelExportMixin, admin.ModelAdmin):
+class PaymentAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced admin configuration for Payment model."""
     
     # List display

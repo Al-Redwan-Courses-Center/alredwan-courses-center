@@ -14,7 +14,7 @@ from .inlines import TagCourseInline, TagInstructorInline
 
 
 @admin.register(Tag)
-class TagAdmin(ExcelExportMixin, ArabicLabelsMixin, admin.ModelAdmin):
+class TagAdmin(ArabicLabelsMixin, admin.ModelAdmin, ExcelExportMixin):
     """Admin configuration for Tag model."""
 
     list_display = ('name', 'get_courses_count', 'get_instructors_count', 'created_at')

@@ -15,7 +15,7 @@ from .actions import activate_selected, deactivate_selected, duplicate_selected
 
 
 @admin.register(Season)
-class SeasonAdmin(ExcelExportMixin, ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+class SeasonAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
     """Admin configuration for Season model."""
 
     list_display = (

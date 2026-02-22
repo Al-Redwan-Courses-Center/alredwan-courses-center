@@ -276,7 +276,7 @@ class HasEnrollmentsFilter(admin.SimpleListFilter):
 # =============================================================================
 
 @admin.register(Parent)
-class ParentAdmin(ExcelExportMixin, admin.ModelAdmin):
+class ParentAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced Admin for Parent model."""
     list_display = (
         'get_full_name', 'get_phone', 'get_email',
@@ -424,7 +424,7 @@ class ParentAdmin(ExcelExportMixin, admin.ModelAdmin):
 
 
 @admin.register(Child)
-class ChildAdmin(ExcelExportMixin, admin.ModelAdmin):
+class ChildAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced Admin for Child model."""
     list_display = (
         'get_unique_code_badge', 'get_full_name', 'get_gender_badge',
@@ -700,7 +700,7 @@ class ChildAdmin(ExcelExportMixin, admin.ModelAdmin):
 
 
 @admin.register(ChildParents)
-class ChildParentsAdmin(ExcelExportMixin, admin.ModelAdmin):
+class ChildParentsAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced Admin for ChildParents model."""
     list_display = ('get_child_link', 'get_parent_link',
                     'get_relationship_type')
@@ -741,7 +741,7 @@ class ChildParentsAdmin(ExcelExportMixin, admin.ModelAdmin):
 
 
 @admin.register(ParentLinkRequest)
-class ParentLinkRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
+class ParentLinkRequestAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced Admin for ParentLinkRequest model."""
     list_display = (
         'get_child_link', 'get_requester_link',
