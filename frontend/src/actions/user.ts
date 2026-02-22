@@ -2,20 +2,28 @@ import { getAuthApiClient } from "@/lib/auth-api";
 import { PaginatedResponse } from "@/types/config";
 import { isAxiosError } from "axios";
 
-export interface ParentChildOption {
+export interface ParentChildDetail {
   id: string;
   first_name: string;
   last_name: string;
+  phone: string | null;
+  dob: string;
+  age: number;
+  gender: "girl" | "boy";
+  image: string | null;
   unique_code: string;
+  primary_parent_name: string;
+  created_at: string;
+  updated_at: string;
 }
 
-export async function getParentChildren(): Promise<ParentChildOption[]> {
+export async function getParentChildren(): Promise<ParentChildDetail[]> {
   try {
     const apiClient = await getAuthApiClient();
 
     const { data } = await apiClient.get<
-      PaginatedResponse<ParentChildOption> | ParentChildOption[]
-    >("/api/children/?page_size=100");
+      PaginatedResponse<ParentChildDetail> | ParentChildDetail[]
+    >("/api/parents/children/?page_size=100");
 
     return Array.isArray(data) ? data : data.results;
   } catch (error) {

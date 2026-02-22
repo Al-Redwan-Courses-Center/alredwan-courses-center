@@ -1,6 +1,8 @@
+import { ParentChildDetail } from "@/actions/user";
 import ActiveCourseIcon from "@/components/icons/ActiveCourseIcon";
 import CheckBadgeIcon from "@/components/icons/CheckBadgeIcon";
 import PendingTransactionIcon from "@/components/icons/PendingTransactionIcon";
+import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import CopyToClipboardButton from "@/components/ui/CopyToClipboardButton";
 import ItemCard from "@/components/ui/ItemCard";
@@ -11,7 +13,6 @@ import {
   getChildPendingEnrollments,
 } from "@/dev-data/db";
 import { cn, getArabicPlural, toHindiDigits } from "@/lib/utils";
-import Image from "next/image";
 import { FunctionComponent, SVGProps } from "react";
 
 function StatCard({
@@ -39,7 +40,7 @@ export default function ChildCard({
   child,
 }: {
   index: number;
-  child: any;
+  child: ParentChildDetail;
 }) {
   // TODO(api): Child-level enrollments/attendance are not available yet.
   const activeCourses = getChildOngoingEnrollments(child.id);
@@ -59,19 +60,18 @@ export default function ChildCard({
           <div
             className={cn(
               "relative row-span-full aspect-square h-24 w-auto",
-              "overflow-hidden rounded-full bg-gray-300",
+              "overflow-hidden rounded-full bg-gray-100",
             )}
           >
-            <Image
+            <Avatar
               src={child.image}
               alt="Child Image"
-              fill
               className="object-cover"
             />
           </div>
 
           <div className="flex flex-col pe-30">
-            <span className="text-[1.6rem] font-bold">{child.name}</span>
+            <span className="text-[1.6rem] font-bold">{child.first_name}</span>
             <span>
               {child.age}{" "}
               {getArabicPlural(child.age, {
@@ -83,7 +83,7 @@ export default function ChildCard({
           </div>
 
           <CopyToClipboardButton className="absolute top-4 left-0 rounded-[0_1rem] px-5 py-2 font-black shadow-[0_0.909px_0.909px_0_rgba(0,0,0,0.25),1.591px_1.364px_3.319px_0_rgba(0,0,0,0.25)]!">
-            {child.code}
+            {child.unique_code}
           </CopyToClipboardButton>
         </div>
       }

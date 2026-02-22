@@ -3,20 +3,15 @@
 import DataView from "@/components/ui/data-view/DataView";
 import DataViewBody from "@/components/ui/data-view/DataViewBody";
 import DataViewCell from "@/components/ui/data-view/DataViewCell";
-import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
 import { DataViewPagination } from "@/components/ui/data-view/DataViewPagination";
 import {
   DataViewHeader,
   DataViewRow,
 } from "@/components/ui/data-view/DataViewRow";
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
-import DataViewSort from "@/components/ui/data-view/DataViewSort";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { cn, formatDate, toHindiDigits } from "@/lib/utils";
-import {
-  EnrollmentListItem,
-  InstructorEnrollmentListItem,
-} from "@/types/entities";
+import { InstructorEnrollmentListItem } from "@/types/entities";
 import { parseISO } from "date-fns";
 
 const participantTranslationMap: Record<
@@ -123,33 +118,3 @@ export default function CourseEnrollmentsView({
     </DataView>
   );
 }
-
-/**
-{
-    "id": "08078277-12f5-455d-a2ca-b8a2c0ef814e",
-    "course_start_date": "2026-01-19",
-    "course_end_date": null,
-    "participant_name": "سلمى كمال",
-    "participant_type": "child",
-    "participant_phone": "+208748624007",
-    "status": "active",
-    "status_display": "نشط",
-    "enrolled_at": "2026-02-15T18:47:29.782200+02:00",
-    "completed_at": null,
-    "completion_percentage": 0.0
-}
-
-"course_id": "40",
-"course_name": "حفظ القرآن للأطفال",
-
-{
-    "capacity": 15,
-    "enrolled_count": 11,
-    "available_spots": 4,
-    "active_students": 11,
-    "suspended_students": 0,
-    "completed_students": 0,
-    "dropped_students": 0,
-    "refunded_students": 0
-}
-*/

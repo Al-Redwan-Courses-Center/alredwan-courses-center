@@ -1,10 +1,10 @@
-import DefaultUser from "@/assets/images/default-user.svg";
 import LeftDecoration from "@/assets/dashboard/navbar-decoration-left.svg";
 import RightDecoration from "@/assets/dashboard/navbar-decoration-right.svg";
 import Logo from "@/assets/logo.svg";
 import { getUser } from "@/actions/auth";
 import LogoutButton from "@/components/auth/LogoutButton";
 import NotificationsDrawer from "@/components/dashboard/NotificationsDrawer";
+import Avatar from "@/components/ui/Avatar";
 import NavLink from "@/components/ui/navigation/NavLink";
 import Image from "next/image";
 
@@ -25,24 +25,12 @@ export default async function DashboardHeader() {
       </LogoutButton>
 
       <div className="me-auto flex items-center gap-10">
-        {!!image ? (
-          <div className="relative aspect-square h-20 w-auto overflow-clip rounded-full">
-            <Image
-              src={image}
-              alt={`صورة ${first_name}`}
-              fill
-              className="object-cover"
-              draggable={false}
-            />
-          </div>
-        ) : (
-          <Image
-            src={DefaultUser}
-            alt="Default User Illustration"
-            className="border-olive-300 aspect-square h-20 w-auto rounded-full border-3 object-cover"
-            draggable={false}
-          />
-        )}
+        <Avatar
+          src={image}
+          alt={`صورة ${first_name}`}
+          className="h-20 w-auto"
+          fallbackClassName="border-olive-300 border-3"
+        />
         <span className="text-olive-700 text-4xl">
           {role === "instructor" && "أخ"} {first_name}
         </span>

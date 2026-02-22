@@ -18,11 +18,11 @@ import {
   getWeekDay,
   toHindiDigits,
 } from "@/lib/utils";
-import { parse, parseISO } from "date-fns";
+import { CourseDetail, LectureListItem } from "@/types/entities";
+import { parseISO } from "date-fns";
+import Link from "next/link";
 import { DataViewPagination } from "../ui/data-view/DataViewPagination";
 import { DataViewHeader, DataViewRow } from "../ui/data-view/DataViewRow";
-import Link from "next/link";
-import { CourseDetail, LectureListItem } from "@/types/entities";
 
 const { sortConfig, filterConfig, statusMap } = courseLecturesViewConfig;
 

@@ -158,3 +158,28 @@ export async function createEnrollmentRequest(
     };
   }
 }
+
+export async function deleteEnrollmentRequestById(
+  enrollmentRequestId: string,
+): Promise<boolean> {
+  try {
+    const apiClient = await getAuthApiClient();
+
+    await apiClient.delete(
+      `/api/enrollment-requests/${enrollmentRequestId}/cancel/`,
+    );
+
+    return true;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      console.error(
+        "Failed to cancel enrollment request: ",
+        error.response?.data ?? error.message,
+      );
+    } else {
+      console.error("Failed to cancel enrollment request: ", error);
+    }
+
+    return false;
+  }
+}

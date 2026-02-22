@@ -4,7 +4,7 @@ import AddLectureNotesInput from "@/components/attendance/AddLectureNotesInput";
 import LectureAttendanceView from "@/components/attendance/LectureAttendanceView";
 import ClockIcon from "@/components/icons/ClockIcon";
 import CommentIcon from "@/components/icons/CommentIcon";
-import Button from "@/components/ui/Button";
+import CopyToClipboardButton from "@/components/ui/CopyToClipboardButton";
 import { cn, formatTime } from "@/lib/utils";
 
 const dataPointWrapperStyles = cn(
@@ -21,17 +21,22 @@ export default async function Page({
   params: Promise<{ lectureId: string; courseId: string }>;
 }) {
   const { lectureId, courseId } = await params;
-  const [
-    lecture,
-    lectureAttendance,
-    // enrollments
-  ] = await Promise.all([
+  const [lecture, lectureAttendance] = await Promise.all([
     getLectureById(lectureId),
     getLectureAttendance(lectureId),
-    // await getInstructorEnrollmentsByCourseId(courseId),
   ]);
 
   const { attendances } = lectureAttendance || {};
+  const attendanceViewOptions = lectureAttendance
+    ? {
+        is_future_lecture: lectureAttendance.is_future_lecture,
+        is_attendance_submittable: lectureAttendance.is_attendance_submittable,
+        is_editable: lectureAttendance.is_editable,
+        user_can_bypass_deadline: lectureAttendance.user_can_bypass_deadline,
+        user_can_mark_future_lectures:
+          lectureAttendance.user_can_mark_future_lectures,
+      }
+    : null;
 
   return (
     <div className="flex flex-col pt-4">
@@ -46,9 +51,14 @@ export default async function Page({
             </h2>
           </div>
 
-          <Button variant="light" size="small" className="cursor-default!">
-            c1389403
-          </Button>
+          {!!lecture?.id && lecture.id >= 0 && (
+            <div className="flex items-center gap-7">
+              <span className="text-olive-700 text-2xl font-bold">الكود</span>
+              <CopyToClipboardButton>
+                {String(lecture.id)}
+              </CopyToClipboardButton>
+            </div>
+          )}
         </div>
 
         <div className={dataPointWrapperStyles}>
@@ -72,10 +82,10 @@ export default async function Page({
       </div>
 
       <LectureAttendanceView
-        // students={course.enrollments.map((e) => e.child ?? e.student) || []}
         attendances={attendances || []}
         courseId={courseId}
         lecture={lecture}
+        options={attendanceViewOptions}
       />
     </div>
   );

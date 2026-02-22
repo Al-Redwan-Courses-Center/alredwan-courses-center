@@ -1,4 +1,5 @@
-import EnrollmentsList from "@/components/dashboard/enrollments/EnrollmentsList";
+import { ParentChildDetail } from "@/actions/user";
+import EnrollmentRequestsList from "@/components/dashboard/enrollments/EnrollmentRequestsList";
 import ChildCard from "@/components/dashboard/parent/ChildCard";
 import { getChildEnrollmentRequests } from "@/dev-data/db";
 import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
@@ -8,7 +9,7 @@ export default function ChildRow({
   child,
   index,
 }: {
-  child: any;
+  child: ParentChildDetail;
   index: number;
 }) {
   // TODO(api): Enrollment requests do not include child identifiers yet.
@@ -26,13 +27,13 @@ export default function ChildRow({
   return (
     <div className="grid grid-cols-[15rem_auto_1.5fr_1fr] gap-x-10">
       <span className="text-olive-500 text-[2.4rem] font-bold">
-        {`( ${toHindiDigits(index + 1)} ) ${child.name.split(" ")[0]}`}
+        {`( ${toHindiDigits(index + 1)} ) ${child.first_name}`}
       </span>
       <div>
         <ChildCard child={child} index={index} />
       </div>
       <div className="relative">
-        <EnrollmentsList
+        <EnrollmentRequestsList
           enrollments={enrollments}
           listStyles="absolute inset-0 mt-20"
           wrapperStyles="*:px-7!"

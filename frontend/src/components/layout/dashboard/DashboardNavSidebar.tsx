@@ -1,5 +1,4 @@
 import { getUser } from "@/actions/auth";
-import DefaultUser from "@/assets/images/default-user.svg";
 import LogoutButton from "@/components/auth/LogoutButton";
 import AllCoursesIcon from "@/components/icons/AllCoursesIcon";
 import ClipboardIcon from "@/components/icons/ClipboardIcon";
@@ -8,9 +7,9 @@ import OverviewIcon from "@/components/icons/OverviewIcon";
 import PanelsIcon from "@/components/icons/PanelsIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import PersonIcon from "@/components/icons/PersonIcon";
+import Avatar from "@/components/ui/Avatar";
 import NavLink from "@/components/ui/navigation/NavLink";
 import ResourceCollapsibleNavList from "@/components/ui/navigation/ResourceCollapsibleNavList";
-import Image from "next/image";
 import { ReactNode } from "react";
 
 interface NavLink {
@@ -183,24 +182,11 @@ export default async function DashboardNavSidebar() {
       // MARK: Image
       //
       */}
-      {!!image ? (
-        <div className="border-olive-300 relative aspect-square h-auto w-46 overflow-clip rounded-full border-4">
-          <Image
-            src={image}
-            alt={`صورة ${first_name}`}
-            fill
-            className="h-full object-cover"
-            draggable={false}
-          />
-        </div>
-      ) : (
-        <Image
-          src={DefaultUser}
-          alt="Default User Illustration"
-          className="border-olive-300 aspect-square h-auto w-46 rounded-full border-4 object-cover"
-          draggable={false}
-        />
-      )}
+      <Avatar
+        src={image}
+        alt={`صورة ${first_name}`}
+        className="border-olive-300 aspect-square h-auto w-46 border-4"
+      />
 
       {/* 
       //

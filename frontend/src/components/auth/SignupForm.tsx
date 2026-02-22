@@ -11,7 +11,7 @@ import FieldSetInput from "@/components/ui/FieldSetInput";
 import { cn, toHindiDigits } from "@/lib/utils";
 import { SignupInputs } from "@/types/auth";
 import { signIn } from "next-auth/react";
-import { FocusEvent, ReactNode, useEffect, useState } from "react";
+import { FocusEvent, ReactNode, useState } from "react";
 import {
   FieldErrors,
   FieldValues,
@@ -63,7 +63,6 @@ export default function SignupForm() {
     setValue,
     watch,
     formState: { errors },
-    clearErrors,
   } = useForm<SignupInputs>({
     defaultValues: {
       first_name: "",

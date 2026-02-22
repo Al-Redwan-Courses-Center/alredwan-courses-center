@@ -24,12 +24,30 @@ export interface LectureAttendanceDetailsResponse {
   lecture_id: number;
   lecture_title: string;
   course_name: string | null;
+  lecture_date: string;
+  lecture_start_time: string | null;
+  is_future_lecture: boolean;
+  is_attendance_submittable: boolean;
+  is_editable: boolean;
+  submission_deadline: string | null;
+  user_can_bypass_deadline: boolean;
+  user_can_mark_future_lectures: boolean;
   total_enrolled: number;
   present_count: number;
   absent_count: number;
+  not_marked_count: number;
   attendance_rate: number;
   attendances: LectureAttendanceDetail[];
 }
+
+export type LectureAttendanceViewOptions = Pick<
+  LectureAttendanceDetailsResponse,
+  | "is_future_lecture"
+  | "is_attendance_submittable"
+  | "is_editable"
+  | "user_can_bypass_deadline"
+  | "user_can_mark_future_lectures"
+>;
 
 export interface BulkLectureAttendanceItem {
   code: string;

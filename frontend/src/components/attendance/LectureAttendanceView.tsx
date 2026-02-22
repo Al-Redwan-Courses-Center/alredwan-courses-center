@@ -2,9 +2,9 @@
 
 import { markLectureAttendanceInBulk } from "@/actions/attendances";
 import AddNoteModal from "@/components/attendance/AddNoteModal";
+import AttendanceStudentIdQrCodeScannerModal from "@/components/attendance/AttendanceStudentIdQrCodeScannerModal";
 import lectureAttendanceViewConfig from "@/components/attendance/lecture-attendance-view.config";
-import QrCodeIcon from "@/components/icons/QrCodeIcon";
-import StarIcon from "@/components/icons/StarIcon";
+import RatingPopover from "@/components/attendance/RatingPopover";
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
 import DataView from "@/components/ui/data-view/DataView";
@@ -15,18 +15,14 @@ import {
   DataViewRow,
 } from "@/components/ui/data-view/DataViewRow";
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/Popover";
+
 import { cn, persistInLocalStorage, toHindiDigits } from "@/lib/utils";
 import {
   BulkLectureAttendanceBody,
   LectureAttendanceDetail,
+  LectureAttendanceViewOptions,
   LectureDetail,
 } from "@/types/entities";
-import { addHours, isValid, parseISO } from "date-fns";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -35,36 +31,29 @@ import toast from "react-hot-toast";
 const { filterConfig, sortConfig } = lectureAttendanceViewConfig;
 
 export default function LectureAttendanceView({
-  // students,
   attendances,
   courseId,
   lecture,
+  options,
 }: {
-  // students: {
-  //   participant_name: string;
-  // }[];
   attendances: LectureAttendanceDetail[];
   courseId: string;
   lecture: LectureDetail | null;
+  options: LectureAttendanceViewOptions | null;
 }) {
   const router = useRouter();
-  const lectureDate = lecture?.scheduled_at
-    ? parseISO(lecture.scheduled_at)
-    : null;
-  const now = new Date();
-  const editableUntil =
-    lectureDate && isValid(lectureDate) ? addHours(lectureDate, 24) : null;
-  const isEditable =
-    !!lectureDate &&
-    !!editableUntil &&
-    isValid(lectureDate) &&
-    now >= lectureDate &&
-    now <= editableUntil;
-  const localStorageKey = `attendance-${courseId}-${lecture?.id}`;
+  const attendanceConfig = {
+    isFutureLecture: options?.is_future_lecture ?? false,
+    isAttendanceSubmittable: options?.is_attendance_submittable ?? false,
+    isEditable: options?.is_editable ?? false,
+    userCanBypassDeadline: options?.user_can_bypass_deadline ?? false,
+    userCanMarkFutureLectures: options?.user_can_mark_future_lectures ?? false,
+  };
 
-  const [currentHoveredStar, setCurrentHoveredStar] = useState<number | null>(
-    null,
-  );
+  const canEditAttendance =
+    attendanceConfig.isAttendanceSubmittable && attendanceConfig.isEditable;
+
+  const localStorageKey = `attendance-${courseId}-${lecture?.id}`;
 
   const getMergedAttendanceState = useCallback(
     (
@@ -72,7 +61,7 @@ export default function LectureAttendanceView({
     ): LectureAttendanceDetail[] => {
       if (typeof window === "undefined") return serverAttendances;
 
-      if (!isEditable) {
+      if (!canEditAttendance) {
         localStorage.removeItem(localStorageKey);
         return serverAttendances;
       }
@@ -105,30 +94,11 @@ export default function LectureAttendanceView({
         return serverAttendances;
       }
     },
-    [isEditable, localStorageKey],
+    [canEditAttendance, localStorageKey],
   );
 
   const [attendanceState, setAttendanceState] =
     useState<LectureAttendanceDetail[]>(attendances);
-  // () => {
-  //   const initial: LectureAttendanceDetail[] = [];
-  //   attendances.forEach((s) => {
-  //     if (!s) return;
-  //     const oldEntry = attendances.find(
-  //       (a) => (a.child || a.student || {}).id === s.id,
-  //     );
-
-  //     initial.push({
-  //       id: ``,
-  //       present: oldEntry?.present || false,
-  //       student: (s.age || 0) < 15 ? undefined : (s as Student),
-  //       child: (s.age || 0) < 15 ? (s as Child) : undefined,
-  //       notes: "",
-  //       rating: oldEntry?.rating || 7,
-  //     });
-  //   });
-  //   return initial;
-  // },
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -138,7 +108,7 @@ export default function LectureAttendanceView({
   );
 
   async function handleSubmit() {
-    if (!isEditable) return;
+    if (!canEditAttendance) return;
 
     try {
       setIsSubmitting(true);
@@ -180,10 +150,10 @@ export default function LectureAttendanceView({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!isEditable) {
+    if (!canEditAttendance) {
       localStorage.removeItem(localStorageKey);
     }
-  }, [isEditable, localStorageKey]);
+  }, [canEditAttendance, localStorageKey]);
 
   useEffect(() => {
     setAttendanceState(getMergedAttendanceState(attendances));
@@ -202,25 +172,46 @@ export default function LectureAttendanceView({
       <div className="mb-10 flex items-center gap-10 px-16">
         <DataViewSearch />
 
-        <button
-          className={cn(
-            "bg-olive-300 hover:bg-olive-700 rounded-[0.4rem] p-2 text-gray-100 transition-colors",
-            !isEditable && "bg-gray-450 pointer-events-none",
-          )}
-        >
-          <QrCodeIcon />
-        </button>
+        {canEditAttendance && (
+          <>
+            <AttendanceStudentIdQrCodeScannerModal
+              disabled={!canEditAttendance}
+              onScan={(studentCode) => {
+                let markedStudentName = "";
 
-        <Button
-          variant="primary"
-          size="small"
-          className="bg-olive-300 hover:bg-olive-700 ms-auto h-15 min-w-50"
-          onClick={handleSubmit}
-          loading={isSubmitting}
-          disabled={!isEditable}
-        >
-          حفظ
-        </Button>
+                setAttendanceStateWithPersistence((prev) => {
+                  const target = prev.find(
+                    (a) => a.participant_code === studentCode,
+                  );
+
+                  if (!target || target.present) return prev;
+
+                  markedStudentName = target.participant_full_name || "";
+
+                  return prev.map((a) =>
+                    a.participant_code === studentCode
+                      ? { ...a, present: true }
+                      : a,
+                  );
+                });
+
+                if (markedStudentName) {
+                  toast.success(`تم أخذ حضور ${markedStudentName}`);
+                }
+              }}
+            />
+
+            <Button
+              variant="primary"
+              size="small"
+              className="bg-olive-300 hover:bg-olive-700 ms-auto h-15 min-w-50"
+              onClick={handleSubmit}
+              loading={isSubmitting}
+            >
+              حفظ
+            </Button>
+          </>
+        )}
       </div>
 
       <DataViewHeader className="mx-16">
@@ -240,13 +231,13 @@ export default function LectureAttendanceView({
                 attendanceState.every((a) => a.present)
               }
               onCheckedChange={(willBe) => {
-                if (!isEditable) return;
+                if (!canEditAttendance) return;
 
                 setAttendanceStateWithPersistence(
                   attendanceState.map((a) => ({ ...a, present: willBe })),
                 );
               }}
-              disabled={!isEditable}
+              disabled={!canEditAttendance}
             />
           </span>
         </DataViewCell>
@@ -294,62 +285,19 @@ export default function LectureAttendanceView({
                 <DataViewCell>{toHindiDigits(age || "")}</DataViewCell>
 
                 <DataViewCell className="py-0 font-bold">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button
-                        className={cn(
-                          "bg-gray shadow-primary flex h-15 w-4/5 items-center justify-center gap-3 rounded-[1rem_0] bg-gray-100 transition-colors hover:bg-gray-200",
-                          !isEditable &&
-                            "bg-gray-450 pointer-events-none shadow-none!",
-                        )}
-                      >
-                        <StarIcon className="text-beige-500" />
-                        {toHindiDigits(currentRecord?.rating || "7")} /{" "}
-                        {toHindiDigits(10)}
-                      </button>
-                    </PopoverTrigger>
+                  <RatingPopover
+                    disabled={!canEditAttendance}
+                    rating={currentRecord?.rating ?? 7}
+                    onSelectRating={(n) =>
+                      setAttendanceStateWithPersistence(
+                        attendanceState.map((a) => {
+                          if (a.id !== id) return a;
 
-                    <PopoverContent className="shadow-primary flex w-fit flex-col items-center gap-2 bg-gray-100">
-                      <div className="flex items-center">
-                        {Array.from({ length: 10 }, (_, k) => k + 1).map(
-                          (n) => {
-                            const rating = currentRecord?.rating || 7;
-
-                            return (
-                              <StarIcon
-                                key={n}
-                                onMouseEnter={() => setCurrentHoveredStar(n)}
-                                onMouseLeave={() => setCurrentHoveredStar(null)}
-                                onClick={() =>
-                                  setAttendanceStateWithPersistence(
-                                    attendanceState.map((a) => {
-                                      if (a.id !== id) return a;
-
-                                      return { ...a, rating: n };
-                                    }),
-                                  )
-                                }
-                                className={cn(
-                                  "h-8 w-auto cursor-pointer px-1",
-                                  (
-                                    !!currentHoveredStar
-                                      ? n <= currentHoveredStar
-                                      : n <= rating
-                                  )
-                                    ? "text-beige-500"
-                                    : "text-gray-500",
-                                )}
-                              />
-                            );
-                          },
-                        )}
-                      </div>
-                      <span className="text-2xl font-bold">
-                        {toHindiDigits(currentRecord?.rating || "7")} /{" "}
-                        {toHindiDigits(10)}
-                      </span>
-                    </PopoverContent>
-                  </Popover>
+                          return { ...a, rating: n };
+                        }),
+                      )
+                    }
+                  />
                 </DataViewCell>
 
                 <DataViewCell className="py-0">
@@ -357,7 +305,7 @@ export default function LectureAttendanceView({
                     id={`attendance-${id}`}
                     checked={!!currentRecord?.present}
                     onCheckedChange={(willBe) => {
-                      if (!isEditable) return;
+                      if (!canEditAttendance) return;
 
                       setAttendanceStateWithPersistence(
                         attendanceState.map((a) => {
@@ -366,12 +314,16 @@ export default function LectureAttendanceView({
                         }),
                       );
                     }}
-                    disabled={!isEditable}
+                    disabled={!canEditAttendance}
                   />
                 </DataViewCell>
 
                 <DataViewCell className="justify-start! overflow-hidden pe-0!">
-                  <span className="truncate">{currentRecord?.notes}</span>
+                  <span className="truncate">
+                    {!!currentRecord?.notes?.trim()
+                      ? currentRecord.notes.trim()
+                      : "لا توجد ملاحظات"}
+                  </span>
                 </DataViewCell>
 
                 <DataViewCell className="*:text-olive-300 *:hover:text-olive-700 *:transition-colors">
@@ -387,7 +339,7 @@ export default function LectureAttendanceView({
                       )
                     }
                     notes={currentRecord?.notes || ""}
-                    disabled={!isEditable}
+                    disabled={!canEditAttendance}
                   />
                 </DataViewCell>
               </DataViewRow>

@@ -1,10 +1,9 @@
 import EmailIcon from "@/components/icons/EmailIcon";
+import LocationIcon from "@/components/icons/LocationIcon";
 import PhoneIcon from "@/components/icons/PhoneIcon";
 import WhatsappIcon from "@/components/icons/WhatsappIcon";
-import LocationIcon from "@/components/icons/LocationIcon";
-import Link from "next/link";
-import SectionDivider from "@/components/landing-page/SectionDivider";
 import { toHindiDigits } from "@/lib/utils";
+import Link from "next/link";
 
 export default function Footer() {
   return (

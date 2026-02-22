@@ -3,25 +3,24 @@ import {
   getMyEnrollmentRequests,
   getMyEnrollments,
 } from "@/actions/enrollments";
-import EnrollmentsList from "@/components/dashboard/enrollments/EnrollmentsList";
+import { getParentChildren } from "@/actions/user";
+import EnrollmentRequestsList from "@/components/dashboard/enrollments/EnrollmentRequestsList";
 import ChildCard from "@/components/dashboard/parent/ChildCard";
 import ParentOverviewHeader from "@/components/dashboard/parent/ParentOverviewHeader";
 import Button from "@/components/ui/Button";
-import { getMyChildren } from "@/dev-data/db";
 import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
 import Link from "next/link";
 
 export default async function ParentOverviewPage() {
   const { first_name } = await getUser();
-  // TODO(api): Replace mock children with a real parent-children endpoint.
-  const myChildren = getMyChildren();
 
-  const [allEnrollments, allParentEnrollments] = await Promise.all([
+  const [myChildren, myEnrollmentRequests, myEnrollments] = await Promise.all([
+    getParentChildren(),
     getMyEnrollmentRequests(),
     getMyEnrollments(),
   ]);
 
-  const sortedEnrollments = allEnrollments.sort(
+  const sortedEnrollmentResquests = myEnrollmentRequests.sort(
     (a, b) =>
       ENROLLMENT_REQUEST_STATUS_WEIGHTS[
         a.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
@@ -31,17 +30,18 @@ export default async function ParentOverviewPage() {
       ],
   );
 
-  const pendingEnrollmentsCount = allEnrollments.filter(
+  const pendingEnrollmentRequestsCount = myEnrollmentRequests.filter(
     (enrollment) => enrollment.status === "pending",
   ).length;
 
-  const totalPaid = allParentEnrollments.reduce((acc, enrollment) => {
+  const totalPaid = myEnrollments.reduce((acc, enrollment) => {
     const paid = Number.parseFloat(enrollment.amount_paid || "0");
     return acc + (Number.isNaN(paid) ? 0 : paid);
   }, 0);
 
-  console.log(allEnrollments);
-  console.log(allParentEnrollments);
+  console.log("Children", myChildren);
+  console.log("Enrollment Requests", myEnrollmentRequests);
+  console.log("Enrollments", myEnrollments);
 
   return (
     <div className="ps-16 pt-15 *:pe-16">
@@ -51,7 +51,7 @@ export default async function ParentOverviewPage() {
 
       <ParentOverviewHeader
         myChildrenCount={myChildren.length}
-        pendingEnrollmentsCount={pendingEnrollmentsCount}
+        pendingEnrollmentsCount={pendingEnrollmentRequestsCount}
         totalPaid={totalPaid}
       />
 
@@ -78,8 +78,8 @@ export default async function ParentOverviewPage() {
           </div>
         </div>
 
-        <EnrollmentsList
-          enrollments={sortedEnrollments}
+        <EnrollmentRequestsList
+          enrollments={sortedEnrollmentResquests}
           listStyles="max-h-[calc(100dvh-55rem)]"
         />
       </div>

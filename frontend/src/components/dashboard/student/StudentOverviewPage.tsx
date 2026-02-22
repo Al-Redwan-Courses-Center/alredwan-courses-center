@@ -1,7 +1,7 @@
 import { getUser } from "@/actions/auth";
 import { getStudentCourses } from "@/actions/courses";
 import { getMyEnrollmentRequests } from "@/actions/enrollments";
-import EnrollmentCard from "@/components/dashboard/enrollments/EnrollmentCard";
+import EnrollmentRequestCard from "@/components/dashboard/enrollments/EnrollmentRequestCard";
 import StudentCourseCard from "@/components/dashboard/student/StudentCourseCard";
 import StudentOverviewHeader from "@/components/dashboard/student/StudentOverviewHeader";
 import Button from "@/components/ui/Button";
@@ -42,6 +42,7 @@ export default async function StudentOverviewPage({
     myActiveCourses = await getStudentCourses();
 
     const requests = await getMyEnrollmentRequests();
+
     myEnrollmentRequests = requests.sort(
       (a, b) =>
         ENROLLMENT_REQUEST_STATUS_WEIGHTS[
@@ -93,7 +94,7 @@ export default async function StudentOverviewPage({
           <div className="flex max-h-[calc(100dvh-44rem)] flex-col gap-10 overflow-y-auto pe-16 pt-6 pb-10">
             {myEnrollmentRequests.length > 0 ? (
               myEnrollmentRequests.map((e) => (
-                <EnrollmentCard key={e.id} enrollment={e} />
+                <EnrollmentRequestCard key={e.id} enrollmentRequest={e} />
               ))
             ) : (
               <div className="flex w-full flex-col items-center justify-center gap-4 py-40 text-4xl font-bold">

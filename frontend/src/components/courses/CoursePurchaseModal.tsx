@@ -1,7 +1,7 @@
 "use client";
 
 import { createEnrollmentRequest } from "@/actions/enrollments";
-import { ParentChildOption } from "@/actions/user";
+import { ParentChildDetail } from "@/actions/user";
 import Button from "@/components/ui/Button";
 import {
   Modal,
@@ -49,7 +49,7 @@ export default function CoursePurchaseModal({
   role: "parent" | "student";
   courseId: string;
   coursePrice: string;
-  childrenOptions?: ParentChildOption[];
+  childrenOptions?: ParentChildDetail[];
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const {
