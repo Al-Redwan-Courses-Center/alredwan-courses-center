@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
 """Views for instructor attendance (fingerprint devices and admin dashboard)."""
 
-from rest_framework import generics, status, views
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
-from rest_framework.decorators import api_view, permission_classes
-from django.utils import timezone
-from django.shortcuts import get_object_or_404
-from django.core.exceptions import ValidationError
-
 from attendance.models import (
     InstructorAttendance,
     AttendanceDevice,
@@ -19,6 +11,9 @@ from attendance.models import (
     FingerprintScanLog,
     ScanAction,
 )
+from courses.models import Season
+from users.models import Instructor
+from attendance.filters import InstructorAttendanceFilter, SupervisorScheduleFilter
 from attendance.serializers import (
     InstructorAttendanceSerializer,
     InstructorAttendanceListSerializer,
@@ -29,9 +24,69 @@ from attendance.serializers import (
     AttendanceDeviceSerializer,
     SupervisorScheduleSerializer,
     TodayAttendanceSummarySerializer,
+    GenerateAttendanceSerializer,
 )
-from users.models import Instructor
-from courses.models import Season
+from attendance.models.attendance_cron_log import AttendanceCronLog
+from rest_framework import generics, status, views
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny, BasePermission
+from rest_framework.decorators import api_view, permission_classes
+from django_filters.rest_framework import DjangoFilterBackend
+from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from django.core.exceptions import ValidationError
+
+
+class IsAdminOrSupervisorRole(BasePermission):
+    """
+    Permission class that checks for admin or supervisor role.
+    Allows access if:
+    - user.role == 'admin' or 'supervisor'
+    - user.is_staff or user.is_superuser
+    - user has instructor_profile with type == 'supervisor'
+    """
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        # Superuser/staff always allowed
+        if request.user.is_superuser or request.user.is_staff:
+            return True
+
+        # Check role attribute
+        if hasattr(request.user, 'role') and request.user.role in ['admin', 'supervisor']:
+            return True
+
+        # Check instructor profile type
+        if hasattr(request.user, 'instructor_profile'):
+            if request.user.instructor_profile.type == 'supervisor':
+                return True
+
+        return False
+
+
+class IsAdminRoleOnly(BasePermission):
+    """
+    Permission class that checks for admin role only.
+    Allows access if:
+    - user.role == 'admin'
+    - user.is_superuser
+    """
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        # Superuser always allowed
+        if request.user.is_superuser:
+            return True
+
+        # Check role attribute
+        if hasattr(request.user, 'role') and request.user.role == 'admin':
+            return True
+
+        return False
 
 
 class DeviceAuthenticationMixin:
@@ -692,6 +747,105 @@ class InstructorAttendanceHistoryView(generics.ListAPIView):
         ).order_by('-date')
 
 
+class AdminAllAttendanceListView(generics.ListAPIView):
+    """
+    List ALL attendance records (past and future) with comprehensive filters.
+
+    This endpoint is admin-only and provides access to the complete attendance history
+    with powerful filtering capabilities.
+
+    GET /api/attendance/all/
+
+    Roles: Admin, Supervisor (role == 'admin' or 'supervisor')
+
+    Query Parameters:
+    - date_from: Filter records from this date (inclusive). Format: YYYY-MM-DD
+    - date_to: Filter records up to this date (inclusive). Format: YYYY-MM-DD
+    - instructor: Filter by instructor user ID (UUID)
+    - status: Filter by attendance status (present, absent, late, pending, not_started)
+    - attendance_type: Filter by type (lecture, supervision)
+    - rated_by: Filter by the admin user ID who rated the attendance
+    - has_rating: Filter records that have been rated (true/false)
+    - season: Filter by season ID
+    - checked_in: Filter by check-in status (true/false)
+    - checked_out: Filter by check-out status (true/false)
+
+    Examples:
+    - GET /api/attendance/all/?date_from=2025-01-01&date_to=2025-01-31
+    - GET /api/attendance/all/?instructor=<uuid>&status=present
+    - GET /api/attendance/all/?attendance_type=supervision&has_rating=false
+    """
+    serializer_class = InstructorAttendanceSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrSupervisorRole]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = InstructorAttendanceFilter
+
+    def get_queryset(self):
+        return InstructorAttendance.objects.select_related(
+            'instructor__user',
+            'lecture',
+            'schedule',
+            'rated_by',
+            'season'
+        ).order_by('-date', '-check_in_time', 'instructor__user__first_name')
+
+
+class AdminEditAttendanceView(generics.RetrieveUpdateAPIView):
+    """
+    Retrieve or update ANY attendance record (including past records).
+
+    This endpoint allows admins to edit attendance records from any date,
+    including past records. Useful for correcting historical data.
+
+    GET /api/attendance/all/{id}/
+    PUT /api/attendance/all/{id}/
+    PATCH /api/attendance/all/{id}/
+
+    Roles: Admin only (role == 'admin' or is_superuser)
+
+    Editable Fields:
+    - status: Change attendance status (present, absent, late, pending, not_started)
+    - check_in_time: Manually set check-in time
+    - check_out_time: Manually set check-out time
+    - check_in_method: Set method (fingerprint, rfid, qr_code, manual)
+    - check_out_method: Set method
+    - rating: Set rating (1.00 - 10.00), requires instructor to be present/late
+    - notes: Add/update notes
+    - attendance_type: Change type (lecture, supervision)
+
+    Note: Changing status to absent will clear the rating. Setting rating
+    requires the attendance to be present or late.
+    """
+    serializer_class = InstructorAttendanceSerializer
+    permission_classes = [IsAuthenticated, IsAdminRoleOnly]
+    queryset = InstructorAttendance.objects.select_related(
+        'instructor__user',
+        'lecture',
+        'schedule',
+        'rated_by',
+        'season'
+    )
+
+    def perform_update(self, serializer):
+        """Track who made the edit if rating is updated."""
+        instance = self.get_object()
+        old_rating = instance.rating
+
+        # Save the update
+        updated_instance = serializer.save()
+
+        # If rating was changed and is now > 0, track the rater
+        new_rating = updated_instance.rating
+        if new_rating and new_rating > 0 and new_rating != old_rating:
+            updated_instance.rated_by = self.request.user
+            updated_instance.rated_at = timezone.now()
+            updated_instance.save()
+            # Broadcast the rating update
+            updated_instance.broadcast_rating()
+
+        return updated_instance
+
+
 class AttendanceDeviceListView(generics.ListCreateAPIView):
     """
     List or create attendance devices.
@@ -723,10 +877,65 @@ class SupervisorScheduleListView(generics.ListCreateAPIView):
 
     GET /api/attendance/schedules/
     POST /api/attendance/schedules/
+
+    Roles:
+    - Admin/Supervisor: See all schedules, can create new schedules
+    - Instructor: See only their own schedules (read-only)
+
+    Query Parameters (for admins):
+    - instructor: Filter by instructor user ID (UUID)
+    - day_of_week: Filter by day (0=Saturday, 1=Sunday, ..., 6=Friday)
+    - start_time_from: Filter by minimum start time (HH:MM)
+    - start_time_to: Filter by maximum start time (HH:MM)
     """
     serializer_class = SupervisorScheduleSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    queryset = SupervisorSchedule.objects.select_related('instructor__user')
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = SupervisorScheduleFilter
+
+    def get_queryset(self):
+        """
+        Return schedules based on user role:
+        - Admin/Supervisor/Staff: All schedules
+        - Instructor: Only their own schedules
+        """
+        user = self.request.user
+        base_qs = SupervisorSchedule.objects.select_related('instructor__user')
+
+        # Admin, supervisor, or staff see all
+        if user.is_staff or user.is_superuser:
+            return base_qs.order_by('day_of_week', 'start_time')
+
+        if hasattr(user, 'role') and user.role in ['admin', 'supervisor']:
+            return base_qs.order_by('day_of_week', 'start_time')
+
+        if hasattr(user, 'instructor_profile'):
+            instructor_profile = user.instructor_profile
+            # Supervisors see all
+            if instructor_profile.type == 'supervisor':
+                return base_qs.order_by('day_of_week', 'start_time')
+            # Regular instructors see only their own
+            return base_qs.filter(instructor=instructor_profile).order_by('day_of_week', 'start_time')
+
+        # Non-instructors see nothing
+        return SupervisorSchedule.objects.none()
+
+    def create(self, request, *args, **kwargs):
+        """Only admins can create schedules."""
+        user = request.user
+        is_admin = (
+            user.is_staff or
+            user.is_superuser or
+            (hasattr(user, 'role') and user.role in ['admin', 'supervisor'])
+        )
+
+        if not is_admin:
+            return Response(
+                {"error": "Only admins can create schedules"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        return super().create(request, *args, **kwargs)
 
 
 class SupervisorScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -736,10 +945,95 @@ class SupervisorScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):
     GET /api/attendance/schedules/<id>/
     PATCH /api/attendance/schedules/<id>/
     DELETE /api/attendance/schedules/<id>/
+
+    Roles:
+    - Admin/Supervisor: Full access to any schedule
+    - Instructor: Read-only access to their own schedules
     """
     serializer_class = SupervisorScheduleSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
-    queryset = SupervisorSchedule.objects.select_related('instructor__user')
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Return schedules based on user role."""
+        user = self.request.user
+        base_qs = SupervisorSchedule.objects.select_related('instructor__user')
+
+        # Admin, supervisor, or staff see all
+        if user.is_staff or user.is_superuser:
+            return base_qs
+
+        if hasattr(user, 'role') and user.role in ['admin', 'supervisor']:
+            return base_qs
+
+        if hasattr(user, 'instructor_profile'):
+            instructor_profile = user.instructor_profile
+            # Supervisors see all
+            if instructor_profile.type == 'supervisor':
+                return base_qs
+            # Regular instructors see only their own
+            return base_qs.filter(instructor=instructor_profile)
+
+        return SupervisorSchedule.objects.none()
+
+    def update(self, request, *args, **kwargs):
+        """Only admins can update schedules."""
+        user = request.user
+        is_admin = (
+            user.is_staff or
+            user.is_superuser or
+            (hasattr(user, 'role') and user.role in ['admin', 'supervisor'])
+        )
+
+        if not is_admin:
+            return Response(
+                {"error": "Only admins can update schedules"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """Only admins can delete schedules."""
+        user = request.user
+        is_admin = (
+            user.is_staff or
+            user.is_superuser or
+            (hasattr(user, 'role') and user.role in ['admin', 'supervisor'])
+        )
+
+        if not is_admin:
+            return Response(
+                {"error": "Only admins can delete schedules"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        return super().destroy(request, *args, **kwargs)
+
+
+class MyScheduleView(generics.ListAPIView):
+    """
+    Get the current instructor's weekly schedule.
+
+    GET /api/attendance/my-schedule/
+
+    This endpoint is specifically for instructors to view their own
+    weekly supervision schedule. Returns schedules ordered by day and time.
+
+    Response includes all days of the week with the instructor's shifts.
+    """
+    serializer_class = SupervisorScheduleSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Return only the current instructor's schedules."""
+        user = self.request.user
+
+        if not hasattr(user, 'instructor_profile'):
+            return SupervisorSchedule.objects.none()
+
+        return SupervisorSchedule.objects.filter(
+            instructor=user.instructor_profile
+        ).select_related('instructor__user').order_by('day_of_week', 'start_time')
 
 
 @api_view(['POST'])
@@ -805,3 +1099,100 @@ def mark_absent(request, pk):
         InstructorAttendanceSerializer(attendance).data,
         status=status.HTTP_200_OK
     )
+
+
+class GenerateAttendanceView(views.APIView):
+    """
+    Generate attendance records for a date range.
+
+    POST /api/attendance/generate/
+    {
+        "start_date": "2026-03-01",
+        "end_date": "2026-03-07",
+        "season_id": 1  // optional
+    }
+
+    This endpoint allows SUPERUSERS ONLY to manually generate attendance records
+    for instructors and supervisors within a specified date range.
+
+    Features:
+    - Checks if records already exist for the date range and rejects if so
+    - Records are created based on:
+      - SupervisorSchedule entries for each day (supervision attendance)
+      - Scheduled lectures for each day (lecture attendance)
+    - Logs the generation in AttendanceCronLog for audit trail
+
+    Restrictions:
+    - Only superusers can access this endpoint
+    - Maximum date range is 30 days
+    - Cannot generate if records already exist for the date range
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Only superusers can generate attendance
+        if not request.user.is_superuser:
+            return Response(
+                {"error": "Only superusers can generate attendance records"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = GenerateAttendanceSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        start_date = serializer.validated_data['start_date']
+        end_date = serializer.validated_data['end_date']
+        season_id = serializer.validated_data.get('season_id')
+
+        # Get season if specified
+        season = None
+        if season_id:
+            season = Season.objects.filter(id=season_id).first()
+            if not season:
+                return Response(
+                    {"error": f"Season with ID {season_id} not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        # Check if attendance records already exist for this date range
+        existing_count = InstructorAttendance.objects.filter(
+            date__gte=start_date,
+            date__lte=end_date
+        ).count()
+
+        if existing_count > 0:
+            return Response(
+                {
+                    "error": "Attendance records already exist for this date range",
+                    "existing_count": existing_count,
+                    "start_date": str(start_date),
+                    "end_date": str(end_date),
+                    "hint": "Choose a date range with no existing records"
+                },
+                status=status.HTTP_409_CONFLICT
+            )
+
+        # Generate attendance records
+        created_count = InstructorAttendance.generate_for_date_range(
+            start_date=start_date,
+            end_date=end_date,
+            season=season
+        )
+
+        # Log the manual generation
+        AttendanceCronLog.objects.create(
+            job_name="manual_generate_attendance",
+            details=(
+                f"Superuser {request.user.get_full_name()} manually generated "
+                f"{created_count} attendance records from {start_date} to {end_date}"
+                f"{f' for season {season.name}' if season else ''}"
+            )
+        )
+
+        return Response({
+            "message": "Attendance records generated successfully",
+            "created_count": created_count,
+            "start_date": str(start_date),
+            "end_date": str(end_date),
+            "season": season.name if season else "Active season"
+        }, status=status.HTTP_201_CREATED)

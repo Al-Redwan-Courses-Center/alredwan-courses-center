@@ -315,3 +315,41 @@ class TodayAttendanceSummarySerializer(serializers.Serializer):
     not_started = serializers.IntegerField()
     lecture_attendance_count = serializers.IntegerField()
     supervision_attendance_count = serializers.IntegerField()
+
+
+class GenerateAttendanceSerializer(serializers.Serializer):
+    """
+    Serializer for the attendance generation endpoint.
+
+    Allows superusers to manually generate attendance records for a date range.
+    """
+    start_date = serializers.DateField(
+        help_text="Start date for generating attendance records (YYYY-MM-DD)"
+    )
+    end_date = serializers.DateField(
+        help_text="End date for generating attendance records (YYYY-MM-DD)"
+    )
+    season_id = serializers.IntegerField(
+        required=False,
+        allow_null=True,
+        help_text="Optional: Season ID. If not provided, uses the active season."
+    )
+
+    def validate(self, data):
+        """Validate the date range."""
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+
+        if start_date > end_date:
+            raise serializers.ValidationError({
+                'end_date': 'End date must be on or after start date.'
+            })
+
+        # Limit to maximum 30 days to prevent accidental large generations
+        from datetime import timedelta
+        if (end_date - start_date).days > 30:
+            raise serializers.ValidationError({
+                'end_date': 'Date range cannot exceed 30 days.'
+            })
+
+        return data

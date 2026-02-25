@@ -7,6 +7,9 @@ from .lecture_attendance import (
     LectureAttendanceDetailView,
 )
 from .instructor_attendance import (
+    # Permission Classes
+    IsAdminOrSupervisorRole,
+    IsAdminRoleOnly,
     # Fingerprint Device Views
     DeviceAuthenticationMixin,
     FingerprintCheckInView,
@@ -19,12 +22,16 @@ from .instructor_attendance import (
     RateAttendanceView,
     AttendanceByDateView,
     InstructorAttendanceHistoryView,
+    AdminAllAttendanceListView,
+    AdminEditAttendanceView,
+    GenerateAttendanceView,
     # Device Management Views
     AttendanceDeviceListView,
     AttendanceDeviceDetailView,
     # Schedule Management Views
     SupervisorScheduleListView,
     SupervisorScheduleDetailView,
+    MyScheduleView,
     # Function-based Views
     manual_check_in,
     manual_check_out,
@@ -32,6 +39,9 @@ from .instructor_attendance import (
 )
 
 __all__ = [
+    # Permission Classes
+    'IsAdminOrSupervisorRole',
+    'IsAdminRoleOnly',
     # Lecture Attendance
     'LectureAttendanceView',
     'BulkLectureAttendanceView',
@@ -48,12 +58,16 @@ __all__ = [
     'RateAttendanceView',
     'AttendanceByDateView',
     'InstructorAttendanceHistoryView',
+    'AdminAllAttendanceListView',
+    'AdminEditAttendanceView',
+    'GenerateAttendanceView',
     # Device Management
     'AttendanceDeviceListView',
     'AttendanceDeviceDetailView',
     # Schedule Management
     'SupervisorScheduleListView',
     'SupervisorScheduleDetailView',
+    'MyScheduleView',
     # Function-based Views
     'manual_check_in',
     'manual_check_out',
