@@ -18,6 +18,12 @@ urlpatterns = [
          name='fingerprint-check-out'),
 
     # Admin dashboard endpoints
+    path('all/', views.AdminAllAttendanceListView.as_view(),
+         name='all-attendance'),
+    path('all/<int:pk>/', views.AdminEditAttendanceView.as_view(),
+         name='edit-attendance'),
+    path('generate/', views.GenerateAttendanceView.as_view(),
+         name='generate-attendance'),
     path('today/', views.TodayAttendanceListView.as_view(), name='today-attendance'),
     path('today/summary/', views.TodayAttendanceSummaryView.as_view(),
          name='today-summary'),
@@ -49,4 +55,5 @@ urlpatterns = [
          name='schedule-list'),
     path('schedules/<int:pk>/',
          views.SupervisorScheduleDetailView.as_view(), name='schedule-detail'),
+    path('my-schedule/', views.MyScheduleView.as_view(), name='my-schedule'),
 ]
