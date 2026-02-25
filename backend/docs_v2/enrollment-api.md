@@ -91,6 +91,7 @@ The Enrollment API manages course enrollments through a request → approval wor
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `status` | string | Filter: `pending`, `processing`, `accepted`, `rejected`, `cancelled` |
+| `child` | uuid | Filter by child ID (parents only) |
 | `course` | integer | Filter by course ID |
 
 **Example Response:**
@@ -100,6 +101,7 @@ The Enrollment API manages course enrollments through a request → approval wor
   {
     "id": "uuid",
     "course": { "id": 1, "name": "Test Course" },
+    "child_id": "child-uuid",
     "participant_name": "Test Child",
     "participant_type": "child",
     "status": "pending",
@@ -344,6 +346,7 @@ The Enrollment API manages course enrollments through a request → approval wor
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `status` | string | Filter: `active`, `suspended`, `completed`, `dropped` |
+| `child` | uuid | Filter by child ID (parents only) |
 | `course` | integer | Filter by course ID |
 
 **Example Response:**
@@ -357,6 +360,7 @@ The Enrollment API manages course enrollments through a request → approval wor
       "name": "Test Course",
       "instructor_name": "John Doe"
     },
+    "child_id": "child-uuid",
     "participant_name": "Test Child",
     "status": "active",
     "enrolled_at": "2025-02-10T12:00:00Z"
