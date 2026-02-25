@@ -11,7 +11,7 @@ from courses.models import Weekday
 class InstructorAttendanceFilter(FilterSet):
     """
     FilterSet for filtering instructor attendance records.
-    
+
     Available filters:
     - date_from: Filter records from this date (inclusive)
     - date_to: Filter records up to this date (inclusive)
@@ -68,7 +68,7 @@ class InstructorAttendanceFilter(FilterSet):
     class Meta:
         model = InstructorAttendance
         fields = [
-            'date_from', 'date_to', 'instructor', 'status', 
+            'date_from', 'date_to', 'instructor', 'status',
             'attendance_type', 'rated_by', 'has_rating', 'season',
             'checked_in', 'checked_out'
         ]
@@ -103,7 +103,7 @@ class InstructorAttendanceFilter(FilterSet):
 class SupervisorScheduleFilter(FilterSet):
     """
     FilterSet for filtering supervisor schedules.
-    
+
     Available filters:
     - instructor: Filter by instructor profile ID (integer PK)
     - day_of_week: Filter by day of week (0=Saturday, 1=Sunday, ..., 6=Friday)
@@ -131,4 +131,5 @@ class SupervisorScheduleFilter(FilterSet):
 
     class Meta:
         model = SupervisorSchedule
-        fields = ['instructor', 'day_of_week', 'start_time_from', 'start_time_to']
+        fields = ['instructor', 'day_of_week',
+                  'start_time_from', 'start_time_to']
