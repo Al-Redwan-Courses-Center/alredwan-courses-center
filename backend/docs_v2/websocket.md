@@ -103,17 +103,38 @@ Sent when an instructor checks out.
 
 #### `attendance_rated`
 
-Sent when an admin rates an attendance record.
+Sent when an admin rates an attendance record via `POST /api/attendance/{id}/rate/`.
 
 ```json
 {
   "type": "attendance_rated",
   "data": {
     "id": 123,
+    "instructor": "محمد أحمد",
+    "instructor_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "rating": 8.5,
-    "rated_by": "Admin User"
+    "rated_by": "Admin User",
+    "rated_by_id": "f0e1d2c3-b4a5-6789-0123-456789abcdef",
+    "rated_at": "2026-02-05T15:30:00+02:00",
+    "notes": "أداء ممتاز في الشرح",
+    "date": "2026-02-05",
+    "status": "present"
   }
 }
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer | Attendance record ID |
+| `instructor` | string | Instructor's full name |
+| `instructor_id` | UUID | Instructor's user ID |
+| `rating` | decimal | Rating value (1.00-10.00) |
+| `rated_by` | string | Admin's full name who rated |
+| `rated_by_id` | UUID | Admin's user ID |
+| `rated_at` | datetime | When the rating was submitted |
+| `notes` | string/null | Optional notes about the rating |
+| `date` | date | Attendance date |
+| `status` | string | Attendance status (present/late) |
 ```
 
 #### `summary_response`
@@ -252,3 +273,142 @@ ws.connect();
 3. **Request summary on connect** to get the current state immediately
 4. **Show loading states** while the WebSocket connection is being established
 5. **Handle all close codes** — `4001`/`4002`/`4003` should not trigger reconnect
+
+
+---
+
+## Manual WebSocket Testing Instructions
+
+Here's how to test the WebSocket implementation manually:
+
+
+Prerequisites
+
+
+1. The backend must be running with both Gunicorn (port 8000) and Uvicorn (port 8001)
+2. Redis must be running (for the channel layer)
+3. You need a valid admin JWT token
+
+Step 1: Get a JWT Token
+```bash
+# Login to get tokens
+curl -X POST http://localhost:8000/auth/jwt/create/ \
+  -H "Content-Type: application/json" \
+  -d '{"phone_number1": "+201000000001", "password": "yourpassword"}'
+```
+
+Response:
+
+```bash
+{
+  "refresh": "eyJ...",
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+Step 2: Connect to WebSocket
+Using websocat (install with cargo install websocat or brew install websocat):
+```bash
+websocat "ws://localhost:8001/ws/attendance/?token=YOUR_ACCESS_TOKEN"
+```
+
+Or using wscat (install with npm install -g wscat):
+```bash
+wscat -c "ws://localhost:8001/ws/attendance/?token=YOUR_ACCESS_TOKEN"
+```
+
+Step 3: Expected Connection Response
+```bash
+{
+  "type": "connection_established",
+  "message": "Connected as Admin User",
+  "user_id": "a1b2c3d4-..."
+}
+```
+
+Step 4: Test Ping/Pong
+Send:
+
+```json
+{ "type": "ping" }
+```
+Expect:
+
+```json
+{ "type": "pong" }
+```
+
+Step 5: Request Today's Summary
+Send:
+
+```json
+{ "type": "request_summary" }
+```
+Expect:
+```json
+{
+  "type": "summary_response",
+  "data": {
+    "date": "2026-02-25",
+    "total_expected": 15,
+    "checked_in": 10,
+    "checked_out": 3,
+    "present": 8,
+    "late": 2,
+    "absent": 1,
+    "pending": 0,
+    "not_started": 4
+  }
+}
+```
+
+Step 6: Test Real-time Updates
+Open another terminal and trigger a scan (simulating fingerprint device):
+```bash
+curl -X POST http://localhost:8000/api/attendance/scan/ \
+  -H "Content-Type: application/json" \
+  -d '{"fingerprint_id": "FP_TEST_001", "device_id": "DEVICE_TEST_001"}'
+```
+
+
+In your WebSocket terminal, you should receive:
+```json
+{
+  "type": "attendance_update",
+  "data": {
+    "instructor": "محمد أحمد",
+    "id": 123,
+    "time": "2026-02-25T08:30:00+02:00",
+    "status": "present",
+    "date": "2026-02-25"
+  }
+}
+```
+
+Step 7: Test Rating Broadcast
+Rate an attendance record:
+```bash
+curl -X POST http://localhost:8000/api/attendance/123/rate/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: JWT YOUR_ACCESS_TOKEN" \
+  -d '{"rating": 8.5, "notes": "أداء ممتاز"}'
+```
+In your WebSocket terminal, you should receive:
+
+```json
+{
+  "type": "attendance_rated",
+  "data": {
+    "id": 123,
+    "instructor": "محمد أحمد",
+    "instructor_id": "uuid...",
+    "rating": 8.5,
+    "rated_by": "Admin User",
+    "rated_by_id": "uuid...",
+    "rated_at": "2026-02-25T15:30:00+02:00",
+    "notes": "أداء ممتاز",
+    "date": "2026-02-25",
+    "status": "present"
+  }
+}
+```

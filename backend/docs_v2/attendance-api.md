@@ -243,6 +243,117 @@ Returns same format as Today's Attendance for the specified date.
 
 ---
 
+### All Attendance Records (Admin)
+
+Full access to ALL attendance records (past and future) with comprehensive filtering.
+
+| | |
+|--|--|
+| **URL** | `GET /api/attendance/all/` |
+| **Auth** | ✅ Admin / Supervisor (`role == 'admin'` or `role == 'supervisor'`) |
+
+**Query Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `date_from` | date | Filter records from this date (inclusive). Format: `YYYY-MM-DD` |
+| `date_to` | date | Filter records up to this date (inclusive). Format: `YYYY-MM-DD` |
+| `instructor` | UUID | Filter by instructor user ID |
+| `status` | string | Filter by status: `present`, `absent`, `late`, `pending`, `not_started` |
+| `attendance_type` | string | Filter by type: `lecture`, `supervision` |
+| `rated_by` | UUID | Filter by the admin user ID who rated |
+| `has_rating` | boolean | Filter by whether attendance has been rated (`true`/`false`) |
+| `season` | integer | Filter by season ID |
+| `checked_in` | boolean | Filter by check-in status (`true`/`false`) |
+| `checked_out` | boolean | Filter by check-out status (`true`/`false`) |
+
+**Examples:**
+
+```http
+GET /api/attendance/all/?date_from=2025-01-01&date_to=2025-01-31
+GET /api/attendance/all/?instructor=<uuid>&status=present
+GET /api/attendance/all/?attendance_type=supervision&has_rating=false
+GET /api/attendance/all/?checked_in=true&status=late
+```
+
+**Response (200):**
+
+```json
+[
+  {
+    "id": 123,
+    "instructor": 1,
+    "instructor_name": "محمد أحمد",
+    "instructor_type": "معلم",
+    "date": "2026-02-05",
+    "check_in_time": "2026-02-05T08:30:00+02:00",
+    "check_out_time": "2026-02-05T14:00:00+02:00",
+    "check_in_method": "fingerprint",
+    "check_out_method": "fingerprint",
+    "status": "present",
+    "status_display": "حاضر",
+    "attendance_type": "lecture",
+    "attendance_type_display": "محاضرة",
+    "schedule": null,
+    "schedule_info": null,
+    "lecture": 45,
+    "lecture_title": "القرآن الكريم - المستوى 2",
+    "season": 1,
+    "rating": "8.50",
+    "rated_by": 1,
+    "rated_by_name": "Admin User",
+    "rated_at": "2026-02-05T15:30:00+02:00",
+    "notes": "أداء ممتاز في الشرح"
+  }
+]
+```
+
+**Response includes `rated_by` information:** When an attendance record has been rated, the response shows who rated it (`rated_by_name`), when (`rated_at`), and any notes.
+
+---
+
+### Edit Any Attendance Record (Admin Only)
+
+Edit ANY attendance record including past records. Admin-only endpoint for correcting historical data.
+
+| | |
+|--|--|
+| **URL** | `GET/PUT/PATCH /api/attendance/all/{id}/` |
+| **Auth** | ✅ Admin only (`role == 'admin'` or `is_superuser`) |
+
+**Editable Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | string | Change status: `present`, `absent`, `late`, `pending`, `not_started` |
+| `check_in_time` | datetime | Manually set check-in time |
+| `check_out_time` | datetime | Manually set check-out time |
+| `check_in_method` | string | Set method: `fingerprint`, `rfid`, `qr_code`, `manual` |
+| `check_out_method` | string | Set method |
+| `rating` | decimal | Set rating (1.00 - 10.00), requires present/late status |
+| `notes` | string | Add/update notes |
+| `attendance_type` | string | Change type: `lecture`, `supervision` |
+
+**Example Request:**
+
+```json
+{
+  "status": "present",
+  "check_in_time": "2026-02-05T08:30:00+02:00",
+  "rating": 9.0,
+  "notes": "تم تصحيح الحضور يدوياً"
+}
+```
+
+**Validation Rules:**
+- Setting `status` to `absent` will clear the rating
+- Setting `rating > 0` requires `status` to be `present` or `late`
+- `check_out_time` must be after `check_in_time`
+
+**Response (200):** Returns the updated attendance record.
+
+---
+
 ### Manual Check-in
 
 | | |
@@ -267,6 +378,59 @@ Returns same format as Today's Attendance for the specified date.
 |--|--|
 | **URL** | `POST /api/attendance/{id}/mark-absent/` |
 | **Auth** | ✅ Admin |
+
+---
+
+### Generate Attendance Records
+
+Manually generate attendance records for a date range. This allows admins to pre-create attendance records for upcoming days or backfill missed records.
+
+| | |
+|--|--|
+| **URL** | `POST /api/attendance/generate/` |
+| **Auth** | ✅ Admin |
+
+**Request Body:**
+
+```json
+{
+  "start_date": "2026-03-01",
+  "end_date": "2026-03-07",
+  "season_id": 1
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `start_date` | date | Yes | Start date for generation (YYYY-MM-DD) |
+| `end_date` | date | Yes | End date for generation (YYYY-MM-DD) |
+| `season_id` | integer | No | Season ID. If not provided, uses active season |
+
+**Validation:**
+- `end_date` must be on or after `start_date`
+- Maximum date range is 60 days
+- Invalid `season_id` returns 404
+
+**Response (201):**
+
+```json
+{
+  "message": "Attendance records generated successfully",
+  "created_count": 14,
+  "start_date": "2026-03-01",
+  "end_date": "2026-03-07",
+  "season": "الموسم الدراسي 2026"
+}
+```
+
+**Notes:**
+- Uses `get_or_create` internally, so duplicate records are NOT created
+- Safe to run multiple times for the same date range
+- Generates records based on:
+  - **SupervisorSchedule** entries (supervision attendance)
+  - **Scheduled lectures** (lecture attendance)
+- All generations are logged in `AttendanceCronLog` for audit trail
+- Compatible with the weekly cron job (no conflicts)
 
 ---
 
@@ -604,6 +768,9 @@ The system checks the following attributes to determine admin/supervisor status:
 | POST | `/api/attendance/scan/` | Unified fingerprint scan | Device ID |
 | POST | `/api/attendance/check-in/` | Fingerprint check-in (legacy) | Device ID |
 | POST | `/api/attendance/check-out/` | Fingerprint check-out (legacy) | Device ID |
+| GET | `/api/attendance/all/` | **All attendance with filters** | Admin/Supervisor |
+| GET/PUT/PATCH | `/api/attendance/all/{id}/` | **Edit any attendance (past)** | Admin only |
+| POST | `/api/attendance/generate/` | **Generate attendance records** | Admin |
 | GET | `/api/attendance/today/` | Today's attendance | Admin |
 | GET | `/api/attendance/today/summary/` | Today's summary | Admin |
 | GET/PUT/PATCH | `/api/attendance/{id}/` | Attendance detail / update | Admin |
@@ -615,8 +782,9 @@ The system checks the following attributes to determine admin/supervisor status:
 | GET | `/api/attendance/instructor/{id}/` | Instructor history | Admin |
 | GET/POST | `/api/attendance/devices/` | Device management | Admin |
 | GET/PATCH/DELETE | `/api/attendance/devices/{id}/` | Device detail | Admin |
-| GET/POST | `/api/attendance/schedules/` | Schedule management | Admin |
-| GET/PATCH/DELETE | `/api/attendance/schedules/{id}/` | Schedule detail | Admin |
+| GET/POST | `/api/attendance/schedules/` | Schedule management | Admin (create) / All roles (view) |
+| GET/PATCH/DELETE | `/api/attendance/schedules/{id}/` | Schedule detail | Admin (edit/delete) / Own (view) |
+| GET | `/api/attendance/my-schedule/` | **My weekly schedule** | Instructor |
 | POST | `/api/attendance/lecture/{id}/mark/` | Mark lecture attendance | Admin/Instructor |
 | POST | `/api/attendance/lecture/{id}/mark-bulk/` | Bulk mark attendance | Admin/Instructor |
 | GET | `/api/attendance/lecture/{id}/details/` | Lecture attendance details | Admin/Instructor |
