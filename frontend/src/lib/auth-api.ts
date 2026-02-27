@@ -4,7 +4,7 @@ import { getServerJwtToken } from "@/actions/auth";
 import axios from "axios";
 
 const baseConfig = {
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: process.env.REST_API_URL,
 };
 
 export async function getAuthApiClient() {
