@@ -3,13 +3,13 @@
 set -o errexit
 
 # Install dependencies
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
 # Collect static files
-python manage.py collectstatic --no-input
+python3 manage.py collectstatic --no-input
 
 # Run migrations
-python manage.py migrate --no-input
+python3 manage.py migrate --no-input
 
 # Create superuser from env vars if it doesn't exist
-python manage.py create_superuser_if_not_exists
+python3 manage.py create_superuser_if_not_exists
