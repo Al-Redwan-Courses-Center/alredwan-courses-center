@@ -6,6 +6,7 @@ This script can be run while the Django server is running.
 Features:
 - Supports Arabic column headers from Google Forms
 - Auto-generates fingerprint IDs
+- Auto-generates secure random passwords
 - Downloads ID images from Google Drive and uploads to Cloudinary
 - Skips duplicates
 
@@ -22,6 +23,8 @@ from decimal import Decimal
 import re
 import requests
 from io import BytesIO
+import secrets
+import string
 
 # Setup Django environment
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -76,6 +79,7 @@ class StaffImporter:
         }
         self.error_messages = []
         self.fingerprint_counter = self.get_next_fingerprint_number()
+        self.imported_users = []  # Store imported user data for Excel export
     
     def get_next_fingerprint_number(self):
         """Get the next available fingerprint ID number"""
@@ -97,6 +101,41 @@ class StaffImporter:
         fingerprint_id = f"FP{self.fingerprint_counter:04d}"
         self.fingerprint_counter += 1
         return fingerprint_id
+    
+    def generate_secure_password(self, length=12):
+        """
+        Generate a secure random password that meets Django's validation requirements:
+        - At least 8 characters (we use 12 for better security)
+        - Contains uppercase, lowercase, numbers, and special characters
+        - Not similar to user attributes
+        - Not a common password
+        - Not entirely numeric
+        """
+        # Define character sets
+        uppercase = string.ascii_uppercase
+        lowercase = string.ascii_lowercase
+        digits = string.digits
+        special_chars = '@$!%*?&#'
+        
+        # Ensure at least one character from each set
+        password = [
+            secrets.choice(uppercase),
+            secrets.choice(uppercase),  # Add extra uppercase
+            secrets.choice(lowercase),
+            secrets.choice(lowercase),  # Add extra lowercase
+            secrets.choice(digits),
+            secrets.choice(digits),  # Add extra digits
+            secrets.choice(special_chars),
+        ]
+        
+        # Fill the rest with random characters from all sets
+        all_chars = uppercase + lowercase + digits + special_chars
+        password += [secrets.choice(all_chars) for _ in range(length - len(password))]
+        
+        # Shuffle to avoid predictable patterns
+        secrets.SystemRandom().shuffle(password)
+        
+        return ''.join(password)
     
     def extract_google_drive_file_id(self, url):
         """Extract file ID from Google Drive URL"""
@@ -356,18 +395,12 @@ class StaffImporter:
             address = self.get_cell_value(row_data, 'address')
             location = self.get_cell_value(row_data, 'location')
             bio = self.get_cell_value(row_data, 'bio')
-            password = self.get_cell_value(row_data, 'password')
-            
-            # Image URLs
-            nid_front_url = self.get_cell_value(row_data, 'nid_front_url')
-            nid_back_url = self.get_cell_value(row_data, 'nid_back_url')
             
             # Generate fingerprint ID
             fingerprint_id = self.generate_fingerprint_id()
             
-            # Set default password if not provided
-            if not password:
-                password = phone_number1  # Use phone number as default
+            # Auto-generate secure password (ignore password from Excel)
+            password = self.generate_secure_password(length=12)
             
             # Check for duplicates
             duplicate_msg = self.check_duplicate(phone_number1, email, identity_number, fingerprint_id)
@@ -403,16 +436,15 @@ class StaffImporter:
                 if location:
                     user_data['location'] = location
                 
-                # Create user instance without saving yet
-                user = CustomUser(**user_data)
-                
-                # Manually set password hash to bypass validation
-                user.password = make_password(password)
-                
-                # Save the user
-                user.save()
+                # Create user with password validation enabled
+                user = CustomUser.objects.create_user(
+                    phone_number1=phone_number1,
+                    password=password,
+                    **{k: v for k, v in user_data.items() if k != 'phone_number1'}
+                )
                 
                 print(f"✅ Created user: {user.get_full_name()} ({phone_number1})")
+                print(f"  🔑 Generated password: {password}")
                 
                 # Create instructor profile
                 instructor_data = {
@@ -426,6 +458,9 @@ class StaffImporter:
                     instructor_data['bio'] = bio
                 
                 # Download and upload ID images to Cloudinary
+                nid_front_url = self.get_cell_value(row_data, 'nid_front_url')
+                nid_back_url = self.get_cell_value(row_data, 'nid_back_url')
+                
                 if nid_front_url:
                     print(f"  📄 Processing front ID image...")
                     image_data = self.download_google_drive_image(nid_front_url)
@@ -452,6 +487,18 @@ class StaffImporter:
                 
                 instructor = Instructor.objects.create(**instructor_data)
                 print(f"✅ Created instructor profile (Fingerprint: {fingerprint_id})")
+                
+                # Store imported user data for Excel export
+                self.imported_users.append({
+                    'full_name': user.get_full_name(),
+                    'phone_number1': phone_number1,
+                    'phone_number2': phone_number2 or '',
+                    'email': email or '',
+                    'password': password,
+                    'fingerprint_id': fingerprint_id,
+                    'role': role,
+                    'monthly_salary': str(monthly_salary),
+                })
                 
                 self.stats['success'] += 1
                 
@@ -531,6 +578,136 @@ class StaffImporter:
             print("\n❌ ERROR DETAILS:")
             for msg in self.error_messages:
                 print(f"  - {msg}")
+    
+    def export_passwords_to_excel(self):
+        """Export imported users with passwords to Excel file"""
+        if not self.imported_users:
+            print("\n⚠️  No users were imported, skipping Excel export.")
+            return None
+        
+        try:
+            from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+            
+            # Create new workbook
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Staff Passwords"
+            
+            # Define headers (Arabic and English)
+            headers = [
+                'الاسم الكامل\nFull Name',
+                'رقم الهاتف الأساسي\nPrimary Phone',
+                'رقم هاتف إضافي\nSecondary Phone',
+                'البريد الإلكتروني\nEmail',
+                'كلمة المرور\nPassword',
+                'معرف البصمة\nFingerprint ID',
+                'الدور\nRole',
+                'الراتب الشهري\nMonthly Salary',
+            ]
+            
+            # Style for headers
+            header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+            header_font = Font(color="FFFFFF", bold=True, size=12)
+            header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            
+            # Border style
+            thin_border = Border(
+                left=Side(style='thin'),
+                right=Side(style='thin'),
+                top=Side(style='thin'),
+                bottom=Side(style='thin')
+            )
+            
+            # Write headers
+            for col_idx, header in enumerate(headers, start=1):
+                cell = ws.cell(row=1, column=col_idx, value=header)
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = header_alignment
+                cell.border = thin_border
+            
+            # Data alignment
+            data_alignment = Alignment(horizontal="left", vertical="center", wrap_text=False)
+            password_alignment = Alignment(horizontal="center", vertical="center")
+            
+            # Write data rows
+            for row_idx, user_data in enumerate(self.imported_users, start=2):
+                row_data = [
+                    user_data['full_name'],
+                    user_data['phone_number1'],
+                    user_data['phone_number2'],
+                    user_data['email'],
+                    user_data['password'],
+                    user_data['fingerprint_id'],
+                    user_data['role'],
+                    user_data['monthly_salary'],
+                ]
+                
+                for col_idx, value in enumerate(row_data, start=1):
+                    cell = ws.cell(row=row_idx, column=col_idx, value=value)
+                    cell.border = thin_border
+                    
+                    # Special formatting for password column
+                    if col_idx == 5:  # Password column
+                        cell.alignment = password_alignment
+                        cell.font = Font(bold=True, size=11, color="FF0000")  # Red, bold
+                    else:
+                        cell.alignment = data_alignment
+            
+            # Adjust column widths
+            column_widths = {
+                'A': 30,  # Full Name
+                'B': 20,  # Primary Phone
+                'C': 20,  # Secondary Phone
+                'D': 30,  # Email
+                'E': 18,  # Password
+                'F': 15,  # Fingerprint ID
+                'G': 15,  # Role
+                'H': 18,  # Monthly Salary
+            }
+            
+            for col, width in column_widths.items():
+                ws.column_dimensions[col].width = width
+            
+            # Set row height for header
+            ws.row_dimensions[1].height = 35
+            
+            # Freeze header row
+            ws.freeze_panes = 'A2'
+            
+            # Add a note/warning at the top
+            ws.insert_rows(1)
+            warning_cell = ws.cell(row=1, column=1, value="⚠️ تحذير: هذا الملف يحتوي على كلمات مرور حساسة. يرجى حفظه في مكان آمن وعدم مشاركته | WARNING: This file contains sensitive passwords. Keep it secure!")
+            warning_cell.font = Font(bold=True, size=11, color="FF0000")
+            warning_cell.fill = PatternFill(start_color="FFF2CC", end_color="FFF2CC", fill_type="solid")
+            ws.merge_cells('A1:H1')
+            warning_cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            ws.row_dimensions[1].height = 30
+            
+            # Save file
+            script_dir = Path(__file__).resolve().parent
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            output_filename = f'staff_passwords_{timestamp}.xlsx'
+            output_file = script_dir / output_filename
+            
+            wb.save(output_file)
+            
+            print(f"\n📄 ✅ Password Excel file created successfully!")
+            print(f"📁 File location: {output_file}")
+            print(f"📊 Contains {len(self.imported_users)} staff members with their passwords")
+            print(f"\n🔒 SECURITY REMINDER:")
+            print(f"   - This file contains sensitive password information")
+            print(f"   - Store it in a secure location")
+            print(f"   - Delete it after distributing passwords to staff")
+            print(f"   - Do not share via email or unsecured channels")
+            
+            return output_file
+            
+        except Exception as e:
+            print(f"\n❌ Error creating password Excel file: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return None
 
 
 def main():
@@ -557,6 +734,7 @@ def main():
     # Run import
     importer = StaffImporter(excel_file)
     importer.import_from_excel()
+    importer.export_passwords_to_excel()
 
 
 if __name__ == '__main__':
