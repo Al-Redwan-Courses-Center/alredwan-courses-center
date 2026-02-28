@@ -1,184 +1,227 @@
-# Import Staff Data Guide
+# Import Staff Data Guide (Google Forms Format)
 
-This guide explains how to import **Instructors** and **Supervisors** data from Excel files into the system.
+This guide explains how to import **Instructors** and **Supervisors** data from Excel files exported from Google Forms.
 
-## 📋 Required Excel Format
+## 📋 Excel Format (Arabic Headers from Google Forms)
 
-### Excel File Columns
+Your Excel file should have these **Arabic column headers** (as they appear in Google Forms):
 
-Create an Excel file (`.xlsx` or `.xls`) with the following columns **exactly as shown**:
-
-| Column Name | Data Type | Required | Description | Example |
-|-------------|-----------|----------|-------------|---------|
-| `phone_number1` | Text | ✅ Yes | Primary WhatsApp number (with country code) | `+201012345678` |
-| `phone_number2` | Text | ❌ No | Alternative phone number (with country code) | `+201087654321` |
-| `first_name` | Text | ✅ Yes | First and second name in Arabic or English | `محمد أحمد` |
-| `last_name` | Text | ✅ Yes | Third and fourth name in Arabic or English | `علي حسن` |
-| `email` | Email | ❌ No | Email address (must be unique) | `mohamed@example.com` |
-| `dob` | Date | ✅ Yes | Date of birth (YYYY-MM-DD or DD/MM/YYYY) | `1990-05-15` or `15/05/1990` |
-| `gender` | Text | ✅ Yes | Gender: `male` or `female` (or `ذكر` or `أنثى`) | `male` or `ذكر` |
-| `identity_number` | Text | ❌ No | National ID or Passport number (must be unique) | `29005151234567` |
-| `identity_type` | Text | ❌ No | Type: `nid`, `passport`, or `other` | `nid` |
-| `address` | Text | ❌ No | Full address | `10 شارع الجامعة، القاهرة` |
-| `location` | URL | ❌ No | Google Maps location URL | `https://maps.google.com/?q=30.0444,31.2357` |
-| `role` | Text | ✅ Yes | Must be `instructor` or `supervisor` (or `مدرس` or `مشرف`) | `instructor` |
-| `monthly_salary` | Number | ✅ Yes | Monthly salary amount | `5000.00` |
-| `bio` | Text | ❌ No | Biography or description | `خبرة 10 سنوات في تدريس الرياضيات` |
-| `type` | Text | ✅ Yes | For instructors: `supervisor` or `normal` | `normal` |
-| `fingerprint_id` | Text | ❌ No | Fingerprint device ID (must be unique) | `FP001` |
-| `password` | Text | ❌ No | Login password (if empty, uses phone_number1) | `SecurePass123` |
-
----
-
-## 📝 Important Notes
-
-### 1. **Phone Number Format**
-- Must include country code (e.g., `+20` for Egypt)
-- Examples: `+201012345678`, `+966501234567`, `+971501234567`
-- The system will automatically validate and format phone numbers
-
-### 2. **Gender Values**
-Accept either English or Arabic:
-- English: `male` or `female`
-- Arabic: `ذكر` or `أنثى`
-
-### 3. **Role Values**
-Accept either English or Arabic:
-- English: `instructor` or `supervisor`
-- Arabic: `مدرس` or `مشرف`
-
-### 4. **Type Values**
-For the instructor type field:
-- English: `supervisor` or `normal`
-- Arabic: `مشرف` or `عادي`
-
-### 5. **Date Format**
-Dates can be in multiple formats:
-- `YYYY-MM-DD` (e.g., `1990-05-15`)
-- `DD/MM/YYYY` (e.g., `15/05/1990`)
-- Excel date format (will be auto-converted)
-
-### 6. **Duplicate Detection**
-The script will **skip duplicates** based on:
-- Phone number (`phone_number1`)
-- Email (if provided)
-- Identity number (if provided)
-- Fingerprint ID (if provided)
-
-Only **new records** will be inserted!
+| Arabic Column Header | Required | Description | Example |
+|---------------------|----------|-------------|---------|
+| `الاسم الأول` | ✅ Yes | First name | `محمد` |
+| `الاسم الثاني` | ✅ Yes | Second name | `أحمد` |
+| `الاسم الثالث` | ✅ Yes | Third name | `محمد` |
+| `اسم الرابع` | ✅ Yes | Fourth name | `السيد` |
+| `البريد الإلكتروني` | ❌ No | Email address | `mohamed@example.com` |
+| `تاريخ الميلاد` | ✅ Yes | Date of birth | `2/4/2026` or `1990-05-15` |
+| `الجنس` | ✅ Yes | Gender: `ذكر` or `أنثى` | `ذكر` |
+| `رقم الهاتف الأساسي (رقم 1)` | ✅ Yes | Primary phone (WhatsApp) | `01025847029` |
+| `رقم هاتف إضافي (رقم 2) - اختياري` | ❌ No | Alternative phone | `01556851539` |
+| `نوع الهوية` | ❌ No | ID type | `بطاقة هوية وطنية` or `رخصة قيادة` |
+| `رقم الهوية / الوثيقة` | ❌ No | National ID / Document number | `30306171300114` |
+| `تحميل صورة الواجهة الأمامية لوثيقة الهوية` | ❌ No | Front ID image (Google Drive URL) | `https://drive.google.com/open?id=...` |
+| `تحميل صورة الواجهة الخلفية لوثيقة الهوية` | ❌ No | Back ID image (Google Drive URL) | `https://drive.google.com/open?id=...` |
+| `العنوان بالتفصيل` | ❌ No | Detailed address | `الاسماعيلية ارض الجمعيات` |
+| `الموقع الجغرافي (المدينة/المنطقة)` | ❌ No | Geographic location | `ismailia elshaek zaid` |
+| `الدور في الأكاديمية` | ✅ Yes | Role: `معلم` or `مشرف` | `معلم` |
+| `الراتب الشهري المتوقع/المتفق عليه` | ✅ Yes | Monthly salary | `10000` |
+| `نبذة شخصية وسيرة ذاتية مختصرة (Bio)` | ❌ No | Biography | `good` or detailed bio |
+| `تعيين كلمة مرور مؤقتة للنظام الداخلي` | ❌ No | Temporary password | `mohamed123` |
 
 ---
 
-## 📊 Sample Excel Data
+## ✨ New Features
 
-Here's an example of how your Excel should look:
+### 1. **Auto-Generated Fingerprint IDs**
+The script automatically generates unique fingerprint IDs for each staff member:
+- Format: `FP0001`, `FP0002`, `FP0003`, etc.
+- Continues from the last existing fingerprint ID in the database
+- No need to provide this manually!
 
-| phone_number1 | phone_number2 | first_name | last_name | email | dob | gender | identity_number | identity_type | address | role | monthly_salary | bio | type | fingerprint_id | password |
-|---------------|---------------|------------|-----------|-------|-----|--------|-----------------|---------------|---------|------|----------------|-----|------|----------------|----------|
-| +201012345678 | +201087654321 | محمد أحمد | علي حسن | mohamed@example.com | 1990-05-15 | male | 29005151234567 | nid | 10 شارع الجامعة، القاهرة | instructor | 5000.00 | خبرة 10 سنوات | normal | FP001 | Pass123 |
-| +201098765432 | | أحمد محمود | إبراهيم | ahmed@example.com | 1985-03-20 | ذكر | 28503201234568 | nid | 25 شارع النيل، الجيزة | supervisor | 7000.00 | مشرف التدريس | supervisor | FP002 | |
-| +201055555555 | | فاطمة سعيد | محمد | fatma@example.com | 1992-08-10 | female | 29208101234569 | nid | | instructor | 4500.00 | | normal | | |
+### 2. **Automatic Google Drive Image Download**
+The script automatically:
+- ✅ Extracts file IDs from Google Drive URLs
+- ✅ Downloads ID images (front and back)
+- ✅ Uploads them to Cloudinary
+- ✅ Links them to the instructor profile
+
+**Supported Google Drive URL formats:**
+- `https://drive.google.com/open?id=FILE_ID`
+- `https://drive.google.com/file/d/FILE_ID/view`
+
+### 3. **Phone Number Auto-Formatting**
+Egyptian phone numbers are automatically formatted:
+- `01025847029` → `+201025847029`
+- `1025847029` → `+201025847029`
+- Already formatted numbers are kept as-is
 
 ---
 
-## 🚀 How to Use the Import Script
+## 📊 Sample Data (As in Your Excel)
 
-### Step 1: Prepare Your Excel File
-1. Create an Excel file with the columns above
-2. Fill in your instructor and supervisor data
-3. Save the file (e.g., `staff_data.xlsx`)
+```
+الاسم الأول: mohamed
+الاسم الثاني: ahmed
+الاسم الثالث: mohamed
+اسم الرابع: elsayed
+البريد الإلكتروني: mohamed.aboellil0@gmail.com
+تاريخ الميلاد: 2/4/2026
+الجنس: ذكر
+رقم الهاتف الأساسي: 01025847029
+نوع الهوية: بطاقة هوية وطنية
+رقم الهوية: 30306171300114
+تحميل صورة الواجهة الأمامية: https://drive.google.com/open?id=1Y29Sd18EZzsCXPkfM77qTTxkXhL4zyup
+تحميل صورة الواجهة الخلفية: https://drive.google.com/open?id=12q5uVg1pJUKd_WkUeO8VqkdHQh4LSlPm
+العنوان: الاسماعيلية ارض الجمعيات
+الدور في الأكاديمية: معلم
+الراتب الشهري: 10000
+نبذة شخصية: good
+كلمة المرور: mohamed123
+```
 
-### Step 2: Place the File
-Put your Excel file in one of these locations:
-- Same directory as the script
-- Or provide the full path when running the script
+---
 
-### Step 3: Run the Import Script
+## 🚀 How to Use
 
-**While the Django server is running**, open a new terminal and run:
+### Step 1: Export Excel from Google Forms
+1. Open your Google Forms responses
+2. Click on the **Google Sheets icon** to view responses
+3. In Google Sheets: **File → Download → Microsoft Excel (.xlsx)**
+4. Save the file to your computer
+
+### Step 2: Run the Import Script
+
+**While your Django server is running**, open a new terminal:
 
 ```bash
 # Navigate to backend directory
 cd backend
 
 # Run the import script
-python scripts/import_staff_from_excel.py path/to/your/staff_data.xlsx
+python scripts/import_staff_from_excel.py "path/to/your_file.xlsx"
 ```
 
-Or if the file is in the scripts directory:
-
+**Example:**
 ```bash
-python scripts/import_staff_from_excel.py staff_data.xlsx
+python scripts/import_staff_from_excel.py "C:/Users/Downloads/staff_responses.xlsx"
 ```
 
-### Step 4: Review the Results
-The script will show:
-- ✅ Successfully imported records
-- ⚠️ Skipped duplicates
-- ❌ Errors (if any)
-- 📊 Summary statistics
+### Step 3: Watch the Progress
 
----
-
-## 🔍 Example Output
+The script will show detailed progress:
 
 ```
-Starting import from: staff_data.xlsx
+Starting import from: staff_responses.xlsx
+================================================================================
+Found 21 columns
+Mapped headers: first_name_1, first_name_2, last_name_1, last_name_2, email...
 ================================================================================
 
 Processing row 2...
-✅ Created user: محمد أحمد علي حسن (+201012345678)
-✅ Created instructor profile for: محمد أحمد علي حسن
+✅ Created user: mohamed ahmed mohamed elsayed (+201025847029)
+  📄 Processing front ID image...
+  📥 Downloading image from Google Drive...
+  ☁️  Uploading to Cloudinary...
+  ✅ Uploaded to Cloudinary successfully
+  📄 Processing back ID image...
+  📥 Downloading image from Google Drive...
+  ☁️  Uploading to Cloudinary...
+  ✅ Uploaded to Cloudinary successfully
+✅ Created instructor profile (Fingerprint: FP0001)
 
 Processing row 3...
-⚠️  Skipped: Phone number +201098765432 already exists
-
-Processing row 4...
-✅ Created user: فاطمة سعيد محمد (+201055555555)
-✅ Created instructor profile for: فاطمة سعيد محمد
+✅ Created user: محمد احمد محمد السيد (+201025847026)
+  📄 Processing front ID image...
+  📥 Downloading image from Google Drive...
+  ☁️  Uploading to Cloudinary...
+  ✅ Uploaded to Cloudinary successfully
+  📄 Processing back ID image...
+  📥 Downloading image from Google Drive...
+  ☁️  Uploading to Cloudinary...
+  ✅ Uploaded to Cloudinary successfully
+✅ Created instructor profile (Fingerprint: FP0002)
 
 ================================================================================
 📊 IMPORT SUMMARY
 ================================================================================
-Total rows processed: 3
+Total rows processed: 2
 ✅ Successfully imported: 2
-⚠️  Skipped (duplicates): 1
+⚠️  Skipped (duplicates): 0
 ❌ Failed (errors): 0
 ================================================================================
 ```
 
 ---
 
-## ⚠️ Common Errors and Solutions
+## 📝 Important Notes
 
-| Error | Cause | Solution |
+### 1. **Gender Values (Arabic)**
+- `ذكر` = Male
+- `أنثى` = Female
+
+### 2. **Role Values (Arabic)**
+- `معلم` = Instructor
+- `مشرف` = Supervisor
+
+### 3. **Identity Types (Arabic)**
+- `بطاقة هوية وطنية` = National ID
+- `جواز سفر` = Passport
+- `رخصة قيادة` = Driving License (stored as "other")
+
+### 4. **Date Formats Accepted**
+- `2/4/2026` (M/D/YYYY)
+- `04/02/2026` (D/M/YYYY)
+- `2026-02-04` (YYYY-MM-DD)
+- Excel date numbers
+
+### 5. **Duplicate Detection**
+The script will **skip** users if any of these already exist:
+- Phone number
+- Email address
+- Identity number
+- Fingerprint ID
+
+### 6. **Google Drive Image Requirements**
+- Images must be shared with "Anyone with the link can view"
+- Supported formats: JPG, PNG, GIF
+- The script will skip images that fail to download
+
+### 7. **Password Handling**
+- If password field is empty: Uses phone number as default password
+- Any password is accepted (no validation)
+- Users should change password after first login!
+
+---
+
+## ⚠️ Common Issues and Solutions
+
+| Issue | Cause | Solution |
 |-------|-------|----------|
-| `Invalid phone number` | Wrong format | Use international format with + and country code |
-| `Phone number already exists` | Duplicate entry | This is normal - the script skips duplicates |
-| `Email already exists` | Duplicate email | Change the email or leave it empty |
-| `Invalid gender value` | Wrong text | Use `male`/`female` or `ذكر`/`أنثى` |
-| `Invalid date format` | Wrong date | Use YYYY-MM-DD or DD/MM/YYYY |
-| `Missing required field` | Empty required column | Fill in all required fields marked with ✅ |
+| `Could not extract file ID from URL` | Invalid Google Drive URL | Make sure images are uploaded to Google Drive and shared properly |
+| `Failed to download image (Status: 403)` | Image not shared | Set Google Drive sharing to "Anyone with the link can view" |
+| `Phone number already exists` | Duplicate entry | This is normal - script skips duplicates |
+| `Invalid gender value` | Wrong text | Use `ذكر` or `أنثى` |
+| `Invalid role value` | Wrong text | Use `معلم` or `مشرف` |
 
 ---
 
 ## 🔒 Security Notes
 
-1. **Passwords**: If no password is provided, the system will use `phone_number1` as the default password
-2. **Verification**: All imported users will have `is_verified = False` by default
-3. **Staff Status**: Users will have `is_staff = False` (not admin users)
-4. **Unique Constraints**: Phone numbers, emails, identity numbers, and fingerprint IDs must be unique
+1. **Passwords** are securely hashed before storage (never stored in plain text)
+2. **Images** are uploaded to Cloudinary with proper transformations
+3. **Phone numbers** are validated and normalized
+4. **All imports** use database transactions (rollback on error)
 
 ---
 
 ## 📞 Support
 
-If you encounter any issues:
-1. Check that your Excel column names match exactly
-2. Verify all required fields are filled
-3. Check the error messages for specific issues
-4. Review the sample Excel format above
+If you encounter issues:
+1. Check that column headers match exactly (copy-paste from Google Forms)
+2. Ensure all required fields are filled
+3. Verify Google Drive image links are accessible
+4. Check the error messages for specific details
 
 ---
 
-**Last Updated**: February 2026
+**Last Updated**: February 28, 2026
