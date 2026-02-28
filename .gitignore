@@ -6,3 +6,5 @@
 **/code.txt
 backend/courses/migrations/0001_initial.py
 backend/.env.local
+config.bat
+node_modules
