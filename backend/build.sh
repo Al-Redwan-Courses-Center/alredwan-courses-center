@@ -2,6 +2,7 @@
 # Exit on error
 set -o errexit
 
+export DJANGO_SETTINGS_MODULE=Redwan_courses_center.settings
 # Install dependencies
 pip3 install -r requirements.txt
 

@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+export DJANGO_SETTINGS_MODULE=Redwan_courses_center.settings
 # Wait for database to be ready
 echo "Waiting for PostgreSQL..."
 while ! python3 -c "
