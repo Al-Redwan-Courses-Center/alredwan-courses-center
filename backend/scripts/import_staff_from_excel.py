@@ -580,7 +580,7 @@ class StaffImporter:
                 print(f"  - {msg}")
     
     def export_passwords_to_excel(self):
-        """Export imported users with passwords to Excel file"""
+        """Export imported users with passwords to Excel file (replaces old file)"""
         if not self.imported_users:
             print("\n⚠️  No users were imported, skipping Excel export.")
             return None
@@ -588,6 +588,7 @@ class StaffImporter:
         try:
             from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
             from django.conf import settings
+            import glob
             
             # Create new workbook
             wb = openpyxl.Workbook()
@@ -685,35 +686,40 @@ class StaffImporter:
             warning_cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
             ws.row_dimensions[1].height = 30
             
-            # Save to media/temp folder (accessible via API)
+            # Save to server storage (single file that gets replaced)
             temp_dir = Path(settings.MEDIA_ROOT) / 'temp' / 'staff_imports'
             temp_dir.mkdir(parents=True, exist_ok=True)
             
+            # Delete all old password files first
+            old_files = list(temp_dir.glob('staff_passwords_*.xlsx'))
+            deleted_count = 0
+            for old_file in old_files:
+                try:
+                    os.remove(old_file)
+                    deleted_count += 1
+                    print(f"  🗑️  Deleted old file: {old_file.name}")
+                except Exception as e:
+                    print(f"  ⚠️  Could not delete {old_file.name}: {str(e)}")
+            
+            # Create new file with timestamp
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             output_filename = f'staff_passwords_{timestamp}.xlsx'
             output_file = temp_dir / output_filename
             
             wb.save(output_file)
             
-            # Generate download URL
-            download_url = f"/api/users/staff/download-passwords/{output_filename}/"
-            
             print(f"\n{'='*80}")
-            print(f"📄 ✅ Password Excel file created successfully!")
-            print(f"📁 Filename: {output_filename}")
-            print(f"📊 Contains: {len(self.imported_users)} staff members")
+            print(f"📄 ✅ Password Excel file saved successfully!")
+            print(f"📁 File location: {output_file}")
+            print(f"📊 Contains: {len(self.imported_users)} staff members (new import)")
+            if deleted_count > 0:
+                print(f"🗑️  Replaced: {deleted_count} old file(s) deleted")
             print(f"{'='*80}")
-            print(f"\n🌐 DOWNLOAD VIA API:")
-            print(f"   GET {download_url}")
-            print(f"   Authorization: JWT <admin_token>")
-            print(f"\n📋 Or use this URL in your browser (after login):")
-            print(f"   http://your-domain.com{download_url}")
-            print(f"{'='*80}")
-            print(f"\n🔒 SECURITY REMINDER:")
-            print(f"   ⚠️  This file contains sensitive password information")
-            print(f"   ⏰ File will auto-delete after 24 hours")
-            print(f"   📂 Store in a secure location after download")
-            print(f"   🚫 Do NOT share via email or messaging apps")
+            print(f"\n🔒 SECURITY INFORMATION:")
+            print(f"   ⏰ File will auto-expire and be deleted after 24 hours")
+            print(f"   📂 Access the file directly from the server")
+            print(f"   🔄 Old files are automatically replaced with new imports")
+            print(f"   🚫 No API download endpoint (manual server access only)")
             print(f"{'='*80}\n")
             
             return str(output_file)
