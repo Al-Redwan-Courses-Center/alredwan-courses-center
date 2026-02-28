@@ -587,6 +587,7 @@ class StaffImporter:
         
         try:
             from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+            from django.conf import settings
             
             # Create new workbook
             wb = openpyxl.Workbook()
@@ -684,24 +685,38 @@ class StaffImporter:
             warning_cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
             ws.row_dimensions[1].height = 30
             
-            # Save file
-            script_dir = Path(__file__).resolve().parent
+            # Save to media/temp folder (accessible via API)
+            temp_dir = Path(settings.MEDIA_ROOT) / 'temp' / 'staff_imports'
+            temp_dir.mkdir(parents=True, exist_ok=True)
+            
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             output_filename = f'staff_passwords_{timestamp}.xlsx'
-            output_file = script_dir / output_filename
+            output_file = temp_dir / output_filename
             
             wb.save(output_file)
             
-            print(f"\n📄 ✅ Password Excel file created successfully!")
-            print(f"📁 File location: {output_file}")
-            print(f"📊 Contains {len(self.imported_users)} staff members with their passwords")
-            print(f"\n🔒 SECURITY REMINDER:")
-            print(f"   - This file contains sensitive password information")
-            print(f"   - Store it in a secure location")
-            print(f"   - Delete it after distributing passwords to staff")
-            print(f"   - Do not share via email or unsecured channels")
+            # Generate download URL
+            download_url = f"/api/users/staff/download-passwords/{output_filename}/"
             
-            return output_file
+            print(f"\n{'='*80}")
+            print(f"📄 ✅ Password Excel file created successfully!")
+            print(f"📁 Filename: {output_filename}")
+            print(f"📊 Contains: {len(self.imported_users)} staff members")
+            print(f"{'='*80}")
+            print(f"\n🌐 DOWNLOAD VIA API:")
+            print(f"   GET {download_url}")
+            print(f"   Authorization: JWT <admin_token>")
+            print(f"\n📋 Or use this URL in your browser (after login):")
+            print(f"   http://your-domain.com{download_url}")
+            print(f"{'='*80}")
+            print(f"\n🔒 SECURITY REMINDER:")
+            print(f"   ⚠️  This file contains sensitive password information")
+            print(f"   ⏰ File will auto-delete after 24 hours")
+            print(f"   📂 Store in a secure location after download")
+            print(f"   🚫 Do NOT share via email or messaging apps")
+            print(f"{'='*80}\n")
+            
+            return str(output_file)
             
         except Exception as e:
             print(f"\n❌ Error creating password Excel file: {str(e)}")
