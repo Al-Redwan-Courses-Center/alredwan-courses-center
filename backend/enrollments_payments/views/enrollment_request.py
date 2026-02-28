@@ -17,7 +17,7 @@ from ..models import EnrollmentRequest, EnrollmentRequestStatus
 
 class IsParentOrStudent(IsAuthenticated):
     """Permission class that only allows parents and students"""
-    
+
     def has_permission(self, request, view):
         if not super().has_permission(request, view):
             return False
@@ -26,7 +26,7 @@ class IsParentOrStudent(IsAuthenticated):
 
 class IsOwnerOrAdminOrSupervisor(IsAuthenticated):
     """Permission class for viewing/modifying enrollment requests"""
-    
+
     def has_object_permission(self, request, view, obj):
         user = request.user
         # Admin and Supervisor can access all
@@ -45,10 +45,11 @@ class IsOwnerOrAdminOrSupervisor(IsAuthenticated):
 class EnrollmentRequestFilter(filters.FilterSet):
     """Filter for enrollment requests"""
     status = filters.ChoiceFilter(choices=EnrollmentRequestStatus.choices)
-    
+    child = filters.UUIDFilter(field_name='child_id')
+
     class Meta:
         model = EnrollmentRequest
-        fields = ['status']
+        fields = ['status', 'child']
 
 
 class EnrollmentRequestCreateView(generics.CreateAPIView):
@@ -91,13 +92,13 @@ class EnrollmentRequestListView(generics.ListAPIView):
             if parent:
                 return queryset.filter(parent=parent)
             return queryset.none()
-        
+
         elif user.role == 'student':
             student = getattr(user, 'student_profile', None)
             if student:
                 return queryset.filter(student=student)
             return queryset.none()
-        
+
         return queryset.none()
 
 

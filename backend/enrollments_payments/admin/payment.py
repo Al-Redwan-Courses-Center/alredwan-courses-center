@@ -5,6 +5,7 @@ from django.utils.html import format_html
 from django.utils import timezone
 from django.urls import reverse
 from django.db.models import Sum, Count
+from core.utils import ExcelExportMixin
 
 from enrollments_payments.models.payment import (
     Payment, RefundRequest, PaymentStatus, PaymentMethod
@@ -218,7 +219,7 @@ def void_payments(modeladmin, request, queryset):
 # Payment Admin Configuration
 # =============================================================================
 @admin.register(Payment)
-class PaymentAdmin(admin.ModelAdmin):
+class PaymentAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced admin configuration for Payment model."""
     
     # List display
@@ -258,6 +259,9 @@ class PaymentAdmin(admin.ModelAdmin):
     
     # Actions
     actions = [mark_as_paid, mark_as_refunded, void_payments]
+    
+    # Excel export configuration
+    excel_filename = 'payments'
     
     # =========================================================================
     # Dynamic Fieldsets

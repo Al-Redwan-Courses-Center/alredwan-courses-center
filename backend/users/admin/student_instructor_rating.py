@@ -1,4 +1,5 @@
 from django.contrib import admin
+from core.utils import ExcelExportMixin
 from users.models.student_instructor_rating import (
     StudentInstructorRating,
     ParentInstructorRating,
@@ -8,7 +9,7 @@ from users.models.student_instructor_rating import (
 
 
 @admin.register(StudentInstructorRating)
-class StudentInstructorRatingAdmin(admin.ModelAdmin):
+class StudentInstructorRatingAdmin(admin.ModelAdmin, ExcelExportMixin):
     list_display = ('get_student', 'get_instructor',
                     'get_course', 'get_rating', 'get_created_at')
     list_filter = ('rating', 'course', 'instructor', 'created_at')
@@ -74,9 +75,12 @@ class StudentInstructorRatingAdmin(admin.ModelAdmin):
         verbose_name = 'تقييم طالب لمدرس'
         verbose_name_plural = 'تقييمات الطلاب للمدرسين'
 
+    # Excel export configuration
+    excel_filename = 'student_instructor_ratings'
+
 
 @admin.register(ParentInstructorRating)
-class ParentInstructorRatingAdmin(admin.ModelAdmin):
+class ParentInstructorRatingAdmin(admin.ModelAdmin, ExcelExportMixin):
     list_display = ('get_parent', 'get_instructor',
                     'get_course', 'get_rating', 'get_created_at')
     list_filter = ('rating', 'course', 'instructor', 'created_at')
@@ -135,9 +139,12 @@ class ParentInstructorRatingAdmin(admin.ModelAdmin):
         verbose_name = 'تقييم ولي أمر لمدرس'
         verbose_name_plural = 'تقييمات أولياء الأمور للمدرسين'
 
+    # Excel export configuration
+    excel_filename = 'parent_instructor_ratings'
+
 
 @admin.register(StudentCourseRating)
-class StudentCourseRatingAdmin(admin.ModelAdmin):
+class StudentCourseRatingAdmin(admin.ModelAdmin, ExcelExportMixin):
     list_display = ('get_student', 'get_course',
                     'get_rating', 'get_created_at')
     list_filter = ('rating', 'course', 'created_at')
@@ -186,9 +193,12 @@ class StudentCourseRatingAdmin(admin.ModelAdmin):
         verbose_name = 'تقييم طالب لكورس'
         verbose_name_plural = 'تقييمات الطلاب للكورسات'
 
+    # Excel export configuration
+    excel_filename = 'student_course_ratings'
+
 
 @admin.register(ParentCourseRating)
-class ParentCourseRatingAdmin(admin.ModelAdmin):
+class ParentCourseRatingAdmin(admin.ModelAdmin, ExcelExportMixin):
     list_display = ('get_parent', 'get_course', 'get_rating', 'get_created_at')
     list_filter = ('rating', 'course', 'created_at')
     search_fields = ('parent__user__first_name', 'course__name', 'feedback')
@@ -235,3 +245,6 @@ class ParentCourseRatingAdmin(admin.ModelAdmin):
     class Meta:
         verbose_name = 'تقييم ولي أمر لكورس'
         verbose_name_plural = 'تقييمات أولياء الأمور للكورسات'
+
+    # Excel export configuration
+    excel_filename = 'parent_course_ratings'

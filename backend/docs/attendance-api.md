@@ -300,9 +300,142 @@ Manage weekly supervisor schedules.
 | | |
 |--|--|
 | **URL** | `POST /api/attendance/lecture/{lecture_id}/mark/` |
-| **Auth** | ✅ Required |
+| **Auth** | ✅ Required (Admin or Course Instructor) |
 
-Marks attendance for students/children in a lecture.
+Marks attendance for a single student/child in a lecture.
+
+**Request Body:**
+```json
+{
+  "code": "M64793",
+  "participant_type": "student",
+  "rating": 8,
+  "notes": "Good performance"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `code` | string | Yes | Unique code of the student or child |
+| `participant_type` | string | Yes | `student` or `child` |
+| `rating` | integer | Yes | Rating from 1 to 10 |
+| `notes` | string | No | Optional notes about attendance |
+
+---
+
+### Bulk Mark Attendance
+
+| | |
+|--|--|
+| **URL** | `POST /api/attendance/lecture/{lecture_id}/mark-bulk/` |
+| **Auth** | ✅ Required (Admin or Course Instructor) |
+
+Marks attendance for multiple students/children at once.
+
+**Request Body:**
+```json
+{
+  "marked_via": "manual",
+  "attendances": [
+    {
+      "code": "M64793",
+      "participant_type": "student",
+      "rating": 8,
+      "notes": "Good performance",
+      "present": true
+    },
+    {
+      "code": "C12345",
+      "participant_type": "child",
+      "rating": 9,
+      "notes": "Excellent",
+      "present": true
+    }
+  ]
+}
+```
+
+---
+
+### Get Lecture Attendance Details
+
+| | |
+|--|--|
+| **URL** | `GET /api/attendance/lecture/{lecture_id}/details/` |
+| **Auth** | ✅ Required (Admin or Course Instructor) |
+
+Returns detailed attendance for all enrolled students/children in a lecture, including their personal information.
+
+**Response (200):**
+```json
+{
+  "lecture_id": 123,
+  "lecture_title": "Lecture 1 - Introduction",
+  "course_name": "Quran Memorization",
+  "total_enrolled": 15,
+  "present_count": 12,
+  "absent_count": 3,
+  "attendance_rate": 80.0,
+  "attendances": [
+    {
+      "id": 1,
+      "lecture": 123,
+      "lecture_title": "Lecture 1 - Introduction",
+      "participant_name": "أحمد",
+      "participant_full_name": "أحمد محمد علي",
+      "participant_type": "child",
+      "participant_code": "M12345",
+      "participant_image": "https://res.cloudinary.com/.../image.jpg",
+      "participant_age": 12,
+      "participant_gender": "boy",
+      "present": true,
+      "rating": 8,
+      "notes": "ممتاز في الحفظ",
+      "marked_by": 5,
+      "marked_by_name": "الأستاذ عمر",
+      "marked_via": "manual",
+      "marked_at": "2025-01-15T10:30:00Z",
+      "created_at": "2025-01-10T08:00:00Z",
+      "updated_at": "2025-01-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `lecture_id` | integer | ID of the lecture |
+| `lecture_title` | string | Title of the lecture |
+| `course_name` | string | Name of the course |
+| `total_enrolled` | integer | Total number of students/children enrolled |
+| `present_count` | integer | Number of participants marked present |
+| `absent_count` | integer | Number of participants not present |
+| `attendance_rate` | float | Percentage of attendance (0-100) |
+| `attendances` | array | List of attendance records |
+
+**Attendance Record Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `participant_name` | string | First name of the participant |
+| `participant_full_name` | string | Full name of the participant |
+| `participant_type` | string | `child` or `student` |
+| `participant_code` | string | Unique code (e.g., M12345) |
+| `participant_image` | string/null | URL to participant's profile image |
+| `participant_age` | integer/null | Current age in years |
+| `participant_gender` | string | `boy`/`girl` for children, gender for students |
+| `present` | boolean | Whether participant was present |
+| `rating` | integer/null | Rating from 1-10 (if marked) |
+| `notes` | string | Optional notes about attendance |
+| `marked_via` | string | Method used: `manual`, `qr_scan` |
+| `marked_at` | datetime/null | When attendance was marked |
+
+**Errors:**
+
+| Code | Description |
+|------|-------------|
+| 404 | Lecture not found |
+| 403 | User is not admin or course instructor |
 
 ---
 
@@ -323,4 +456,6 @@ Marks attendance for students/children in a lecture.
 | GET | `/api/attendance/instructor/{id}/` | Instructor history | Admin |
 | GET/POST | `/api/attendance/devices/` | Device management | Admin |
 | GET/POST | `/api/attendance/schedules/` | Schedule management | Admin |
-| POST | `/api/attendance/lecture/{id}/mark/` | Mark lecture attendance | Required |
+| POST | `/api/attendance/lecture/{id}/mark/` | Mark lecture attendance | Admin/Instructor |
+| POST | `/api/attendance/lecture/{id}/mark-bulk/` | Bulk mark attendance | Admin/Instructor |
+| GET | `/api/attendance/lecture/{id}/details/` | Lecture attendance details | Admin/Instructor |

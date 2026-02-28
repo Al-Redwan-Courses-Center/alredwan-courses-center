@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Count, Avg
 
+from core.utils import ExcelExportMixin
 from courses.models import Exam, ExamResult
 from .base import ArabicLabelsMixin, OptimizedQuerysetMixin
 from .filters import PassedFilter
@@ -16,7 +17,7 @@ from .inlines import ExamResultInline
 
 
 @admin.register(Exam)
-class ExamAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+class ExamAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
     """Admin configuration for Exam model."""
 
     select_related_fields = [
@@ -147,9 +148,12 @@ class ExamAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
             results_avg=Avg('results__percentage')
         )
 
+    # Excel export configuration
+    excel_filename = 'exams'
+
 
 @admin.register(ExamResult)
-class ExamResultAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+class ExamResultAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
     """Admin configuration for ExamResult model with enhanced UX."""
 
     select_related_fields = [
@@ -299,3 +303,6 @@ class ExamResultAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmi
         if obj:  # Editing existing object
             readonly.extend(['exam', 'student', 'child'])
         return readonly
+
+    # Excel export configuration
+    excel_filename = 'exam_results'

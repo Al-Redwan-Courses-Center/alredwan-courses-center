@@ -3,12 +3,13 @@
 
 from django.contrib import admin
 from django.utils.html import format_html
+from core.utils import ExcelExportMixin
 from ..models.instructor_attendance import SupervisorSchedule
 from courses.models import Weekday
 
 
 @admin.register(SupervisorSchedule)
-class SupervisorScheduleAdmin(admin.ModelAdmin):
+class SupervisorScheduleAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Admin interface for managing supervisor schedules."""
     
     list_display = (
@@ -80,3 +81,6 @@ class SupervisorScheduleAdmin(admin.ModelAdmin):
             form.base_fields['auto_absent_after_minutes'].label = 'دقائق التغييب التلقائي'
             form.base_fields['auto_absent_after_minutes'].help_text = 'عدد الدقائق بعد موعد البدء لاعتباره غائباً تلقائياً'
         return form
+    
+    # Excel export configuration
+    excel_filename = 'supervisor_schedules'

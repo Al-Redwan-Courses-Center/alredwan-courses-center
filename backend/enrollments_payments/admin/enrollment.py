@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.urls import reverse
 from django.db.models import Sum, Count
 
+from core.utils import ExcelExportMixin
 from enrollments_payments.models.enrollment import Enrollment, EnrollmentStatus
 from enrollments_payments.models.payment import Payment
 
@@ -312,7 +313,7 @@ class PaymentInline(admin.TabularInline):
 # Admin Configuration
 # =============================================================================
 @admin.register(Enrollment)
-class EnrollmentAdmin(admin.ModelAdmin):
+class EnrollmentAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced admin configuration for Enrollment model."""
 
     # List display configuration
@@ -353,6 +354,9 @@ class EnrollmentAdmin(admin.ModelAdmin):
     # Actions
     actions = [suspend_enrollments, reactivate_enrollments,
                mark_completed, drop_enrollments, auto_complete_enrollments]
+    
+    # Excel export configuration
+    excel_filename = 'enrollments'
 
     # Inlines
     inlines = [PaymentInline]
@@ -724,7 +728,7 @@ class EnrollmentAdmin(admin.ModelAdmin):
             '<div style="font-size: 1.2em; color: #27ae60; font-weight: bold;">{} ج.م</div>'
             '<div style="font-size: 0.8em; color: #95a5a6;">المدفوع</div>'
             '</div>'
-            '<div style="background: #1a3a4a; padding: 10px; border-radius: 5px;">'
+            '<div style="background: #1a3a4ا; padding: 10px; border-radius: 5px;">'
             '<div style="font-size: 1.2em; color: {}; font-weight: bold;">{} ج.م</div>'
             '<div style="font-size: 0.8em; color: #95a5a6;">المتبقي</div>'
             '</div>'

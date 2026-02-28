@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
 from django.urls import reverse
 from django.db.models import Count, Q
+from core.utils import ExcelExportMixin
 from users.models import LandingPageInstructor
 
 
@@ -37,7 +38,7 @@ class OptimizedQuerysetMixin:
 
 
 @admin.register(LandingPageInstructor)
-class LandingPageInstructorAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+class LandingPageInstructorAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
     """Admin configuration for Landing Page Featured Instructors."""
 
     select_related_fields = ['instructor', 'instructor__user']
@@ -61,6 +62,9 @@ class LandingPageInstructorAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admi
             'description': _('اختر المعلم وحدد ترتيب ظهوره (الأرقام الأعلى تظهر أولاً)')
         }),
     )
+
+    # Excel export configuration
+    excel_filename = 'landing_page_instructors'
 
     @admin.display(description=_('الترتيب'), ordering='order')
     def get_order_badge(self, obj):

@@ -8,12 +8,13 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.db.models import Count
 
+from core.utils import ExcelExportMixin
 from courses.models import LandingPageCourse
 from .base import ArabicLabelsMixin, OptimizedQuerysetMixin
 
 
 @admin.register(LandingPageCourse)
-class LandingPageCourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+class LandingPageCourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
     """Admin configuration for LandingPageCourse with drag ordering support."""
 
     select_related_fields = [
@@ -73,7 +74,7 @@ class LandingPageCourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.Mo
 
         url = reverse('admin:courses_course_change', args=[obj.course.pk])
         season_badge = ''
-        if obj.course.season:
+        if (obj.course.season):
             season_badge = format_html(
                 '<span style="background: #9b59b6; color: white; padding: 1px 6px; '
                 'border-radius: 8px; font-size: 0.75em; margin-right: 5px;">{}</span>',
@@ -150,6 +151,9 @@ class LandingPageCourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.Mo
         return qs.annotate(
             _course_enrolled_count=Count('course__enrollments')
         )
+
+    # Excel export configuration
+    excel_filename = 'landing_page_courses'
 
     class Media:
         css = {

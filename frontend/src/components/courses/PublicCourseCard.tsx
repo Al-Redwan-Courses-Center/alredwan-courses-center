@@ -12,9 +12,11 @@ import Image from "next/image";
 export default function PublicCourseCard({
   course: course,
   index,
+  linkTo = "landing",
 }: {
   course: CourseListItem;
   index: number;
+  linkTo?: "dashboard" | "landing";
 }) {
   const startDate = parseISO(course.start_date);
   // const endDate = parseISO(course.start_date);
@@ -42,7 +44,11 @@ export default function PublicCourseCard({
           <Button
             variant="primary"
             size="small"
-            href={`/courses/${course.id}`}
+            href={
+              linkTo === "dashboard"
+                ? `/dashboard/courses/${course.id}`
+                : `/courses/${course.id}`
+            }
             className="px-0 text-[1.125rem]"
           >
             عرض الدورة

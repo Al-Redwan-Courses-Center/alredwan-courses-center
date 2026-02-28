@@ -28,6 +28,11 @@ python3 manage.py collectstatic --noinput
 echo "Applying database migrations..."
 python3 manage.py migrate --noinput
 
-# Start server (Daphne for ASGI/WebSocket support)
-echo "Starting server..."
-exec daphne -b 0.0.0.0 -p 8000 core.asgi:application
+# Create supervisor log directory
+mkdir -p /var/log/supervisor
+
+# Start supervisor (manages both Gunicorn on :8000 and Uvicorn on :8001)
+echo "Starting services with supervisor..."
+echo "  - Gunicorn (HTTP) on port 8000"
+echo "  - Uvicorn (WebSocket) on port 8001"
+exec supervisord -c /etc/supervisor/conf.d/supervisord.conf

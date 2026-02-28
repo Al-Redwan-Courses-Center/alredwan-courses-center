@@ -188,10 +188,34 @@ Authentication uses **JWT tokens** via **Djoser**. Login is via **phone number**
   "identity_type": "nid",
   "address": null,
   "location": null,
-  "role": "student",
-  "date_joined": "2025-01-01T10:30:00Z"
+  "role": "instructor",
+  "date_joined": "2025-01-01T10:30:00Z",
+  "instructor_id": 5
 }
 ```
+
+**Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | User's unique identifier |
+| `phone_number1` | string | Primary WhatsApp number |
+| `phone_number2` | string | Alternative phone (nullable) |
+| `email` | string | Email address (nullable) |
+| `first_name` | string | First and second names |
+| `last_name` | string | Third and fourth names |
+| `dob` | date | Date of birth |
+| `gender` | string | `male` or `female` |
+| `is_verified` | boolean | Account verification status |
+| `identity_number` | string | Government ID (nullable) |
+| `identity_type` | string | `nid`, `passport`, or `other` |
+| `address` | string | Full address (nullable) |
+| `location` | string | Google Maps URL (nullable) |
+| `role` | string | `student`, `parent`, `instructor`, or `admin` |
+| `date_joined` | datetime | Registration timestamp |
+| `instructor_id` | integer | Instructor profile ID if user is an instructor, `null` otherwise |
+
+> 💡 **Note:** The `instructor_id` field is only populated when the user has an instructor profile. Use this ID for instructor-specific API calls.
 
 ---
 

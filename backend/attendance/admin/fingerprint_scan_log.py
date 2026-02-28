@@ -3,11 +3,12 @@
 
 from django.contrib import admin
 from django.utils.html import format_html
+from core.utils import ExcelExportMixin
 from ..models.fingerprint_scan_log import FingerprintScanLog, ScanAction
 
 
 @admin.register(FingerprintScanLog)
-class FingerprintScanLogAdmin(admin.ModelAdmin):
+class FingerprintScanLogAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Admin interface for viewing fingerprint scan logs."""
     
     list_display = (
@@ -102,3 +103,6 @@ class FingerprintScanLogAdmin(admin.ModelAdmin):
             return obj.notes[:50] + '...' if len(obj.notes) > 50 else obj.notes
         return '-'
     notes_preview.short_description = 'ملاحظات'
+    
+    # Excel export configuration
+    excel_filename = 'fingerprint_scan_logs'

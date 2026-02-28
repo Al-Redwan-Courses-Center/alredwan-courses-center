@@ -132,7 +132,7 @@ class InstructorListAPITest(BaseAPITestCase):
         """Test successful listing of instructors."""
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get('/api/users/instructors/')
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Handle paginated response
         results = response.data.get('results', response.data)
@@ -142,7 +142,7 @@ class InstructorListAPITest(BaseAPITestCase):
         """Test filtering instructors by type."""
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get('/api/users/instructors/?type=supervisor')
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data.get('results', response.data)
         self.assertEqual(len(results), 1)
@@ -151,8 +151,9 @@ class InstructorListAPITest(BaseAPITestCase):
     def test_filter_by_tag(self):
         """Test filtering instructors by tag."""
         self.client.force_authenticate(user=self.regular_user)
-        response = self.client.get(f'/api/users/instructors/?tags={self.tag_quran.id}')
-        
+        response = self.client.get(
+            f'/api/users/instructors/?tags={self.tag_quran.id}')
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data.get('results', response.data)
         self.assertEqual(len(results), 2)
@@ -161,7 +162,7 @@ class InstructorListAPITest(BaseAPITestCase):
         """Test searching instructors by name."""
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get('/api/users/instructors/?search=أحمد')
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data.get('results', response.data)
         self.assertEqual(len(results), 1)
@@ -170,7 +171,7 @@ class InstructorListAPITest(BaseAPITestCase):
         """Test searching instructors by bio."""
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.get('/api/users/instructors/?search=Tajweed')
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data.get('results', response.data)
         self.assertEqual(len(results), 1)
@@ -178,8 +179,9 @@ class InstructorListAPITest(BaseAPITestCase):
     def test_ordering_by_joined_date(self):
         """Test ordering instructors by joined date."""
         self.client.force_authenticate(user=self.regular_user)
-        response = self.client.get('/api/users/instructors/?ordering=joined_date')
-        
+        response = self.client.get(
+            '/api/users/instructors/?ordering=joined_date')
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data.get('results', response.data)
         # Should be ordered from oldest to newest
@@ -191,14 +193,16 @@ class InstructorDetailAPITest(BaseAPITestCase):
 
     def test_get_instructor_detail_public(self):
         """Test that instructor detail is publicly accessible."""
-        response = self.client.get(f'/api/users/instructors/{self.instructor1.id}/')
+        response = self.client.get(
+            f'/api/users/instructors/{self.instructor1.id}/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.instructor1.id)
 
     def test_get_instructor_detail_includes_tags(self):
         """Test that instructor detail includes tags."""
-        response = self.client.get(f'/api/users/instructors/{self.instructor3.id}/')
-        
+        response = self.client.get(
+            f'/api/users/instructors/{self.instructor3.id}/')
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('tags', response.data)
         self.assertEqual(len(response.data['tags']), 2)
@@ -220,7 +224,7 @@ class LandingPageInstructorAPITest(BaseAPITestCase):
     def test_landing_page_instructors_ordered_by_order(self):
         """Test that landing page instructors are ordered by order field."""
         response = self.client.get('/api/users/landingpageinstructors/')
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data.get('results', response.data)
         self.assertEqual(len(results), 2)
@@ -230,7 +234,7 @@ class LandingPageInstructorAPITest(BaseAPITestCase):
     def test_landing_page_instructors_count(self):
         """Test that only featured instructors are returned."""
         response = self.client.get('/api/users/landingpageinstructors/')
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data.get('results', response.data)
         # Only 2 instructors are featured
@@ -242,14 +246,16 @@ class InstructorRatingsAPITest(BaseAPITestCase):
 
     def test_ratings_requires_auth(self):
         """Test that ratings endpoint requires authentication."""
-        response = self.client.get(f'/api/users/instructors/{self.instructor1.id}/ratings/')
+        response = self.client.get(
+            f'/api/users/instructors/{self.instructor1.id}/ratings/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_ratings_success(self):
         """Test successful retrieval of instructor ratings."""
         self.client.force_authenticate(user=self.regular_user)
-        response = self.client.get(f'/api/users/instructors/{self.instructor1.id}/ratings/')
-        
+        response = self.client.get(
+            f'/api/users/instructors/{self.instructor1.id}/ratings/')
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
@@ -319,3 +325,119 @@ class InstructorModelTest(TestCase):
             type='supervisor'
         )
         self.assertIn('أحمد', str(instructor))
+
+
+class UserMeEndpointTest(TestCase):
+    """Tests for the /auth/users/me/ endpoint with instructor_id field."""
+
+    def setUp(self):
+        """Set up test data."""
+        self.client = APIClient()
+
+        # Create regular user (no instructor profile)
+        self.regular_user = CustomUser.objects.create_user(
+            phone_number1='+201033333001',
+            password='testpass123',
+            first_name='Regular',
+            last_name='User',
+            email='regular@test.com',
+            dob='1990-01-01',
+            gender='male'
+        )
+
+        # Create instructor user
+        self.instructor_user = CustomUser.objects.create_user(
+            phone_number1='+201033333002',
+            password='testpass123',
+            first_name='Instructor',
+            last_name='User',
+            email='instructor@test.com',
+            dob='1985-05-15',
+            gender='male'
+        )
+        self.instructor = Instructor.objects.create(
+            user=self.instructor_user,
+            monthly_salary=5000.00,
+            type='normal',
+            bio='Test instructor bio'
+        )
+
+    def test_user_me_requires_authentication(self):
+        """Test that /auth/users/me/ requires authentication."""
+        response = self.client.get('/auth/users/me/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_user_me_regular_user_has_null_instructor_id(self):
+        """Test that regular users have instructor_id as null."""
+        self.client.force_authenticate(user=self.regular_user)
+        response = self.client.get('/auth/users/me/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('instructor_id', response.data)
+        self.assertIsNone(response.data['instructor_id'])
+
+    def test_user_me_instructor_has_instructor_id(self):
+        """Test that instructors have their instructor_id populated."""
+        self.client.force_authenticate(user=self.instructor_user)
+        response = self.client.get('/auth/users/me/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('instructor_id', response.data)
+        self.assertEqual(response.data['instructor_id'], self.instructor.id)
+
+    def test_user_me_response_contains_all_fields(self):
+        """Test that /auth/users/me/ returns all expected fields."""
+        self.client.force_authenticate(user=self.instructor_user)
+        response = self.client.get('/auth/users/me/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        expected_fields = [
+            'id', 'phone_number1', 'phone_number2', 'email',
+            'first_name', 'last_name', 'dob', 'gender',
+            'identity_number', 'identity_type', 'address', 'location',
+            'role', 'is_verified', 'date_joined', 'instructor_id'
+        ]
+
+        for field in expected_fields:
+            self.assertIn(field, response.data, f"Missing field: {field}")
+
+    def test_user_me_instructor_id_matches_correct_instructor(self):
+        """Test that instructor_id matches the correct instructor profile."""
+        # Create another instructor to ensure correct matching
+        other_user = CustomUser.objects.create_user(
+            phone_number1='+201033333003',
+            password='testpass123',
+            first_name='Other',
+            last_name='Instructor',
+            dob='1988-03-20',
+            gender='male'
+        )
+        other_instructor = Instructor.objects.create(
+            user=other_user,
+            monthly_salary=6000.00,
+            type='supervisor'
+        )
+
+        # Test first instructor
+        self.client.force_authenticate(user=self.instructor_user)
+        response = self.client.get('/auth/users/me/')
+        self.assertEqual(response.data['instructor_id'], self.instructor.id)
+
+        # Test second instructor
+        self.client.force_authenticate(user=other_user)
+        response = self.client.get('/auth/users/me/')
+        self.assertEqual(response.data['instructor_id'], other_instructor.id)
+
+    def test_user_me_instructor_id_is_read_only(self):
+        """Test that instructor_id cannot be modified via PATCH."""
+        self.client.force_authenticate(user=self.regular_user)
+
+        # Try to set instructor_id via PATCH (should be ignored)
+        response = self.client.patch('/auth/users/me/', {
+            'instructor_id': 999
+        }, format='json')
+
+        # Request should succeed but instructor_id should remain null
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(response.data['instructor_id'])

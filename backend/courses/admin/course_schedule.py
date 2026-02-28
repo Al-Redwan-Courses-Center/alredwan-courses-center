@@ -7,12 +7,13 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
 from datetime import datetime
 
+from core.utils import ExcelExportMixin
 from courses.models import CourseSchedule
 from .base import ArabicLabelsMixin, OptimizedQuerysetMixin
 
 
 @admin.register(CourseSchedule)
-class CourseScheduleAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+class CourseScheduleAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
     """Admin configuration for CourseSchedule model."""
 
     select_related_fields = ['course', 'course__instructor']
@@ -25,6 +26,9 @@ class CourseScheduleAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.Model
     autocomplete_fields = ['course']
     list_per_page = 50
     ordering = ('weekday', 'start_time')
+
+    # Excel export configuration
+    excel_filename = 'course_schedules'
 
     @admin.display(description=_('اليوم'), ordering='weekday')
     def get_weekday_badge(self, obj):

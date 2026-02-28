@@ -13,17 +13,20 @@ import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
 import { cn, formatTime, toHindiDigits } from "@/lib/utils";
 import { Lecture } from "@/types/entities";
+import Link from "next/link";
 import { DataViewPagination } from "../ui/data-view/DataViewPagination";
 import { DataViewHeader, DataViewRow } from "../ui/data-view/DataViewRow";
-import { TODAYS_SCHEDULE } from "@/dev-data/db";
-import Link from "next/link";
 
 const { sortConfig, filterConfig, statusMap } = lecturesViewConfig;
 
-export default function TodaysLecturesTable() {
+export default function TodaysLecturesTable({
+  todaysLectures,
+}: {
+  todaysLectures: any[];
+}) {
   return (
     <DataView
-      data={TODAYS_SCHEDULE}
+      data={todaysLectures}
       sortConfig={sortConfig}
       filterConfig={filterConfig}
       gridLayout={cn(

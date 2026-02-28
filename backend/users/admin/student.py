@@ -2,12 +2,13 @@ from django.contrib import admin
 from django.contrib import messages
 from django.http import HttpResponse
 
+from core.utils import ExcelExportMixin
 from ..models.student import StudentUser
 from ..utils.card_generator import generate_students_pdf
 
 
 @admin.register(StudentUser)
-class StudentUserAdmin(admin.ModelAdmin):
+class StudentUserAdmin(admin.ModelAdmin, ExcelExportMixin):
     list_display = ('unique_code', 'get_full_name',
                     'get_phone', 'get_gender', 'image')
     list_filter = ('user__gender', 'user__is_verified')
@@ -15,11 +16,16 @@ class StudentUserAdmin(admin.ModelAdmin):
                      'user__last_name', 'user__phone_number1')
     readonly_fields = ('unique_code',)
     list_select_related = ('user',)
+    
+    # Excel export configuration
+    excel_filename = 'students'
+    
     fieldsets = (
         ('معلومات الطالب', {'fields': ('user', 'image')}),
     )
     autocomplete_fields = ('user',)
     list_select_related = ('user',)
+    
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         if 'user' in form.base_fields:

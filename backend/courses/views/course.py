@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Views for Course model"""
 from rest_framework import generics, filters
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q, Sum, Value
@@ -17,10 +17,10 @@ class CourseListView(generics.ListAPIView):
     """
     API endpoint for listing all courses
     GET /api/courses/
-    
+
     Supports comprehensive filtering, searching, and ordering capabilities.
     Pagination: ?page=1&page_size=10 (default: 10, max: 100)
-    
+
     Available Filters:
     - is_active, season, instructor, for_adults, tags
     - price__gte, price__lte
@@ -31,15 +31,16 @@ class CourseListView(generics.ListAPIView):
     - num_lectures__gte, num_lectures__lte
     - season__season_type, season__is_active
     - instructor__type
-    
+
     Search: name, description, instructor name
     Ordering: start_date, end_date, price, created_at, name, capacity, num_lectures
     """
     serializer_class = CourseListSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPageNumberPagination
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    
+    filter_backends = [DjangoFilterBackend,
+                       filters.SearchFilter, filters.OrderingFilter]
+
     # Define filters directly in the view
     filterset_fields = {
         'is_active': ['exact'],
@@ -58,9 +59,11 @@ class CourseListView(generics.ListAPIView):
         'season__is_active': ['exact'],
         'instructor__type': ['exact'],
     }
-    
-    search_fields = ['name', 'description', 'instructor__user__first_name', 'instructor__user__last_name']
-    ordering_fields = ['start_date', 'end_date', 'price', 'created_at', 'name', 'capacity', 'num_lectures']
+
+    search_fields = ['name', 'description',
+                     'instructor__user__first_name', 'instructor__user__last_name']
+    ordering_fields = ['start_date', 'end_date', 'price',
+                       'created_at', 'name', 'capacity', 'num_lectures']
     ordering = ['-start_date']
 
     def get_queryset(self):
@@ -100,7 +103,7 @@ class CourseDetailView(generics.RetrieveAPIView):
     GET /api/courses/{slug}/
     """
     serializer_class = CourseDetailSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     lookup_field = 'pk'
 
     def get_queryset(self):
@@ -134,25 +137,27 @@ class CourseUpdateView(generics.UpdateAPIView):
     """
     API endpoint for updating course information
     PUT/PATCH /api/courses/{id}/edit/
-    
+
     Permissions:
     - Admins: Full access to all courses
     - Supervisors: Full access to all courses
     - Instructors: Only access to courses they are assigned to teach
     """
-    queryset = Course.objects.select_related('instructor', 'season').prefetch_related('tags', 'schedules')
+    queryset = Course.objects.select_related(
+        'instructor', 'season').prefetch_related('tags', 'schedules')
     serializer_class = CourseUpdateSerializer
     permission_classes = [IsAdminOrCourseInstructor]
     lookup_field = 'pk'
-    
+
     def update(self, request, *args, **kwargs):
         """Override to return detailed course info after update"""
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        
+
         # Return detailed course information
         output_serializer = CourseDetailSerializer(instance)
         return Response(output_serializer.data)

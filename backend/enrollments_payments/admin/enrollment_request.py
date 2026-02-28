@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.db.models import Count
 from django import forms
 
+from core.utils import ExcelExportMixin
 from enrollments_payments.models.enrollment_request import (
     EnrollmentRequest, 
     EnrollmentRequestStatus,
@@ -114,7 +115,7 @@ def approve_selected(modeladmin, request, queryset):
     Handles partial payments: if enrollment_request.price < course.price,
     the payment will be recorded as partial with remaining amount tracked.
     """
-    approvable = queryset.filter(status__in=[
+    approvable = queryset.filter(status__in[
         EnrollmentRequestStatus.PENDING,
         EnrollmentRequestStatus.PROCESSING
     ])
@@ -153,7 +154,7 @@ def approve_selected(modeladmin, request, queryset):
 @admin.action(description=_('❌ رفض الطلبات المحددة'))
 def reject_selected(modeladmin, request, queryset):
     """Reject selected pending or processing enrollment requests."""
-    rejectable = queryset.filter(status__in=[
+    rejectable = queryset.filter(status__in[
         EnrollmentRequestStatus.PENDING,
         EnrollmentRequestStatus.PROCESSING
     ])
@@ -197,7 +198,7 @@ def mark_processing(modeladmin, request, queryset):
 @admin.action(description=_('⏳ تمديد صلاحية الطلبات (7 أيام)'))
 def extend_expiry(modeladmin, request, queryset):
     """Extend expiry date by 7 days for selected requests."""
-    pending = queryset.filter(status__in=[
+    pending = queryset.filter(status__in[
         EnrollmentRequestStatus.PENDING,
         EnrollmentRequestStatus.PROCESSING
     ])
@@ -218,7 +219,7 @@ def extend_expiry(modeladmin, request, queryset):
 # Admin Configuration
 # =============================================================================
 @admin.register(EnrollmentRequest)
-class EnrollmentRequestAdmin(admin.ModelAdmin):
+class EnrollmentRequestAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced admin configuration for EnrollmentRequest model."""
     
     # List display configuration
@@ -259,6 +260,9 @@ class EnrollmentRequestAdmin(admin.ModelAdmin):
     
     # Actions
     actions = [approve_selected, reject_selected, mark_processing, extend_expiry]
+    
+    # Excel export configuration
+    excel_filename = 'enrollment_requests'
     
     # =========================================================================
     # Dynamic Fieldsets - Different for Add vs Edit

@@ -157,6 +157,8 @@ class EnrollmentRequestListSerializer(serializers.ModelSerializer):
     course_name = serializers.CharField(source='course.name', read_only=True)
     course_price = serializers.DecimalField(
         source='course.price', max_digits=10, decimal_places=2, read_only=True)
+    child_id = serializers.UUIDField(
+        source='child.id', read_only=True, default=None)
     participant_name = serializers.SerializerMethodField()
     status_display = serializers.CharField(
         source='get_status_display', read_only=True)
@@ -165,7 +167,7 @@ class EnrollmentRequestListSerializer(serializers.ModelSerializer):
         model = EnrollmentRequest
         fields = [
             'id', 'course', 'course_name', 'course_price',
-            'participant_name', 'price', 'status', 'status_display',
+            'child_id', 'participant_name', 'price', 'status', 'status_display',
             'payment_method', 'created_at', 'expires_at', 'notes'
         ]
         read_only_fields = fields
@@ -189,15 +191,15 @@ class EnrollmentRequestDetailSerializer(serializers.ModelSerializer):
     course_start_date = serializers.DateField(
         source='course.start_date', read_only=True)
     course_instructor = serializers.SerializerMethodField()
-    
+
     participant_name = serializers.SerializerMethodField()
     participant_type = serializers.SerializerMethodField()
-    
+
     status_display = serializers.CharField(
         source='get_status_display', read_only=True)
     payment_method_display = serializers.CharField(
         source='get_payment_method_display', read_only=True)
-    
+
     processed_by_name = serializers.SerializerMethodField()
 
     class Meta:
@@ -307,7 +309,8 @@ class AdminEnrollmentRequestUpdateSerializer(serializers.ModelSerializer):
         """Validate price is positive and not greater than course price"""
         if value is not None:
             if value < 0:
-                raise serializers.ValidationError("السعر يجب أن يكون قيمة موجبة.")
+                raise serializers.ValidationError(
+                    "السعر يجب أن يكون قيمة موجبة.")
             if self.instance and value > self.instance.course.price:
                 raise serializers.ValidationError(
                     "السعر لا يمكن أن يكون أكبر من سعر الدورة.")
@@ -324,7 +327,7 @@ class AdminEnrollmentRequestUpdateSerializer(serializers.ModelSerializer):
     def validate(self, data):
         """Validate the request can be updated"""
         instance = self.instance
-        if instance.status in [EnrollmentRequestStatus.ACCEPTED, 
+        if instance.status in [EnrollmentRequestStatus.ACCEPTED,
                                EnrollmentRequestStatus.REJECTED,
                                EnrollmentRequestStatus.EXPIRED]:
             raise serializers.ValidationError(
@@ -345,14 +348,16 @@ class EnrollmentRequestApproveSerializer(serializers.Serializer):
     paid_amount = serializers.DecimalField(
         max_digits=10, decimal_places=2, required=False, allow_null=True)
     payment_method = serializers.ChoiceField(
-        choices=['cash', 'card', 'bank_transfer', 'instapay', 'vodafone_cash', 'other'],
+        choices=['cash', 'card', 'bank_transfer',
+                 'instapay', 'vodafone_cash', 'other'],
         required=False)
     payment_notes = serializers.CharField(required=False, allow_blank=True)
 
     def validate_paid_amount(self, value):
         """Validate paid amount is positive"""
         if value is not None and value < 0:
-            raise serializers.ValidationError("المبلغ المدفوع يجب أن يكون قيمة موجبة.")
+            raise serializers.ValidationError(
+                "المبلغ المدفوع يجب أن يكون قيمة موجبة.")
         return value
 
     def validate(self, data):
@@ -360,17 +365,17 @@ class EnrollmentRequestApproveSerializer(serializers.Serializer):
         instance = self.context.get('enrollment_request')
         if not instance:
             raise serializers.ValidationError("طلب الإلتحاق غير موجود.")
-        
-        if instance.status not in [EnrollmentRequestStatus.PENDING, 
+
+        if instance.status not in [EnrollmentRequestStatus.PENDING,
                                    EnrollmentRequestStatus.PROCESSING]:
             raise serializers.ValidationError(
                 f"لا يمكن الموافقة على طلب بحالة: {instance.get_status_display()}")
-        
+
         # Check course capacity
         if instance.course.enrolled_count >= instance.course.capacity:
             raise serializers.ValidationError(
                 "لا يمكن الموافقة - تم الوصول إلى الحد الأقصى للمشاركين في الدورة.")
-        
+
         return data
 
 
@@ -383,12 +388,12 @@ class EnrollmentRequestRejectSerializer(serializers.Serializer):
         instance = self.context.get('enrollment_request')
         if not instance:
             raise serializers.ValidationError("طلب الإلتحاق غير موجود.")
-        
-        if instance.status not in [EnrollmentRequestStatus.PENDING, 
+
+        if instance.status not in [EnrollmentRequestStatus.PENDING,
                                    EnrollmentRequestStatus.PROCESSING]:
             raise serializers.ValidationError(
                 f"لا يمكن رفض طلب بحالة: {instance.get_status_display()}")
-        
+
         return data
 
 
@@ -400,21 +405,23 @@ class BulkApproveSerializer(serializers.Serializer):
         max_length=50  # Limit to prevent performance issues
     )
     payment_method = serializers.ChoiceField(
-        choices=['cash', 'card', 'bank_transfer', 'instapay', 'vodafone_cash', 'other'],
+        choices=['cash', 'card', 'bank_transfer',
+                 'instapay', 'vodafone_cash', 'other'],
         default='cash'
     )
 
     def validate_request_ids(self, value):
         """Validate all request IDs exist and are in valid status"""
-        existing = EnrollmentRequest.objects.filter(id__in=value).values_list('id', flat=True)
+        existing = EnrollmentRequest.objects.filter(
+            id__in=value).values_list('id', flat=True)
         existing_set = set(str(id) for id in existing)
         provided_set = set(str(id) for id in value)
-        
+
         missing = provided_set - existing_set
         if missing:
             raise serializers.ValidationError(
                 f"طلبات غير موجودة: {', '.join(missing)}")
-        
+
         return value
 
 
@@ -429,13 +436,14 @@ class BulkRejectSerializer(serializers.Serializer):
 
     def validate_request_ids(self, value):
         """Validate all request IDs exist"""
-        existing = EnrollmentRequest.objects.filter(id__in=value).values_list('id', flat=True)
+        existing = EnrollmentRequest.objects.filter(
+            id__in=value).values_list('id', flat=True)
         existing_set = set(str(id) for id in existing)
         provided_set = set(str(id) for id in value)
-        
+
         missing = provided_set - existing_set
         if missing:
             raise serializers.ValidationError(
                 f"طلبات غير موجودة: {', '.join(missing)}")
-        
+
         return value

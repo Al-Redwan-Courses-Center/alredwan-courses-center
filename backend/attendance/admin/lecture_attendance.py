@@ -1,9 +1,12 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
+from django.utils.html import format_html
+from core.utils import ExcelExportMixin
 from attendance.models.lecture_attendance import LectureAttendance
 
 
 @admin.register(LectureAttendance)
-class LectureAttendanceAdmin(admin.ModelAdmin):
+class LectureAttendanceAdmin(admin.ModelAdmin, ExcelExportMixin):
     list_display = ('get_lecture', 'get_participant', 'get_present',
                     'get_rating', 'get_marked_by', 'get_marked_via', 'get_marked_at')
     list_filter = ('present', 'lecture__course', 'marked_via', 'marked_at')
@@ -18,6 +21,9 @@ class LectureAttendanceAdmin(admin.ModelAdmin):
         ('معلومات التسجيل', {'fields': ('marked_by', 'marked_via', 'marked_at')}),
         ('التواريخ', {'fields': ('created_at', 'updated_at')}),
     )
+
+    # Excel export configuration
+    excel_filename = 'lecture_attendance'
 
     def get_lecture(self, obj):
         return obj.lecture

@@ -1,9 +1,10 @@
 from django.contrib import admin
+from core.utils import ExcelExportMixin
 from attendance.models.device import AttendanceDevice
 
 
 @admin.register(AttendanceDevice)
-class AttendanceDeviceAdmin(admin.ModelAdmin):
+class AttendanceDeviceAdmin(admin.ModelAdmin, ExcelExportMixin):
     list_display = ('get_device_id', 'get_name',
                     'get_location', 'get_is_active')
     list_filter = ('is_active',)
@@ -50,3 +51,6 @@ class AttendanceDeviceAdmin(admin.ModelAdmin):
     class Meta:
         verbose_name = 'جهاز حضور'
         verbose_name_plural = 'أجهزة الحضور'
+
+    # Excel export configuration
+    excel_filename = 'attendance_devices'

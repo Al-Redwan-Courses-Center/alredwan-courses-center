@@ -5,6 +5,7 @@ from django.db.models import Count, Sum, Q
 from django.urls import reverse
 from django.contrib import messages
 from django.http import HttpResponse
+from core.utils import ExcelExportMixin
 
 from ..models import Parent, Child, ChildParents, ParentLinkRequest
 from ..utils.card_generator import generate_children_pdf
@@ -275,7 +276,7 @@ class HasEnrollmentsFilter(admin.SimpleListFilter):
 # =============================================================================
 
 @admin.register(Parent)
-class ParentAdmin(admin.ModelAdmin):
+class ParentAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced Admin for Parent model."""
     list_display = (
         'get_full_name', 'get_phone', 'get_email',
@@ -300,6 +301,9 @@ class ParentAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
         }),
     )
+
+    # Excel export configuration
+    excel_filename = 'parents'
 
     def get_inlines(self, request, obj):
         """Dynamically set inlines with correct model references."""
@@ -359,9 +363,10 @@ class ParentAdmin(admin.ModelAdmin):
     def get_total_payments(self, obj):
         total = getattr(obj, 'total_payments', None) or 0
         if total > 0:
+            formatted_total = f"{total:,.0f}"
             return format_html(
-                '<span style="color: #5cb85c; font-weight: bold;">{:,.0f} ج.م</span>',
-                total
+                '<span style="color: #5cb85c; font-weight: bold;">{} ج.م</span>',
+                formatted_total
             )
         return format_html('<span style="color: #999;">0</span>')
     get_total_payments.short_description = 'إجمالي المدفوعات'
@@ -388,6 +393,7 @@ class ParentAdmin(admin.ModelAdmin):
         total_paid = obj.payments.filter(status='paid').aggregate(
             Sum('amount'))['amount__sum'] or 0
         pending_payments = obj.payments.filter(status='pending').count()
+        formatted_total_paid = f"{total_paid:,.0f}"
 
         return format_html(
             '''
@@ -402,7 +408,7 @@ class ParentAdmin(admin.ModelAdmin):
                     <div style="color: #666;">أطفال إضافيين</div>
                 </div>
                 <div style="text-align: center; padding: 10px;">
-                    <div style="font-size: 24px; font-weight: bold; color: #5cb85c;">{:,.0f} ج.م</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #5cb85c;">{} ج.م</div>
                     <div style="color: #666;">إجمالي المدفوعات</div>
                 </div>
                 <div style="text-align: center; padding: 10px;">
@@ -411,14 +417,14 @@ class ParentAdmin(admin.ModelAdmin):
                 </div>
             </div>
             ''',
-            children_count, extra_children, total_paid,
+            children_count, extra_children, formatted_total_paid,
             '#d9534f' if pending_payments > 0 else '#5cb85c', pending_payments
         )
     get_summary_card.short_description = 'ملخص الحساب'
 
 
 @admin.register(Child)
-class ChildAdmin(admin.ModelAdmin):
+class ChildAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced Admin for Child model."""
     list_display = (
         'get_unique_code_badge', 'get_full_name', 'get_gender_badge',
@@ -434,6 +440,9 @@ class ChildAdmin(admin.ModelAdmin):
     autocomplete_fields = ('primary_parent',)
     date_hierarchy = 'created_at'
     list_per_page = 25
+
+    # Excel export configuration
+    excel_filename = 'children'
 
     fieldsets = (
         ('معلومات الطفل', {
@@ -478,7 +487,7 @@ class ChildAdmin(admin.ModelAdmin):
 
     def get_unique_code_badge(self, obj):
         return format_html(
-            '<code style="background-color: #f5f5f5; padding: 3px 8px; '
+            '<code style="background-color: #264b5d; padding: 3px 8px; '
             'border-radius: 4px; font-family: monospace; font-weight: bold;">{}</code>',
             obj.unique_code
         )
@@ -691,7 +700,7 @@ class ChildAdmin(admin.ModelAdmin):
 
 
 @admin.register(ChildParents)
-class ChildParentsAdmin(admin.ModelAdmin):
+class ChildParentsAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced Admin for ChildParents model."""
     list_display = ('get_child_link', 'get_parent_link',
                     'get_relationship_type')
@@ -701,6 +710,9 @@ class ChildParentsAdmin(admin.ModelAdmin):
         'parent__user__first_name', 'parent__user__phone_number1'
     )
     autocomplete_fields = ('child', 'parent')
+
+    # Excel export configuration
+    excel_filename = 'child_parents_links'
 
     def get_child_link(self, obj):
         url = reverse('admin:parents_child_change', args=[obj.child.pk])
@@ -729,7 +741,7 @@ class ChildParentsAdmin(admin.ModelAdmin):
 
 
 @admin.register(ParentLinkRequest)
-class ParentLinkRequestAdmin(admin.ModelAdmin):
+class ParentLinkRequestAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced Admin for ParentLinkRequest model."""
     list_display = (
         'get_child_link', 'get_requester_link',
@@ -745,6 +757,9 @@ class ParentLinkRequestAdmin(admin.ModelAdmin):
     autocomplete_fields = ('child', 'requester', 'primary_parent')
     date_hierarchy = 'created_at'
     list_per_page = 25
+
+    # Excel export configuration
+    excel_filename = 'parent_link_requests'
 
     fieldsets = (
         ('معلومات الطلب', {
