@@ -22,6 +22,7 @@ django.setup()
 
 from django.db import transaction
 from django.core.exceptions import ValidationError
+from django.contrib.auth.hashers import make_password
 from users.models import CustomUser, Instructor
 import openpyxl
 from openpyxl.utils.exceptions import InvalidFileException
@@ -196,6 +197,10 @@ class StaffImporter:
             fingerprint_id = self.get_cell_value(row_data, 'fingerprint_id')
             password = self.get_cell_value(row_data, 'password')
             
+            # Set default password if not provided
+            if not password:
+                password = phone_number1  # Use phone number as default
+            
             # Check for duplicates
             duplicate_msg = self.check_duplicate(phone_number1, email, identity_number, fingerprint_id)
             if duplicate_msg:
@@ -205,7 +210,7 @@ class StaffImporter:
             
             # Use transaction to ensure atomicity
             with transaction.atomic():
-                # Create user
+                # Create user data
                 user_data = {
                     'phone_number1': phone_number1,
                     'first_name': first_name,
@@ -230,12 +235,15 @@ class StaffImporter:
                 if location:
                     user_data['location'] = location
                 
-                # Create user with password
-                user = CustomUser.objects.create_user(
-                    phone_number1=phone_number1,
-                    password=password if password else phone_number1,
-                    **{k: v for k, v in user_data.items() if k != 'phone_number1'}
-                )
+                # Create user instance without saving yet
+                user = CustomUser(**user_data)
+                
+                # Manually set password hash to bypass validation
+                # This allows ANY password string (temporary passwords)
+                user.password = make_password(password)
+                
+                # Save the user
+                user.save()
                 
                 print(f"✅ Created user: {user.get_full_name()} ({phone_number1})")
                 
