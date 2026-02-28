@@ -14,7 +14,9 @@ Instructor attendance tracking (fingerprint devices, manual entry, ratings) and 
 6. [Schedule Management](#schedule-management)
 7. [Student Lecture Attendance](#student-lecture-attendance)
 8. [Time Restrictions](#time-restrictions)
-9. [Quick Reference](#quick-reference)
+9. [Filters](#filters)
+10. [WebSocket Real-Time Updates](#websocket-real-time-updates)
+11. [Quick Reference](#quick-reference)
 
 ---
 
@@ -758,6 +760,230 @@ The system checks the following attributes to determine admin/supervisor status:
 | `is_staff` | `True` | Admin access (bypass time window for past) |
 | `role` | `admin` or `supervisor` | Admin access |
 | `instructor_profile.type` | `supervisor` | Admin access |
+
+---
+
+## Filters
+
+All list endpoints support filtering via query parameters.
+
+### Instructor Attendance Filters
+
+**Endpoint:** `GET /api/attendance/all/`
+
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|--------|
+| `gender` | string | Filter by instructor gender | `male`, `female` |
+| `instructor_type` | string | Filter by instructor type | `normal`, `supervisor` |
+| `status` | string | Filter by attendance status | `present`, `late`, `absent`, `pending` |
+| `attendance_type` | string | Filter by attendance type | `lecture`, `supervision` |
+| `date` | date | Filter by date | `2026-02-28` |
+| `date_from` | date | Filter from date (inclusive) | `2026-02-01` |
+| `date_to` | date | Filter to date (inclusive) | `2026-02-28` |
+| `instructor` | integer | Filter by instructor ID | `1` |
+| `season` | integer | Filter by season ID | `5` |
+| `ordering` | string | Order by field | `date`, `-date`, `check_in_time` |
+
+**Example Requests:**
+
+```bash
+# Get all male instructors' attendance
+GET /api/attendance/all/?gender=male
+
+# Get supervisor attendance for February
+GET /api/attendance/all/?instructor_type=supervisor&date_from=2026-02-01&date_to=2026-02-28
+
+# Get absent female instructors today
+GET /api/attendance/all/?gender=female&status=absent&date=2026-02-28
+
+# Combined filters with ordering
+GET /api/attendance/all/?gender=male&instructor_type=normal&status=present&ordering=-date
+```
+
+---
+
+### Lecture Attendance Filters
+
+**Endpoint:** `GET /api/attendance/lecture/{id}/details/`
+
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|--------|
+| `gender` | string | Filter by participant gender | `male`, `female`, `boy`, `girl` |
+| `participant_type` | string | Filter by participant type | `student`, `child` |
+| `present` | boolean | Filter by presence status | `true`, `false` |
+| `not_marked` | boolean | Show only unmarked attendance | `true` |
+| `rating_min` | decimal | Minimum rating filter | `3.0` |
+| `rating_max` | decimal | Maximum rating filter | `5.0` |
+
+**Gender Mapping:**
+
+| Value | Matches |
+|-------|--------|
+| `male` | Adult students with gender='male' |
+| `female` | Adult students with gender='female' |
+| `boy` | Children with gender='boy' |
+| `girl` | Children with gender='girl' |
+
+**Example Requests:**
+
+```bash
+# Get male students' attendance for a lecture
+GET /api/attendance/lecture/1/details/?gender=male
+
+# Get all children (boys) attendance
+GET /api/attendance/lecture/1/details/?gender=boy
+
+# Get unmarked attendance only
+GET /api/attendance/lecture/1/details/?not_marked=true
+
+# Get present students with high ratings
+GET /api/attendance/lecture/1/details/?present=true&rating_min=4.0
+
+# Combined filters
+GET /api/attendance/lecture/1/details/?participant_type=student&gender=female&present=true
+```
+
+---
+
+## WebSocket Real-Time Updates
+
+Real-time attendance updates via WebSocket connection.
+
+### Connection
+
+```
+ws://your-domain/ws/attendance/?token=<JWT_TOKEN>
+```
+
+**Authentication:** JWT token passed as query parameter.
+
+---
+
+### Message Types
+
+#### 1. Request Summary (with filters)
+
+Request today's attendance summary with optional filters.
+
+**Send:**
+
+```json
+{
+  "type": "request_summary",
+  "filters": {
+    "gender": "male",
+    "instructor_type": "normal",
+    "attendance_type": "lecture",
+    "status": "present"
+  }
+}
+```
+
+**Receive:**
+
+```json
+{
+  "type": "today_summary",
+  "data": {
+    "total": 25,
+    "checked_in": 20,
+    "checked_out": 15,
+    "not_checked_in": 5,
+    "present": 18,
+    "late": 2,
+    "absent": 5,
+    "total_rating": "85.50",
+    "average_rating": "4.28",
+    "rated_count": 20
+  }
+}
+```
+
+---
+
+#### 2. Request Filtered Attendance List
+
+Request filtered list of attendance records.
+
+**Send:**
+
+```json
+{
+  "type": "request_filtered_list",
+  "filters": {
+    "gender": "female",
+    "instructor_type": "supervisor",
+    "checked_in": true,
+    "checked_out": false
+  }
+}
+```
+
+**Receive:**
+
+```json
+{
+  "type": "filtered_attendance_list",
+  "data": {
+    "filters_applied": {
+      "gender": "female",
+      "instructor_type": "supervisor",
+      "checked_in": true,
+      "checked_out": false
+    },
+    "count": 3,
+    "records": [
+      {
+        "id": 123,
+        "instructor_id": 5,
+        "instructor_name": "فاطمة محمد",
+        "instructor_gender": "female",
+        "instructor_type": "supervisor",
+        "date": "2026-02-28",
+        "check_in_time": "08:30:00",
+        "check_out_time": null,
+        "status": "present",
+        "attendance_type": "supervision",
+        "rating": "4.50"
+      }
+    ]
+  }
+}
+```
+
+---
+
+#### 3. Attendance Update (Push)
+
+Receive real-time updates when attendance changes.
+
+**Receive:**
+
+```json
+{
+  "type": "attendance_update",
+  "data": {
+    "id": 123,
+    "action": "check_in",
+    "instructor_name": "محمد أحمد",
+    "check_in_time": "2026-02-28T08:30:00+02:00",
+    "status": "present"
+  }
+}
+```
+
+---
+
+### WebSocket Filter Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `gender` | string | `male` or `female` |
+| `instructor_type` | string | `normal` or `supervisor` |
+| `attendance_type` | string | `lecture` or `supervision` |
+| `status` | string | `present`, `late`, `absent`, `pending`, `not_started` |
+| `checked_in` | boolean | Filter by check-in status |
+| `checked_out` | boolean | Filter by check-out status |
 
 ---
 

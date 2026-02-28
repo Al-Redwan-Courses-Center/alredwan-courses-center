@@ -40,6 +40,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
             'identity_type',
             'address',
             'location',
+            'role',  # Added: allows student/parent role during registration
         )
         # These fields cannot be set by the user during registration
         read_only_fields = ('id',)
