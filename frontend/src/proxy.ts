@@ -37,9 +37,7 @@ export default withAuth(
       authorized({ token }) {
         const isLoggedOut = !token || !!token.error;
 
-        if (isLoggedOut) return false;
-
-        return true;
+        return !isLoggedOut;
       },
     },
 

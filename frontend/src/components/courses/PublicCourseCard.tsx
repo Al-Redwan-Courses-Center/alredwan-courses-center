@@ -1,6 +1,6 @@
-import CourseImage from "@/assets/course-img.jpg";
 import BookIcon from "@/components/icons/BookIcon";
 import CalendarIcon from "@/components/icons/CalendarIcon";
+import OpenBookIcon from "@/components/icons/OpenBookIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import Button from "@/components/ui/Button";
 import ItemCard from "@/components/ui/ItemCard";
@@ -22,17 +22,24 @@ export default function PublicCourseCard({
   // const endDate = parseISO(course.start_date);
   const lectureCount = course.num_lectures;
   const isEven = index % 2 === 0;
+  const isCourseImageValid = course.image?.startsWith("https");
 
   return (
     <ItemCard
       cardHeader={
-        <Image
-          src={course.image || CourseImage}
-          fill
-          alt="Template Course Image"
-          draggable="false"
-          className="object-cover"
-        />
+        !!course.image && isCourseImageValid ? (
+          <Image
+            src={course.image}
+            fill
+            alt="Template Course Image"
+            draggable="false"
+            className="object-cover"
+          />
+        ) : (
+          <div className="grid h-full place-items-center bg-gray-200">
+            <OpenBookIcon className="text-olive-700 h-auto w-25" />
+          </div>
+        )
       }
       cardFooter={
         <div
