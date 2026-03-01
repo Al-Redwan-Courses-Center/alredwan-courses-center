@@ -109,6 +109,20 @@ const roleMap: Record<string, NavLink[]> = {
       label: "دوراتي",
       href: "/dashboard/my-courses",
       icon: <MyCoursesIcon />,
+      nestedNavLinks: [
+        {
+          href: "lectures",
+          label: "المحاضرات",
+        },
+        {
+          href: "",
+          label: "تفاصيل الدورة",
+        },
+        {
+          href: "enrollments",
+          label: "الحجوزات",
+        },
+      ],
     },
 
     {

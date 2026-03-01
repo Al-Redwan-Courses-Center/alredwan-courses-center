@@ -146,7 +146,7 @@ class LandingPageCourseSerializer(serializers.ModelSerializer):
 
 class CourseUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating course information"""
-    
+
     class Meta:
         model = Course
         fields = [
@@ -160,40 +160,50 @@ class CourseUpdateSerializer(serializers.ModelSerializer):
             'capacity': {'required': False},
             'price': {'required': False},
         }
-    
+
     def validate(self, data):
         """Validate course update data"""
         instance = self.instance
-        
+
         # Check if end_date is being updated and validate it
-        end_date = data.get('end_date', instance.end_date if instance else None)
-        start_date = data.get('start_date', instance.start_date if instance else None)
-        
+        end_date = data.get(
+            'end_date', instance.end_date if instance else None)
+        start_date = data.get(
+            'start_date', instance.start_date if instance else None)
+
         if end_date and start_date and end_date < start_date:
             raise serializers.ValidationError({
                 'end_date': 'End date must be on or after start date.'
             })
-        
+
         # Validate age constraints
         min_age = data.get('min_age', instance.min_age if instance else None)
         max_age = data.get('max_age', instance.max_age if instance else None)
-        
+
         if min_age and max_age and min_age > max_age:
             raise serializers.ValidationError({
                 'min_age': 'Minimum age cannot be greater than maximum age.'
             })
-        
+
         return data
+
+
+class LectureCourseSerializer(serializers.ModelSerializer):
+    """Minimal course serializer for lecture responses"""
+
+    class Meta:
+        model = Course
+        fields = ['id', 'name']
 
 
 class LectureInstructorSerializer(serializers.ModelSerializer):
     """Minimal instructor serializer for lecture responses"""
     full_name = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = InstructorSerializer.Meta.model
         fields = ['id', 'full_name']
-    
+
     def get_full_name(self, obj):
         if obj.user:
             return f"{obj.user.first_name} {obj.user.last_name}".strip()
@@ -202,24 +212,63 @@ class LectureInstructorSerializer(serializers.ModelSerializer):
 
 class LectureListSerializer(serializers.ModelSerializer):
     """Serializer for listing lectures"""
+    course = LectureCourseSerializer(read_only=True)
     instructor = LectureInstructorSerializer(read_only=True)
     scheduled_at = serializers.SerializerMethodField()
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
-    
+    status_display = serializers.CharField(
+        source='get_status_display', read_only=True)
+
     class Meta:
         model = Lecture
         fields = [
             'id', 'lecture_number', 'title', 'day', 'scheduled_at',
-            'start_time', 'end_time', 'instructor', 'status', 
-            'status_display', 'is_accepted', 'attendance_taken', 
+            'start_time', 'end_time', 'instructor', 'course', 'status',
+            'status_display', 'is_accepted', 'attendance_taken',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'attendance_taken']
-    
+        read_only_fields = ['id', 'created_at',
+                            'updated_at', 'attendance_taken']
+
     def get_scheduled_at(self, obj):
         """Return timezone-aware datetime for the lecture start"""
         start_dt = obj.get_start_datetime()
         return start_dt.isoformat() if start_dt else None
+
+
+class LectureDetailSerializer(serializers.ModelSerializer):
+    """Serializer for detailed lecture view with full course and instructor info"""
+    course = CourseListSerializer(read_only=True)
+    instructor = LectureInstructorSerializer(read_only=True)
+    scheduled_at = serializers.SerializerMethodField()
+    status_display = serializers.CharField(
+        source='get_status_display', read_only=True)
+    duration_minutes = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Lecture
+        fields = [
+            'id', 'lecture_number', 'title', 'day', 'scheduled_at',
+            'start_time', 'end_time', 'duration_minutes', 'instructor',
+            'course', 'status', 'status_display', 'is_accepted',
+            'attendance_taken', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at',
+                            'updated_at', 'attendance_taken']
+
+    def get_scheduled_at(self, obj):
+        """Return timezone-aware datetime for the lecture start"""
+        start_dt = obj.get_start_datetime()
+        return start_dt.isoformat() if start_dt else None
+
+    def get_duration_minutes(self, obj):
+        """Calculate lecture duration in minutes"""
+        if obj.start_time and obj.end_time:
+            from datetime import datetime, date
+            start = datetime.combine(date.today(), obj.start_time)
+            end = datetime.combine(date.today(), obj.end_time)
+            delta = end - start
+            return int(delta.total_seconds() / 60)
+        return None
 
 
 class LectureCreateSerializer(serializers.ModelSerializer):
@@ -230,14 +279,14 @@ class LectureCreateSerializer(serializers.ModelSerializer):
         allow_null=True
     )
     is_accepted = serializers.BooleanField(required=False, default=True)
-    
+
     class Meta:
         model = Lecture
         fields = [
-            'lecture_number', 'title', 'day', 'start_time', 
+            'lecture_number', 'title', 'day', 'start_time',
             'end_time', 'instructor', 'status', 'is_accepted'
         ]
-    
+
     def validate_lecture_number(self, value):
         """Validate that lecture_number is positive"""
         if value <= 0:
@@ -245,42 +294,42 @@ class LectureCreateSerializer(serializers.ModelSerializer):
                 "رقم المحاضرة يجب أن يكون عددًا صحيحًا موجبًا."
             )
         return value
-    
+
     def validate(self, data):
         """Validate lecture data"""
         # Check time coherence
         start_time = data.get('start_time')
         end_time = data.get('end_time')
-        
+
         if start_time and end_time and start_time >= end_time:
             raise serializers.ValidationError({
                 'end_time': "وقت البداية يجب أن يكون قبل وقت النهاية."
             })
-        
+
         # Get course from context
         course = self.context.get('course')
         if not course:
             raise serializers.ValidationError("Course is required in context")
-        
+
         return data
-    
+
     def create(self, validated_data):
         """Create lecture with course from context using add_lecture_with_shift"""
         course = self.context.get('course')
-        
+
         # If no instructor specified, use course instructor
         if 'instructor' not in validated_data or validated_data['instructor'] is None:
             validated_data['instructor'] = course.instructor
-        
+
         # Use the add_lecture_with_shift method to handle insertion and shifting
         lecture = Lecture.add_lecture_with_shift(course, validated_data)
-        
+
         return lecture
 
 
 class LectureUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating lecture information"""
-    
+
     class Meta:
         model = Lecture
         fields = [
@@ -293,27 +342,29 @@ class LectureUpdateSerializer(serializers.ModelSerializer):
             'end_time': {'required': False},
             'status': {'required': False},
         }
-    
+
     def validate(self, data):
         """Validate lecture update data"""
         instance = self.instance
-        
+
         # Check if times are valid
-        start_time = data.get('start_time', instance.start_time if instance else None)
-        end_time = data.get('end_time', instance.end_time if instance else None)
-        
+        start_time = data.get(
+            'start_time', instance.start_time if instance else None)
+        end_time = data.get(
+            'end_time', instance.end_time if instance else None)
+
         if start_time and end_time and start_time >= end_time:
             raise serializers.ValidationError({
                 'end_time': 'End time must be after start time.'
             })
-        
+
         # Prevent changing lecture if attendance has been taken
         if instance and instance.attendance_taken:
             if 'day' in data or 'start_time' in data or 'end_time' in data:
                 raise serializers.ValidationError({
                     'non_field_errors': 'Cannot modify lecture date/time after attendance has been taken.'
                 })
-        
+
         return data
 
 
@@ -324,29 +375,29 @@ class InstructorLectureCreateSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
-    
+
     class Meta:
         model = Lecture
         fields = [
             'title', 'day', 'start_time', 'end_time', 'instructor'
         ]
-    
+
     def validate(self, data):
         """Validate lecture data"""
         # Check time coherence
         start_time = data.get('start_time')
         end_time = data.get('end_time')
-        
+
         if start_time and end_time and start_time >= end_time:
             raise serializers.ValidationError({
                 'end_time': "وقت البداية يجب أن يكون قبل وقت النهاية."
             })
-        
+
         # Get course from context
         course = self.context.get('course')
         if not course:
             raise serializers.ValidationError("Course is required in context")
-        
+
         # Check for duplicate date+time
         existing_lecture = Lecture.objects.filter(
             course=course,
@@ -354,20 +405,20 @@ class InstructorLectureCreateSerializer(serializers.ModelSerializer):
             start_time=start_time,
             is_accepted=True
         ).first()
-        
+
         if existing_lecture:
             raise serializers.ValidationError({
                 'day': f"محاضرة موجودة بالفعل في {data.get('day')} في الوقت {start_time or 'midnight'}. لا يمكن إنشاء محاضرات مكررة في نفس التاريخ والوقت.",
                 'start_time': "محاضرة موجودة بالفعل في هذا الوقت."
             })
-        
+
         return data
-    
+
     def create(self, validated_data):
         """Create additional lecture using add_lecture_by_datetime method - automatically calculates lecture number"""
         course = self.context.get('course')
         instructor = validated_data.get('instructor') or course.instructor
-        
+
         # Use add_lecture_by_datetime to handle automatic lecture numbering
         lecture = Lecture.add_lecture_by_datetime(
             course=course,
@@ -379,7 +430,7 @@ class InstructorLectureCreateSerializer(serializers.ModelSerializer):
             status=LectureStatus.ADDITIONAL,
             is_accepted=False
         )
-        
+
         return lecture
 
 

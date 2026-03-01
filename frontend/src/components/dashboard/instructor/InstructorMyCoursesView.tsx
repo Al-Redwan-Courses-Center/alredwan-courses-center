@@ -14,31 +14,33 @@ import {
 } from "@/components/ui/data-view/DataViewRow";
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
-import { MY_COURSES } from "@/dev-data/db";
 import { cn, formatDate, toHindiDigits } from "@/lib/utils";
-import { Course } from "@/types/entities";
+import buildInstructorMyCoursesConfig, {
+  CourseViewItem,
+} from "@/components/dashboard/instructor/instructor-my-courses-view-config";
 import { parseISO } from "date-fns";
 import Link from "next/link";
+import { CourseListItem } from "@/types/entities";
 
-export default function MyCoursesView() {
+export default function InstructorMyCoursesView({
+  courses,
+}: {
+  courses: CourseListItem[];
+}) {
+  const {
+    courses: viewCourses,
+    filterConfig,
+    sortConfig,
+  } = buildInstructorMyCoursesConfig(courses);
+
   return (
     <DataView
-      data={MY_COURSES}
+      data={viewCourses}
       gridLayout={cn(
         "grid-cols-[minmax(0,0.5fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)_minmax(0,0.5fr)]",
       )}
-      filterConfig={{
-        test: {
-          key: "أ",
-          label: "Abc",
-        },
-      }}
-      sortConfig={{
-        test: {
-          label: "Abc",
-          sortFn: () => 1,
-        },
-      }}
+      filterConfig={filterConfig}
+      sortConfig={sortConfig}
     >
       <div className="mb-14 flex items-center gap-32 ps-16">
         <DataViewSearch />
@@ -59,10 +61,10 @@ export default function MyCoursesView() {
       <DataViewBody
         className="px-16"
         render={{
-          table: (course: Course, i) => (
+          table: (course: CourseViewItem, i) => (
             <DataViewRow index={i} key={course.id}>
               <DataViewCell>{toHindiDigits(i + 1)}</DataViewCell>
-              <DataViewCell>{course.title}</DataViewCell>
+              <DataViewCell>{course.name}</DataViewCell>
               <DataViewCell>{course.season?.name}</DataViewCell>
               <DataViewCell>
                 {formatDate(parseISO(course.start_date))}
@@ -85,7 +87,7 @@ export default function MyCoursesView() {
             </DataViewRow>
           ),
 
-          cards: (item: Course, index) => (
+          cards: (item: CourseViewItem, index) => (
             <MyCourseCard course={item} index={index} key={item.id} />
           ),
         }}

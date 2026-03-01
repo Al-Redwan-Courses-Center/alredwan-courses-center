@@ -8,7 +8,7 @@ from ..models.fingerprint_scan_log import FingerprintScanLog, ScanAction
 
 
 @admin.register(FingerprintScanLog)
-class FingerprintScanLogAdmin(ExcelExportMixin, admin.ModelAdmin):
+class FingerprintScanLogAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Admin interface for viewing fingerprint scan logs."""
     
     list_display = (

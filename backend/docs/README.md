@@ -23,14 +23,27 @@ Welcome! This is the **single source of truth** for the backend API. Everything 
 | [⚙️ Signals & Lecture Generation](./internal/signals-and-lecture-generation.md) | How lectures are auto-generated from schedules |
 | [⚙️ Attendance System Logic](./internal/attendance-system-logic.md) | Business rules, cron jobs, rating system internals |
 
+### DevOps & Deployment
+
+| Document | Description |
+|----------|-------------|
+| [🚀 Production Checklist](./PRODUCTION_CHECKLIST.md) | Complete guide for production deployment |
+
 ---
 
 ## 🌐 Base URLs
 
-| Environment | Base URL |
-|-------------|----------|
-| Local | `http://localhost:8000` |
-| Production | `https://<your-app>.onrender.com` |
+| Environment | Base URL (HTTP) | WebSocket URL |
+|-------------|-----------------|---------------|
+| Local | `http://localhost:8000` | `ws://localhost:8001` |
+| Production | `https://<your-app>.onrender.com` | `wss://<your-app>.onrender.com:8001` |
+
+### Server Ports
+
+| Port | Server | Purpose |
+|------|--------|---------|
+| 8000 | Gunicorn (WSGI) | HTTP/REST API |
+| 8001 | Uvicorn (ASGI) | WebSocket connections |
 
 ### API Prefixes
 

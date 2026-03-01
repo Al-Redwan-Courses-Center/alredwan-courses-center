@@ -1,5 +1,7 @@
 import { getUser, protect } from "@/actions/auth";
+import { getInstructorTodaysLectures } from "@/actions/lectures";
 import TodaysLecturesTable from "@/components/lectures/TodaysLecturesTable";
+import { TODAYS_SCHEDULE } from "@/dev-data/db";
 import { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -12,6 +14,8 @@ export default async function Page() {
 
   const { first_name } = await getUser();
 
+  await getInstructorTodaysLectures();
+
   return (
     <div className="px-16 pt-15">
       <h1 className="text-olive-700 font-medad mb-14 text-6xl">
@@ -19,7 +23,7 @@ export default async function Page() {
       </h1>
 
       <Suspense>
-        <TodaysLecturesTable />
+        <TodaysLecturesTable todaysLectures={TODAYS_SCHEDULE} />
       </Suspense>
     </div>
   );

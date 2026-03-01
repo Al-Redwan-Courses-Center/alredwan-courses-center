@@ -14,22 +14,27 @@ class EnrollmentListSerializer(serializers.ModelSerializer):
     course_name = serializers.CharField(source='course.name', read_only=True)
     course_price = serializers.DecimalField(
         source='course.price', max_digits=10, decimal_places=2, read_only=True)
-    course_start_date = serializers.DateField(source='course.start_date', read_only=True)
-    course_end_date = serializers.DateField(source='course.end_date', read_only=True)
+    course_start_date = serializers.DateField(
+        source='course.start_date', read_only=True)
+    course_end_date = serializers.DateField(
+        source='course.end_date', read_only=True)
     course_instructor = serializers.SerializerMethodField()
-    
+
     # Participant info
+    child_id = serializers.UUIDField(
+        source='child.id', read_only=True, default=None)
     participant_name = serializers.SerializerMethodField()
     participant_type = serializers.SerializerMethodField()
-    
+
     # Status
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
-    
+    status_display = serializers.CharField(
+        source='get_status_display', read_only=True)
+
     # Payment summary
     amount_paid = serializers.SerializerMethodField()
     remaining_amount = serializers.SerializerMethodField()
     payment_status = serializers.SerializerMethodField()
-    
+
     # Progress summary
     completion_percentage = serializers.SerializerMethodField()
 
@@ -38,7 +43,7 @@ class EnrollmentListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'course', 'course_name', 'course_price',
             'course_start_date', 'course_end_date', 'course_instructor',
-            'participant_name', 'participant_type',
+            'child_id', 'participant_name', 'participant_type',
             'status', 'status_display',
             'enrolled_at', 'completed_at',
             'amount_paid', 'remaining_amount', 'payment_status',
@@ -82,8 +87,10 @@ class EnrollmentListSerializer(serializers.ModelSerializer):
 
 class PaymentSummarySerializer(serializers.ModelSerializer):
     """Serializer for payment records in enrollment detail"""
-    method_display = serializers.CharField(source='get_method_display', read_only=True)
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    method_display = serializers.CharField(
+        source='get_method_display', read_only=True)
+    status_display = serializers.CharField(
+        source='get_status_display', read_only=True)
     processed_by_name = serializers.SerializerMethodField()
 
     class Meta:
@@ -106,31 +113,36 @@ class EnrollmentDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for viewing a single enrollment"""
     # Course info
     course_name = serializers.CharField(source='course.name', read_only=True)
-    course_description = serializers.CharField(source='course.description', read_only=True)
+    course_description = serializers.CharField(
+        source='course.description', read_only=True)
     course_price = serializers.DecimalField(
         source='course.price', max_digits=10, decimal_places=2, read_only=True)
-    course_start_date = serializers.DateField(source='course.start_date', read_only=True)
-    course_end_date = serializers.DateField(source='course.end_date', read_only=True)
+    course_start_date = serializers.DateField(
+        source='course.start_date', read_only=True)
+    course_end_date = serializers.DateField(
+        source='course.end_date', read_only=True)
     course_instructor = serializers.SerializerMethodField()
-    course_num_lectures = serializers.IntegerField(source='course.num_lectures', read_only=True)
-    
+    course_num_lectures = serializers.IntegerField(
+        source='course.num_lectures', read_only=True)
+
     # Participant info
     participant_name = serializers.SerializerMethodField()
     participant_type = serializers.SerializerMethodField()
     participant_id = serializers.SerializerMethodField()
-    
+
     # Status
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
-    
+    status_display = serializers.CharField(
+        source='get_status_display', read_only=True)
+
     # Payment info
     amount_paid = serializers.SerializerMethodField()
     remaining_amount = serializers.SerializerMethodField()
     payment_status = serializers.SerializerMethodField()
     payments = serializers.SerializerMethodField()
-    
+
     # Progress
     completion_progress = serializers.SerializerMethodField()
-    
+
     # Created by
     created_by_name = serializers.SerializerMethodField()
 

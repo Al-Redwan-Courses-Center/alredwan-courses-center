@@ -13,7 +13,7 @@ from .base import ArabicLabelsMixin, OptimizedQuerysetMixin
 
 
 @admin.register(CourseSchedule)
-class CourseScheduleAdmin(ExcelExportMixin, ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+class CourseScheduleAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
     """Admin configuration for CourseSchedule model."""
 
     select_related_fields = ['course', 'course__instructor']

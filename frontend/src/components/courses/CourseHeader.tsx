@@ -2,10 +2,9 @@ import CalendarIcon from "@/components/icons/CalendarIcon";
 import ClockIcon from "@/components/icons/ClockIcon";
 import InstructorIcon from "@/components/icons/InstructorIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
-import Button from "@/components/ui/Button";
 import CopyToClipboardButton from "@/components/ui/CopyToClipboardButton";
 import { cn, formatDate, toHindiDigits } from "@/lib/utils";
-import { Course } from "@/types/entities";
+import { CourseDetail } from "@/types/entities";
 import { parseISO } from "date-fns";
 
 const dataPointWrapperStyles = cn(
@@ -16,13 +15,15 @@ const dataPointIconStyles = cn(
   "drop-shadow-soft row-span-full h-10 w-auto self-center",
 );
 
-export default function CourseHeader({ course }: { course: Course }) {
+export default function CourseHeader({
+  course,
+}: {
+  course: CourseDetail | null;
+}) {
   return (
     <div className="mb-14 grid h-76 w-6/10 grid-cols-[repeat(4,auto)] grid-rows-2 gap-x-20 rounded-[0_0_1.5951rem_1.5951rem] bg-[linear-gradient(164deg,#EDF0ED_12.23%,#F8F9F8_88.43%)] px-36 shadow-inner">
       <div className="col-span-full flex items-center justify-between">
-        <h2 className="text-olive-500 text-[4rem] font-bold">
-          {course?.title}
-        </h2>
+        <h2 className="text-olive-500 text-[4rem] font-bold">{course?.name}</h2>
 
         <CopyToClipboardButton>c1389403</CopyToClipboardButton>
       </div>
@@ -33,7 +34,8 @@ export default function CourseHeader({ course }: { course: Course }) {
           المعلم{course?.instructor.name === "female" && "ة"}
         </span>
         <span className="text-olive-500">
-          الأخ{course?.instructor.gender === "female" && "ت"}{" "}
+          {/* الأخ{course?.instructor.gender === "female" && "ت"}{" "} */}
+          الأخ
           {course?.instructor.name}
         </span>
       </div>

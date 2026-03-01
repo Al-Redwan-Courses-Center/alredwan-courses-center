@@ -1,9 +1,12 @@
 import { getUser } from "@/actions/auth";
-import MyCoursesView from "@/components/courses/MyCoursesView";
+import { getInstructorCourses } from "@/actions/courses";
+import InstructorMyCoursesView from "@/components/dashboard/instructor/InstructorMyCoursesView";
 import { Suspense } from "react";
 
 export default async function InstructorMyCoursesPage() {
-  const { first_name } = await getUser();
+  const { first_name, id } = await getUser();
+
+  const courses = await getInstructorCourses(id);
 
   return (
     <div className="flex h-full max-h-73/100 flex-col pt-15">
@@ -13,7 +16,7 @@ export default async function InstructorMyCoursesPage() {
 
       <div className="max-h-full w-full">
         <Suspense fallback={null}>
-          <MyCoursesView />
+          <InstructorMyCoursesView courses={courses} />
         </Suspense>
       </div>
     </div>

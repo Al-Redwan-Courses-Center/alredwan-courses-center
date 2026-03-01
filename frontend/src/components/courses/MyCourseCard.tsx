@@ -1,10 +1,11 @@
+import CourseImage from "@/assets/course-img.jpg";
 import BookIcon from "@/components/icons/BookIcon";
 import CalendarIcon from "@/components/icons/CalendarIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import Button from "@/components/ui/Button";
 import ItemCard from "@/components/ui/ItemCard";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
-import { Course } from "@/types/entities";
+import { CourseListItem } from "@/types/entities";
 import { parseISO } from "date-fns";
 import Image from "next/image";
 
@@ -12,18 +13,18 @@ export default function MyCourseCard({
   course,
   index,
 }: {
-  course: Course;
+  course: CourseListItem;
   index: number;
 }) {
-  const lectureCount = course.lectures.length;
-  const numEnrollments = course.enrollments.length;
+  const lectureCount = course.num_lectures;
+  const numEnrollments = course.enrolled_count;
   const isEven = index % 2 === 0;
 
   return (
     <ItemCard
       cardHeader={
         <Image
-          src={course.images.cover}
+          src={course.image || CourseImage}
           alt="Course Image"
           draggable="false"
           fill
@@ -46,7 +47,7 @@ export default function MyCourseCard({
       index={index}
       key={index}
     >
-      <h3 className="mb-3 text-[1.28rem] font-bold">{course.title}</h3>
+      <h3 className="mb-3 text-[1.28rem] font-bold">{course.name}</h3>
       <p className="mb-5">
         دورات شامل لتعلم تلاوة القرآن الكريم وأحكام التجويد
       </p>
@@ -91,8 +92,8 @@ export default function MyCourseCard({
         <li>
           <PeopleIcon />
           <span>
-            الأماكن المتاحة: {toHindiDigits(course.capacity - numEnrollments)}{" "}
-            من {toHindiDigits(course.capacity)}
+            الأماكن المتاحة: {toHindiDigits(course.available_spots)} من{" "}
+            {toHindiDigits(course.capacity)}
           </span>
         </li>
       </ul>

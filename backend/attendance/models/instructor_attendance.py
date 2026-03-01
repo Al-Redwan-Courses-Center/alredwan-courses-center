@@ -412,7 +412,39 @@ class InstructorAttendance(models.Model):
         self.notes = notes
 
         self.save()
+        self.broadcast_rating()
         return self
+
+    def broadcast_rating(self):
+        """Broadcast rating update to connected WebSocket clients.
+
+        Silently fails if Redis/channel layer is unavailable (e.g., during tests).
+        """
+        try:
+            channel_layer = get_channel_layer()
+            if channel_layer is None:
+                return
+            async_to_sync(channel_layer.group_send)(
+                "attendance_live",
+                {
+                    "type": "attendance_rated",
+                    "data": {
+                        "id": self.id,
+                        "instructor": self.instructor.user.get_full_name(),
+                        "instructor_id": str(self.instructor.user.id),
+                        "rating": float(self.rating) if self.rating else None,
+                        "rated_by": self.rated_by.get_full_name() if self.rated_by else None,
+                        "rated_by_id": str(self.rated_by.id) if self.rated_by else None,
+                        "rated_at": self.rated_at.isoformat() if self.rated_at else None,
+                        "notes": self.notes,
+                        "date": str(self.date),
+                        "status": self.status,
+                    },
+                },
+            )
+        except Exception:
+            # Silently fail if channel layer is not available (e.g., during tests)
+            pass
 
     @classmethod
     def generate_for_date_range(cls, start_date, end_date, season=None):

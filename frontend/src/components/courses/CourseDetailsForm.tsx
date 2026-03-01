@@ -6,8 +6,8 @@ import WeekdayPicker from "@/components/courses/WeekdayPicker";
 import NotepadIcon from "@/components/icons/NotepadIcon";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { cn, formatTime, getWeekDay, getWeekDayIndex } from "@/lib/utils";
-import { Course } from "@/types/entities";
+import { cn, formatTime, getWeekDay } from "@/lib/utils";
+import { CourseDetail } from "@/types/entities";
 import { PickerValue } from "@mui/x-date-pickers/internals";
 import { format, parse, parseISO } from "date-fns";
 import { useState } from "react";
@@ -23,7 +23,11 @@ export interface CourseDetailsInputs {
 
 const labelStyles = cn("text-[2rem] font-bold text-gray-500");
 
-export default function CourseDetailsForm({ course }: { course: Course }) {
+export default function CourseDetailsForm({
+  course,
+}: {
+  course: CourseDetail | null;
+}) {
   const [activeClockId, setActiveClockId] = useState("");
   const [activeClockDay, activeClockSide] = activeClockId.split("-") as [
     string,
@@ -34,25 +38,24 @@ export default function CourseDetailsForm({ course }: { course: Course }) {
     register,
     watch,
     setValue,
-    // handleSubmit,
-    // formState: { errors },
+    handleSubmit,
+    formState: { errors },
   } = useForm<CourseDetailsInputs>({
     defaultValues: {
-      course_title: course.title,
-      description: course.description,
-      weekdays: course.schedule.map((s) => ({
-        day: getWeekDayIndex(s.day),
-        start: parse(s.start, "HH:mm", new Date()),
-        end: parse(s.end, "HH:mm", new Date()),
+      course_title: course?.name,
+      description: course?.description,
+      weekdays: course?.schedules.map((s) => ({
+        day: s.weekday,
+        start: parse(s.start_time, "HH:mm", new Date()),
+        end: parse(s.end_time, "HH:mm", new Date()),
       })),
       date_range: {
-        from: parseISO(course.start_date),
-        to: parseISO(course.end_date || ""),
+        from: parseISO(course?.start_date || ""),
+        to: parseISO(course?.end_date || ""),
       },
     },
   });
 
-  // eslint-disable-next-line react-hooks/incompatible-library
   const weekdays = watch("weekdays");
   const dateRange = watch("date_range");
 
