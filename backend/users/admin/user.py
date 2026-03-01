@@ -5,8 +5,8 @@ from ..models.user import CustomUser
 
 
 @admin.register(CustomUser)
-class UserAdmin(BaseUserAdmin, ExcelExportMixin):
-    list_display = ('get_full_name_display', 'get_phone_number1', 'get_phone_number2', 'get_role',
+class UserAdmin(ExcelExportMixin, BaseUserAdmin):
+    list_display = ('action_checkbox', 'get_full_name_display', 'get_phone_number1', 'get_phone_number2', 'get_role',
                     'get_gender', 'get_date_joined', 'get_is_verified', 'get_is_active')
     list_filter = ('role', 'is_verified', 'is_active',
                    'gender', 'date_joined')

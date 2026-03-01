@@ -219,12 +219,12 @@ def void_payments(modeladmin, request, queryset):
 # Payment Admin Configuration
 # =============================================================================
 @admin.register(Payment)
-class PaymentAdmin(admin.ModelAdmin, ExcelExportMixin):
+class PaymentAdmin(ExcelExportMixin, admin.ModelAdmin):
     """Enhanced admin configuration for Payment model."""
     
     # List display
     list_display = (
-        'get_payer_display', 'get_enrollment_link', 'get_amount_display',
+        'action_checkbox', 'get_payer_display', 'get_enrollment_link', 'get_amount_display',
         'get_method_badge', 'get_status_badge', 'get_processed_date',
         'get_processed_by_display', 'get_reference_display'
     )
