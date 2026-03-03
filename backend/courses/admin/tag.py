@@ -14,10 +14,10 @@ from .inlines import TagCourseInline, TagInstructorInline
 
 
 @admin.register(Tag)
-class TagAdmin(ArabicLabelsMixin, admin.ModelAdmin, ExcelExportMixin):
+class TagAdmin(ArabicLabelsMixin, ExcelExportMixin, admin.ModelAdmin):
     """Admin configuration for Tag model."""
 
-    list_display = ('name', 'get_courses_count', 'get_instructors_count', 'created_at')
+    list_display = ('action_checkbox', 'name', 'get_courses_count', 'get_instructors_count', 'created_at')
     search_fields = ('name',)
     list_per_page = 50
     ordering = ('name',)

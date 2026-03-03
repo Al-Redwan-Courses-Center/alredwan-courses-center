@@ -10,7 +10,7 @@ from users.models.student_instructor_rating import (
 
 @admin.register(StudentInstructorRating)
 class StudentInstructorRatingAdmin(ExcelExportMixin, admin.ModelAdmin):
-    list_display = ('get_student', 'get_instructor',
+    list_display = ('action_checkbox', 'get_student', 'get_instructor',
                     'get_course', 'get_rating', 'get_created_at')
     list_filter = ('rating', 'course', 'instructor', 'created_at')
     search_fields = ('student__user__first_name',
@@ -81,7 +81,7 @@ class StudentInstructorRatingAdmin(ExcelExportMixin, admin.ModelAdmin):
 
 @admin.register(ParentInstructorRating)
 class ParentInstructorRatingAdmin(ExcelExportMixin, admin.ModelAdmin):
-    list_display = ('get_parent', 'get_instructor',
+    list_display = ('action_checkbox', 'get_parent', 'get_instructor',
                     'get_course', 'get_rating', 'get_created_at')
     list_filter = ('rating', 'course', 'instructor', 'created_at')
     search_fields = ('parent__user__first_name',
@@ -145,7 +145,7 @@ class ParentInstructorRatingAdmin(ExcelExportMixin, admin.ModelAdmin):
 
 @admin.register(StudentCourseRating)
 class StudentCourseRatingAdmin(ExcelExportMixin, admin.ModelAdmin):
-    list_display = ('get_student', 'get_course',
+    list_display = ('action_checkbox', 'get_student', 'get_course',
                     'get_rating', 'get_created_at')
     list_filter = ('rating', 'course', 'created_at')
     search_fields = ('student__user__first_name', 'course__name', 'feedback')
@@ -199,7 +199,7 @@ class StudentCourseRatingAdmin(ExcelExportMixin, admin.ModelAdmin):
 
 @admin.register(ParentCourseRating)
 class ParentCourseRatingAdmin(ExcelExportMixin, admin.ModelAdmin):
-    list_display = ('get_parent', 'get_course', 'get_rating', 'get_created_at')
+    list_display = ('action_checkbox', 'get_parent', 'get_course', 'get_rating', 'get_created_at')
     list_filter = ('rating', 'course', 'created_at')
     search_fields = ('parent__user__first_name', 'course__name', 'feedback')
     date_hierarchy = 'created_at'
