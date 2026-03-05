@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, re_path, include
-from core.views import health_check
+from core.views import health_check, font_diagnostic
 from debug_toolbar.toolbar import debug_toolbar_urls
 from django.conf import settings
 from django.conf.urls.static import static
@@ -28,6 +28,7 @@ admin.site.index_title = "الصفحة الرئيسية"
 urlpatterns = [
     path('Al-Redwan-superadmin-dashboard/', admin.site.urls),
     path('health/', health_check, name='health_check'),
+    path('api/diagnostics/fonts/', font_diagnostic, name='font_diagnostic'),
     re_path(r'^auth/', include('djoser.urls')),
     re_path(r'^auth/', include('djoser.urls.jwt')),
     path('api/courses/', include('courses.urls')),
