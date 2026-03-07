@@ -247,6 +247,11 @@ class Course(models.Model):
         Only used if all the Course Schedules for a course are created before any lectures.
         '''
         from .lecture import Lecture
+
+        # Guard: skip if lectures already exist for this course
+        if self.lectures.exists():
+            return
+
         course_start_date = self.start_date
         course_end_date = self.end_date if self.end_date else None
         course_number_of_lectures = self.num_lectures if self.num_lectures else None
@@ -302,7 +307,7 @@ class Course(models.Model):
 
         # Bulk create lectures for better performance
         if lectures_to_create:
-            Lecture.objects.bulk_create(lectures_to_create)
+            Lecture.objects.bulk_create(lectures_to_create, ignore_conflicts=True)
             # Update timestamps to be identical for all lectures in this batch
             lecture_ids = [lec.pk for lec in lectures_to_create]
             Lecture.objects.filter(pk__in=lecture_ids).update(
