@@ -21,6 +21,14 @@ interface NavLink {
 }
 
 const roleMap: Record<string, NavLink[]> = {
+  admin: [
+    {
+      label: "حضور اليوم",
+      href: "/dashboard/todays-staff-attendances",
+      icon: <ClipboardIcon />,
+    },
+  ],
+
   instructor: [
     {
       label: "محاضرات اليوم",
@@ -205,7 +213,7 @@ export default async function DashboardNavSidebar() {
         <LogoutButton
           variant="primary"
           size="small"
-          className="bg-olive-300 self-start"
+          className="bg-olive-300 mt-auto self-start"
         >
           تسجيل الخروج
         </LogoutButton>

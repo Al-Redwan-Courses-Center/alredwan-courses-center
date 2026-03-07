@@ -73,14 +73,8 @@ export interface CourseStats {
 }
 */
 
-// TODO(types): Unused entity type; reintroduce when an API uses it.
-/*
-export interface CourseSchedule {
-  day: string;
-  start: string;
-  end: string;
-}
-*/
+
+
 
 // TODO(types): Unused entity type; reintroduce when an API uses it.
 /*

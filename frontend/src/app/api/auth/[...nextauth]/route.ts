@@ -40,8 +40,6 @@ export const authConfig: AuthOptions = {
 
         if (!user) return null;
 
-        console.log(user.role);
-
         if (user.role === "instructor") {
           const {
             data: {

@@ -31,7 +31,7 @@ export default function LoginForm({
     formState: { isSubmitting },
   } = useForm<LoginInputs>({
     defaultValues: {
-      phone_number1: "01010000001",
+      phone_number1: "01000000000",
       password: "Test@1234",
     },
   });
