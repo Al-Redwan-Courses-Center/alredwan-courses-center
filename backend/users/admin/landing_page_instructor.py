@@ -38,13 +38,13 @@ class OptimizedQuerysetMixin:
 
 
 @admin.register(LandingPageInstructor)
-class LandingPageInstructorAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
+class LandingPageInstructorAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, ExcelExportMixin, admin.ModelAdmin):
     """Admin configuration for Landing Page Featured Instructors."""
 
     select_related_fields = ['instructor', 'instructor__user']
 
     list_display = (
-        'get_order_badge', 'get_instructor_link', 'get_instructor_type',
+        'action_checkbox', 'get_order_badge', 'get_instructor_link', 'get_instructor_type',
         'get_courses_count', 'get_bio_preview', 'created_at'
     )
     list_filter = ('instructor__type',)

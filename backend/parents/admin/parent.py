@@ -276,10 +276,10 @@ class HasEnrollmentsFilter(admin.SimpleListFilter):
 # =============================================================================
 
 @admin.register(Parent)
-class ParentAdmin(admin.ModelAdmin, ExcelExportMixin):
+class ParentAdmin(ExcelExportMixin, admin.ModelAdmin):
     """Enhanced Admin for Parent model."""
     list_display = (
-        'get_full_name', 'get_phone', 'get_email',
+        'action_checkbox', 'get_full_name', 'get_phone', 'get_email',
         'get_children_count', 'get_total_payments', 'get_verified_badge'
     )
     list_filter = (HasChildrenFilter, HasPaymentsFilter,
@@ -424,10 +424,10 @@ class ParentAdmin(admin.ModelAdmin, ExcelExportMixin):
 
 
 @admin.register(Child)
-class ChildAdmin(admin.ModelAdmin, ExcelExportMixin):
+class ChildAdmin(ExcelExportMixin, admin.ModelAdmin):
     """Enhanced Admin for Child model."""
     list_display = (
-        'get_unique_code_badge', 'get_full_name', 'get_gender_badge',
+        'action_checkbox', 'get_unique_code_badge', 'get_full_name', 'get_gender_badge',
         'get_age_display', 'get_primary_parent_link', 'get_enrollments_badge',
         'get_phone_display', 'image'
     )
@@ -700,9 +700,9 @@ class ChildAdmin(admin.ModelAdmin, ExcelExportMixin):
 
 
 @admin.register(ChildParents)
-class ChildParentsAdmin(admin.ModelAdmin, ExcelExportMixin):
+class ChildParentsAdmin(ExcelExportMixin, admin.ModelAdmin):
     """Enhanced Admin for ChildParents model."""
-    list_display = ('get_child_link', 'get_parent_link',
+    list_display = ('action_checkbox', 'get_child_link', 'get_parent_link',
                     'get_relationship_type')
     list_filter = ('child__gender',)
     search_fields = (
@@ -741,10 +741,10 @@ class ChildParentsAdmin(admin.ModelAdmin, ExcelExportMixin):
 
 
 @admin.register(ParentLinkRequest)
-class ParentLinkRequestAdmin(admin.ModelAdmin, ExcelExportMixin):
+class ParentLinkRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
     """Enhanced Admin for ParentLinkRequest model."""
     list_display = (
-        'get_child_link', 'get_requester_link',
+        'action_checkbox', 'get_child_link', 'get_requester_link',
         'get_primary_parent_link', 'get_status_badge', 'created_at'
     )
     list_filter = ('status', 'created_at')

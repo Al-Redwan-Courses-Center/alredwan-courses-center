@@ -15,11 +15,11 @@ from .actions import activate_selected, deactivate_selected, duplicate_selected
 
 
 @admin.register(Season)
-class SeasonAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
+class SeasonAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, ExcelExportMixin, admin.ModelAdmin):
     """Admin configuration for Season model."""
 
     list_display = (
-        'name', 'season_type', 'get_date_range',
+        'action_checkbox', 'name', 'season_type', 'get_date_range',
         'get_active_status', 'get_courses_count', 'created_at'
     )
     list_filter = ('season_type', ActiveStatusFilter, 'start_date')

@@ -313,12 +313,12 @@ class PaymentInline(admin.TabularInline):
 # Admin Configuration
 # =============================================================================
 @admin.register(Enrollment)
-class EnrollmentAdmin(admin.ModelAdmin, ExcelExportMixin):
+class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
     """Enhanced admin configuration for Enrollment model."""
 
     # List display configuration
     list_display = (
-        'get_participant_display', 'get_course_link', 'get_status_badge',
+        'action_checkbox', 'get_participant_display', 'get_course_link', 'get_status_badge',
         'get_course_progress', 'get_payment_status', 'get_payment_progress',
         'get_enrolled_date', 'get_created_by_display'
     )

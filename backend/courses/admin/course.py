@@ -17,14 +17,14 @@ from .inlines import CourseScheduleInline, LectureInline, ExamInline, CourseEnro
 
 
 @admin.register(Course)
-class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
+class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, ExcelExportMixin, admin.ModelAdmin):
     """Admin configuration for Course model with enhanced UX."""
 
     select_related_fields = ['instructor', 'instructor__user', 'season']
     prefetch_related_fields = ['tags']
 
     list_display = (
-        'name', 'get_instructor_link', 'get_season', 'get_date_range',
+        'action_checkbox', 'name', 'get_instructor_link', 'get_season', 'get_date_range',
         'get_capacity_bar', 'get_price_display', 'get_active_status'
     )
     list_filter = (

@@ -6,8 +6,8 @@ from ..models.instructor_attendance import InstructorAttendance
 
 
 @admin.register(InstructorAttendance)
-class InstructorAttendanceAdmin(admin.ModelAdmin, ExcelExportMixin):
-    list_display = ('get_instructor', 'get_date', 'get_status',
+class InstructorAttendanceAdmin(ExcelExportMixin, admin.ModelAdmin):
+    list_display = ('action_checkbox', 'get_instructor', 'get_date', 'get_status',
                     'get_check_in_time', 'get_check_out_time', 'get_rating', 'get_rated_by')
     list_filter = ('status', 'date', 'season', 'check_in_method')
     search_fields = ('instructor__user__first_name',

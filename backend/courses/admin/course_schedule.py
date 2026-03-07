@@ -13,13 +13,13 @@ from .base import ArabicLabelsMixin, OptimizedQuerysetMixin
 
 
 @admin.register(CourseSchedule)
-class CourseScheduleAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
+class CourseScheduleAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, ExcelExportMixin, admin.ModelAdmin):
     """Admin configuration for CourseSchedule model."""
 
     select_related_fields = ['course', 'course__instructor']
 
     list_display = (
-        'course', 'get_weekday_badge', 'get_time_range', 'get_duration'
+        'action_checkbox', 'course', 'get_weekday_badge', 'get_time_range', 'get_duration'
     )
     list_filter = ('weekday', 'course__season', 'course')
     search_fields = ('course__name',)

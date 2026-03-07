@@ -9,8 +9,8 @@ from users.models.student_instructor_rating import (
 
 
 @admin.register(StudentInstructorRating)
-class StudentInstructorRatingAdmin(admin.ModelAdmin, ExcelExportMixin):
-    list_display = ('get_student', 'get_instructor',
+class StudentInstructorRatingAdmin(ExcelExportMixin, admin.ModelAdmin):
+    list_display = ('action_checkbox', 'get_student', 'get_instructor',
                     'get_course', 'get_rating', 'get_created_at')
     list_filter = ('rating', 'course', 'instructor', 'created_at')
     search_fields = ('student__user__first_name',
@@ -80,8 +80,8 @@ class StudentInstructorRatingAdmin(admin.ModelAdmin, ExcelExportMixin):
 
 
 @admin.register(ParentInstructorRating)
-class ParentInstructorRatingAdmin(admin.ModelAdmin, ExcelExportMixin):
-    list_display = ('get_parent', 'get_instructor',
+class ParentInstructorRatingAdmin(ExcelExportMixin, admin.ModelAdmin):
+    list_display = ('action_checkbox', 'get_parent', 'get_instructor',
                     'get_course', 'get_rating', 'get_created_at')
     list_filter = ('rating', 'course', 'instructor', 'created_at')
     search_fields = ('parent__user__first_name',
@@ -144,8 +144,8 @@ class ParentInstructorRatingAdmin(admin.ModelAdmin, ExcelExportMixin):
 
 
 @admin.register(StudentCourseRating)
-class StudentCourseRatingAdmin(admin.ModelAdmin, ExcelExportMixin):
-    list_display = ('get_student', 'get_course',
+class StudentCourseRatingAdmin(ExcelExportMixin, admin.ModelAdmin):
+    list_display = ('action_checkbox', 'get_student', 'get_course',
                     'get_rating', 'get_created_at')
     list_filter = ('rating', 'course', 'created_at')
     search_fields = ('student__user__first_name', 'course__name', 'feedback')
@@ -198,8 +198,8 @@ class StudentCourseRatingAdmin(admin.ModelAdmin, ExcelExportMixin):
 
 
 @admin.register(ParentCourseRating)
-class ParentCourseRatingAdmin(admin.ModelAdmin, ExcelExportMixin):
-    list_display = ('get_parent', 'get_course', 'get_rating', 'get_created_at')
+class ParentCourseRatingAdmin(ExcelExportMixin, admin.ModelAdmin):
+    list_display = ('action_checkbox', 'get_parent', 'get_course', 'get_rating', 'get_created_at')
     list_filter = ('rating', 'course', 'created_at')
     search_fields = ('parent__user__first_name', 'course__name', 'feedback')
     date_hierarchy = 'created_at'

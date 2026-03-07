@@ -62,8 +62,8 @@ class LectureInline(admin.TabularInline):
 
 
 @admin.register(Instructor)
-class InstructorAdmin(admin.ModelAdmin, ExcelExportMixin):
-    list_display = ('get_full_name', 'get_type',
+class InstructorAdmin(ExcelExportMixin, admin.ModelAdmin):
+    list_display = ('action_checkbox', 'get_full_name', 'get_type',
                     'get_monthly_salary', 'get_phone', 'get_tags_display', 'get_joined_date', 'fingerprint_id')
     list_filter = ('type', 'tags', 'joined_date')
     search_fields = ('user__first_name', 'user__last_name',
