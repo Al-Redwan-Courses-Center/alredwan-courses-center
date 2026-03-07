@@ -5,6 +5,7 @@ from django.utils import timezone
 from datetime import timedelta
 from .models.instructor_attendance import InstructorAttendance, AttendanceStatus
 from .models.attendance_cron_log import AttendanceCronLog
+from courses.models.lecture import Lecture, LectureStatus
 
 
 def generate_instructor_attendance_weekly():
@@ -107,3 +108,85 @@ def update_pending_to_not_started():
             job_name="update_pending_to_not_started",
             details=f"{count} attendance records ready for today {today}"
         )
+
+
+def mark_lectures_without_attendance_as_cancelled():
+    """
+    Cron job to mark lectures as cancelled if attendance wasn't taken.
+    
+    Runs daily at 23:55 (before mark_absent_daily).
+    
+    Logic:
+    - Find all lectures from yesterday (or earlier) that:
+      - Have status = SCHEDULED
+      - Have attendance_taken = False
+    - Mark them as CANCELLED
+    
+    This handles cases where:
+    - Instructor didn't show up
+    - Lecture was skipped without formal cancellation
+    - Technical issues prevented attendance marking
+    
+    Note: Only marks lectures that are past their scheduled date.
+    Today's lectures are not affected (they might still be ongoing).
+    """
+    yesterday = timezone.localdate() - timedelta(days=1)
+    
+    # Find all past lectures that are still SCHEDULED but attendance wasn't taken
+    lectures_to_cancel = Lecture.objects.filter(
+        day__lte=yesterday,
+        status=LectureStatus.SCHEDULED,
+        attendance_taken=False
+    )
+    
+    cancelled_count = 0
+    cancelled_lectures = []
+    
+    for lecture in lectures_to_cancel:
+        lecture.status = LectureStatus.CANCELLED
+        lecture.save(update_fields=['status', 'updated_at'])
+        cancelled_count += 1
+        cancelled_lectures.append(f"{lecture.course.name} - {lecture.title or f'Lecture {lecture.lecture_number}'} ({lecture.day})")
+    
+    if cancelled_count > 0:
+        details = f"Marked {cancelled_count} lectures as CANCELLED (no attendance taken):\n"
+        details += "\n".join(cancelled_lectures[:20])  # Limit to first 20 for log readability
+        if cancelled_count > 20:
+            details += f"\n... and {cancelled_count - 20} more"
+        
+        AttendanceCronLog.objects.create(
+            job_name="mark_lectures_without_attendance_as_cancelled",
+            details=details
+        )
+    
+    return cancelled_count
+
+
+def mark_lectures_without_attendance_as_cancelled_fallback():
+    """
+    Fallback cron job for marking lectures as cancelled.
+    
+    Runs daily at 00:05 AM to catch any lectures missed by the previous day's job.
+    Only processes lectures from 2+ days ago to avoid race conditions.
+    """
+    two_days_ago = timezone.localdate() - timedelta(days=2)
+    
+    lectures_to_cancel = Lecture.objects.filter(
+        day__lte=two_days_ago,
+        status=LectureStatus.SCHEDULED,
+        attendance_taken=False
+    )
+    
+    cancelled_count = 0
+    for lecture in lectures_to_cancel:
+        lecture.status = LectureStatus.CANCELLED
+        lecture.save(update_fields=['status', 'updated_at'])
+        cancelled_count += 1
+    
+    if cancelled_count > 0:
+        AttendanceCronLog.objects.create(
+            job_name="mark_lectures_without_attendance_as_cancelled_fallback",
+            details=f"Marked {cancelled_count} old lectures as CANCELLED (fallback job, ≤ {two_days_ago})"
+        )
+    
+    return cancelled_count
