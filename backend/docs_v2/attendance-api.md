@@ -16,7 +16,8 @@ Instructor attendance tracking (fingerprint devices, manual entry, ratings) and 
 8. [Time Restrictions](#time-restrictions)
 9. [Filters](#filters)
 10. [WebSocket Real-Time Updates](#websocket-real-time-updates)
-11. [Quick Reference](#quick-reference)
+11. [Automated Cron Jobs](#automated-cron-jobs)
+12. [Quick Reference](#quick-reference)
 
 ---
 
@@ -984,6 +985,64 @@ Receive real-time updates when attendance changes.
 | `status` | string | `present`, `late`, `absent`, `pending`, `not_started` |
 | `checked_in` | boolean | Filter by check-in status |
 | `checked_out` | boolean | Filter by check-out status |
+
+---
+
+## Automated Cron Jobs
+
+The attendance system uses automated background jobs for data consistency.
+
+### Attendance Record Generation
+
+| Job | Schedule | Description |
+|-----|----------|-------------|
+| `generate_instructor_attendance_weekly` | Sunday 00:05 | Creates attendance records for the next 7 days based on SupervisorSchedule and scheduled lectures |
+
+### Absent Marking
+
+| Job | Schedule | Description |
+|-----|----------|-------------|
+| `mark_absent_daily` | Daily 23:59 | Marks all PENDING/NOT_STARTED instructor attendance as ABSENT |
+| `mark_absent_for_yesterday` | Daily 00:01 | Fallback job for missed records from previous day |
+| `update_pending_to_not_started` | Daily 06:00 | Logs expected attendance for monitoring dashboards |
+
+### Lecture Cancellation (Auto)
+
+When a lecture's attendance is not taken, the system automatically marks it as cancelled.
+
+| Job | Schedule | Description |
+|-----|----------|-------------|
+| `mark_lectures_without_attendance_as_cancelled` | Daily 23:55 | Marks past SCHEDULED lectures (yesterday or older) with `attendance_taken=False` as CANCELLED |
+| `mark_lectures_without_attendance_as_cancelled_fallback` | Daily 00:05 | Fallback for lectures 2+ days old that were missed by primary job |
+
+**Cancellation Logic:**
+
+```
+Lecture Eligible for Auto-Cancellation when:
+  - day ≤ yesterday (lecture date has passed)
+  - status = SCHEDULED (not already COMPLETED, CANCELLED, or ADDITIONAL)
+  - attendance_taken = False (no attendance marked)
+
+Result:
+  - status → CANCELLED
+  - Logged to AttendanceCronLog
+```
+
+**Note:** Today's lectures are never auto-cancelled (they might still be ongoing).
+
+### Cron Job Logging
+
+All cron jobs log their execution to `AttendanceCronLog` for audit trail:
+
+```json
+{
+  "job_name": "mark_lectures_without_attendance_as_cancelled",
+  "executed_at": "2026-02-14T23:55:00+02:00",
+  "details": "Marked 3 lectures as CANCELLED (no attendance taken):\nQuran Level 1 - Lecture 5 (2026-02-13)\n..."
+}
+```
+
+Admins can view these logs in the Django admin under **Attendance > Attendance Cron Logs**.
 
 ---
 

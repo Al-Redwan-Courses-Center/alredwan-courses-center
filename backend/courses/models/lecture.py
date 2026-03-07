@@ -65,21 +65,13 @@ class Lecture(models.Model):
         # Validate times
         if self.start_time and self.end_time and self.start_time >= self.end_time:
             raise ValidationError(_("وقت البداية يجب أن يكون قبل وقت النهاية."))
-        # For scheduled lectures, prevent scheduling in the past
-        if self.status == LectureStatus.SCHEDULED:
-            # combine day + start_time into datetime if start_time exists, else compare dates
-            now = timezone.now()
-            if self.start_time:
-                start_dt = timezone.make_aware(datetime.datetime.combine(
-                    self.day, self.start_time), timezone.get_current_timezone())
-                if start_dt < now:
-                    raise ValidationError(
-                        "Scheduled lectures cannot be in the past.")
-            else:
-                # compare date only (no time)
-                if self.day < now.date():
-                    raise ValidationError(
-                        "Scheduled lectures cannot be in the past.")
+        
+        # NOTE: Past-date validation is NOT enforced at the model level.
+        # This allows admins to:
+        #   - Backdate lectures for record-keeping
+        #   - Import historical data
+        #   - Create makeup lectures in the past
+        # The API layer should enforce past-date restrictions for non-admin users.
 
     def delete(self, using=None, keep_parents=False):
         """Prevent deletion if attendance has been taken."""

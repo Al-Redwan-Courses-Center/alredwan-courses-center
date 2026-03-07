@@ -186,12 +186,49 @@ Find all attendance with status PENDING or NOT_STARTED for today
 
 ## Cron Jobs
 
+### Instructor Attendance Cron Jobs
+
 | Job | Schedule | Purpose |
 |-----|----------|---------|
 | `generate_instructor_attendance_weekly` | Sunday 00:05 | Generate attendance records for next 7 days |
 | `mark_absent_daily` | Daily 23:59 | Mark pending/not_started as absent |
 | `mark_absent_for_yesterday` | Daily 00:01 | Fallback for missed records |
 | `update_pending_to_not_started` | Daily 06:00 | Log expected attendance for monitoring |
+
+### Lecture Cancellation Cron Jobs
+
+| Job | Schedule | Purpose |
+|-----|----------|---------|
+| `mark_lectures_without_attendance_as_cancelled` | Daily 23:55 | Mark past lectures without attendance as CANCELLED |
+| `mark_lectures_without_attendance_as_cancelled_fallback` | Daily 00:05 | Fallback for 2+ day old lectures |
+
+**Lecture Cancellation Logic:**
+
+```
+For each lecture where:
+  - day ≤ yesterday (lecture date has passed)
+  - status = SCHEDULED
+  - attendance_taken = False
+
+Action:
+  - Set status = CANCELLED
+  - Log to AttendanceCronLog with lecture details
+```
+
+**Why two jobs?**
+
+1. **Primary job (23:55):** Runs before midnight to cancel yesterday's lectures
+2. **Fallback job (00:05):** Catches lectures from 2+ days ago that were missed (server downtime, job failure, etc.)
+
+**Edge cases handled:**
+
+| Scenario | Behavior |
+|----------|----------|
+| Today's lecture | Not cancelled (might still be ongoing) |
+| Lecture with `attendance_taken=True` | Not cancelled |
+| Already COMPLETED lecture | Not cancelled |
+| Already CANCELLED lecture | No change |
+| ADDITIONAL lecture without attendance | Marked CANCELLED |
 
 All jobs log results to `AttendanceCronLog`.
 
@@ -222,6 +259,8 @@ See [WebSocket documentation](../websocket.md) for client-side integration.
 | **No active season** | Cron creates 0 records |
 | **Instructor without fingerprint ID** | Device check-in fails; use admin manual check-in |
 | **Admin updates existing rating** | Last rating wins; `rated_at` updated |
+| **Lecture attendance not taken** | Auto-cancelled by cron job the next day; logged for audit |
+| **Lecture manually cancelled before cron** | Cron skips it (status != SCHEDULED) |
 
 ---
 
