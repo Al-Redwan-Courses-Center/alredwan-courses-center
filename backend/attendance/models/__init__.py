@@ -5,3 +5,4 @@ from .device import *
 from .lecture_attendance import *
 from .instructor_attendance import *
 from .fingerprint_scan_log import FingerprintScanLog, ScanAction
+from .websocket_ticket import WebSocketTicket

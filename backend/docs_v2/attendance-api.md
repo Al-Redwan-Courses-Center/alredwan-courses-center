@@ -850,13 +850,43 @@ GET /api/attendance/lecture/1/details/?participant_type=student&gender=female&pr
 
 Real-time attendance updates via WebSocket connection.
 
+### Obtain WebSocket Ticket (Recommended)
+
+Get a secure, single-use ticket for WebSocket authentication.
+
+| | |
+|--|--|
+| **URL** | `POST /api/attendance/ws-ticket/` |
+| **Auth** | ✅ Required (Admin/Staff only) |
+
+**Response (201 Created):**
+```json
+{
+  "ticket": "abc123xyz...",
+  "expires_in_seconds": 30,
+  "message": "Use this ticket to connect to WebSocket within 30 seconds. Single use only."
+}
+```
+
+**Why use tickets instead of JWT?**
+- Tickets are single-use (replay attacks impossible)
+- Short lifespan (30 seconds)
+- Random token (not decodable, no JWT claims exposed in logs)
+- More secure than JWT in query string
+
 ### Connection
 
+**Method 1: Ticket-based (Recommended)**
+```
+ws://your-domain/ws/attendance/?ticket=<TICKET>
+```
+
+**Method 2: JWT-based (Legacy)**
 ```
 ws://your-domain/ws/attendance/?token=<JWT_TOKEN>
 ```
 
-**Authentication:** JWT token passed as query parameter.
+**Authentication:** Ticket (preferred) or JWT token passed as query parameter.
 
 ---
 
@@ -1050,6 +1080,8 @@ Admins can view these logs in the Django admin under **Attendance > Attendance C
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
+| POST | `/api/attendance/ws-ticket/` | **Obtain WebSocket ticket** | Admin/Staff |
+| POST | `/api/attendance/ws-ticket/cleanup/` | Clean expired tickets | Admin |
 | POST | `/api/attendance/scan/` | Unified fingerprint scan | Device ID |
 | POST | `/api/attendance/check-in/` | Fingerprint check-in (legacy) | Device ID |
 | POST | `/api/attendance/check-out/` | Fingerprint check-out (legacy) | Device ID |

@@ -17,28 +17,49 @@ class InstructorAttendanceConsumer(AsyncJsonWebsocketConsumer):
     """
     WebSocket consumer to send real-time attendance updates to authenticated admins.
 
-    Connection URL: ws://host/ws/attendance/?token=<jwt_token>
+    Connection URLs (in order of preference):
+    1. Ticket-based (recommended): ws://host/ws/attendance/?ticket=<ticket_token>
+    2. JWT-based (legacy): ws://host/ws/attendance/?token=<jwt_token>
+
+    The ticket-based approach is more secure as tickets are:
+    - Single-use (invalidated after connection)
+    - Short-lived (30 second expiration)
+    - Not decodable (random token, not JWT)
 
     Only authenticated admin users can connect to receive updates.
     """
 
     async def connect(self):
-        """Handle WebSocket connection with JWT authentication."""
-        # Extract token from query string
+        """
+        Handle WebSocket connection with authentication.
+        
+        Supports both ticket-based auth (preferred) and JWT auth (legacy).
+        """
         query_string = self.scope.get('query_string', b'').decode()
         query_params = parse_qs(query_string)
-        token = query_params.get('token', [None])[0]
-
-        if not token:
-            # No token provided - reject connection
+        
+        # Try ticket-based auth first (more secure)
+        ticket_token = query_params.get('ticket', [None])[0]
+        jwt_token = query_params.get('token', [None])[0]
+        
+        user = None
+        auth_method = None
+        
+        if ticket_token:
+            # Ticket-based authentication
+            user = await self.get_user_from_ticket(ticket_token)
+            auth_method = 'ticket'
+        elif jwt_token:
+            # Legacy JWT authentication
+            user = await self.get_user_from_token(jwt_token)
+            auth_method = 'jwt'
+        else:
+            # No auth provided
             await self.close(code=4001)
             return
 
-        # Validate token and get user
-        user = await self.get_user_from_token(token)
-
         if user is None or isinstance(user, AnonymousUser):
-            # Invalid token - reject connection
+            # Invalid token/ticket - reject connection
             await self.close(code=4002)
             return
 
@@ -60,6 +81,7 @@ class InstructorAttendanceConsumer(AsyncJsonWebsocketConsumer):
             "type": "connection_established",
             "message": f"Connected as {user.get_full_name()}",
             "user_id": str(user.id),
+            "auth_method": auth_method,
         })
 
     async def disconnect(self, close_code):
@@ -128,8 +150,20 @@ class InstructorAttendanceConsumer(AsyncJsonWebsocketConsumer):
         })
 
     @database_sync_to_async
+    def get_user_from_ticket(self, ticket_token):
+        """
+        Validate a WebSocket ticket and return the associated user.
+        
+        The ticket is single-use and will be invalidated after this call.
+        """
+        from .models import WebSocketTicket
+        
+        user, error = WebSocketTicket.validate_and_use(ticket_token)
+        return user
+
+    @database_sync_to_async
     def get_user_from_token(self, token):
-        """Validate JWT token and return user."""
+        """Validate JWT token and return user (legacy auth method)."""
         try:
             access_token = AccessToken(token)
             user_id = access_token['user_id']

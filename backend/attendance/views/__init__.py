@@ -37,6 +37,10 @@ from .instructor_attendance import (
     manual_check_out,
     mark_absent,
 )
+from .websocket_ticket import (
+    ObtainWebSocketTicketView,
+    CleanupExpiredTicketsView,
+)
 
 __all__ = [
     # Permission Classes
@@ -72,4 +76,7 @@ __all__ = [
     'manual_check_in',
     'manual_check_out',
     'mark_absent',
+    # WebSocket Ticket
+    'ObtainWebSocketTicketView',
+    'CleanupExpiredTicketsView',
 ]
