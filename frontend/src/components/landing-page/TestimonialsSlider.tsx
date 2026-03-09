@@ -2,7 +2,7 @@
 
 import { useMediaQuery } from "usehooks-ts";
 import Image from "next/image";
-import AvatarProfile from "@/assets/user-avatar.png";
+import AvatarProfile from "@/assets/images/default-user.svg";
 import { Testimonial } from "@/dev-data/testimonials";
 import StarIcon from "@/components/icons/StarIcon";
 import HalfStarIcon from "@/components/icons/HalfStarIcon";
