@@ -18,7 +18,7 @@ from ..models.enrollment import EnrollmentStatus
 
 class IsParentOrStudent(IsAuthenticated):
     """Permission class that only allows parents and students"""
-    
+
     def has_permission(self, request, view):
         if not super().has_permission(request, view):
             return False
@@ -27,43 +27,44 @@ class IsParentOrStudent(IsAuthenticated):
 
 class IsOwnerOrAdminOrSupervisorOrInstructor(IsAuthenticated):
     """Permission class for viewing enrollment details"""
-    
+
     def has_object_permission(self, request, view, obj):
         user = request.user
-        
+
         # Admin and Supervisor can access all
         if user.role in ['admin', 'supervisor']:
             return True
-        
+
         # Course instructor can view enrollments in their courses
         if user.role == 'instructor':
             instructor = getattr(user, 'instructor_profile', None)
             if instructor and obj.course.instructor_id == instructor.id:
                 return True
-        
+
         # Check if user is the owner (parent of child or the student)
         if user.role == 'parent':
             parent = getattr(user, 'parent_profile', None)
             if parent and obj.child:
                 # Check if parent is linked to the child
-                is_linked = (obj.child.primary_parent_id == parent.id or 
-                            obj.child.extra_parents.filter(parent=parent).exists())
+                is_linked = (obj.child.primary_parent_id == parent.id or
+                             obj.child.extra_parents.filter(parent=parent).exists())
                 return is_linked
-        
+
         if user.role == 'student':
             student = getattr(user, 'student_profile', None)
             return student and obj.student_id == student.id
-        
+
         return False
 
 
 class EnrollmentFilter(filters.FilterSet):
     """Filter for enrollment listing"""
     status = filters.ChoiceFilter(choices=EnrollmentStatus.choices)
-    
+    child = filters.UUIDFilter(field_name='child_id')
+
     class Meta:
         model = Enrollment
-        fields = ['status']
+        fields = ['status', 'child']
 
 
 class EnrollmentListView(generics.ListAPIView):
@@ -92,7 +93,8 @@ class EnrollmentListView(generics.ListAPIView):
                 # Get all children linked to this parent
                 from parents.models import Child
                 child_ids = list(
-                    Child.objects.filter(primary_parent=parent).values_list('id', flat=True)
+                    Child.objects.filter(
+                        primary_parent=parent).values_list('id', flat=True)
                 )
                 # Also include children where parent is an extra parent
                 # extra_children is the related_name on ChildParents model
@@ -102,13 +104,13 @@ class EnrollmentListView(generics.ListAPIView):
                 all_child_ids = set(child_ids + extra_child_ids)
                 return queryset.filter(child_id__in=all_child_ids)
             return queryset.none()
-        
+
         elif user.role == 'student':
             student = getattr(user, 'student_profile', None)
             if student:
                 return queryset.filter(student=student)
             return queryset.none()
-        
+
         return queryset.none()
 
 
@@ -156,31 +158,31 @@ class EnrollmentProgressView(APIView):
     def check_object_permissions(self, request, obj):
         """Check object-level permissions"""
         user = request.user
-        
+
         # Admin and Supervisor can access all
         if user.role in ['admin', 'supervisor']:
             return True
-        
+
         # Course instructor can view
         if user.role == 'instructor':
             instructor = getattr(user, 'instructor_profile', None)
             if instructor and obj.course.instructor_id == instructor.id:
                 return True
-        
+
         # Check if user is the owner
         if user.role == 'parent':
             parent = getattr(user, 'parent_profile', None)
             if parent and obj.child:
-                is_linked = (obj.child.primary_parent_id == parent.id or 
-                            obj.child.extra_parents.filter(parent=parent).exists())
+                is_linked = (obj.child.primary_parent_id == parent.id or
+                             obj.child.extra_parents.filter(parent=parent).exists())
                 if is_linked:
                     return True
-        
+
         if user.role == 'student':
             student = getattr(user, 'student_profile', None)
             if student and obj.student_id == student.id:
                 return True
-        
+
         return False
 
     def get(self, request, id):

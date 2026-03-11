@@ -9,7 +9,7 @@ from courses.models import Weekday
 
 
 @admin.register(SupervisorSchedule)
-class SupervisorScheduleAdmin(ExcelExportMixin, admin.ModelAdmin):
+class SupervisorScheduleAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Admin interface for managing supervisor schedules."""
     
     list_display = (

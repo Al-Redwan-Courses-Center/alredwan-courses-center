@@ -21,3 +21,13 @@ export type StatusMap<T extends { status: string }> = Record<
   T["status"],
   { label: string; color: StatusColors }
 >;
+
+
+export interface AccordionItemData {
+  id: string;
+  header: {
+    title: string;
+    days?: string;
+  };
+  content: React.ReactNode;
+}

@@ -40,6 +40,9 @@ class ExcelExportMixin:
     excel_export_fields = None
     excel_export_exclude = []
     excel_filename = None
+    
+    # Internal Django admin fields that should never be exported
+    _internal_fields = ['action_checkbox', '__str__', '__repr__']
 
     def get_actions(self, request):
         """Add export to Excel action to the admin actions."""
@@ -379,12 +382,16 @@ class ExcelExportMixin:
         if self.excel_export_fields:
             field_names = self.excel_export_fields
         else:
+            # Filter out internal Django admin fields and excluded fields
             field_names = [
-                f for f in self.list_display if f not in self.excel_export_exclude]
+                f for f in self.list_display 
+                if f not in self.excel_export_exclude and f not in self._internal_fields
+            ]
 
         fields = []
         for field_name in field_names:
-            if field_name in self.excel_export_exclude:
+            # Skip internal fields and excluded fields
+            if field_name in self.excel_export_exclude or field_name in self._internal_fields:
                 continue
 
             field_info = {

@@ -17,7 +17,7 @@ from .inlines import ExamResultInline
 
 
 @admin.register(Exam)
-class ExamAdmin(ExcelExportMixin, ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+class ExamAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
     """Admin configuration for Exam model."""
 
     select_related_fields = [
@@ -153,7 +153,7 @@ class ExamAdmin(ExcelExportMixin, ArabicLabelsMixin, OptimizedQuerysetMixin, adm
 
 
 @admin.register(ExamResult)
-class ExamResultAdmin(ExcelExportMixin, ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin):
+class ExamResultAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
     """Admin configuration for ExamResult model with enhanced UX."""
 
     select_related_fields = [

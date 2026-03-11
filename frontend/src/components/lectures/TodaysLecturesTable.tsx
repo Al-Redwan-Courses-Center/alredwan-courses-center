@@ -12,10 +12,10 @@ import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
 import { cn, formatTime, toHindiDigits } from "@/lib/utils";
+import { Lecture } from "@/types/entities";
 import Link from "next/link";
 import { DataViewPagination } from "../ui/data-view/DataViewPagination";
 import { DataViewHeader, DataViewRow } from "../ui/data-view/DataViewRow";
-import { TodaysLectureListItem } from "@/types/config";
 
 const { sortConfig, filterConfig, statusMap } = lecturesViewConfig;
 

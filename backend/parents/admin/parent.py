@@ -276,7 +276,7 @@ class HasEnrollmentsFilter(admin.SimpleListFilter):
 # =============================================================================
 
 @admin.register(Parent)
-class ParentAdmin(ExcelExportMixin, admin.ModelAdmin):
+class ParentAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced Admin for Parent model."""
     list_display = (
         'get_full_name', 'get_phone', 'get_email',
@@ -424,7 +424,7 @@ class ParentAdmin(ExcelExportMixin, admin.ModelAdmin):
 
 
 @admin.register(Child)
-class ChildAdmin(admin.ModelAdmin):
+class ChildAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced Admin for Child model."""
     list_display = (
         'get_unique_code_badge', 'get_full_name', 'get_gender_badge',
@@ -440,6 +440,9 @@ class ChildAdmin(admin.ModelAdmin):
     autocomplete_fields = ('primary_parent',)
     date_hierarchy = 'created_at'
     list_per_page = 25
+
+    # Excel export configuration
+    excel_filename = 'children'
 
     fieldsets = (
         ('معلومات الطفل', {
@@ -697,7 +700,7 @@ class ChildAdmin(admin.ModelAdmin):
 
 
 @admin.register(ChildParents)
-class ChildParentsAdmin(admin.ModelAdmin):
+class ChildParentsAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced Admin for ChildParents model."""
     list_display = ('get_child_link', 'get_parent_link',
                     'get_relationship_type')
@@ -707,6 +710,9 @@ class ChildParentsAdmin(admin.ModelAdmin):
         'parent__user__first_name', 'parent__user__phone_number1'
     )
     autocomplete_fields = ('child', 'parent')
+
+    # Excel export configuration
+    excel_filename = 'child_parents_links'
 
     def get_child_link(self, obj):
         url = reverse('admin:parents_child_change', args=[obj.child.pk])
@@ -735,7 +741,7 @@ class ChildParentsAdmin(admin.ModelAdmin):
 
 
 @admin.register(ParentLinkRequest)
-class ParentLinkRequestAdmin(admin.ModelAdmin):
+class ParentLinkRequestAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced Admin for ParentLinkRequest model."""
     list_display = (
         'get_child_link', 'get_requester_link',
@@ -751,6 +757,9 @@ class ParentLinkRequestAdmin(admin.ModelAdmin):
     autocomplete_fields = ('child', 'requester', 'primary_parent')
     date_hierarchy = 'created_at'
     list_per_page = 25
+
+    # Excel export configuration
+    excel_filename = 'parent_link_requests'
 
     fieldsets = (
         ('معلومات الطلب', {

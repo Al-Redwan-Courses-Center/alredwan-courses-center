@@ -4,7 +4,7 @@ from attendance.models.device import AttendanceDevice
 
 
 @admin.register(AttendanceDevice)
-class AttendanceDeviceAdmin(ExcelExportMixin, admin.ModelAdmin):
+class AttendanceDeviceAdmin(admin.ModelAdmin, ExcelExportMixin):
     list_display = ('get_device_id', 'get_name',
                     'get_location', 'get_is_active')
     list_filter = ('is_active',)

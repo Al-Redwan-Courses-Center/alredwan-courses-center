@@ -313,7 +313,7 @@ class PaymentInline(admin.TabularInline):
 # Admin Configuration
 # =============================================================================
 @admin.register(Enrollment)
-class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
+class EnrollmentAdmin(admin.ModelAdmin, ExcelExportMixin):
     """Enhanced admin configuration for Enrollment model."""
 
     # List display configuration
