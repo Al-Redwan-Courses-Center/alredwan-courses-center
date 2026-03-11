@@ -16,6 +16,13 @@ import { Lecture } from "@/types/entities";
 import Link from "next/link";
 import { DataViewPagination } from "../ui/data-view/DataViewPagination";
 import { DataViewHeader, DataViewRow } from "../ui/data-view/DataViewRow";
+import { TodaysLectureListItem } from "@/types/config";
+import { useEffect, useState } from "react";
+import Accordion from "@/components/ui/accordion/Accordion";
+import AccordionItem from "@/components/ui/accordion/AccordionItem";
+import AccordionHeader from "@/components/ui/accordion/AccordionHeader";
+import AccordionHeaderInfo from "@/components/ui/accordion/AccordionHeaderInfo";
+import AccordionContent from "@/components/ui/accordion/AccordionContent";
 
 const { sortConfig, filterConfig, statusMap } = lecturesViewConfig;
 
@@ -24,6 +31,23 @@ export default function TodaysLecturesTable({
 }: {
   todaysLectures?: TodaysLectureListItem[];
 }) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 500px)");
+
+    function handleChange() {
+      setIsMobile(mediaQuery.matches);
+    }
+
+    handleChange();
+    mediaQuery.addEventListener("change", handleChange);
+
+    return () => {
+      mediaQuery.removeEventListener("change", handleChange);
+    };
+  }, []);
+
   return (
     <DataView
       data={todaysLectures}
@@ -39,57 +63,117 @@ export default function TodaysLecturesTable({
         <DataViewFilter />
       </div>
 
-      <DataViewHeader>
-        <DataViewCell>م</DataViewCell>
-        <DataViewCell>المحاضرة</DataViewCell>
-        <DataViewCell>الدورة</DataViewCell>
-        <DataViewCell>البداية</DataViewCell>
-        <DataViewCell>النهاية</DataViewCell>
-        <DataViewCell>الحالة</DataViewCell>
-        <DataViewCell></DataViewCell>
-      </DataViewHeader>
+      {isMobile ? (
+        <>
+          <div>
+            <Accordion>
+              {todaysLectures.map((lecture: Lecture, i: number) => {
+                const { label, color } = statusMap[lecture.status];
 
-      <DataViewBody<TodaysLectureListItem>
-        render={{
-          table: (lecture, i) => {
-            const { label, color } = statusMap[lecture.status];
+                return (
+                  <AccordionItem
+                    key={lecture.id}
+                    id={lecture.id.toString()}
+                    rounded="top-left-bottom-right"
+                    header={(isOpen) => (
+                      <AccordionHeader isOpen={isOpen}>
+                        <AccordionHeaderInfo
+                          title={`${toHindiDigits(i + 1)}- ${lecture.title}`}
+                          subtitle={lecture.course_title}
+                          subtitleClassName="text-xs"
+                        />
+                      </AccordionHeader>
+                    )}
+                  >
+                    <AccordionContent
+                      rows={[
+                        [
+                          {
+                            label: "البداية",
+                            value: formatTime(lecture.start_time),
+                          },
+                          {
+                            label: "النهاية",
+                            value: formatTime(lecture.end_time),
+                          },
+                        ],
+                        [
+                          {
+                            label: "الحالة",
+                            value: (
+                              <StatusBadge color={color}>{label}</StatusBadge>
+                            ),
+                          },
+                        ],
+                      ]}
+                      actions={{
+                        onEdit: () => console.log("Edit", lecture.id),
+                        onInfo: () => {
+                          window.location.href = `/dashboard/my-courses/${lecture.course.id}/lectures/${lecture.id}`;
+                        },
+                      }}
+                    />
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
+          </div>
+        </>
+      ) : (
+        <>
+          <DataViewHeader>
+            <DataViewCell>م</DataViewCell>
+            <DataViewCell>المحاضرة</DataViewCell>
+            <DataViewCell>الدورة</DataViewCell>
+            <DataViewCell>البداية</DataViewCell>
+            <DataViewCell>النهاية</DataViewCell>
+            <DataViewCell>الحالة</DataViewCell>
+            <DataViewCell></DataViewCell>
+          </DataViewHeader>
 
-            return (
-              <DataViewRow key={lecture.id} index={i}>
-                <DataViewCell className="font-bold">
-                  {toHindiDigits(i + 1)}
-                </DataViewCell>
-                <DataViewCell>{lecture.title}</DataViewCell>
-                <DataViewCell>{lecture.course.name}</DataViewCell>
-                <DataViewCell className="font-bold">
-                  {formatTime(lecture.start_time)}
-                </DataViewCell>
-                <DataViewCell className="font-bold">
-                  {formatTime(lecture.end_time)}
-                </DataViewCell>
-                <DataViewCell>
-                  <StatusBadge color={color}>{label}</StatusBadge>
-                </DataViewCell>
-                <DataViewCell>
-                  <div className="*:text-olive-300 *:hover:text-olive-700 flex items-center justify-center gap-6 *:transition-colors">
-                    <button>
-                      <EditIcon />
-                    </button>
+          <DataViewBody
+            render={{
+              table: (lecture: Lecture, i: number) => {
+                const { label, color } = statusMap[lecture.status];
 
-                    <Link
-                      href={`/dashboard/my-courses/${lecture.course.id}/lectures/${lecture.id}`}
-                    >
-                      <InfoIcon />
-                    </Link>
-                  </div>
-                </DataViewCell>
-              </DataViewRow>
-            );
-          },
+                return (
+                  <DataViewRow key={lecture.id} index={i}>
+                    <DataViewCell className="font-bold">
+                      {toHindiDigits(i + 1)}
+                    </DataViewCell>
+                    <DataViewCell>{lecture.title}</DataViewCell>
+                    <DataViewCell>{lecture.course_title}</DataViewCell>
+                    <DataViewCell className="font-bold">
+                      {formatTime(lecture.start_time)}
+                    </DataViewCell>
+                    <DataViewCell className="font-bold">
+                      {formatTime(lecture.end_time)}
+                    </DataViewCell>
+                    <DataViewCell>
+                      <StatusBadge color={color}>{label}</StatusBadge>
+                    </DataViewCell>
+                    <DataViewCell>
+                      <div className="*:text-olive-300 *:hover:text-olive-700 flex items-center justify-center gap-6 *:transition-colors">
+                        <button>
+                          <EditIcon />
+                        </button>
 
-          cards: () => null,
-        }}
-      />
+                        <Link
+                          href={`/dashboard/my-courses/${lecture.course.id}/lectures/${lecture.id}`}
+                        >
+                          <InfoIcon />
+                        </Link>
+                      </div>
+                    </DataViewCell>
+                  </DataViewRow>
+                );
+              },
+
+              cards: () => null,
+            }}
+          />
+        </>
+      )}
 
       <DataViewPagination />
     </DataView>
