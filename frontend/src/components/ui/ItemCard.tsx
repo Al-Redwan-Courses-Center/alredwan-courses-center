@@ -38,7 +38,7 @@ export default function ItemCard({
       className={cn(itemCardVariants({ shape }), className)}
     >
       {cardHeader && (
-        <div className="relative group-data-[shape=leaf]:min-h-50">
+        <div className="relative grid group-data-[shape=leaf]:min-h-50">
           {cardHeader}
         </div>
       )}

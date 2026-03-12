@@ -10,7 +10,7 @@ import Image9 from "@/assets/image-grid/image-9.jpg";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
-const baseStyles = cn("mobile-lg:border-6 border-[2rem] border-white");
+const baseStyles = cn("tablet:border-6 border-[2rem] border-white");
 
 export default function PictureGrid() {
   return (

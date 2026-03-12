@@ -22,11 +22,7 @@ export default async function CoursesSection() {
 
       <PublicCoursesList courses={courses} />
 
-      <Button
-        variant="primary"
-        href="/courses"
-        className="not-mobile-lg:self-start mobile-lg:mt-10"
-      >
+      <Button variant="primary" className="mobile-lg:mt-10 self-start">
         تصفح الدورات
       </Button>
     </section>

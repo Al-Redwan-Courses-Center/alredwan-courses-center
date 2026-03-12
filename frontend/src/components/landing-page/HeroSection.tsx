@@ -4,6 +4,7 @@ import SectionDivider from "@/components/landing-page/SectionDivider";
 import Button from "@/components/ui/Button";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
+import SignupModal from "@/components/auth/SignupModal";
 
 export default async function HeroSection() {
   const session = await getServerSession(authConfig);
@@ -27,7 +28,7 @@ export default async function HeroSection() {
         </p>
 
         <div className="grid w-fit grid-cols-2 gap-6">
-          <Button variant="primary" size="medium" href="/courses">
+          <Button variant="primary" size="medium">
             تصفح الدورات
           </Button>
 
@@ -36,9 +37,13 @@ export default async function HeroSection() {
               لوحة التحكم
             </Button>
           ) : (
-            <Button variant="secondary" size="medium" href="/signup" revert>
-              سجل الآن
-            </Button>
+            <SignupModal
+              trigger={
+                <Button variant="secondary" size="medium" revert>
+                  سجل الآن
+                </Button>
+              }
+            />
           )}
         </div>
       </div>

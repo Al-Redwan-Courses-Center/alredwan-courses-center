@@ -11,22 +11,22 @@ const navlinksMap = {
       href: "/",
       label: "الرئيسية",
     },
-    {
-      href: "/courses",
-      label: "الدورات",
-    },
-    {
-      href: "/about",
-      label: "عن الواحة",
-    },
-    {
-      href: "/activities",
-      label: "الأنشطة",
-    },
-    {
-      href: "/contact-us",
-      label: "تواصل معنا",
-    },
+    // {
+    //   href: "/courses",
+    //   label: "الدورات",
+    // },
+    // {
+    //   href: "/about",
+    //   label: "عن الواحة",
+    // },
+    // {
+    //   href: "/activities",
+    //   label: "الأنشطة",
+    // },
+    // {
+    //   href: "/contact-us",
+    //   label: "تواصل معنا",
+    // },
     // {
     //   href: "/login",
     //   label: "تسجيل الدخول",

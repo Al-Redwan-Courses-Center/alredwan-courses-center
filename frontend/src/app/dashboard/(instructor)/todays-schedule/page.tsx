@@ -1,6 +1,6 @@
 import { getUser, protect } from "@/actions/auth";
 import { getInstructorTodaysLectures } from "@/actions/lectures";
-import TodaysLecturesTable from "@/components/lectures/TodaysLecturesTable";
+import TodaysLecturesTable from "@/components/dashboard/instructor/TodaysLecturesTable";
 import { Metadata } from "next";
 import { Suspense } from "react";
 

@@ -15,10 +15,8 @@ export default function GoalsSection() {
         </p>
 
         <div className="mobile-lg:grid-cols-1 mobile-lg:w-2/3 grid w-full max-w-163 grid-cols-2 gap-9 *:px-0">
-          <Button variant="primary" href="/contact-us">
-            اتصل بنا الآن
-          </Button>
-          <Button revert variant="secondary" href="/courses">
+          <Button variant="primary">اتصل بنا الآن</Button>
+          <Button revert variant="secondary">
             تعرف على مناهجنا
           </Button>
         </div>

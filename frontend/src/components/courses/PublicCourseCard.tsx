@@ -36,7 +36,7 @@ export default function PublicCourseCard({
             className="object-cover"
           />
         ) : (
-          <div className="grid h-full place-items-center bg-gray-200">
+          <div className="grid place-items-center bg-gray-200">
             <OpenBookIcon className="text-olive-700 h-auto w-25" />
           </div>
         )

@@ -3,18 +3,17 @@ import CallToActionSection from "@/components/landing-page/CallToActionSection";
 import CoursesSection from "@/components/landing-page/CoursesSection";
 import GoalsSection from "@/components/landing-page/GoalsSection";
 import HeroSection from "@/components/landing-page/HeroSection";
-import InstructorsSection from "@/components/landing-page/InstructorsSection";
 import StatisticsSection from "@/components/landing-page/StatisticsSection";
 import TestimonialsSection from "@/components/landing-page/TestimonialsSection";
 import WhyUsSection from "@/components/landing-page/WhyUsSection";
 
 export default async function Home() {
   return (
-    <main className="tablet:[&>section]:p-28 mobile-lg:[&>section]:px-15! [&_h2>span]:text-beige-500 [&>section]:px-128 [&>section]:py-28">
+    <main className="tablet:[&>section]:p-28 mobile-lg:[&>section]:px-15! desktop-sm:[&>section]:px-80 laptop:[&>section]:px-60 [&_h2>span]:text-beige-500 [&>section]:px-128 [&>section]:py-28">
       <HeroSection />
       <StatisticsSection />
       <WhyUsSection />
-      <InstructorsSection />
+      {/*<InstructorsSection />*/}
       <GoalsSection />
       <ActivitiesSection />
       <CoursesSection />

@@ -1,17 +1,16 @@
 import { authConfig } from "@/app/api/auth/[...nextauth]/route";
 import Logo from "@/assets/logo.svg";
-import AuthModal from "@/components/auth/AuthModal";
 import LogoutButton from "@/components/auth/LogoutButton";
-import SignupModal from "@/components/auth/SignupModal";
 import NavLink from "@/components/ui/navigation/NavLink";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
+import { NavBarAuthButtons } from "@/components/layout/landing/NavBarAuthButtons";
 
 export default async function NavBar() {
   const session = await getServerSession(authConfig);
 
   return (
-    <nav className="shadow-soft tablet:hidden sticky top-0 z-1000 flex h-26 w-full items-center justify-between bg-gray-100/80 px-128 backdrop-blur-md">
+    <nav className="shadow-soft tablet:hidden desktop-sm:px-80 laptop:px-60 sticky top-0 z-1000 flex h-26 w-full items-center justify-between bg-gray-100/80 px-128 py-3 backdrop-blur-md">
       {!!session?.user ? (
         <div className="tablet:hidden grid content-center">
           <LogoutButton variant="primary" size="small">
@@ -19,28 +18,25 @@ export default async function NavBar() {
           </LogoutButton>
         </div>
       ) : (
-        <div className="tablet:hidden grid grid-cols-2 items-stretch gap-4">
-          <AuthModal />
-          <SignupModal />
-        </div>
+        <NavBarAuthButtons />
       )}
 
       <ul className="text-primary tablet:hidden absolute left-1/2 flex transform-[translateX(-50%)] items-center gap-8 text-[14px]">
         <NavLink variant="landing" href="/">
           الرئيسية
         </NavLink>
-        <NavLink variant="landing" href="/courses">
-          الدورات
-        </NavLink>
-        <NavLink variant="landing" href="/about">
-          عن الواحة
-        </NavLink>
-        <NavLink variant="landing" href="/activities">
-          الأنشطة
-        </NavLink>
-        <NavLink variant="landing" href="/contact-us">
-          تواصل معنا
-        </NavLink>
+        {/*<NavLink variant="landing" href="/courses">*/}
+        {/*  الدورات*/}
+        {/*</NavLink>*/}
+        {/*<NavLink variant="landing" href="/about">*/}
+        {/*  عن الواحة*/}
+        {/*</NavLink>*/}
+        {/*<NavLink variant="landing" href="/activities">*/}
+        {/*  الأنشطة*/}
+        {/*</NavLink>*/}
+        {/*<NavLink variant="landing" href="/contact-us">*/}
+        {/*  تواصل معنا*/}
+        {/*</NavLink>*/}
       </ul>
 
       <NavLink
@@ -50,7 +46,7 @@ export default async function NavBar() {
         boldWidth={false}
         canActivate={false}
       >
-        <Image alt="Logo" src={Logo} />
+        <Image alt="Logo" src={Logo} className="h-20" />
       </NavLink>
     </nav>
   );

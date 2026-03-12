@@ -5,6 +5,7 @@ import PhoneIcon from "@/components/icons/PhoneIcon";
 import WhatsappIcon from "@/components/icons/WhatsappIcon";
 import EmailIcon from "@/components/icons/EmailIcon";
 import SectionDivider from "@/components/landing-page/SectionDivider";
+import SignupModal from "@/components/auth/SignupModal";
 
 export default function CallToActionSection() {
   return (
@@ -29,13 +30,21 @@ export default function CallToActionSection() {
         </p>
 
         <div className="mb-12 grid w-fit grid-cols-2 gap-6">
-          <Button variant="primary" size="medium" href="/signup">
-            سجل الآن
-          </Button>
+          <SignupModal
+            trigger={
+              <Button variant="primary" size="medium">
+                سجل الآن
+              </Button>
+            }
+          />
 
-          <Button variant="secondary" size="medium" revert href="/signup">
-            جرب درس تجريبي
-          </Button>
+          <SignupModal
+            trigger={
+              <Button variant="secondary" size="medium" revert>
+                جرب درس تجريبي
+              </Button>
+            }
+          />
         </div>
 
         <ul className="text-olive-500 flex items-center gap-11 [&_span]:text-[1.4rem] [&>li]:flex [&>li]:items-center [&>li]:gap-3">
