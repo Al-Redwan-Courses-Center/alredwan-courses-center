@@ -17,7 +17,6 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, re_path, include
 from core.views import health_check, font_diagnostic
-from debug_toolbar.toolbar import debug_toolbar_urls
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -36,7 +35,7 @@ urlpatterns = [
     path('api/attendance/', include('attendance.urls')),
     path('api/', include('enrollments_payments.urls')),
     path('api/parents/', include('parents.urls')),
-] + debug_toolbar_urls()
+]
 
 
 if settings.DEBUG:

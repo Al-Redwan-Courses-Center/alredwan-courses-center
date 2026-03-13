@@ -30,7 +30,7 @@ class SupervisorSchedule(models.Model):
     class Meta:
         unique_together = ("instructor", "day_of_week")
         verbose_name = "سجل حضور مدرس/مشرف"
-        verbose_name_plural = "سجلات حضور المدرسين/المشرفين"
+        verbose_name_plural = "جداول حضور المدرسين/المشرفين"
 
     def clean(self):
         """Validate schedule constraints."""
