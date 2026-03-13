@@ -1214,3 +1214,140 @@ class LectureSupervisorPermissionTest(LectureAPIBaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['title'], 'Other Course Lecture')
+
+
+class LecturePastDateValidationTest(LectureAPIBaseTestCase):
+    """Tests for past date validation at the API layer"""
+
+    def test_admin_can_create_lecture_in_past(self):
+        """Test that admin users can create lectures in the past"""
+        self.client.force_authenticate(user=self.admin_user)
+        past_date = self.today - timedelta(days=5)
+        
+        response = self.client.post(
+            f'/api/courses/{self.course.id}/lectures/',
+            {
+                'day': past_date.isoformat(),
+                'start_time': '10:00:00',
+                'end_time': '12:00:00',
+                'title': 'Past Lecture by Admin'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['title'], 'Past Lecture by Admin')
+        self.assertEqual(response.data['day'], past_date.isoformat())
+
+    def test_instructor_cannot_create_lecture_in_past(self):
+        """Test that instructors cannot create lectures in the past"""
+        self.client.force_authenticate(user=self.instructor_user)
+        past_date = self.today - timedelta(days=5)
+        
+        response = self.client.post(
+            f'/api/courses/{self.course.id}/lectures/',
+            {
+                'day': past_date.isoformat(),
+                'start_time': '10:00:00',
+                'end_time': '12:00:00',
+                'title': 'Past Lecture by Instructor'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('day', response.data)
+
+    def test_supervisor_cannot_create_lecture_in_past(self):
+        """Test that supervisors (non-admin) cannot create lectures in the past"""
+        self.client.force_authenticate(user=self.supervisor_user)
+        past_date = self.today - timedelta(days=5)
+        
+        response = self.client.post(
+            f'/api/courses/{self.course.id}/lectures/',
+            {
+                'day': past_date.isoformat(),
+                'start_time': '10:00:00',
+                'end_time': '12:00:00',
+                'title': 'Past Lecture by Supervisor'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('day', response.data)
+
+    def test_instructor_can_create_lecture_today(self):
+        """Test that instructors can create lectures for today"""
+        self.client.force_authenticate(user=self.instructor_user)
+        
+        response = self.client.post(
+            f'/api/courses/{self.course.id}/lectures/',
+            {
+                'day': self.today.isoformat(),
+                'start_time': '14:00:00',
+                'end_time': '16:00:00',
+                'title': 'Today Lecture'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['day'], self.today.isoformat())
+
+    def test_instructor_can_create_lecture_in_future(self):
+        """Test that instructors can create lectures in the future"""
+        self.client.force_authenticate(user=self.instructor_user)
+        future_date = self.today + timedelta(days=10)
+        
+        response = self.client.post(
+            f'/api/courses/{self.course.id}/lectures/',
+            {
+                'day': future_date.isoformat(),
+                'start_time': '10:00:00',
+                'end_time': '12:00:00',
+                'title': 'Future Lecture'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['day'], future_date.isoformat())
+
+    def test_admin_can_create_lecture_yesterday(self):
+        """Test that admin can create lectures for yesterday (edge case)"""
+        self.client.force_authenticate(user=self.admin_user)
+        yesterday = self.today - timedelta(days=1)
+        
+        response = self.client.post(
+            f'/api/courses/{self.course.id}/lectures/',
+            {
+                'day': yesterday.isoformat(),
+                'start_time': '10:00:00',
+                'end_time': '12:00:00',
+                'title': 'Yesterday Lecture'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['day'], yesterday.isoformat())
+
+    def test_instructor_cannot_create_lecture_yesterday(self):
+        """Test that instructors cannot create lectures for yesterday"""
+        self.client.force_authenticate(user=self.instructor_user)
+        yesterday = self.today - timedelta(days=1)
+        
+        response = self.client.post(
+            f'/api/courses/{self.course.id}/lectures/',
+            {
+                'day': yesterday.isoformat(),
+                'start_time': '10:00:00',
+                'end_time': '12:00:00',
+                'title': 'Yesterday Lecture'
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('day', response.data)

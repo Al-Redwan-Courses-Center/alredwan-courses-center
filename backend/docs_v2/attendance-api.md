@@ -14,7 +14,10 @@ Instructor attendance tracking (fingerprint devices, manual entry, ratings) and 
 6. [Schedule Management](#schedule-management)
 7. [Student Lecture Attendance](#student-lecture-attendance)
 8. [Time Restrictions](#time-restrictions)
-9. [Quick Reference](#quick-reference)
+9. [Filters](#filters)
+10. [WebSocket Real-Time Updates](#websocket-real-time-updates)
+11. [Automated Cron Jobs](#automated-cron-jobs)
+12. [Quick Reference](#quick-reference)
 
 ---
 
@@ -761,10 +764,324 @@ The system checks the following attributes to determine admin/supervisor status:
 
 ---
 
+## Filters
+
+All list endpoints support filtering via query parameters.
+
+### Instructor Attendance Filters
+
+**Endpoint:** `GET /api/attendance/all/`
+
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|--------|
+| `gender` | string | Filter by instructor gender | `male`, `female` |
+| `instructor_type` | string | Filter by instructor type | `normal`, `supervisor` |
+| `status` | string | Filter by attendance status | `present`, `late`, `absent`, `pending` |
+| `attendance_type` | string | Filter by attendance type | `lecture`, `supervision` |
+| `date` | date | Filter by date | `2026-02-28` |
+| `date_from` | date | Filter from date (inclusive) | `2026-02-01` |
+| `date_to` | date | Filter to date (inclusive) | `2026-02-28` |
+| `instructor` | integer | Filter by instructor ID | `1` |
+| `season` | integer | Filter by season ID | `5` |
+| `ordering` | string | Order by field | `date`, `-date`, `check_in_time` |
+
+**Example Requests:**
+
+```bash
+# Get all male instructors' attendance
+GET /api/attendance/all/?gender=male
+
+# Get supervisor attendance for February
+GET /api/attendance/all/?instructor_type=supervisor&date_from=2026-02-01&date_to=2026-02-28
+
+# Get absent female instructors today
+GET /api/attendance/all/?gender=female&status=absent&date=2026-02-28
+
+# Combined filters with ordering
+GET /api/attendance/all/?gender=male&instructor_type=normal&status=present&ordering=-date
+```
+
+---
+
+### Lecture Attendance Filters
+
+**Endpoint:** `GET /api/attendance/lecture/{id}/details/`
+
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|--------|
+| `gender` | string | Filter by participant gender | `male`, `female`, `boy`, `girl` |
+| `participant_type` | string | Filter by participant type | `student`, `child` |
+| `present` | boolean | Filter by presence status | `true`, `false` |
+| `not_marked` | boolean | Show only unmarked attendance | `true` |
+| `rating_min` | decimal | Minimum rating filter | `3.0` |
+| `rating_max` | decimal | Maximum rating filter | `5.0` |
+
+**Gender Mapping:**
+
+| Value | Matches |
+|-------|--------|
+| `male` | Adult students with gender='male' |
+| `female` | Adult students with gender='female' |
+| `boy` | Children with gender='boy' |
+| `girl` | Children with gender='girl' |
+
+**Example Requests:**
+
+```bash
+# Get male students' attendance for a lecture
+GET /api/attendance/lecture/1/details/?gender=male
+
+# Get all children (boys) attendance
+GET /api/attendance/lecture/1/details/?gender=boy
+
+# Get unmarked attendance only
+GET /api/attendance/lecture/1/details/?not_marked=true
+
+# Get present students with high ratings
+GET /api/attendance/lecture/1/details/?present=true&rating_min=4.0
+
+# Combined filters
+GET /api/attendance/lecture/1/details/?participant_type=student&gender=female&present=true
+```
+
+---
+
+## WebSocket Real-Time Updates
+
+Real-time attendance updates via WebSocket connection.
+
+### Obtain WebSocket Ticket (Recommended)
+
+Get a secure, single-use ticket for WebSocket authentication.
+
+| | |
+|--|--|
+| **URL** | `POST /api/attendance/ws-ticket/` |
+| **Auth** | ✅ Required (Admin/Staff only) |
+
+**Response (201 Created):**
+```json
+{
+  "ticket": "abc123xyz...",
+  "expires_in_seconds": 30,
+  "message": "Use this ticket to connect to WebSocket within 30 seconds. Single use only."
+}
+```
+
+**Why use tickets instead of JWT?**
+- Tickets are single-use (replay attacks impossible)
+- Short lifespan (30 seconds)
+- Random token (not decodable, no JWT claims exposed in logs)
+- More secure than JWT in query string
+
+### Connection
+
+**Method 1: Ticket-based (Recommended)**
+```
+ws://your-domain/ws/attendance/?ticket=<TICKET>
+```
+
+**Method 2: JWT-based (Legacy)**
+```
+ws://your-domain/ws/attendance/?token=<JWT_TOKEN>
+```
+
+**Authentication:** Ticket (preferred) or JWT token passed as query parameter.
+
+---
+
+### Message Types
+
+#### 1. Request Summary (with filters)
+
+Request today's attendance summary with optional filters.
+
+**Send:**
+
+```json
+{
+  "type": "request_summary",
+  "filters": {
+    "gender": "male",
+    "instructor_type": "normal",
+    "attendance_type": "lecture",
+    "status": "present"
+  }
+}
+```
+
+**Receive:**
+
+```json
+{
+  "type": "today_summary",
+  "data": {
+    "total": 25,
+    "checked_in": 20,
+    "checked_out": 15,
+    "not_checked_in": 5,
+    "present": 18,
+    "late": 2,
+    "absent": 5,
+    "total_rating": "85.50",
+    "average_rating": "4.28",
+    "rated_count": 20
+  }
+}
+```
+
+---
+
+#### 2. Request Filtered Attendance List
+
+Request filtered list of attendance records.
+
+**Send:**
+
+```json
+{
+  "type": "request_filtered_list",
+  "filters": {
+    "gender": "female",
+    "instructor_type": "supervisor",
+    "checked_in": true,
+    "checked_out": false
+  }
+}
+```
+
+**Receive:**
+
+```json
+{
+  "type": "filtered_attendance_list",
+  "data": {
+    "filters_applied": {
+      "gender": "female",
+      "instructor_type": "supervisor",
+      "checked_in": true,
+      "checked_out": false
+    },
+    "count": 3,
+    "records": [
+      {
+        "id": 123,
+        "instructor_id": 5,
+        "instructor_name": "فاطمة محمد",
+        "instructor_gender": "female",
+        "instructor_type": "supervisor",
+        "date": "2026-02-28",
+        "check_in_time": "08:30:00",
+        "check_out_time": null,
+        "status": "present",
+        "attendance_type": "supervision",
+        "rating": "4.50"
+      }
+    ]
+  }
+}
+```
+
+---
+
+#### 3. Attendance Update (Push)
+
+Receive real-time updates when attendance changes.
+
+**Receive:**
+
+```json
+{
+  "type": "attendance_update",
+  "data": {
+    "id": 123,
+    "action": "check_in",
+    "instructor_name": "محمد أحمد",
+    "check_in_time": "2026-02-28T08:30:00+02:00",
+    "status": "present"
+  }
+}
+```
+
+---
+
+### WebSocket Filter Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `gender` | string | `male` or `female` |
+| `instructor_type` | string | `normal` or `supervisor` |
+| `attendance_type` | string | `lecture` or `supervision` |
+| `status` | string | `present`, `late`, `absent`, `pending`, `not_started` |
+| `checked_in` | boolean | Filter by check-in status |
+| `checked_out` | boolean | Filter by check-out status |
+
+---
+
+## Automated Cron Jobs
+
+The attendance system uses automated background jobs for data consistency.
+
+### Attendance Record Generation
+
+| Job | Schedule | Description |
+|-----|----------|-------------|
+| `generate_instructor_attendance_weekly` | Sunday 00:05 | Creates attendance records for the next 7 days based on SupervisorSchedule and scheduled lectures |
+
+### Absent Marking
+
+| Job | Schedule | Description |
+|-----|----------|-------------|
+| `mark_absent_daily` | Daily 23:59 | Marks all PENDING/NOT_STARTED instructor attendance as ABSENT |
+| `mark_absent_for_yesterday` | Daily 00:01 | Fallback job for missed records from previous day |
+| `update_pending_to_not_started` | Daily 06:00 | Logs expected attendance for monitoring dashboards |
+
+### Lecture Cancellation (Auto)
+
+When a lecture's attendance is not taken, the system automatically marks it as cancelled.
+
+| Job | Schedule | Description |
+|-----|----------|-------------|
+| `mark_lectures_without_attendance_as_cancelled` | Daily 23:55 | Marks past SCHEDULED lectures (yesterday or older) with `attendance_taken=False` as CANCELLED |
+| `mark_lectures_without_attendance_as_cancelled_fallback` | Daily 00:05 | Fallback for lectures 2+ days old that were missed by primary job |
+
+**Cancellation Logic:**
+
+```
+Lecture Eligible for Auto-Cancellation when:
+  - day ≤ yesterday (lecture date has passed)
+  - status = SCHEDULED (not already COMPLETED, CANCELLED, or ADDITIONAL)
+  - attendance_taken = False (no attendance marked)
+
+Result:
+  - status → CANCELLED
+  - Logged to AttendanceCronLog
+```
+
+**Note:** Today's lectures are never auto-cancelled (they might still be ongoing).
+
+### Cron Job Logging
+
+All cron jobs log their execution to `AttendanceCronLog` for audit trail:
+
+```json
+{
+  "job_name": "mark_lectures_without_attendance_as_cancelled",
+  "executed_at": "2026-02-14T23:55:00+02:00",
+  "details": "Marked 3 lectures as CANCELLED (no attendance taken):\nQuran Level 1 - Lecture 5 (2026-02-13)\n..."
+}
+```
+
+Admins can view these logs in the Django admin under **Attendance > Attendance Cron Logs**.
+
+---
+
 ## Quick Reference
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
+| POST | `/api/attendance/ws-ticket/` | **Obtain WebSocket ticket** | Admin/Staff |
+| POST | `/api/attendance/ws-ticket/cleanup/` | Clean expired tickets | Admin |
 | POST | `/api/attendance/scan/` | Unified fingerprint scan | Device ID |
 | POST | `/api/attendance/check-in/` | Fingerprint check-in (legacy) | Device ID |
 | POST | `/api/attendance/check-out/` | Fingerprint check-out (legacy) | Device ID |

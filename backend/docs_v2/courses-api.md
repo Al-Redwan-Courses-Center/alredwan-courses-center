@@ -475,6 +475,15 @@ Creates a new **additional** lecture with `is_accepted=False` (requires approval
 - `start_time` must be before `end_time` (if both provided)
 - Cannot create duplicate lectures at the same date and time
 - Lecture number is automatically calculated based on chronological position
+- **Non-admin users** (instructors, supervisors) cannot create lectures in the past
+- **Admin users** can create lectures on any date (for backfilling, historical data import, etc.)
+
+**Error (400 Bad Request) - Past Date for Non-Admin:**
+```json
+{
+  "day": ["لا يمكن إنشاء محاضرة في الماضي. يرجى اختيار تاريخ اليوم أو تاريخ مستقبلي."]
+}
+```
 
 **Response (201 Created):**
 

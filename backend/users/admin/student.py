@@ -8,8 +8,8 @@ from ..utils.card_generator import generate_students_pdf
 
 
 @admin.register(StudentUser)
-class StudentUserAdmin(admin.ModelAdmin, ExcelExportMixin):
-    list_display = ('unique_code', 'get_full_name',
+class StudentUserAdmin(ExcelExportMixin, admin.ModelAdmin):
+    list_display = ('action_checkbox', 'unique_code', 'get_full_name',
                     'get_phone', 'get_gender', 'image')
     list_filter = ('user__gender', 'user__is_verified')
     search_fields = ('unique_code', 'user__first_name',

@@ -219,12 +219,12 @@ def void_payments(modeladmin, request, queryset):
 # Payment Admin Configuration
 # =============================================================================
 @admin.register(Payment)
-class PaymentAdmin(admin.ModelAdmin, ExcelExportMixin):
+class PaymentAdmin(ExcelExportMixin, admin.ModelAdmin):
     """Enhanced admin configuration for Payment model."""
     
     # List display
     list_display = (
-        'get_payer_display', 'get_enrollment_link', 'get_amount_display',
+        'action_checkbox', 'get_payer_display', 'get_enrollment_link', 'get_amount_display',
         'get_method_badge', 'get_status_badge', 'get_processed_date',
         'get_processed_by_display', 'get_reference_display'
     )
@@ -713,12 +713,12 @@ def reject_refunds(modeladmin, request, queryset):
 # RefundRequest Admin Configuration
 # =============================================================================
 @admin.register(RefundRequest)
-class RefundRequestAdmin(admin.ModelAdmin):
+class RefundRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
     """Enhanced admin configuration for RefundRequest model."""
     
     # List display
     list_display = (
-        'get_enrollment_link', 'get_requester_display', 'get_refund_amount',
+        'action_checkbox', 'get_enrollment_link', 'get_requester_display', 'get_refund_amount',
         'get_status_badge', 'get_reason_preview', 'get_created_date',
         'get_processed_info'
     )
@@ -754,6 +754,9 @@ class RefundRequestAdmin(admin.ModelAdmin):
     
     # Actions
     actions = [approve_and_process_refunds, reject_refunds]
+    
+    # Excel export configuration
+    excel_filename = 'refund_requests'
     
     # =========================================================================
     # Dynamic Fieldsets

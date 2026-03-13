@@ -54,7 +54,7 @@ class StudentUser(ImageOptimizationMixin, models.Model):
         import requests
         from arabic_reshaper import reshape
         from bidi.algorithm import get_display
-        import os
+        from core.utils.font_utils import load_arabic_fonts
 
         # Card size: 800x500 (slightly larger for better design)
         width, height = 800, 500
@@ -85,37 +85,8 @@ class StudentUser(ImageOptimizationMixin, models.Model):
             draw.ellipse([corner[0], corner[1], corner[0]+corner_size, corner[1]+corner_size], 
                         fill=(218, 165, 32), outline=border_color, width=2)
         
-        # Load Arabic-compatible fonts
-        try:
-            # Try fonts in order of availability (Docker-first, then Windows/macOS)
-            arabic_fonts = [
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",  # Docker/Linux (installed)
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",  # Docker/Linux Bold
-                "C:\\Windows\\Fonts\\arial.ttf",  # Windows - good Arabic support
-                "C:\\Windows\\Fonts\\tahoma.ttf",  # Windows - excellent Arabic support
-                "C:\\Windows\\Fonts\\tahomabd.ttf",  # Windows - Tahoma Bold
-                "/System/Library/Fonts/Supplemental/Arial.ttf",  # macOS
-            ]
-            
-            font_path = None
-            for font in arabic_fonts:
-                if os.path.exists(font):
-                    font_path = font
-                    break
-            
-            if font_path:
-                title_font = ImageFont.truetype(font_path, 32)
-                font = ImageFont.truetype(font_path, 22)
-                small_font = ImageFont.truetype(font_path, 16)
-            else:
-                title_font = ImageFont.load_default()
-                font = ImageFont.load_default()
-                small_font = ImageFont.load_default()
-        except Exception as e:
-            print(f"Font loading error: {e}")
-            title_font = ImageFont.load_default()
-            font = ImageFont.load_default()
-            small_font = ImageFont.load_default()
+        # Load Arabic-compatible fonts using centralized utility
+        title_font, font, small_font = load_arabic_fonts(title_size=32, normal_size=22, small_size=16)
         
         # Header section with title
         header_text = get_display(reshape("بطاقة الطالب"))

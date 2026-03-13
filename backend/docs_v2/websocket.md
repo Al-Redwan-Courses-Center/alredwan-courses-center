@@ -15,19 +15,62 @@ The backend runs two separate servers:
 
 ---
 
-## Connection
+## Authentication
+
+The WebSocket supports two authentication methods:
+
+### 1. Ticket-based Authentication (Recommended) ⭐
+
+This is the more secure approach. The client obtains a short-lived, single-use ticket via REST API, then uses it for the WebSocket connection.
+
+**Why tickets are more secure:**
+- Single-use (invalidated after connection)
+- Short-lived (30 second expiration)
+- Random token (not decodable like JWT)
+- Server logs don't expose sensitive claims
+
+**Step 1: Obtain a ticket**
+
+```bash
+POST /api/attendance/ws-ticket/
+Authorization: JWT <access_token>
+```
+
+**Response:**
+```json
+{
+  "ticket": "abc123xyz...",
+  "expires_in_seconds": 30,
+  "message": "Use this ticket to connect to WebSocket within 30 seconds. Single use only."
+}
+```
+
+**Step 2: Connect with ticket**
+
+```
+ws://<host>:8001/ws/attendance/?ticket=<ticket_token>
+```
+
+### 2. JWT Token Authentication (Legacy)
+
+For backwards compatibility, JWT tokens can still be passed in the query string:
 
 ```
 ws://<host>:8001/ws/attendance/?token=<jwt_access_token>
 ```
 
-> **Note:** WebSocket connections use port **8001**, not 8000.
+> **⚠️ Security Note:** JWT in query string is less secure because tokens may appear in server logs, browser history, and referrer headers. Use ticket-based auth for production.
+
+---
+
+## Connection
 
 | | |
 |--|--|
 | **Protocol** | WebSocket |
 | **Port** | 8001 |
-| **Auth** | JWT access token (query string) |
+| **Auth (recommended)** | Ticket via query string `?ticket=...` |
+| **Auth (legacy)** | JWT via query string `?token=...` |
 | **Required Role** | Admin / Staff |
 
 ### Close Codes
@@ -35,8 +78,8 @@ ws://<host>:8001/ws/attendance/?token=<jwt_access_token>
 | Code | Meaning |
 |------|---------|
 | Normal | Disconnected normally |
-| `4001` | No token provided |
-| `4002` | Invalid token |
+| `4001` | No token/ticket provided |
+| `4002` | Invalid token/ticket (expired, used, or malformed) |
 | `4003` | Not authorized (not staff) |
 
 ---
@@ -167,37 +210,130 @@ Response to a `ping` message.
 
 ## JavaScript Example
 
-Full implementation with auto-reconnect:
+Full implementation with ticket-based auth and auto-reconnect:
 
 ```javascript
 class AttendanceWebSocket {
-  constructor(accessToken) {
-    this.token = accessToken;
+  constructor(jwtToken) {
+    this.jwtToken = jwtToken;  // Used to obtain tickets
     this.socket = null;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
   }
 
-  connect() {
-    this.socket = new WebSocket(
-      `ws://localhost:8001/ws/attendance/?token=${this.token}`
-    );
+  async connect() {
+    try {
+      // Step 1: Obtain a ticket via REST API
+      const ticket = await this.obtainTicket();
+      
+      // Step 2: Connect with ticket
+      this.socket = new WebSocket(
+        `ws://localhost:8001/ws/attendance/?ticket=${ticket}`
+      );
 
-    this.socket.onopen = () => {
-      console.log('Connected to attendance updates');
-      this.reconnectAttempts = 0;
-      this.requestSummary();
-    };
+      this.socket.onopen = () => {
+        console.log('Connected to attendance updates');
+        this.reconnectAttempts = 0;
+        this.requestSummary();
+      };
 
-    this.socket.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      this.handleMessage(message);
-    };
+      this.socket.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        this.handleMessage(message);
+      };
 
-    this.socket.onclose = (event) => {
-      if (event.code === 4001) {
-        console.error('No token provided');
-      } else if (event.code === 4002) {
+      this.socket.onclose = (event) => {
+        if (event.code === 4001) {
+          console.error('No ticket provided');
+        } else if (event.code === 4002) {
+          console.error('Invalid or expired ticket');
+        } else if (event.code === 4003) {
+          console.error('Not authorized');
+        } else {
+          this.attemptReconnect();
+        }
+      };
+
+      this.socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+    } catch (error) {
+      console.error('Failed to connect:', error);
+      this.attemptReconnect();
+    }
+  }
+
+  async obtainTicket() {
+    const response = await fetch('/api/attendance/ws-ticket/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `JWT ${this.jwtToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to obtain WebSocket ticket');
+    }
+    
+    const data = await response.json();
+    return data.ticket;
+  }
+
+  handleMessage(message) {
+    switch (message.type) {
+      case 'connection_established':
+        console.log('Connected as:', message.message);
+        console.log('Auth method:', message.auth_method);  // 'ticket' or 'jwt'
+        break;
+      case 'attendance_update':
+        this.onCheckIn(message.data);
+        break;
+      case 'attendance_check_out':
+        this.onCheckOut(message.data);
+        break;
+      case 'attendance_rated':
+        this.onRated(message.data);
+        break;
+      case 'summary_response':
+        this.onSummary(message.data);
+        break;
+      case 'pong':
+        console.log('Server is alive');
+        break;
+    }
+  }
+
+  requestSummary() {
+    this.socket.send(JSON.stringify({ type: 'request_summary' }));
+  }
+
+  ping() {
+    this.socket.send(JSON.stringify({ type: 'ping' }));
+  }
+
+  async attemptReconnect() {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      console.log(`Reconnecting... (attempt ${this.reconnectAttempts})`);
+      setTimeout(() => this.connect(), 3000);
+    }
+  }
+
+  // Override these in your app
+  onCheckIn(data) { console.log('Check-in:', data); }
+  onCheckOut(data) { console.log('Check-out:', data); }
+  onRated(data) { console.log('Rated:', data); }
+  onSummary(data) { console.log('Summary:', data); }
+}
+
+// Usage
+const ws = new AttendanceWebSocket('your-jwt-token');
+ws.onCheckIn = (data) => {
+  showNotification(`${data.instructor} checked in`);
+};
+ws.connect();
+```
         console.error('Invalid token');
       } else if (event.code === 4003) {
         console.error('Not authorized');
@@ -289,7 +425,9 @@ Prerequisites
 2. Redis must be running (for the channel layer)
 3. You need a valid admin JWT token
 
-Step 1: Get a JWT Token
+### Method A: Ticket-based Authentication (Recommended)
+
+**Step 1: Get a JWT Token**
 ```bash
 # Login to get tokens
 curl -X POST http://localhost:8000/auth/jwt/create/ \
@@ -298,33 +436,60 @@ curl -X POST http://localhost:8000/auth/jwt/create/ \
 ```
 
 Response:
-
-```bash
+```json
 {
   "refresh": "eyJ...",
   "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-Step 2: Connect to WebSocket
-Using websocat (install with cargo install websocat or brew install websocat):
+**Step 2: Obtain a WebSocket Ticket**
+```bash
+curl -X POST http://localhost:8000/api/attendance/ws-ticket/ \
+  -H "Authorization: JWT YOUR_ACCESS_TOKEN"
+```
+
+Response:
+```json
+{
+  "ticket": "abc123xyz...",
+  "expires_in_seconds": 30,
+  "message": "Use this ticket to connect to WebSocket within 30 seconds. Single use only."
+}
+```
+
+**Step 3: Connect to WebSocket (within 30 seconds)**
+
+Using websocat:
+```bash
+websocat "ws://localhost:8001/ws/attendance/?ticket=YOUR_TICKET"
+```
+
+Or using wscat:
+```bash
+wscat -c "ws://localhost:8001/ws/attendance/?ticket=YOUR_TICKET"
+```
+
+### Method B: JWT Authentication (Legacy)
+
+**Step 1: Get a JWT Token** (same as above)
+
+**Step 2: Connect to WebSocket Directly**
 ```bash
 websocat "ws://localhost:8001/ws/attendance/?token=YOUR_ACCESS_TOKEN"
 ```
 
-Or using wscat (install with npm install -g wscat):
-```bash
-wscat -c "ws://localhost:8001/ws/attendance/?token=YOUR_ACCESS_TOKEN"
-```
-
-Step 3: Expected Connection Response
-```bash
+### Expected Connection Response
+```json
 {
   "type": "connection_established",
   "message": "Connected as Admin User",
-  "user_id": "a1b2c3d4-..."
+  "user_id": "a1b2c3d4-...",
+  "auth_method": "ticket"
 }
 ```
+
+**Note:** The `auth_method` field will be `"ticket"` or `"jwt"` depending on which method was used.
 
 Step 4: Test Ping/Pong
 Send:
@@ -411,4 +576,5 @@ In your WebSocket terminal, you should receive:
     "status": "present"
   }
 }
+```
 ```

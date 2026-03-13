@@ -14,7 +14,7 @@ from .base import ArabicLabelsMixin, OptimizedQuerysetMixin
 
 
 @admin.register(LandingPageCourse)
-class LandingPageCourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
+class LandingPageCourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, ExcelExportMixin, admin.ModelAdmin):
     """Admin configuration for LandingPageCourse with drag ordering support."""
 
     select_related_fields = [
@@ -23,7 +23,7 @@ class LandingPageCourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.Mo
     ]
 
     list_display = (
-        'get_order_badge', 'get_course_info', 'get_instructor_name',
+        'action_checkbox', 'get_order_badge', 'get_course_info', 'get_instructor_name',
         'get_enrollment_status', 'get_course_active_status', 'get_drag_handle'
     )
     list_display_links = ('get_course_info',)

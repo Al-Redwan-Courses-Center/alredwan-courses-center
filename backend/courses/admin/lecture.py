@@ -16,7 +16,7 @@ from .actions import mark_lectures_completed, mark_lectures_cancelled, reschedul
 
 
 @admin.register(Lecture)
-class LectureAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
+class LectureAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, ExcelExportMixin, admin.ModelAdmin):
     """Admin configuration for Lecture model with enhanced UX."""
 
     select_related_fields = [
@@ -25,7 +25,7 @@ class LectureAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, 
     ]
 
     list_display = (
-        'get_lecture_title', 'get_course_link', 'get_lecture_number', 'get_day_display',
+        'action_checkbox', 'get_lecture_title', 'get_course_link', 'get_lecture_number', 'get_day_display',
         'get_time_range', 'get_instructor_name', 'get_status_badge',
         'get_acceptance_status', 'get_attendance_status'
     )

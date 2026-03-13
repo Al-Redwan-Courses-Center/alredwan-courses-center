@@ -7,6 +7,12 @@ from . import views
 app_name = 'attendance'
 
 urlpatterns = [
+    # WebSocket ticket endpoints (for secure WebSocket authentication)
+    path('ws-ticket/', views.ObtainWebSocketTicketView.as_view(),
+         name='ws-ticket'),
+    path('ws-ticket/cleanup/', views.CleanupExpiredTicketsView.as_view(),
+         name='ws-ticket-cleanup'),
+
     # Fingerprint device endpoints (no auth required - device uses device_id)
     # RECOMMENDED: Use /scan/ for devices that don't distinguish check-in/out
     path('scan/', views.UnifiedFingerprintScanView.as_view(),

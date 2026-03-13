@@ -17,7 +17,7 @@ from .inlines import ExamResultInline
 
 
 @admin.register(Exam)
-class ExamAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
+class ExamAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, ExcelExportMixin, admin.ModelAdmin):
     """Admin configuration for Exam model."""
 
     select_related_fields = [
@@ -25,7 +25,7 @@ class ExamAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, Exc
     ]
 
     list_display = (
-        'name', 'get_exam_type_badge', 'get_course_link',
+        'action_checkbox', 'name', 'get_exam_type_badge', 'get_course_link',
         'get_instructor_name', 'get_scheduled_at', 'total_marks',
         'get_results_summary'
     )
@@ -153,7 +153,7 @@ class ExamAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, Exc
 
 
 @admin.register(ExamResult)
-class ExamResultAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmin, ExcelExportMixin):
+class ExamResultAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, ExcelExportMixin, admin.ModelAdmin):
     """Admin configuration for ExamResult model with enhanced UX."""
 
     select_related_fields = [
@@ -162,7 +162,7 @@ class ExamResultAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, admin.ModelAdmi
     ]
 
     list_display = (
-        'get_exam_info', 'get_participant_display', 'get_marks_display',
+        'action_checkbox', 'get_exam_info', 'get_participant_display', 'get_marks_display',
         'get_percentage_bar', 'get_passed_status', 'get_entered_info'
     )
     list_filter = (

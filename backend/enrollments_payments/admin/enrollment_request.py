@@ -115,7 +115,7 @@ def approve_selected(modeladmin, request, queryset):
     Handles partial payments: if enrollment_request.price < course.price,
     the payment will be recorded as partial with remaining amount tracked.
     """
-    approvable = queryset.filter(status__in[
+    approvable = queryset.filter(status__in=[
         EnrollmentRequestStatus.PENDING,
         EnrollmentRequestStatus.PROCESSING
     ])
@@ -154,7 +154,7 @@ def approve_selected(modeladmin, request, queryset):
 @admin.action(description=_('❌ رفض الطلبات المحددة'))
 def reject_selected(modeladmin, request, queryset):
     """Reject selected pending or processing enrollment requests."""
-    rejectable = queryset.filter(status__in[
+    rejectable = queryset.filter(status__in=[
         EnrollmentRequestStatus.PENDING,
         EnrollmentRequestStatus.PROCESSING
     ])
@@ -198,7 +198,7 @@ def mark_processing(modeladmin, request, queryset):
 @admin.action(description=_('⏳ تمديد صلاحية الطلبات (7 أيام)'))
 def extend_expiry(modeladmin, request, queryset):
     """Extend expiry date by 7 days for selected requests."""
-    pending = queryset.filter(status__in[
+    pending = queryset.filter(status__in=[
         EnrollmentRequestStatus.PENDING,
         EnrollmentRequestStatus.PROCESSING
     ])
@@ -219,12 +219,12 @@ def extend_expiry(modeladmin, request, queryset):
 # Admin Configuration
 # =============================================================================
 @admin.register(EnrollmentRequest)
-class EnrollmentRequestAdmin(admin.ModelAdmin, ExcelExportMixin):
+class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
     """Enhanced admin configuration for EnrollmentRequest model."""
     
     # List display configuration
     list_display = (
-        'get_participant_display', 'get_course_link', 'get_price_display',
+        'action_checkbox', 'get_participant_display', 'get_course_link', 'get_price_display',
         'get_status_badge', 'get_payment_method_badge', 'get_expiry_status',
         'get_created_at', 'get_processed_info'
     )

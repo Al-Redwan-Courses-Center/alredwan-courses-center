@@ -343,6 +343,31 @@ class LectureUpdateSerializer(serializers.ModelSerializer):
             'status': {'required': False},
         }
 
+    def validate_day(self, value):
+        """
+        Validate lecture date on update.
+        
+        Non-admin users cannot move lectures to the past.
+        Admin users can change lectures to any date for flexibility.
+        """
+        from django.utils import timezone
+        
+        request = self.context.get('request')
+        user = request.user if request else None
+        
+        # Allow admins to update to past dates
+        if user and user.is_staff:
+            return value
+        
+        # Non-admin users cannot move lectures to the past
+        today = timezone.localdate()
+        if value < today:
+            raise serializers.ValidationError(
+                "لا يمكن نقل المحاضرة إلى تاريخ في الماضي."
+            )
+        
+        return value
+
     def validate(self, data):
         """Validate lecture update data"""
         instance = self.instance
@@ -381,6 +406,32 @@ class InstructorLectureCreateSerializer(serializers.ModelSerializer):
         fields = [
             'title', 'day', 'start_time', 'end_time', 'instructor'
         ]
+
+    def validate_day(self, value):
+        """
+        Validate lecture date.
+        
+        Non-admin users cannot create lectures in the past.
+        Admin users can create lectures on any date for flexibility
+        (backfilling records, importing historical data, etc.)
+        """
+        from django.utils import timezone
+        
+        request = self.context.get('request')
+        user = request.user if request else None
+        
+        # Allow admins to create past lectures
+        if user and user.is_staff:
+            return value
+        
+        # Non-admin users cannot create lectures in the past
+        today = timezone.localdate()
+        if value < today:
+            raise serializers.ValidationError(
+                "لا يمكن إنشاء محاضرة في الماضي. يرجى اختيار تاريخ اليوم أو تاريخ مستقبلي."
+            )
+        
+        return value
 
     def validate(self, data):
         """Validate lecture data"""
