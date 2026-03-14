@@ -56,6 +56,21 @@ class ExcelExportMixin:
         )
         return actions
 
+    def get_list_display_links(self, request, list_display):
+        """Ensure at least one non-checkbox column links to the change page."""
+        links = super().get_list_display_links(request, list_display)
+        if not list_display:
+            return links
+
+        if links and any(field != 'action_checkbox' for field in links):
+            return links
+
+        for field in list_display:
+            if field != 'action_checkbox':
+                return (field,)
+
+        return links
+
     def changelist_view(self, request, extra_context=None):
         """Add export button to the changelist view and handle direct export."""
         extra_context = extra_context or {}

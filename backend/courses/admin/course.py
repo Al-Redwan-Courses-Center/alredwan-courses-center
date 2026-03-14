@@ -27,6 +27,7 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, ExcelExportMixin, a
         'action_checkbox', 'name', 'get_instructor_link', 'get_season', 'get_date_range',
         'get_capacity_bar', 'get_price_display', 'get_active_status'
     )
+    list_display_links = ('name',)
     list_filter = (
         ActiveStatusFilter, CapacityStatusFilter, 'season',
         'instructor', 'for_adults', DateRangeFilter, 'tags'
@@ -49,6 +50,12 @@ class CourseAdmin(ArabicLabelsMixin, OptimizedQuerysetMixin, ExcelExportMixin, a
 
     # Inlines for related models
     inlines = [CourseScheduleInline, LectureInline, CourseEnrollmentInline]
+
+    def get_inlines(self, request, obj=None):
+        """Show only schedule inline on add form; show all inlines on change form."""
+        if obj is None:
+            return [CourseScheduleInline]
+        return super().get_inlines(request, obj)
 
     fieldsets = (
         (_('معلومات الدورة الأساسية'), {
