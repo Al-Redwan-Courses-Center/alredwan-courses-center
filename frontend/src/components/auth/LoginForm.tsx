@@ -1,11 +1,7 @@
 "use client";
 
 import Button from "@/components/ui/Button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/DropdownMenu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/DropdownMenu";
 import FieldSetInput from "@/components/ui/FieldSetInput";
 import { LoginInputs } from "@/types/auth";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
@@ -32,7 +28,7 @@ export default function LoginForm({
   } = useForm<LoginInputs>({
     defaultValues: {
       phone_number1: "01000000000",
-      password: "Test@1234",
+      password: "password123",
     },
   });
   const [showPassword, setShowPassword] = useState(false);
