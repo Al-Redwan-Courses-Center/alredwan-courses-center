@@ -76,6 +76,12 @@ services:
           ignore:
             - node_modules/
             - .next/
+
+        - action: rebuild
+          path: ./frontend/package.json
+
+        - action: rebuild
+          path: ./frontend/pnpm-lock.yaml
     stdin_open: true
     tty: true
     build:
