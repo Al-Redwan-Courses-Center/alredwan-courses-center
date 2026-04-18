@@ -1,4 +1,5 @@
 import { Session } from "next-auth";
+import { JWT } from "next-auth/jwt";
 
 export interface UserEntity {
   id: string;
@@ -20,11 +21,22 @@ export interface UserEntity {
   jwt_refresh_token: string;
   exp: number;
   error?: string;
+  instructor_id?: string;
 }
 
 export type UserSession = (Session | null) & {
   user: UserEntity;
 };
+
+export type JwtToken = JWT &
+  UserEntity & {
+    sub: string;
+    iat: number;
+    jti: string;
+    exp: number;
+    jwt_access_token: string;
+    jwt_refresh_token: string;
+  };
 
 export interface LoginInputs {
   phone_number1: string;

@@ -3,7 +3,7 @@ import {
   DataViewFilterConfig,
   DataViewSortConfig,
 } from "@/types/components";
-import { Lecture } from "@/types/entities";
+import { LectureListItem } from "@/types/entities";
 import { parse } from "date-fns";
 
 const headers = [
@@ -17,59 +17,70 @@ const headers = [
 ];
 
 const statusWeights = {
-  submitted: 1,
-  pending: 0,
+  scheduled: 0,
+  additional: 1,
+  completed: 2,
+  cancelled: 3,
 };
 
-const sortConfig: DataViewSortConfig<Lecture> = {
+const sortConfig: DataViewSortConfig<LectureListItem> = {
   lecture: {
-    sortFn: (a: Lecture, b: Lecture) => a.title.localeCompare(b.title),
+    sortFn: (a: LectureListItem, b: LectureListItem) =>
+      a.title.localeCompare(b.title),
     label: headers[1],
   },
   date: {
-    sortFn: (a: Lecture, b: Lecture) =>
+    sortFn: (a: LectureListItem, b: LectureListItem) =>
       new Date(a.start_time || "").getTime() -
       new Date(b.start_time || "").getTime(),
     label: headers[2],
   },
   startTime: {
-    sortFn: (a: Lecture, b: Lecture) =>
+    sortFn: (a: LectureListItem, b: LectureListItem) =>
       parse(a.start_time || "", "HH:mm", new Date()).getTime() -
       parse(b.start_time || "", "HH:mm", new Date()).getTime(),
     label: headers[3],
   },
   endTime: {
-    sortFn: (a: Lecture, b: Lecture) =>
+    sortFn: (a: LectureListItem, b: LectureListItem) =>
       parse(a.end_time || "", "HH:mm", new Date()).getTime() -
       parse(b.end_time || "", "HH:mm", new Date()).getTime(),
     label: headers[4],
   },
   status: {
-    sortFn: (a: Lecture, b: Lecture) =>
+    sortFn: (a: LectureListItem, b: LectureListItem) =>
       statusWeights[a.status] - statusWeights[b.status],
     label: headers[5],
   },
 };
 
 const filterConfig: DataViewFilterConfig = {
-  submitted: {
+  completed: {
     key: "status",
     label: "مسجلة",
   },
 
-  pending: {
+  scheduled: {
     key: "status",
     label: "غير مسجلة",
   },
 };
 
-const statusMap: StatusMap<Lecture> = {
-  submitted: {
+const statusMap: StatusMap<LectureListItem> = {
+  scheduled: {
+    label: "غير مسجلة",
+    color: "gray",
+  },
+  additional: {
+    label: "إضافية",
+    color: "gray",
+  },
+  completed: {
     label: "تم التسجيل",
     color: "green",
   },
-  pending: {
-    label: "غير مسجلة",
+  cancelled: {
+    label: "ملغية",
     color: "gray",
   },
 };

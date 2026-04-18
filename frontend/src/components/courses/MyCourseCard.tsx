@@ -17,7 +17,6 @@ export default function MyCourseCard({
   index: number;
 }) {
   const lectureCount = course.num_lectures;
-  const numEnrollments = course.enrolled_count;
   const isEven = index % 2 === 0;
 
   return (

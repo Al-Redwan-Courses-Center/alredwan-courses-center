@@ -4,9 +4,9 @@ import InstructorMyCoursesView from "@/components/dashboard/instructor/Instructo
 import { Suspense } from "react";
 
 export default async function InstructorMyCoursesPage() {
-  const { first_name, id } = await getUser();
+  const { first_name, instructor_id } = await getUser();
 
-  const courses = await getInstructorCourses(id);
+  const courses = await getInstructorCourses(instructor_id);
 
   return (
     <div className="flex h-full max-h-73/100 flex-col pt-15">

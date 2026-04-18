@@ -67,6 +67,8 @@ export default function DataView<T extends Record<string, any>>({
 }) {
   const [layout, setLayout] =
     useState<DataViewContext<T>["layout"]>(viewLayout);
+  const maxItemsState = layout === "cards" ? 8 : maxItemsPerPage;
+
   const { mutateSearchParams, searchParams } = useMutateSearchParams();
 
   const searchableKeys = !!data.length ? Object.keys(data[0]) : [""];
@@ -76,9 +78,9 @@ export default function DataView<T extends Record<string, any>>({
   const sortedData = useSortData<T>(searchedData, sortConfig);
 
   const page = +(searchParams.get("page") || "1");
-  const numPages = Math.ceil(searchedData.length / maxItemsPerPage);
-  const startIndex = (page - 1) * maxItemsPerPage;
-  const endIndex = startIndex + maxItemsPerPage;
+  const numPages = Math.ceil(searchedData.length / maxItemsState);
+  const startIndex = (page - 1) * maxItemsState;
+  const endIndex = startIndex + maxItemsState;
 
   const nextPage = () => {
     if (page >= numPages) return;
@@ -103,7 +105,7 @@ export default function DataView<T extends Record<string, any>>({
     data: sortedData.slice(startIndex, endIndex),
     page,
     numPages,
-    maxItemsPerPage,
+    maxItemsPerPage: maxItemsState,
     nextPage,
     prevPage,
     setPage,

@@ -1,7 +1,6 @@
 import { getUser, protect } from "@/actions/auth";
 import { getInstructorTodaysLectures } from "@/actions/lectures";
-import TodaysLecturesTable from "@/components/lectures/TodaysLecturesTable";
-import { TODAYS_SCHEDULE } from "@/dev-data/db";
+import TodaysLecturesTable from "@/components/dashboard/instructor/TodaysLecturesTable";
 import { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -13,8 +12,7 @@ export default async function Page() {
   await protect(["instructor"]);
 
   const { first_name } = await getUser();
-
-  await getInstructorTodaysLectures();
+  const { lectures } = (await getInstructorTodaysLectures()) || {};
 
   return (
     <div className="px-16 pt-15">
@@ -23,7 +21,7 @@ export default async function Page() {
       </h1>
 
       <Suspense>
-        <TodaysLecturesTable todaysLectures={TODAYS_SCHEDULE} />
+        <TodaysLecturesTable todaysLectures={lectures} />
       </Suspense>
     </div>
   );

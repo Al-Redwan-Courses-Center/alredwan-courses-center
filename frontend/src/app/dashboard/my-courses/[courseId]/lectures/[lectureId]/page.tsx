@@ -1,13 +1,11 @@
+import { getLectureAttendance } from "@/actions/attendances";
+import { getLectureById } from "@/actions/lectures";
 import AddLectureNotesInput from "@/components/attendance/AddLectureNotesInput";
 import LectureAttendanceView from "@/components/attendance/LectureAttendanceView";
 import ClockIcon from "@/components/icons/ClockIcon";
 import CommentIcon from "@/components/icons/CommentIcon";
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
-import { getLectureById } from "@/dev-data/db";
-import { cn, formatTime, getWeekDay } from "@/lib/utils";
-import { Lecture } from "@/types/entities";
-import { parseISO } from "date-fns";
+import CopyToClipboardButton from "@/components/ui/CopyToClipboardButton";
+import { cn, formatTime } from "@/lib/utils";
 
 const dataPointWrapperStyles = cn(
   "text-olive-300 grid grid-cols-[auto_1fr] grid-rows-2 gap-x-5 gap-y-2 text-xl font-bold",
@@ -20,13 +18,25 @@ const dataPointIconStyles = cn(
 export default async function Page({
   params,
 }: {
-  params: Promise<{ lectureId: string }>;
+  params: Promise<{ lectureId: string; courseId: string }>;
 }) {
-  const { lectureId } = await params;
-  const { course, ...lecture } = getLectureById(+lectureId) as Lecture;
-  const weekday = getWeekDay(parseISO(lecture.date).getDay());
-  const { start: startHour, end: endHour } =
-    course.schedule.find((s) => s.day === weekday) || {};
+  const { lectureId, courseId } = await params;
+  const [lecture, lectureAttendance] = await Promise.all([
+    getLectureById(lectureId),
+    getLectureAttendance(lectureId),
+  ]);
+
+  const { attendances } = lectureAttendance || {};
+  const attendanceViewOptions = lectureAttendance
+    ? {
+        is_future_lecture: lectureAttendance.is_future_lecture,
+        is_attendance_submittable: lectureAttendance.is_attendance_submittable,
+        is_editable: lectureAttendance.is_editable,
+        user_can_bypass_deadline: lectureAttendance.user_can_bypass_deadline,
+        user_can_mark_future_lectures:
+          lectureAttendance.user_can_mark_future_lectures,
+      }
+    : null;
 
   return (
     <div className="flex flex-col pt-4">
@@ -34,23 +44,29 @@ export default async function Page({
         <div className="col-span-full flex items-center justify-between">
           <div className="flex flex-col pt-5">
             <span className="text-olive-300 text-xl font-bold">
-              {course?.title}
+              {lecture?.course.name}
             </span>
             <h2 className="text-olive-500 text-[4rem] font-bold">
-              {lecture.title}
+              {lecture?.title}
             </h2>
           </div>
 
-          <Button variant="light" size="small" className="cursor-default!">
-            c1389403
-          </Button>
+          {!!lecture?.id && lecture.id >= 0 && (
+            <div className="flex items-center gap-7">
+              <span className="text-olive-700 text-2xl font-bold">الكود</span>
+              <CopyToClipboardButton>
+                {String(lecture.id)}
+              </CopyToClipboardButton>
+            </div>
+          )}
         </div>
 
         <div className={dataPointWrapperStyles}>
           <ClockIcon className={dataPointIconStyles} />
           <span className="self-end">المواعيد</span>
           <span className="text-olive-500">
-            من {formatTime(startHour)} إلي {formatTime(endHour)}
+            من {formatTime(lecture?.start_time)} إلي{" "}
+            {formatTime(lecture?.end_time)}
           </span>
         </div>
 
@@ -66,10 +82,10 @@ export default async function Page({
       </div>
 
       <LectureAttendanceView
-        students={course.enrollments.map((e) => e.child ?? e.student) || []}
-        attendances={lecture.attendances || []}
-        courseId={String(course.id)}
-        lecture={{ ...lecture, course }}
+        attendances={attendances || []}
+        courseId={courseId}
+        lecture={lecture}
+        options={attendanceViewOptions}
       />
     </div>
   );

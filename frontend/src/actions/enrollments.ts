@@ -5,9 +5,17 @@ import { PaginatedResponse } from "@/types/config";
 import {
   EnrollmentListItem,
   EnrollmentProgress,
+  EnrollmentRequestCreateBody,
   EnrollmentRequestListItem,
+  InstructorEnrollmentListItem,
 } from "@/types/entities";
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
+
+export interface CreateEnrollmentRequestResult {
+  ok: boolean;
+  message?: string;
+  fieldErrors?: Record<string, string[]>;
+}
 
 export async function getMyEnrollmentRequests(): Promise<
   EnrollmentRequestListItem[]
@@ -79,5 +87,99 @@ export async function getEnrollmentProgressById(
     }
 
     return null;
+  }
+}
+
+export async function getInstructorEnrollmentsByCourseId(courseId: string) {
+  try {
+    const apiClient = await getAuthApiClient();
+    const {
+      data: { results },
+    } = await apiClient.get<PaginatedResponse<InstructorEnrollmentListItem>>(
+      `/api/instructor/courses/${courseId}/enrollments?page_size=100`,
+    );
+
+    return results;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      console.error(
+        "Failed to get course enrollments: ",
+        error.response?.data ?? error.message,
+      );
+    } else {
+      console.error("Failed to get course enrollments: ", error);
+    }
+
+    return [];
+  }
+}
+
+export async function createEnrollmentRequest(
+  payload: EnrollmentRequestCreateBody,
+): Promise<CreateEnrollmentRequestResult> {
+  try {
+    const apiClient = await getAuthApiClient();
+
+    await apiClient.post("/api/enrollment-requests/", payload);
+
+    return {
+      ok: true,
+      message: "تم إرسال طلب الإلتحاق بنجاح.",
+    };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const responseData = error.response?.data as
+        | Record<string, string[] | string>
+        | { detail?: string | string[] }
+        | undefined;
+
+      const detail = responseData?.detail;
+      const detailMessage = Array.isArray(detail) ? detail[0] : detail;
+
+      return {
+        ok: false,
+        message:
+          detailMessage || "تعذر إرسال طلب الإلتحاق. يرجى المحاولة مرة أخرى.",
+        fieldErrors:
+          responseData && !Array.isArray(responseData)
+            ? Object.fromEntries(
+                Object.entries(responseData).map(([key, value]) => [
+                  key,
+                  Array.isArray(value) ? value : [String(value)],
+                ]),
+              )
+            : undefined,
+      };
+    }
+
+    return {
+      ok: false,
+      message: "حدث خطأ غير متوقع أثناء إرسال الطلب.",
+    };
+  }
+}
+
+export async function deleteEnrollmentRequestById(
+  enrollmentRequestId: string,
+): Promise<boolean> {
+  try {
+    const apiClient = await getAuthApiClient();
+
+    await apiClient.delete(
+      `/api/enrollment-requests/${enrollmentRequestId}/cancel/`,
+    );
+
+    return true;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      console.error(
+        "Failed to cancel enrollment request: ",
+        error.response?.data ?? error.message,
+      );
+    } else {
+      console.error("Failed to cancel enrollment request: ", error);
+    }
+
+    return false;
   }
 }

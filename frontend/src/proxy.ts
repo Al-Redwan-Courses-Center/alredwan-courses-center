@@ -1,32 +1,34 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse, ProxyConfig } from "next/server";
+import { JwtToken } from "@/types/auth";
 
 export default withAuth(
   function middleware(req) {
-    const token = req.nextauth.token;
+    const token = req.nextauth.token as JwtToken | null;
     const pathname = req.nextUrl.pathname;
     const userRole = token?.role;
 
     // console.log(pathname);
     // console.log(userRole);
 
-    switch (userRole) {
-      case "instructor": {
-        if (pathname === "/dashboard") {
+    if (pathname === "/dashboard") {
+      switch (userRole) {
+        case "admin": {
+          return NextResponse.redirect(
+            new URL("/dashboard/todays-staff-attendances", req.url),
+          );
+        }
+
+        case "instructor": {
           return NextResponse.redirect(
             new URL("/dashboard/todays-schedule", req.url),
           );
         }
 
-        break;
-      }
-
-      case "parent":
-      case "student": {
-        if (pathname === "/dashboard") {
+        case "parent":
+        case "student": {
           return NextResponse.redirect(new URL("/dashboard/overview", req.url));
         }
-        break;
       }
     }
 
@@ -37,9 +39,7 @@ export default withAuth(
       authorized({ token }) {
         const isLoggedOut = !token || !!token.error;
 
-        if (isLoggedOut) return false;
-
-        return true;
+        return !isLoggedOut;
       },
     },
 

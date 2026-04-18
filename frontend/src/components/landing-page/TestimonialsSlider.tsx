@@ -1,14 +1,15 @@
 "use client";
 
-import { useMediaQuery } from "usehooks-ts";
+import { useIsClient, useMediaQuery } from "usehooks-ts";
 import Image from "next/image";
-import AvatarProfile from "@/assets/user-avatar.png";
+import AvatarProfile from "@/assets/images/default-user.svg";
 import { Testimonial } from "@/dev-data/testimonials";
 import StarIcon from "@/components/icons/StarIcon";
 import HalfStarIcon from "@/components/icons/HalfStarIcon";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation } from "swiper/modules";
 import { cn } from "@/lib/utils";
+import Loader from "@/components/ui/Loader";
 
 function renderRating(rating: number) {
   const flooredRating = Math.floor(rating);
@@ -37,7 +38,16 @@ export default function TestimonialsSlider({
 }: {
   testimonials: Testimonial[];
 }) {
+  const isClient = useIsClient();
+  const isSmallDesktop = useMediaQuery("(max-width: 1850px)");
   const isMobile = useMediaQuery("(max-width: 900px)");
+
+  if (!isClient)
+    return (
+      <div className="h-20">
+        <Loader />
+      </div>
+    );
 
   return (
     <div className="relative grid">
@@ -52,7 +62,7 @@ export default function TestimonialsSlider({
 
       <Swiper
         modules={[Autoplay, Navigation]}
-        slidesPerView={isMobile ? 1 : 3}
+        slidesPerView={isMobile ? 1 : isSmallDesktop ? 2 : 3}
         spaceBetween={30}
         loop
         autoplay={{
@@ -68,9 +78,9 @@ export default function TestimonialsSlider({
       >
         {testimonials.map((testimonial, i) => (
           <SwiperSlide
-            key={i}
+            key={testimonial.id}
             className={cn(
-              "shadow-primary w-full bg-gray-100 px-25 py-8 text-[1.8rem]",
+              "shadow-primary laptop:px-30 w-full bg-gray-100 px-25 py-8 text-[1.8rem]",
               i % 2 === 0 ? "rounded-[0_13rem]" : "rounded-[13rem_0]",
             )}
           >

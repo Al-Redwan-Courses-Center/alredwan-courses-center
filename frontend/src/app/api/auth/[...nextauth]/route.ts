@@ -1,5 +1,7 @@
 import apiClient from "@/lib/axios";
 import { UserEntity } from "@/types/auth";
+import { PaginatedResponse } from "@/types/config";
+import { Instructor } from "@/types/entities";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import NextAuth, { AuthOptions } from "next-auth";
@@ -26,7 +28,7 @@ export const authConfig: AuthOptions = {
 
         if (!access || !refresh) return null;
 
-        const userRes = await apiClient.get("/auth/users/me/", {
+        const userRes = await apiClient.get<UserEntity>("/auth/users/me/", {
           headers: {
             Authorization: `JWT ${access}`,
           },
@@ -37,6 +39,25 @@ export const authConfig: AuthOptions = {
         const { exp } = jwtDecode(access);
 
         if (!user) return null;
+
+        if (user.role === "instructor") {
+          const {
+            data: {
+              results: [{ id }],
+            },
+          } = await apiClient.get<PaginatedResponse<Instructor>>(
+            `/api/users/instructors/?user__phone_number1__icontains=${user.phone_number1}`,
+            {
+              headers: {
+                Authorization: `JWT ${access}`,
+              },
+            },
+          );
+
+          user.instructor_id = String(id);
+
+          console.log(id);
+        }
 
         user.jwt_access_token = access;
         user.jwt_refresh_token = refresh;

@@ -1,9 +1,9 @@
-import EnrollmentCard from "@/components/dashboard/enrollments/EnrollmentCard";
+import EnrollmentRequestCard from "@/components/dashboard/enrollments/EnrollmentRequestCard";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-export default function EnrollmentsList({
+export default function EnrollmentRequestsList({
   enrollments,
   wrapperStyles,
   listStyles,
@@ -37,9 +37,11 @@ export default function EnrollmentsList({
         )}
       >
         {enrollments.length > 0 ? (
-          enrollments.map((e) => <EnrollmentCard key={e.id} enrollment={e} />)
+          enrollments.map((e) => (
+            <EnrollmentRequestCard key={e.id} enrollmentRequest={e} />
+          ))
         ) : (
-          <div className="flex w-full flex-col items-center justify-center gap-4 py-40 text-4xl font-bold">
+          <div className="my-auto flex w-full flex-col items-center justify-center gap-4 text-4xl font-bold">
             <span className="text-red-800">لا توجد دورات مسجلة!</span>
             <span className="mb-10">اشترك في دورتك الأولى الآن!</span>
             <Link href="/dashboard/courses">

@@ -6,10 +6,12 @@ FROM bootstrap as dev
 CMD ["npm", "run", "dev"]
 
 FROM bootstrap as base
-COPY ./package*.json ./pnpm-lock.yaml ./
-# RUN npm ci
-RUN pnpm install --frozen-lockfile
+COPY ./package*.json ./
+RUN npm install
 COPY . .
+
+FROM base AS dev-windows
+CMD ["npm", "run", "dev"]
 
 FROM base AS build
 RUN npm run build

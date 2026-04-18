@@ -1,10 +1,9 @@
+import { getParentChildren } from "@/actions/user";
 import ChildRow from "@/components/dashboard/parent/ChildRow";
-import { getMyChildren } from "@/dev-data/db";
 import { Fragment } from "react/jsx-runtime";
 
-export default function Page() {
-  // TODO(api): Replace mock children list with a real parent-children endpoint.
-  const myChildren = getMyChildren();
+export default async function Page() {
+  const myChildren = await getParentChildren();
 
   return (
     <div className="max-h-[calc(100dvh-10%)] overflow-auto px-6 pt-8 pb-9">

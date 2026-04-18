@@ -1,16 +1,24 @@
 "use client";
 
-import DatePicker from "@/components/courses/DatePicker";
-import TimePicker from "@/components/courses/TimePicker";
-import WeekdayPicker from "@/components/courses/WeekdayPicker";
+// import DatePicker from "@/components/courses/DatePicker";
+// import TimePicker from "@/components/courses/TimePicker";
+// import WeekdayPicker from "@/components/courses/WeekdayPicker";
 import NotepadIcon from "@/components/icons/NotepadIcon";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { cn, formatTime, getWeekDay } from "@/lib/utils";
+import {
+  cn,
+  // formatTime,
+  // getWeekDay
+} from "@/lib/utils";
 import { CourseDetail } from "@/types/entities";
 import { PickerValue } from "@mui/x-date-pickers/internals";
-import { format, parse, parseISO } from "date-fns";
-import { useState } from "react";
+import {
+  // format,
+  parse,
+  parseISO,
+} from "date-fns";
+// import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
 
@@ -28,18 +36,18 @@ export default function CourseDetailsForm({
 }: {
   course: CourseDetail | null;
 }) {
-  const [activeClockId, setActiveClockId] = useState("");
-  const [activeClockDay, activeClockSide] = activeClockId.split("-") as [
-    string,
-    "start" | "end",
-  ];
+  // const [activeClockId, setActiveClockId] = useState("");
+  // const [activeClockDay, activeClockSide] = activeClockId.split("-") as [
+  //   string,
+  //   "start" | "end",
+  // ];
 
   const {
     register,
-    watch,
-    setValue,
-    handleSubmit,
-    formState: { errors },
+    // watch,
+    // setValue,
+    // handleSubmit,
+    // formState: { errors },
   } = useForm<CourseDetailsInputs>({
     defaultValues: {
       course_title: course?.name,
@@ -56,10 +64,10 @@ export default function CourseDetailsForm({
     },
   });
 
-  const weekdays = watch("weekdays");
-  const dateRange = watch("date_range");
+  // const weekdays = watch("weekdays");
+  // const dateRange = watch("date_range");
 
-  const currentWeekDay = weekdays.find((w) => String(w.day) === activeClockDay);
+  // const currentWeekDay = weekdays.find((w) => String(w.day) === activeClockDay);
 
   // console.log(course);
 
@@ -93,18 +101,18 @@ export default function CourseDetailsForm({
       // MARK: Days
       //
       */}
-        <WeekdayPicker
+        {/* <WeekdayPicker
           labelStyles={labelStyles}
           setValue={setValue}
           weekdays={weekdays}
-        />
+        /> */}
 
         {/* 
       //
       // MARK: Description
       //
       */}
-        <div className="grid grid-cols-[12rem_1fr]">
+        <div className="col-start-1 grid grid-cols-[12rem_1fr]">
           <label
             htmlFor="description"
             className={cn(labelStyles, "self-start")}
@@ -124,18 +132,18 @@ export default function CourseDetailsForm({
         // MARK: Date Select
         //
         */}
-        <DatePicker
+        {/* <DatePicker
           range={dateRange}
           onRangeChange={(range) => setValue("date_range", range)}
           defaultMonth={dateRange.from || new Date()}
-        />
+        /> */}
 
         {/* 
         //
         // MARK: Time Select
         //
         */}
-        <div className="col-start-3 row-span-full grid grid-rows-[10.5rem_auto_minmax(40rem,1fr)]">
+        {/* <div className="col-start-3 row-span-full grid grid-rows-[10.5rem_auto_minmax(40rem,1fr)]">
           <div className="mb-10 flex flex-wrap items-start justify-center gap-10">
             {weekdays
               .sort((a, b) => {
@@ -219,6 +227,7 @@ export default function CourseDetailsForm({
             />
           )}
         </div>
+        */}
       </div>
 
       <Button size="small" className="min-w-50 self-end">

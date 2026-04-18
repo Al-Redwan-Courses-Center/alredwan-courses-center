@@ -9,7 +9,20 @@ export function cn(...inputs: ClassNameValue[]) {
 
 export { cva };
 
-export function toHindiDigits(num: number | string): string {
+/*
+type HindiDigitsMode = "auto" | "string" | "number";
+
+interface HindiDigitsOptions {
+  mode?: HindiDigitsMode;
+  decimals?: number;
+  preserveLeadingZeros?: boolean;
+}
+
+// TODO(utils): Advanced version kept for later reuse.
+export function toHindiDigits(
+  num: number | string,
+  options: HindiDigitsOptions = {},
+): string {
   const westernToHindiDigits: Record<string, string> = {
     "0": "٠",
     "1": "١",
@@ -23,7 +36,54 @@ export function toHindiDigits(num: number | string): string {
     "9": "٩",
   };
 
-  const number = Number.isInteger(+num) ? (+num).toFixed(0) : (+num).toFixed(2);
+  const { mode = "auto", decimals = 2, preserveLeadingZeros = false } = options;
+  const isString = typeof num === "string";
+  const raw = isString ? num : String(num);
+
+  const hasLeadingZeros = isString && /^0\d+/.test(raw);
+  const isIntegerString = isString && /^\d+$/.test(raw);
+  const isDecimalString = isString && /^\d+\.\d+$/.test(raw);
+
+  const useRawString =
+    mode === "string" ||
+    (mode === "auto" &&
+      ((preserveLeadingZeros && hasLeadingZeros && isIntegerString) ||
+        isDecimalString));
+
+  const numberText = useRawString
+    ? raw
+    : Number.isInteger(+num)
+      ? (+num).toFixed(0)
+      : (+num).toFixed(decimals);
+
+  return numberText.replace(
+    /[0-9]/g,
+    (digit) => westernToHindiDigits[digit] || digit,
+  );
+}
+*/
+
+export function toHindiDigits(
+  num: number | string,
+  preserveLeadingZeros: boolean = false,
+): string {
+  let number = num;
+
+  const westernToHindiDigits: Record<string, string> = {
+    "0": "٠",
+    "1": "١",
+    "2": "٢",
+    "3": "٣",
+    "4": "٤",
+    "5": "٥",
+    "6": "٦",
+    "7": "٧",
+    "8": "٨",
+    "9": "٩",
+  };
+
+  if (!preserveLeadingZeros)
+    number = Number.isInteger(+num) ? (+num).toFixed(0) : (+num).toFixed(2);
 
   return number
     .toString()
@@ -42,7 +102,7 @@ export function formatTime(dateStr: string | Date | undefined) {
   if (!dateStr) return dateStr;
 
   const date =
-    dateStr instanceof Date ? dateStr : parse(dateStr, "HH:mm", new Date());
+    dateStr instanceof Date ? dateStr : parse(dateStr, "HH:mm:ss", new Date());
 
   return date
     .toLocaleTimeString("ar-EG", {

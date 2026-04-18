@@ -1,9 +1,11 @@
 "use server";
 
 import {
+  getMyEnrollmentRequests,
   getEnrollmentProgressById,
   getMyEnrollments,
 } from "@/actions/enrollments";
+import { getUser } from "@/actions/auth";
 import { getAuthApiClient } from "@/lib/auth-api";
 import { PaginatedResponse } from "@/types/config";
 import { CourseDetail, CourseListItem } from "@/types/entities";
@@ -11,20 +13,32 @@ import axios from "axios";
 
 export async function getAllCourses(): Promise<CourseListItem[]> {
   try {
+    const user = await getUser();
     const apiClient = await getAuthApiClient();
 
     const { data } = await apiClient.get<
       PaginatedResponse<CourseListItem> | CourseListItem[]
     >("/api/courses/?page_size=100");
 
+    const courses = Array.isArray(data) ? data : data.results;
+
+    if (user.role === "parent") {
+      return courses;
+    }
+
     const enrollmentsCoursesIds = (await getMyEnrollments()).map(
       (e) => e.course,
     );
-
-    const courses = Array.isArray(data) ? data : data.results;
+    const pendingOrProcessingRequestCourseIds = (
+      await getMyEnrollmentRequests()
+    )
+      .filter((request) => ["pending", "processing"].includes(request.status))
+      .map((request) => request.course);
 
     const notRegisteredCourses = courses.filter(
-      (c) => !enrollmentsCoursesIds.includes(c.id),
+      (c) =>
+        !enrollmentsCoursesIds.includes(c.id) &&
+        !pendingOrProcessingRequestCourseIds.includes(c.id),
     );
 
     return notRegisteredCourses;
@@ -43,12 +57,12 @@ export async function getAllCourses(): Promise<CourseListItem[]> {
 }
 
 export async function getInstructorCourses(
-  instructorId: string,
+  instructorId: string | undefined,
 ): Promise<CourseListItem[]> {
+  if (!instructorId) return [];
+
   try {
     const apiClient = await getAuthApiClient();
-
-    console.log(`/api/courses/?page_size=100&instructor=${instructorId}`);
 
     const { data } = await apiClient.get<
       PaginatedResponse<CourseListItem> | CourseListItem[]

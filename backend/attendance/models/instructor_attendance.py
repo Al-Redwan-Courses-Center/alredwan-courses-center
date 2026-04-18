@@ -1,10 +1,10 @@
-from django.db import models
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.utils.translation import gettext_lazy as _
+from django.db import models
 from django.utils import timezone
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
+from django.utils.translation import gettext_lazy as _
 
 from courses.models import Lecture, Weekday
 from users.models import CustomUser, Instructor
@@ -15,17 +15,20 @@ class SupervisorSchedule(models.Model):
         Instructor,
         on_delete=models.CASCADE,
         related_name="attendance_supervisor_schedules",
-        verbose_name=_("المعلم/المشرف")
+        verbose_name=_("المعلم/المشرف"),
     )
     day_of_week = models.PositiveSmallIntegerField(
-        choices=Weekday.choices, verbose_name=_("يوم الأسبوع"))
+        choices=Weekday.choices, verbose_name=_("يوم الأسبوع")
+    )
     start_time = models.TimeField(verbose_name=_("وقت البدء"))
     end_time = models.TimeField(verbose_name=_("وقت الانتهاء"))
 
     grace_period_minutes = models.PositiveIntegerField(
-        default=20, verbose_name=_("دقائق فترة السماح"))
+        default=20, verbose_name=_("دقائق فترة السماح")
+    )
     auto_absent_after_minutes = models.PositiveIntegerField(
-        default=60, verbose_name=_("دقائق الغياب التلقائي"))
+        default=60, verbose_name=_("دقائق الغياب التلقائي")
+    )
 
     class Meta:
         unique_together = ("instructor", "day_of_week")
@@ -36,22 +39,22 @@ class SupervisorSchedule(models.Model):
         """Validate schedule constraints."""
         # Ensure that end_time is after start_time
         if self.start_time >= self.end_time:
-            raise ValidationError(
-                {"end_time": _("End time must be after start time.")}
-            )
+            raise ValidationError({"end_time": _("End time must be after start time.")})
 
         # Check for overlapping schedules for the same instructor on the same day
         overlapping = SupervisorSchedule.objects.filter(
-            instructor=self.instructor,
-            day_of_week=self.day_of_week
+            instructor=self.instructor, day_of_week=self.day_of_week
         ).exclude(pk=self.pk)
 
         for existing in overlapping:
             # Check if times overlap
-            if (self.start_time < existing.end_time and self.end_time > existing.start_time):
+            if (
+                self.start_time < existing.end_time
+                and self.end_time > existing.start_time
+            ):
                 raise ValidationError(
-                    _("This schedule overlaps with an existing schedule: %(schedule)s") %
-                    {'schedule': str(existing)}
+                    _("This schedule overlaps with an existing schedule: %(schedule)s")
+                    % {"schedule": str(existing)}
                 )
 
     def __str__(self):
@@ -63,17 +66,19 @@ class AttendanceStatus(models.TextChoices):
     PRESENT = "present", _("حاضر")
     ABSENT = "absent", _("غائب")
     LATE = "late", _("متأخر")
-    NOT_STARTED = 'not_started', _('لم يبدأ')
+    NOT_STARTED = "not_started", _("لم يبدأ")
 
 
 class AttendanceType(models.TextChoices):
     """Type of attendance record - lecture-based or supervision schedule."""
+
     LECTURE = "lecture", _("محاضرة")
     SUPERVISION = "supervision", _("إشراف")
 
 
 class CheckInMethod(models.TextChoices):
     """Method used for check-in/check-out."""
+
     FINGERPRINT = "fingerprint", _("بصمة الإصبع")
     RFID = "rfid", _("بطاقة RFID")
     MANUAL = "manual", _("يدوي بواسطة المشرف")
@@ -84,43 +89,46 @@ class InstructorAttendance(models.Model):
     """Track attendance and rating of instructors (check-in/check-out)."""
 
     instructor = models.ForeignKey(
-        Instructor, on_delete=models.CASCADE, related_name="attendance_records",
-        verbose_name=_("المعلم/المشرف")
+        Instructor,
+        on_delete=models.CASCADE,
+        related_name="attendance_records",
+        verbose_name=_("المعلم/المشرف"),
     )
-    date = models.DateField(default=timezone.localdate,
-                            verbose_name=_("التاريخ"))
+    date = models.DateField(default=timezone.localdate, verbose_name=_("التاريخ"))
     check_in_time = models.DateTimeField(
-        null=True, blank=True, verbose_name=_("وقت تسجيل الدخول"))
+        null=True, blank=True, verbose_name=_("وقت تسجيل الدخول")
+    )
     check_out_time = models.DateTimeField(
-        null=True, blank=True, verbose_name=_("وقت تسجيل الخروج"))
+        null=True, blank=True, verbose_name=_("وقت تسجيل الخروج")
+    )
 
     check_in_method = models.CharField(
         max_length=20,
         choices=CheckInMethod.choices,
         null=True,
         blank=True,
-        verbose_name=_("طريقة تسجيل الدخول")
+        verbose_name=_("طريقة تسجيل الدخول"),
     )
     check_out_method = models.CharField(
         max_length=20,
         choices=CheckInMethod.choices,
         null=True,
         blank=True,
-        verbose_name=_("طريقة تسجيل الخروج")
+        verbose_name=_("طريقة تسجيل الخروج"),
     )
 
     status = models.CharField(
         max_length=20,
         choices=AttendanceStatus.choices,
         default=AttendanceStatus.NOT_STARTED,
-        verbose_name=_("الحالة")
+        verbose_name=_("الحالة"),
     )
 
     attendance_type = models.CharField(
         max_length=20,
         choices=AttendanceType.choices,
         default=AttendanceType.LECTURE,
-        verbose_name=_("نوع الحضور")
+        verbose_name=_("نوع الحضور"),
     )
 
     schedule = models.ForeignKey(
@@ -132,25 +140,34 @@ class InstructorAttendance(models.Model):
         help_text=_("يوم جدول زمني مرتبط إذا كان هذا المدرب مشرفًا."),
     )
     lecture = models.ForeignKey(
-        Lecture, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='instructor_attendances'
+        Lecture,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="instructor_attendances",
     )
 
     check_in_device = models.ForeignKey(
-        "attendance.AttendanceDevice", on_delete=models.SET_NULL,
-        null=True, blank=True, related_name="check_ins",
-        verbose_name=_("جهاز تسجيل الدخول")
+        "attendance.AttendanceDevice",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="check_ins",
+        verbose_name=_("جهاز تسجيل الدخول"),
     )
     check_out_device = models.ForeignKey(
-        "attendance.AttendanceDevice", on_delete=models.SET_NULL,
-        null=True, blank=True, related_name="check_outs",
-        verbose_name=_("جهاز تسجيل الخروج")
+        "attendance.AttendanceDevice",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="check_outs",
+        verbose_name=_("جهاز تسجيل الخروج"),
     )
     season = models.ForeignKey(
         "courses.Season",
         on_delete=models.CASCADE,
         related_name="instructor_attendance",
-        verbose_name=_("الموسم")
+        verbose_name=_("الموسم"),
     )
 
     # Rating: null if absent/not_started, 0 if attended (default), then admin can update
@@ -161,7 +178,7 @@ class InstructorAttendance(models.Model):
         validators=[MinValueValidator(0.00), MaxValueValidator(10.00)],
         null=True,
         blank=True,
-        help_text=_("null للغائب، 0 للحاضر بدون تقييم، 1-10 للتقييم الفعلي")
+        help_text=_("null للغائب، 0 للحاضر بدون تقييم، 1-10 للتقييم الفعلي"),
     )
 
     rated_by = models.ForeignKey(
@@ -178,14 +195,10 @@ class InstructorAttendance(models.Model):
         null=True,
         blank=True,
         verbose_name=_("وقت التقييم"),
-        help_text=_("تاريخ ووقت إضافة/تحديث التقييم")
+        help_text=_("تاريخ ووقت إضافة/تحديث التقييم"),
     )
 
-    notes = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("ملاحظات عامة")
-    )
+    notes = models.TextField(blank=True, null=True, verbose_name=_("ملاحظات عامة"))
 
     class Meta:
         verbose_name = _("سجل حضور معلم/مشرف")
@@ -197,13 +210,13 @@ class InstructorAttendance(models.Model):
             models.UniqueConstraint(
                 fields=["instructor", "lecture"],
                 condition=models.Q(lecture__isnull=False),
-                name="unique_instructor_lecture_attendance"
+                name="unique_instructor_lecture_attendance",
             ),
             # For supervision attendance: one record per instructor per schedule per date
             models.UniqueConstraint(
                 fields=["instructor", "schedule", "date"],
                 condition=models.Q(schedule__isnull=False),
-                name="unique_instructor_schedule_date_attendance"
+                name="unique_instructor_schedule_date_attendance",
             ),
         ]
         indexes = [
@@ -215,7 +228,9 @@ class InstructorAttendance(models.Model):
         ]
 
     def __str__(self):
-        rating_display = f"{self.rating}/10" if self.rating is not None else "لم يتم التقييم"
+        rating_display = (
+            f"{self.rating}/10" if self.rating is not None else "لم يتم التقييم"
+        )
         return f"{self.instructor} - {rating_display} on {self.date}"
 
     def clean(self):
@@ -223,49 +238,65 @@ class InstructorAttendance(models.Model):
         # Validate attendance_type consistency with lecture/schedule
         if self.attendance_type == AttendanceType.LECTURE:
             if self.schedule is not None:
-                raise ValidationError({
-                    'schedule': _("Lecture attendance should not have a schedule attached.")
-                })
+                raise ValidationError(
+                    {
+                        "schedule": _(
+                            "Lecture attendance should not have a schedule attached."
+                        )
+                    }
+                )
         elif self.attendance_type == AttendanceType.SUPERVISION:
             if self.lecture is not None:
-                raise ValidationError({
-                    'lecture': _("Supervision attendance should not have a lecture attached.")
-                })
+                raise ValidationError(
+                    {
+                        "lecture": _(
+                            "Supervision attendance should not have a lecture attached."
+                        )
+                    }
+                )
 
         # Validate check-out time is after check-in time
         if self.check_out_time and self.check_in_time:
             if self.check_out_time <= self.check_in_time:
-                raise ValidationError({
-                    'check_out_time': _("Check-out time must be after check-in time.")
-                })
+                raise ValidationError(
+                    {"check_out_time": _("Check-out time must be after check-in time.")}
+                )
 
         # Cannot check out without checking in first
         if self.check_out_time and not self.check_in_time:
-            raise ValidationError({
-                'check_out_time': _("Cannot check out without checking in first.")
-            })
+            raise ValidationError(
+                {"check_out_time": _("Cannot check out without checking in first.")}
+            )
 
         # Rating validations
         # If absent, not started, or pending, rating MUST be null
-        if self.status in [AttendanceStatus.ABSENT, AttendanceStatus.NOT_STARTED, AttendanceStatus.PENDING]:
+        if self.status in [
+            AttendanceStatus.ABSENT,
+            AttendanceStatus.NOT_STARTED,
+            AttendanceStatus.PENDING,
+        ]:
             if self.rating is not None:
-                raise ValidationError({
-                    'rating': _("لا يمكن تقييم المعلم الغائب أو الذي لم يبدأ. يجب أن يكون التقييم فارغاً.")
-                })
+                raise ValidationError(
+                    {
+                        "rating": _(
+                            "لا يمكن تقييم المعلم الغائب أو الذي لم يبدأ. يجب أن يكون التقييم فارغاً."
+                        )
+                    }
+                )
 
         # If present or late, rating can be None (not rated), 0 (attended but not rated), or 1-10
         elif self.status in [AttendanceStatus.PRESENT, AttendanceStatus.LATE]:
             # If rating is provided and not 0, it must be between 1 and 10
             if self.rating is not None and self.rating > 0:
                 if self.rating < 1 or self.rating > 10:
-                    raise ValidationError({
-                        'rating': _("التقييم يجب أن يكون بين 1.00 و 10.00")
-                    })
+                    raise ValidationError(
+                        {"rating": _("التقييم يجب أن يكون بين 1.00 و 10.00")}
+                    )
                 # If rating is provided (not 0), rated_by should also be provided
                 if not self.rated_by:
-                    raise ValidationError({
-                        'rated_by': _("يجب تحديد المقيّم عند إضافة التقييم.")
-                    })
+                    raise ValidationError(
+                        {"rated_by": _("يجب تحديد المقيّم عند إضافة التقييم.")}
+                    )
 
     def save(self, *args, **kwargs):
         """Override save to automatically set rating based on attendance status."""
@@ -274,7 +305,11 @@ class InstructorAttendance(models.Model):
             self.date = self.date.date()
 
         # Auto-set rating based on status
-        if self.status in [AttendanceStatus.ABSENT, AttendanceStatus.NOT_STARTED, AttendanceStatus.PENDING]:
+        if self.status in [
+            AttendanceStatus.ABSENT,
+            AttendanceStatus.NOT_STARTED,
+            AttendanceStatus.PENDING,
+        ]:
             # If absent or not started, rating should be null
             if self.rating == 0:
                 self.rating = None
@@ -290,6 +325,7 @@ class InstructorAttendance(models.Model):
 
         Silently fails if Redis/channel layer is unavailable (e.g., during tests).
         """
+
         try:
             channel_layer = get_channel_layer()
             if channel_layer is None:
@@ -299,9 +335,25 @@ class InstructorAttendance(models.Model):
                 {
                     "type": "attendance_update",
                     "data": {
-                        "instructor": self.instructor.user.get_full_name(),
                         "id": self.id,
-                        "time": str(self.check_in_time),
+                        "instructor": self.instructor.user.get_full_name(),
+                        "instructor_id": self.instructor.id,
+                        "scheduled_check_in_time": (
+                            str(self.lecture.start_time)
+                            if self.attendance_type == AttendanceType.LECTURE
+                            else str(self.schedule.start_time)
+                        ),
+                        "scheduled_check_out_time": (
+                            str(self.lecture.end_time)
+                            if self.attendance_type == AttendanceType.LECTURE
+                            else str(self.schedule.end_time)
+                        ),
+                        "check_in_time": (
+                            str(self.check_in_time) if self.check_in_time else None
+                        ),
+                        "check_out_time": (
+                            str(self.check_out_time) if self.check_out_time else None
+                        ),
                         "status": self.status,
                         "date": str(self.date),
                     },
@@ -354,13 +406,11 @@ class InstructorAttendance(models.Model):
             ValidationError: If instructor hasn't checked in yet
         """
         if not self.check_in_time:
-            raise ValidationError(
-                _("Cannot check out without checking in first."))
+            raise ValidationError(_("Cannot check out without checking in first."))
 
         now = timezone.now()
         if now <= self.check_in_time:
-            raise ValidationError(
-                _("Check-out time must be after check-in time."))
+            raise ValidationError(_("Check-out time must be after check-in time."))
 
         self.check_out_time = now
         self.check_out_device = device
@@ -392,7 +442,11 @@ class InstructorAttendance(models.Model):
             ValidationError: If trying to rate absent instructor or invalid rating
         """
         # Validate that instructor attended
-        if self.status in [AttendanceStatus.ABSENT, AttendanceStatus.NOT_STARTED, AttendanceStatus.PENDING]:
+        if self.status in [
+            AttendanceStatus.ABSENT,
+            AttendanceStatus.NOT_STARTED,
+            AttendanceStatus.PENDING,
+        ]:
             raise ValidationError(
                 _("لا يمكن تقييم المعلم الذي لم يحضر. الحالة الحالية: {}").format(
                     self.get_status_display()
@@ -401,9 +455,7 @@ class InstructorAttendance(models.Model):
 
         # Validate rating range
         if value < 1.00 or value > 10.00:
-            raise ValidationError(
-                _("التقييم يجب أن يكون بين 1.00 و 10.00")
-            )
+            raise ValidationError(_("التقييم يجب أن يكون بين 1.00 و 10.00"))
 
         # Update rating fields
         self.rating = value
@@ -486,8 +538,8 @@ class InstructorAttendance(models.Model):
                     defaults={
                         "attendance_type": AttendanceType.SUPERVISION,
                         "status": AttendanceStatus.NOT_STARTED,
-                        "season": season
-                    }
+                        "season": season,
+                    },
                 )
                 if created:
                     created_count += 1
@@ -504,8 +556,8 @@ class InstructorAttendance(models.Model):
                         "date": current_date,
                         "attendance_type": AttendanceType.LECTURE,
                         "status": AttendanceStatus.NOT_STARTED,
-                        "season": season
-                    }
+                        "season": season,
+                    },
                 )
                 if created:
                     created_count += 1

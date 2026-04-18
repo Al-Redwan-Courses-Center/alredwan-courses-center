@@ -13,7 +13,7 @@ export default async function InstructorsRow() {
   if (instructors.length <= 0) return null;
 
   return (
-    <div className="tablet:grid-cols-1 tablet:gap-40 grid w-full grid-cols-3 gap-20 text-[1.5rem] text-gray-600">
+    <div className="tablet:gap-40 laptop:grid-cols-1 laptop:px-55 desktop-sm:grid-cols-2 desktop-sm:gap-y-40 grid w-full grid-cols-3 gap-20 text-[1.5rem] text-gray-600">
       {instructors.slice(0, 3).map(({ instructor }, i) => {
         const joinDate = new Date(instructor.joined_date);
         const yearsOfExp = differenceInCalendarYears(new Date(), joinDate);
@@ -43,7 +43,7 @@ export default async function InstructorsRow() {
 
             <div className="relative z-10 pr-10">
               <div className="mb-30 pr-15">
-                <h4 className="text-olive-500 text-[2.8rem] font-bold">
+                <h4 className="text-olive-500 max-w-85 text-[2.8rem] font-bold">
                   {instructor.name}
                 </h4>
                 <p className="text-beige-500 max-w-80 text-[1.8rem]">

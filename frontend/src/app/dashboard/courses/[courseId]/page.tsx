@@ -1,16 +1,19 @@
-import CourseImage from "@/assets/course-img.jpg";
+import { getUser } from "@/actions/auth";
 import { getCourseById } from "@/actions/courses";
+import {
+  getMyEnrollmentRequests,
+  getMyEnrollments,
+} from "@/actions/enrollments";
+import { getParentChildren } from "@/actions/user";
+import CourseImage from "@/assets/course-img.jpg";
+import CoursePurchaseModal from "@/components/courses/CoursePurchaseModal";
 import BookIcon from "@/components/icons/BookIcon";
 import CalendarIcon from "@/components/icons/CalendarIcon";
 import ClockIcon from "@/components/icons/ClockIcon";
 import InstructorIcon from "@/components/icons/InstructorIcon";
-import MoneyIcon from "@/components/icons/MoneyIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import Button from "@/components/ui/Button";
-import ProgressBarWithLabel from "@/components/ui/ProgressBarWithLabel";
-import StatusBadge from "@/components/ui/StatusBadge";
 import {
-  cn,
   formatDate,
   formatTime,
   getArabicPlural,
@@ -18,35 +21,7 @@ import {
 } from "@/lib/utils";
 import { parseISO } from "date-fns";
 import Image from "next/image";
-import { ComponentType, SVGProps } from "react";
-
-function InfoCard({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: ComponentType<SVGProps<SVGSVGElement>>;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="relative flex items-center rounded-[1rem_0] bg-gray-100 p-6 font-bold text-gray-500 shadow-inner">
-      <Icon className="text-olive-300 me-4 h-10 w-auto" />
-      <span className="me-auto">{label}</span>
-      <div className="absolute inset-y-6 left-6 grid aspect-square w-auto place-items-center rounded-[0.5rem_0] bg-gray-50 px-3 shadow-[1px_2px_2.1px_0px_rgba(0,0,0,0.17)]">
-        {value}
-      </div>
-    </div>
-  );
-}
-
-const dataPointWrapperStyles = cn(
-  "text-olive-300 grid grid-cols-[auto_1fr] grid-rows-2 gap-x-5 gap-y-2 text-2xl font-bold",
-);
-
-const dataPointIconStyles = cn(
-  "drop-shadow-soft row-span-full h-10 w-auto self-center",
-);
+import { redirect } from "next/navigation";
 
 export default async function Page({
   params,
@@ -54,227 +29,269 @@ export default async function Page({
   params: Promise<{ courseId: string }>;
 }) {
   const { courseId } = await params;
-  const course = await getCourseById(courseId);
+  const [course, user] = await Promise.all([
+    getCourseById(courseId),
+    getUser(),
+  ]);
+  const isParent = user.role === "parent";
+  const enrollmentRole = isParent ? "parent" : "student";
+
+  const [myEnrollments, myEnrollmentRequests, parentChildren] =
+    await Promise.all([
+      getMyEnrollments(),
+      isParent ? Promise.resolve([]) : getMyEnrollmentRequests(),
+      isParent ? getParentChildren() : Promise.resolve([]),
+    ]);
+
+  const normalizeName = (name: string) => name.trim().replace(/\s+/g, " ");
+
+  const enrolledChildNamesInCourse = new Set(
+    myEnrollments
+      .filter(
+        (enrollment) =>
+          String(enrollment.course) === String(courseId) &&
+          enrollment.participant_type === "child" &&
+          !!enrollment.participant_name,
+      )
+      .map((enrollment) => normalizeName(enrollment.participant_name!)),
+  );
+
+  const childrenOptions = parentChildren.filter((child) => {
+    const fullName = normalizeName(`${child.first_name} ${child.last_name}`);
+
+    return !enrolledChildNamesInCourse.has(fullName);
+  });
+
+  // TODO(enrollment-parent-rules): Replace name-based matching with child-id-based enrollment payload when backend exposes stable child identifiers in enrollments list.
+
+  const hasActiveEnrollment = myEnrollments.some(
+    (enrollment) => String(enrollment.course) === String(courseId),
+  );
+
+  if (!isParent && hasActiveEnrollment) {
+    redirect(`/dashboard/my-courses/${courseId}/lectures`);
+  }
+
+  const activeEnrollmentRequest = myEnrollmentRequests.find(
+    (request) =>
+      String(request.course) === String(courseId) &&
+      ["pending", "processing"].includes(request.status),
+  );
 
   if (!course) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-6 text-4xl font-bold text-gray-600">
-        <span>تعذر العثور على بيانات الدورة.</span>
-        <Button size="small" href="/dashboard/courses">
-          الرجوع إلى جميع الدورات
-        </Button>
+      <div className="flex h-full items-center justify-center px-16">
+        <div className="shadow-soft rounded-[2.5rem_0] bg-gray-50 px-16 py-12 text-center">
+          <h2 className="text-olive-500 mb-4 text-5xl font-bold">
+            لم نتمكن من تحميل تفاصيل الدورة
+          </h2>
+          <p className="mb-8 text-2xl text-gray-600">
+            حاول مرة أخرى أو ارجع لقائمة الدورات المتاحة.
+          </p>
+          <Button href="/dashboard/courses" size="small">
+            العودة إلى الدورات
+          </Button>
+        </div>
       </div>
     );
   }
 
-  const startDate = parseISO(course.start_date);
-  const endDate = course.end_date ? parseISO(course.end_date) : null;
-  const seatsTaken = course.enrolled_count;
-  const seatsTotal = course.capacity;
-  const occupancy = seatsTotal
-    ? Math.min(100, Math.round((seatsTaken / seatsTotal) * 100))
-    : 0;
-  const scheduleLabel = course.schedules?.length
-    ? "مواعيد الأسبوع"
-    : "مواعيد لم تحدد بعد";
-
-  const formatApiTime = (time: string) => formatTime(time.slice(0, 5));
-  const ageRangeLabel = course.for_adults ? "للبالغين" : "للأطفال";
-  const ageRangeValue =
-    course.min_age || course.max_age
-      ? `${course.min_age ? toHindiDigits(course.min_age) : "؟"} - ${
-          course.max_age ? toHindiDigits(course.max_age) : "؟"
-        } سنة`
-      : "غير محدد";
+  const lectureCount = course.num_lectures;
 
   return (
-    <div className="flex h-full flex-col gap-12 overflow-y-auto px-16 pt-16 pb-10">
-      <div className="tablet:grid-cols-1 grid grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] gap-12">
-        <div className="shadow-soft rounded-[2rem_0] bg-gray-50 p-10">
-          <div className="flex flex-wrap items-center justify-between gap-6">
-            <div className="flex flex-wrap items-center gap-6">
-              <h2 className="text-olive-500 text-[4rem] font-bold">
+    <main className="h-full overflow-hidden px-16 py-8">
+      <div className="grid h-full w-full grid-rows-[auto_1fr] gap-6">
+        <div className="flex items-center">
+          <Button
+            href="/dashboard/courses"
+            variant="secondary"
+            size="small"
+            className="w-fit px-10"
+          >
+            العودة إلى كل الدورات
+          </Button>
+        </div>
+
+        <div className="grid min-h-0 grid-rows-[1fr_1fr] gap-8">
+          <section className="shadow-soft grid h-full min-h-0 grid-cols-[1fr_1fr] gap-8 rounded-[3.2rem_0] bg-[linear-gradient(164deg,#EDF0ED_12.23%,#F8F9F8_88.43%)] p-8">
+            <div className="relative min-h-95 overflow-hidden rounded-[2.2rem_0] bg-gray-200">
+              <Image
+                src={course.image || CourseImage}
+                alt={course.name}
+                fill
+                className="object-cover"
+                draggable="false"
+                priority
+              />
+            </div>
+
+            <div className="flex min-h-0 flex-col overflow-y-auto pe-2">
+              <div className="mb-5 flex flex-wrap gap-2">
+                {course.tags.map((tag, index) => (
+                  <span
+                    key={tag.id}
+                    className={`bg-gray-100 px-4 py-2 text-xl ${
+                      index % 2 === 0 ? "rounded-[1rem_0]" : "rounded-[0_1rem]"
+                    }`}
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+
+              <h1 className="text-olive-500 mb-4 text-6xl leading-tight font-bold">
                 {course.name}
-              </h2>
-              <div className="flex flex-wrap items-center gap-4">
-                <StatusBadge color={course.is_active ? "green" : "gray"}>
-                  {course.is_active ? "نشطة" : "غير نشطة"}
-                </StatusBadge>
-                <StatusBadge color={course.is_full ? "gray" : "green"}>
-                  {course.is_full ? "مكتملة" : "متاحة"}
-                </StatusBadge>
-              </div>
-            </div>
+              </h1>
 
-            <Button variant="secondary" size="small" href="/dashboard/courses">
-              الرجوع
-            </Button>
-          </div>
+              <p className="mb-7 line-clamp-4 text-[2rem] text-gray-600">
+                {course.description}
+              </p>
 
-          <p className="mt-6 text-[2.2rem] leading-relaxed text-gray-600">
-            {course.description || "لا يوجد وصف متاح حالياً لهذه الدورة."}
-          </p>
-
-          <div className="mt-8 flex flex-wrap gap-4">
-            {course.tags?.length ? (
-              course.tags.map((tag, index) => (
-                <span
-                  key={tag.id}
-                  className={cn(
-                    "inline-block bg-gray-100 px-4 py-2 text-center text-xl",
-                    index % 2 === 0 ? "rounded-[1rem_0]" : "rounded-[0_1rem]",
-                  )}
-                >
-                  {tag.name}
-                </span>
-              ))
-            ) : (
-              <span className="text-xl text-gray-500">لا توجد فئات.</span>
-            )}
-          </div>
-
-          <div className="tablet:grid-cols-1 mt-10 grid grid-cols-2 gap-8">
-            <div className={dataPointWrapperStyles}>
-              <InstructorIcon className={dataPointIconStyles} />
-              <span className="self-end">المعلم</span>
-              <span className="text-olive-500">
-                {course.instructor?.name || "غير محدد"}
-              </span>
-            </div>
-
-            <div className={dataPointWrapperStyles}>
-              <CalendarIcon className={dataPointIconStyles} />
-              <span className="self-end">الفترة</span>
-              <span className="text-olive-500">
-                {formatDate(startDate)}
-                {endDate ? ` - ${formatDate(endDate)}` : " - مفتوحة"}
-              </span>
-            </div>
-
-            <div className={dataPointWrapperStyles}>
-              <BookIcon className={dataPointIconStyles} />
-              <span className="self-end">عدد المحاضرات</span>
-              <span className="text-olive-500">
-                {course.num_lectures
-                  ? `${toHindiDigits(course.num_lectures)} ${getArabicPlural(
-                      course.num_lectures,
-                      {
-                        singular: "محاضرة",
-                        twofer: "محاضرتان",
-                        plural: "محاضرات",
-                      },
-                    )}`
-                  : "غير محدد"}
-              </span>
-            </div>
-
-            <div className={dataPointWrapperStyles}>
-              <PeopleIcon className={dataPointIconStyles} />
-              <span className="self-end">السعة</span>
-              <span className="text-olive-500">
-                {toHindiDigits(seatsTaken)} من {toHindiDigits(seatsTotal)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="shadow-soft relative overflow-hidden rounded-[2rem_0] bg-gray-50">
-          <Image
-            src={course.image || CourseImage}
-            alt={course.name}
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0)_20%,rgba(0,0,0,0.6)_100%)]"></div>
-          <div className="absolute inset-x-0 bottom-0 p-10 text-gray-50">
-            <div className="text-6xl font-bold">
-              {toHindiDigits(course.price)} جنيه
-            </div>
-            <div className="mt-4 text-2xl">
-              الموسم: {course.season?.name || "غير محدد"}
-            </div>
-            <div className="mt-2 text-2xl">
-              الفئة العمرية: {ageRangeLabel} ({ageRangeValue})
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="tablet:grid-cols-1 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12">
-        <div className="shadow-soft rounded-[2rem_0] bg-gray-50 p-10">
-          <div className="mb-8 flex items-center justify-between">
-            <h3 className="text-olive-700 text-4xl font-bold">
-              {scheduleLabel}
-            </h3>
-            <Button size="small" variant="light">
-              إضافة للتقويم
-            </Button>
-          </div>
-
-          <div className="flex flex-col gap-6">
-            {course.schedules?.length ? (
-              course.schedules.map((schedule) => (
-                <div
-                  key={schedule.id}
-                  className="flex flex-wrap items-center justify-between gap-6 rounded-[1.5rem_0] bg-gray-100 px-8 py-6 text-2xl font-bold text-gray-600 shadow-inner"
-                >
-                  <div className="flex items-center gap-4">
-                    <CalendarIcon className="text-olive-300 h-8 w-auto" />
-                    <span className="text-olive-500">
-                      {schedule.weekday_display}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <ClockIcon className="text-olive-300 h-8 w-auto" />
-                    <span>
-                      من {formatApiTime(schedule.start_time)} إلى{" "}
-                      {formatApiTime(schedule.end_time)}
-                    </span>
-                  </div>
+              <div className="[&_svg]:text-olive-500 mb-8 grid grid-cols-2 gap-4 text-[1.7rem] font-semibold [&_svg]:h-8 [&_svg]:w-auto">
+                <div className="flex items-center gap-2 rounded-[1.2rem_0] bg-gray-100 px-4 py-3">
+                  <CalendarIcon />
+                  <span>تبدأ: {formatDate(parseISO(course.start_date))}</span>
                 </div>
-              ))
-            ) : (
-              <div className="rounded-[1.5rem_0] bg-gray-100 px-8 py-10 text-center text-2xl font-bold text-gray-500 shadow-inner">
-                سيتم إعلان المواعيد قريباً.
+
+                <div className="flex items-center gap-2 rounded-[0_1.2rem] bg-gray-100 px-4 py-3">
+                  <BookIcon />
+                  <span>
+                    {toHindiDigits(lectureCount)}{" "}
+                    {getArabicPlural(lectureCount, {
+                      singular: "محاضرة",
+                      twofer: "محاضرتان",
+                      plural: "محاضرات",
+                    })}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 rounded-[0_1.2rem] bg-gray-100 px-4 py-3">
+                  <PeopleIcon />
+                  <span>
+                    المتاح: {toHindiDigits(course.available_spots)} /{" "}
+                    {toHindiDigits(course.capacity)}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 rounded-[1.2rem_0] bg-gray-100 px-4 py-3">
+                  <InstructorIcon />
+                  <span>المعلم: {course.instructor.name}</span>
+                </div>
               </div>
-            )}
-          </div>
-        </div>
 
-        <div className="shadow-soft rounded-[2rem_0] bg-gray-50 p-10">
-          <h3 className="text-olive-700 mb-8 text-4xl font-bold">
-            ملخص التسجيل
-          </h3>
+              <div className="mt-auto rounded-[2rem_0] bg-white px-6 py-5 shadow-inner">
+                <div className="mb-5 flex items-center justify-between">
+                  <div>
+                    <p className="mb-1 text-xl text-gray-600">رسوم الدورة</p>
+                    <p className="text-olive-500 text-5xl font-bold">
+                      {toHindiDigits(course.price)} جنيه
+                    </p>
+                  </div>
 
-          <div className="flex flex-col gap-8">
-            <InfoCard
-              icon={PeopleIcon}
-              label="المقاعد المتاحة"
-              value={toHindiDigits(course.available_spots)}
-            />
+                  <p className="text-right text-[1.4rem] text-gray-600">
+                    احجز مكانك الآن قبل اكتمال العدد
+                  </p>
+                </div>
 
-            <InfoCard
-              icon={MoneyIcon}
-              label="قيمة الاشتراك"
-              value={`${toHindiDigits(course.price)} جنيه`}
-            />
+                <div className="grid w-full grid-cols-2 gap-4">
+                  {activeEnrollmentRequest ? (
+                    <Button className="w-full" disabled>
+                      طلبك قيد المراجعة
+                    </Button>
+                  ) : (
+                    <CoursePurchaseModal
+                      role={enrollmentRole}
+                      courseId={courseId}
+                      coursePrice={course.price}
+                      childrenOptions={childrenOptions}
+                    />
+                  )}
 
-            <ProgressBarWithLabel
-              icon={PeopleIcon}
-              label="نسبة امتلاء المقاعد"
-              progress={occupancy}
-            />
-          </div>
+                  <Button
+                    href="/contact-us"
+                    variant="secondary"
+                    revert
+                    className="w-full"
+                  >
+                    تواصل للاستفسار
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </section>
 
-          <div className="mt-10 flex flex-wrap items-center gap-6">
-            <Button size="small">طلب الاشتراك</Button>
-            <Button size="small" variant="secondary">
-              مشاركة الدورة
-            </Button>
-          </div>
+          <section className="grid h-full min-h-0 grid-cols-2 gap-8">
+            <div className="shadow-soft flex min-h-0 flex-col rounded-[0_2.5rem] bg-gray-50 p-8">
+              <h2 className="text-olive-500 mb-6 text-4xl font-bold">
+                لماذا هذه الدورة؟
+              </h2>
+
+              <ul className="min-h-0 flex-1 space-y-4 overflow-y-auto pe-2 text-[1.9rem] text-gray-600">
+                <li className="flex items-start gap-2">
+                  <span className="text-olive-500 text-3xl">•</span>
+                  <span>شرح مبسط ومناسب للفئة العمرية المستهدفة.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-olive-500 text-3xl">•</span>
+                  <span>برنامج منظم على مدار الموسم الدراسي بشكل واضح.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-olive-500 text-3xl">•</span>
+                  <span>متابعة مباشرة من المعلم مع عدد محدود من المقاعد.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-olive-500 text-3xl">•</span>
+                  <span>محتوى عملي يركز على التطبيق والمراجعة المستمرة.</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="shadow-soft flex min-h-0 flex-col rounded-[2.5rem_0] bg-gray-50 p-8">
+              <h2 className="text-olive-500 mb-6 text-4xl font-bold">
+                المواعيد والتفاصيل
+              </h2>
+
+              <div className="mb-6 rounded-[1.5rem_0] bg-white p-5 shadow-inner">
+                <p className="mb-2 text-xl text-gray-600">فترة الدورة</p>
+                <p className="text-[1.8rem] font-bold text-gray-900">
+                  {formatDate(parseISO(course.start_date))}
+                  {course.end_date
+                    ? ` - ${formatDate(parseISO(course.end_date))}`
+                    : " (مستمرة)"}
+                </p>
+              </div>
+
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pe-2">
+                {course.schedules.length ? (
+                  course.schedules.map((schedule) => (
+                    <div
+                      key={schedule.id}
+                      className="rounded-[1.2rem_0] bg-white px-5 py-4 shadow-inner"
+                    >
+                      <div className="mb-2 flex items-center gap-2 text-[1.6rem] font-bold text-gray-900">
+                        <CalendarIcon className="text-olive-500 h-7 w-auto" />
+                        <span>{schedule.weekday_display}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-[1.5rem] text-gray-600">
+                        <ClockIcon className="text-olive-500 h-7 w-auto" />
+                        <span>
+                          {String(formatTime(schedule.start_time) || "--:--")} -{" "}
+                          {String(formatTime(schedule.end_time) || "--:--")}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-[1.2rem_0] bg-white px-5 py-4 text-[1.5rem] text-gray-600 shadow-inner">
+                    سيتم تحديد جدول المحاضرات وتحديثه قريبًا.
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

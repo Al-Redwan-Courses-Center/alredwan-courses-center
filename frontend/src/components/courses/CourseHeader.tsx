@@ -35,8 +35,7 @@ export default function CourseHeader({
         </span>
         <span className="text-olive-500">
           {/* الأخ{course?.instructor.gender === "female" && "ت"}{" "} */}
-          الأخ
-          {course?.instructor.name}
+          الأخ {course?.instructor.name}
         </span>
       </div>
 
@@ -58,14 +57,18 @@ export default function CourseHeader({
         <ClockIcon className={dataPointIconStyles} />
         <span className="self-end">المواعيد</span>
         <span className="text-olive-500">
-          من{" "}
+          <span>{!!course?.end_date ? "من" : "يبدأ"}</span>{" "}
           <span className="font-bold">
             {formatDate(parseISO(course?.start_date || ""))}
           </span>{" "}
-          إلى{" "}
-          <span className="font-bold">
-            {formatDate(parseISO(course?.end_date || ""))}
-          </span>
+          {!!course?.end_date && (
+            <>
+              <span>إلى</span>{" "}
+              <span className="font-bold">
+                {formatDate(parseISO(course?.end_date || ""))}
+              </span>
+            </>
+          )}
         </span>
       </div>
     </div>

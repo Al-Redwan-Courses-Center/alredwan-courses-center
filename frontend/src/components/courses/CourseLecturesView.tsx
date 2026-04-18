@@ -18,11 +18,11 @@ import {
   getWeekDay,
   toHindiDigits,
 } from "@/lib/utils";
-import { Course, Lecture } from "@/types/entities";
-import { parse, parseISO } from "date-fns";
+import { CourseDetail, LectureListItem } from "@/types/entities";
+import { parseISO } from "date-fns";
+import Link from "next/link";
 import { DataViewPagination } from "../ui/data-view/DataViewPagination";
 import { DataViewHeader, DataViewRow } from "../ui/data-view/DataViewRow";
-import Link from "next/link";
 
 const { sortConfig, filterConfig, statusMap } = courseLecturesViewConfig;
 
@@ -30,9 +30,11 @@ export default function CourseLecturesView({
   lectures,
   course,
 }: {
-  lectures: Lecture[];
-  course: Course;
+  lectures: LectureListItem[];
+  course: CourseDetail | null;
 }) {
+  console.log(lectures[9].id);
+
   return (
     <DataView
       data={lectures}
@@ -62,12 +64,9 @@ export default function CourseLecturesView({
 
       <DataViewBody
         render={{
-          table: (lecture: Lecture, i: number) => {
+          table: (lecture: LectureListItem, i: number) => {
             const { label, color } = statusMap[lecture.status];
-            const weekday = getWeekDay(parseISO(lecture.date).getDay());
-            const { start: startHour, end: endHour } = course.schedule.find(
-              (s) => s.day === weekday,
-            ) || { start: "", end: "" };
+            const weekday = getWeekDay(parseISO(lecture.scheduled_at).getDay());
 
             return (
               <DataViewRow key={lecture.id} index={i}>
@@ -78,17 +77,17 @@ export default function CourseLecturesView({
                 <DataViewCell>{lecture.title}</DataViewCell>
 
                 <DataViewCell>
-                  {formatDate(parseISO(lecture.date))}
+                  {formatDate(parseISO(lecture.scheduled_at))}
                 </DataViewCell>
 
                 <DataViewCell className="font-bold">{weekday}</DataViewCell>
 
                 <DataViewCell className="font-bold">
-                  {formatTime(parse(startHour, "HH:mm", new Date()))}
+                  {formatTime(lecture.start_time)}
                 </DataViewCell>
 
                 <DataViewCell className="font-bold">
-                  {formatTime(parse(endHour, "HH:mm", new Date()))}
+                  {formatTime(lecture.end_time)}
                 </DataViewCell>
 
                 <DataViewCell>
@@ -101,12 +100,14 @@ export default function CourseLecturesView({
                       <TrashIcon />
                     </button>
 
-                    <button>
+                    <Link
+                      href={`/dashboard/my-courses/${course?.id}/lectures/`}
+                    >
                       <EditIcon />
-                    </button>
+                    </Link>
 
                     <Link
-                      href={`/dashboard/my-courses/${course.id}/lectures/${lecture.id}`}
+                      href={`/dashboard/my-courses/${course?.id}/lectures/${lecture.id}`}
                     >
                       <InfoIcon />
                     </Link>

@@ -692,8 +692,7 @@ if (childB) {
 }
 
 // Helpers
-export const getLectureById = (id: number) =>
-  ALL_LECTURES.find((l) => l.id === id);
+// const getLectureById = (id: number) => ALL_LECTURES.find((l) => l.id === id);
 export const getEnrollmentsByParticipantId = (id: number | string) =>
   ENROLLMENTS.filter((e) => e.student?.id === id || e.child?.id === id);
 export const getMyEnrollments = () => {

@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/Modal";
 import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import Image from "next/image";
-import { ReactNode, Suspense, useEffect, useState } from "react";
+import { ReactNode, Suspense, useState } from "react";
 import Logo from "@/assets/logo.svg";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "usehooks-ts";
 
 type AuthMode = "login" | "signup";
 
@@ -26,55 +27,37 @@ function PreAuthModal({
   defaultMode?: AuthMode;
 }) {
   const { searchParams, mutateSearchParams } = useMutateSearchParams();
-  const [isMobile, setIsMobile] = useState(false);
+  const isTablet = useMediaQuery("(max-width: 900px)");
 
   const [callbackUrl] = useState(searchParams.get("callbackUrl"));
   const [isOpen, setIsOpen] = useState(searchParams.get("login") === "true");
   const [mode, setMode] = useState<AuthMode>(
     searchParams.get("login") === "true" ? "login" : defaultMode,
   );
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  useEffect(() => {
-    if (isOpen || callbackUrl)
-      mutateSearchParams(
-        [
-          {
-            key: "login",
-            val: "",
-          },
-          {
-            key: "callbackUrl",
-            val: "",
-          },
-        ],
-        true,
-      );
-  }, []);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 900px)");
-    const handleChange = () => setIsMobile(mediaQuery.matches);
-
-    handleChange();
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", handleChange);
-    } else {
-      mediaQuery.addListener(handleChange);
-    }
-
-    return () => {
-      if (mediaQuery.removeEventListener) {
-        mediaQuery.removeEventListener("change", handleChange);
-      } else {
-        mediaQuery.removeListener(handleChange);
-      }
-    };
-  }, []);
+  // useEffect(() => {
+  //   if (isOpen || callbackUrl)
+  //     mutateSearchParams(
+  //       [
+  //         {
+  //           key: "login",
+  //           val: "",
+  //         },
+  //         {
+  //           key: "callbackUrl",
+  //           val: "",
+  //         },
+  //       ],
+  //       true,
+  //     );
+  // }, []);
 
   return (
     <Modal
       open={isOpen}
       onOpenChange={(open) => {
+        if (!open && isLoggingIn) return;
         setIsOpen(open);
         if (open) setMode(defaultMode);
       }}
@@ -82,7 +65,7 @@ function PreAuthModal({
       <ModalTrigger asChild>
         {trigger ? (
           trigger
-        ) : isMobile ? (
+        ) : isTablet ? (
           <button className="text-olive-500 relative flex h-full flex-col items-center text-center text-[1.4rem] leading-normal font-normal transition-all">
             <Image src={Logo} alt="Logo" className="h-auto w-10" />
             <span className="whitespace-nowrap">تسجيل الدخول</span>
@@ -96,9 +79,16 @@ function PreAuthModal({
 
       <ModalContent
         className={cn(
-          mode === "login" ? "max-w-1/4" : "mobile-lg:max-h-9/10 max-w-1/2",
-          "tablet:max-w-8/10 max-h-7/10",
+          mode === "login" ? "max-w-3xl" : "max-h-8/10 max-w-384",
+          "tablet:max-w-200",
         )}
+        showCloseButton={!isLoggingIn}
+        onEscapeKeyDown={(event) => {
+          if (isLoggingIn) event.preventDefault();
+        }}
+        onInteractOutside={(event) => {
+          if (isLoggingIn) event.preventDefault();
+        }}
       >
         <ModalTitle>
           <div className="flex flex-col items-start gap-10">
@@ -122,16 +112,18 @@ function PreAuthModal({
           <LoginForm
             callbackUrl={callbackUrl}
             onSwitchToSignup={() => setMode("signup")}
+            onLoadingChange={setIsLoggingIn}
           />
         ) : (
           <div className="flex max-h-full w-full flex-col items-center overflow-auto">
             <SignupForm />
+            <span className="mt-6 text-2xl">لديك حساب بالفعل؟</span>
             <button
               type="button"
               onClick={() => setMode("login")}
-              className="text-olive-900 hover:text-olive-300 mt-6 text-2xl font-bold underline transition-colors"
+              className="text-olive-900 hover:text-olive-300 text-2xl font-bold underline transition-colors"
             >
-              لديك حساب بالفعل؟ سجل دخولك
+              سجل دخولك الآن
             </button>
           </div>
         )}

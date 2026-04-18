@@ -3,7 +3,7 @@ import {
   DataViewSortConfig,
   StatusMap,
 } from "@/types/components";
-import { Child, Student } from "@/types/entities";
+import { Child, LectureAttendanceDetail, Student } from "@/types/entities";
 import { parse } from "date-fns";
 
 const headers = [
@@ -21,7 +21,7 @@ const statusWeights = {
   pending: 0,
 };
 
-const sortConfig: DataViewSortConfig<Student | Child> = {
+const sortConfig: DataViewSortConfig<LectureAttendanceDetail> = {
   // lecture: {
   //   sortFn: (a: Student | Child, b: Student | Child) =>
   //     a.title.localeCompare(b.title),
