@@ -25,18 +25,18 @@ export default async function NavBar() {
         <NavLink variant="landing" href="/">
           الرئيسية
         </NavLink>
-        {/*<NavLink variant="landing" href="/courses">*/}
-        {/*  الدورات*/}
-        {/*</NavLink>*/}
-        {/*<NavLink variant="landing" href="/about">*/}
-        {/*  عن الواحة*/}
-        {/*</NavLink>*/}
-        {/*<NavLink variant="landing" href="/activities">*/}
-        {/*  الأنشطة*/}
-        {/*</NavLink>*/}
-        {/*<NavLink variant="landing" href="/contact-us">*/}
-        {/*  تواصل معنا*/}
-        {/*</NavLink>*/}
+        <NavLink variant="landing" href="/courses">
+          الدورات
+        </NavLink>
+        <NavLink variant="landing" href="/about">
+          عن الواحة
+        </NavLink>
+        <NavLink variant="landing" href="/activities">
+          الأنشطة
+        </NavLink>
+        <NavLink variant="landing" href="/contact-us">
+          تواصل معنا
+        </NavLink>
       </ul>
 
       <NavLink

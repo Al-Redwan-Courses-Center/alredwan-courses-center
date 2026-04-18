@@ -1,28 +1,31 @@
-FROM node:lts-alpine3.23 AS bootstrap
+# 1. Base stage
+FROM node:lts-alpine3.23 AS base
 WORKDIR /app
-RUN npm i -g pnpm
+RUN corepack enable pnpm 
 
-FROM bootstrap as dev
-CMD ["npm", "run", "dev"]
+# 2. Dependencies stage 
+FROM base AS deps
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
-FROM bootstrap as base
-COPY ./package*.json ./
-RUN npm install
+# 3. Local dev stage
+FROM deps AS dev
 COPY . .
+CMD ["pnpm", "dev"]
 
-FROM base AS dev-windows
-CMD ["npm", "run", "dev"]
+# 4. Build stage (COPY is required here for production builds)
+FROM deps AS build
+COPY . .
+RUN pnpm build
 
-FROM base AS build
-RUN npm run build
-
+# 5. Production stage
 FROM node:lts-alpine3.23 AS final
 WORKDIR /app
 ENV NODE_ENV=production
+
 COPY --from=build /app/.next/standalone .
 COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
 
 EXPOSE 3000
-
-CMD [ "node", "server.js" ]
+CMD ["node", "server.js"]

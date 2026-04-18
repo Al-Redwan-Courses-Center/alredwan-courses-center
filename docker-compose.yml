@@ -19,6 +19,19 @@ services:
       retries: 10
       start_period: 10s
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # pgadmin:
   #   image: dpage/pgadmin4
   #   container_name: redwan-pgadmin
@@ -62,12 +75,13 @@ services:
           target: /app
           ignore:
             - node_modules/
+            - .next/
     stdin_open: true
     tty: true
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      target: dev-windows
+      target: dev
     container_name: redwan-frontend
     depends_on:
       redwan-backend:
@@ -78,3 +92,4 @@ services:
 volumes:
   postgres_data:
   pgadmin_data:
+  redis_data:
