@@ -18,9 +18,13 @@ export default function MyCourseCard({
 }) {
   const lectureCount = course.num_lectures;
   const isEven = index % 2 === 0;
+  const description =
+    course.description?.trim() ||
+    "دورات شاملة لتعلم القرآن الكريم وأحكام التجويد";
 
   return (
     <ItemCard
+      className="mx-auto h-full w-full max-w-160 min-w-0"
       cardHeader={
         <Image
           src={course.image || CourseImage}
@@ -44,26 +48,25 @@ export default function MyCourseCard({
         </Button>
       }
       index={index}
-      key={index}
     >
       <h3 className="mb-3 text-[1.28rem] font-bold">{course.name}</h3>
-      <p className="mb-5">
-        دورات شامل لتعلم تلاوة القرآن الكريم وأحكام التجويد
-      </p>
+      <p className="mb-5 line-clamp-2">{description}</p>
 
-      <div className="courses-center mb-5 grid grid-cols-[repeat(auto-fill,minmax(5rem,auto))] gap-2">
-        {course.tags.map((tag, i) => (
-          <span
-            className={cn(
-              "inline-block bg-gray-100 px-4 py-2 text-center text-xl",
-              i % 2 === 0 ? "rounded-[1rem_0]" : "rounded-[0_1rem]",
-            )}
-            key={i}
-          >
-            {tag.name}
-          </span>
-        ))}
-      </div>
+      {course.tags?.length ? (
+        <div className="courses-center mb-5 grid grid-cols-[repeat(auto-fill,minmax(5rem,auto))] gap-2">
+          {course.tags.map((tag, i) => (
+            <span
+              className={cn(
+                "inline-block bg-gray-100 px-4 py-2 text-center text-xl",
+                i % 2 === 0 ? "rounded-[1rem_0]" : "rounded-[0_1rem]",
+              )}
+              key={i}
+            >
+              {tag.name}
+            </span>
+          ))}
+        </div>
+      ) : null}
 
       <ul className="[&_svg]:text-olive-500 [&>li]:courses-center mb-7 flex flex-col gap-3 [&_svg]:h-auto [&_svg]:w-[1.525rem] [&>li]:flex [&>li]:gap-2">
         <li>

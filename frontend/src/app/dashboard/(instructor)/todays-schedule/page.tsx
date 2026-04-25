@@ -1,8 +1,7 @@
 import { getUser, protect } from "@/actions/auth";
 import { getInstructorTodaysLectures } from "@/actions/lectures";
-import TodaysLecturesTable from "@/components/dashboard/instructor/TodaysLecturesTable";
 import { Metadata } from "next";
-import { Suspense } from "react";
+import TodaysLecturesTable from "./todays-lectures-table";
 
 export const metadata: Metadata = {
   title: "محاضرات اليوم",
@@ -20,9 +19,7 @@ export default async function Page() {
         السلام عليكم يا أخ {first_name}
       </h1>
 
-      <Suspense>
-        <TodaysLecturesTable todaysLectures={lectures} />
-      </Suspense>
+      <TodaysLecturesTable todaysLectures={lectures} />
     </div>
   );
 }
