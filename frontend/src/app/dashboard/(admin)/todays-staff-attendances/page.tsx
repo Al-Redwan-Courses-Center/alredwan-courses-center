@@ -1,5 +1,5 @@
-import TodaysAttendancesView from "@/components/dashboard/admin/TodaysAttendancesView";
 import { getTodaysAttendances } from "@/actions/admin-attendances";
+import TodaysAttendancesView from "@/components/dashboard/admin/TodaysAttendancesView";
 
 export default async function Page() {
   const attendances = await getTodaysAttendances();

@@ -5,12 +5,6 @@ import EditIcon from "@/components/icons/EditIcon";
 import InfoIcon from "@/components/icons/InfoIcon";
 import TrashIcon from "@/components/icons/TrashIcon";
 import StatusBadge from "@/components/ui/StatusBadge";
-import DataView from "@/components/ui/data-view/DataView";
-import DataViewBody from "@/components/ui/data-view/DataViewBody";
-import DataViewCell from "@/components/ui/data-view/DataViewCell";
-import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
-import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
-import DataViewSort from "@/components/ui/data-view/DataViewSort";
 import {
   cn,
   formatDate,
@@ -18,13 +12,18 @@ import {
   getWeekDay,
   toHindiDigits,
 } from "@/lib/utils";
+import {
+  DataTable,
+  DataTableFilterConfig,
+  DataTableMobileConfig,
+} from "@/shadcn/components/data-table";
 import { CourseDetail, LectureListItem } from "@/types/entities";
+import { ColumnDef } from "@tanstack/react-table";
 import { parseISO } from "date-fns";
 import Link from "next/link";
-import { DataViewPagination } from "../ui/data-view/DataViewPagination";
-import { DataViewHeader, DataViewRow } from "../ui/data-view/DataViewRow";
+import { useMemo } from "react";
 
-const { sortConfig, filterConfig, statusMap } = courseLecturesViewConfig;
+const { statusMap } = courseLecturesViewConfig;
 
 export default function CourseLecturesView({
   lectures,
@@ -33,95 +32,174 @@ export default function CourseLecturesView({
   lectures: LectureListItem[];
   course: CourseDetail | null;
 }) {
-  console.log(lectures[9].id);
+  const columns = useMemo<ColumnDef<LectureListItem>[]>(
+    () => [
+      {
+        id: "index",
+        header: "م",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <span className="font-bold">{toHindiDigits(row.index + 1)}</span>
+        ),
+      },
+      {
+        accessorKey: "title",
+        header: "المحاضرة",
+      },
+      {
+        accessorKey: "scheduled_at",
+        header: "التاريخ",
+        cell: ({ row }) => (
+          <span>{formatDate(parseISO(row.original.scheduled_at))}</span>
+        ),
+      },
+      {
+        id: "weekday",
+        header: "اليوم",
+        accessorFn: (row) => getWeekDay(parseISO(row.scheduled_at).getDay()),
+        cell: ({ row }) => (
+          <span className="font-bold">{row.getValue("weekday") as string}</span>
+        ),
+      },
+      {
+        accessorKey: "start_time",
+        header: "البداية",
+        cell: ({ row }) => (
+          <span className="font-bold">
+            {formatTime(row.original.start_time)}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "end_time",
+        header: "النهاية",
+        cell: ({ row }) => (
+          <span className="font-bold">{formatTime(row.original.end_time)}</span>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: "الحالة",
+        cell: ({ row }) => {
+          const { label, color } = statusMap[row.original.status];
+          return <StatusBadge color={color}>{label}</StatusBadge>;
+        },
+        filterFn: (row, columnId, value: string) => {
+          if (!value || value === "all") return true;
+          if (value === "completed")
+            return row.getValue(columnId) === "completed";
+          return row.getValue(columnId) === "scheduled";
+        },
+      },
+      {
+        id: "actions",
+        header: "",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="*:text-olive-300 *:hover:text-olive-700 flex items-center justify-center gap-6 *:transition-colors">
+            <button>
+              <TrashIcon />
+            </button>
+
+            <Link href={`/dashboard/my-courses/${course?.id}/lectures/`}>
+              <EditIcon />
+            </Link>
+
+            <Link
+              href={`/dashboard/my-courses/${course?.id}/lectures/${row.original.id}`}
+            >
+              <InfoIcon />
+            </Link>
+          </div>
+        ),
+      },
+    ],
+    [course?.id],
+  );
+
+  const filters = useMemo<DataTableFilterConfig[]>(
+    () => [
+      {
+        columnId: "status",
+        label: "الحالة",
+        options: [
+          { label: "الكل", value: "all" },
+          { label: "مسجلة", value: "completed" },
+          { label: "غير مسجلة", value: "scheduled" },
+        ],
+      },
+    ],
+    [],
+  );
+
+  const mobileConfig = useMemo<DataTableMobileConfig<LectureListItem>>(
+    () => ({
+      renderTitle: (lecture, index) => (
+        <span>
+          {toHindiDigits(index + 1)}- {lecture.title}
+        </span>
+      ),
+      renderSubtitle: (lecture) => (
+        <span className="text-olive-400">
+          {formatDate(parseISO(lecture.scheduled_at))}
+        </span>
+      ),
+      renderContent: (lecture) => {
+        const { label, color } = statusMap[lecture.status];
+
+        return (
+          <div className="space-y-3 text-[1.4rem]">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-gray-500">اليوم :</span>
+              <span>{getWeekDay(parseISO(lecture.scheduled_at).getDay())}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-gray-500">البداية :</span>
+              <span>{formatTime(lecture.start_time)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-gray-500">النهاية :</span>
+              <span>{formatTime(lecture.end_time)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-gray-500">الحالة :</span>
+              <StatusBadge className={cn("text-[1.2rem]")} color={color}>
+                {label}
+              </StatusBadge>
+            </div>
+          </div>
+        );
+      },
+      renderActions: (lecture) => (
+        <div className="*:text-olive-300 *:hover:text-olive-700 flex items-center justify-end gap-6 *:transition-colors">
+          <button>
+            <TrashIcon />
+          </button>
+
+          <Link href={`/dashboard/my-courses/${course?.id}/lectures/`}>
+            <EditIcon />
+          </Link>
+
+          <Link
+            href={`/dashboard/my-courses/${course?.id}/lectures/${lecture.id}`}
+          >
+            <InfoIcon />
+          </Link>
+        </div>
+      ),
+    }),
+    [course?.id],
+  );
 
   return (
-    <DataView
+    <DataTable
+      columns={columns}
       data={lectures}
-      maxItemsPerPage={5}
-      sortConfig={sortConfig}
-      filterConfig={filterConfig}
-      gridLayout={cn(
-        "grid-cols-[minmax(0,0.5fr)_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]",
-      )}
-    >
-      <div className="relative z-100 mb-14 flex items-center gap-32">
-        <DataViewSearch />
-        <DataViewSort />
-        <DataViewFilter />
-      </div>
-
-      <DataViewHeader>
-        <DataViewCell>م</DataViewCell>
-        <DataViewCell>المحاضرة</DataViewCell>
-        <DataViewCell>التاريخ</DataViewCell>
-        <DataViewCell>اليوم</DataViewCell>
-        <DataViewCell>البداية</DataViewCell>
-        <DataViewCell>النهاية</DataViewCell>
-        <DataViewCell>الحالة</DataViewCell>
-        <DataViewCell></DataViewCell>
-      </DataViewHeader>
-
-      <DataViewBody
-        render={{
-          table: (lecture: LectureListItem, i: number) => {
-            const { label, color } = statusMap[lecture.status];
-            const weekday = getWeekDay(parseISO(lecture.scheduled_at).getDay());
-
-            return (
-              <DataViewRow key={lecture.id} index={i}>
-                <DataViewCell className="font-bold">
-                  {toHindiDigits(i + 1)}
-                </DataViewCell>
-
-                <DataViewCell>{lecture.title}</DataViewCell>
-
-                <DataViewCell>
-                  {formatDate(parseISO(lecture.scheduled_at))}
-                </DataViewCell>
-
-                <DataViewCell className="font-bold">{weekday}</DataViewCell>
-
-                <DataViewCell className="font-bold">
-                  {formatTime(lecture.start_time)}
-                </DataViewCell>
-
-                <DataViewCell className="font-bold">
-                  {formatTime(lecture.end_time)}
-                </DataViewCell>
-
-                <DataViewCell>
-                  <StatusBadge color={color}>{label}</StatusBadge>
-                </DataViewCell>
-
-                <DataViewCell>
-                  <div className="*:text-olive-300 *:hover:text-olive-700 flex items-center justify-center gap-6 *:transition-colors">
-                    <button>
-                      <TrashIcon />
-                    </button>
-
-                    <Link
-                      href={`/dashboard/my-courses/${course?.id}/lectures/`}
-                    >
-                      <EditIcon />
-                    </Link>
-
-                    <Link
-                      href={`/dashboard/my-courses/${course?.id}/lectures/${lecture.id}`}
-                    >
-                      <InfoIcon />
-                    </Link>
-                  </div>
-                </DataViewCell>
-              </DataViewRow>
-            );
-          },
-
-          cards: () => null,
-        }}
-      />
-
-      <DataViewPagination />
-    </DataView>
+      searchKey="title"
+      searchPlaceholder="ابحث عن محاضرة..."
+      filters={filters}
+      mobileConfig={mobileConfig}
+      pageSize={5}
+    />
   );
 }

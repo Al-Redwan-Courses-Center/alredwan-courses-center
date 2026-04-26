@@ -1,16 +1,30 @@
 "use client";
 
-import StudentCourseCard from "@/components/dashboard/student/StudentCourseCard";
-import DataView from "@/components/ui/data-view/DataView";
-import DataViewBody from "@/components/ui/data-view/DataViewBody";
-import DataViewCell from "@/components/ui/data-view/DataViewCell";
-import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
-import { DataViewPagination } from "@/components/ui/data-view/DataViewPagination";
-import { DataViewHeader } from "@/components/ui/data-view/DataViewRow";
-import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
-import DataViewSort from "@/components/ui/data-view/DataViewSort";
-import { cn } from "@/lib/utils";
+import InfoIcon from "@/components/icons/InfoIcon";
+import { formatDate, toHindiDigits } from "@/lib/utils";
+import {
+  DataTable,
+  DataTableFilterConfig,
+  DataTableMobileConfig,
+} from "@/shadcn/components/data-table";
 import { CourseDetail } from "@/types/entities";
+import { ColumnDef } from "@tanstack/react-table";
+import { parseISO } from "date-fns";
+import Link from "next/link";
+import { useMemo } from "react";
+
+function renderCourseAction(course: CourseDetail) {
+  return (
+    <div className="flex items-center justify-center gap-6">
+      <Link
+        href={`/dashboard/my-courses/${course.id}/`}
+        className="text-olive-300 hover:text-olive-700 transition-colors"
+      >
+        <InfoIcon />
+      </Link>
+    </div>
+  );
+}
 
 export default function StudentMyCoursesView({
   courses,
@@ -19,57 +33,120 @@ export default function StudentMyCoursesView({
   childId?: string;
   role?: string;
 }) {
+  const seasonOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(courses.map((course) => course.season.name).filter(Boolean)),
+      ),
+    [courses],
+  );
+
+  const columns = useMemo<ColumnDef<CourseDetail>[]>(
+    () => [
+      {
+        id: "index",
+        header: "م",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <span className="font-bold">{toHindiDigits(row.index + 1)}</span>
+        ),
+      },
+      {
+        accessorKey: "name",
+        header: "الدورة",
+      },
+      {
+        id: "season_name",
+        accessorFn: (row) => row.season.name,
+        header: "الموسم",
+        filterFn: (row, columnId, value: string) => {
+          if (!value || value === "all") return true;
+          return (row.getValue(columnId) as string) === value;
+        },
+      },
+      {
+        accessorKey: "start_date",
+        header: "البداية",
+        cell: ({ row }) => (
+          <span>{formatDate(parseISO(row.original.start_date))}</span>
+        ),
+      },
+      {
+        accessorKey: "end_date",
+        header: "النهاية",
+        cell: ({ row }) => {
+          const endDate = row.original.end_date;
+          return (
+            <span>{endDate ? formatDate(parseISO(endDate)) : "غير محدد"}</span>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: "",
+        enableSorting: false,
+        cell: ({ row }) => renderCourseAction(row.original),
+      },
+    ],
+    [],
+  );
+
+  const filters = useMemo<DataTableFilterConfig[]>(
+    () => [
+      {
+        columnId: "season_name",
+        label: "الموسم",
+        options: [
+          { label: "الكل", value: "all" },
+          ...seasonOptions.map((season) => ({ label: season, value: season })),
+        ],
+      },
+    ],
+    [seasonOptions],
+  );
+
+  const mobileConfig = useMemo<DataTableMobileConfig<CourseDetail>>(
+    () => ({
+      renderTitle: (course, index) => (
+        <span>
+          {toHindiDigits(index + 1)}- {course.name}
+        </span>
+      ),
+      renderSubtitle: (course) => (
+        <span className="text-olive-400">{course.season.name}</span>
+      ),
+      renderContent: (course) => (
+        <div className="space-y-3 text-[1.4rem]">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-gray-500">البداية :</span>
+            <span>{formatDate(parseISO(course.start_date))}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-gray-500">النهاية :</span>
+            <span>
+              {course.end_date
+                ? formatDate(parseISO(course.end_date))
+                : "غير محدد"}
+            </span>
+          </div>
+        </div>
+      ),
+      renderActions: (course) => renderCourseAction(course),
+    }),
+    [],
+  );
+
   return (
-    <DataView
-      data={courses}
-      maxItemsPerPage={8}
-      gridLayout={cn(
-        "grid-cols-[minmax(0,0.5fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)_minmax(0,0.5fr)]",
-      )}
-      filterConfig={{
-        test: {
-          key: "أ",
-          label: "Abc",
-        },
-      }}
-      sortConfig={{
-        test: {
-          label: "Abc",
-          sortFn: () => 1,
-        },
-      }}
-      viewLayout="cards"
-    >
-      <div className="mb-14 flex items-center gap-32 ps-16">
-        <DataViewSearch />
-        <DataViewSort />
-        <DataViewFilter />
-      </div>
-
-      <DataViewHeader className="mx-16">
-        <DataViewCell>م</DataViewCell>
-        <DataViewCell>الدورة</DataViewCell>
-        <DataViewCell>الموسم</DataViewCell>
-        <DataViewCell>البداية</DataViewCell>
-        <DataViewCell>النهاية</DataViewCell>
-        <DataViewCell></DataViewCell>
-      </DataViewHeader>
-
-      <DataViewBody
-        className="px-16"
-        render={{
-          table: () => null,
-
-          cards: (
-            item: CourseDetail & {
-              course_progress: number;
-            },
-            index,
-          ) => <StudentCourseCard course={item} index={index} key={item.id} />,
-        }}
+    <div className="px-16">
+      <DataTable
+        columns={columns}
+        data={courses}
+        searchKey="name"
+        searchPlaceholder="ابحث عن دورة..."
+        filters={filters}
+        mobileConfig={mobileConfig}
+        pageSize={8}
       />
-
-      <DataViewPagination />
-    </DataView>
+    </div>
   );
 }
