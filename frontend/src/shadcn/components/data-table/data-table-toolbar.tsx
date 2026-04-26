@@ -55,10 +55,14 @@ export function DataTableToolbar<TData>({
     ? `${activeSortCol.id}:${activeSortCol.desc ? "desc" : "asc"}`
     : NO_SORT_VALUE;
 
-  if (!searchKey && !filters.length && !showColumnVisibilityToggle) {
+  if (
+    !searchKey &&
+    !filters.length &&
+    !showColumnVisibilityToggle &&
+    !showMobileSortDropdown
+  ) {
     return null;
   }
-
   return (
     <div className="mb-6 space-y-3">
       {searchKey && (

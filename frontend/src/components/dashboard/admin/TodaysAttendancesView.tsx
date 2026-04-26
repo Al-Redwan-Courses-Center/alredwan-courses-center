@@ -192,8 +192,11 @@ function AttendanceActionCell({
         loading={isCheckingIn}
         onClick={async () => {
           setIsCheckingIn(true);
-          await manualCheckIn(attendance.id);
-          setIsCheckingIn(false);
+          try {
+            await manualCheckIn(attendance.id);
+          } finally {
+            setIsCheckingIn(false);
+          }
         }}
       >
         سجل الحضور
@@ -210,8 +213,11 @@ function AttendanceActionCell({
         loading={isCheckingOut}
         onClick={async () => {
           setIsCheckingOut(true);
-          await manualCheckOut(attendance.id);
-          setIsCheckingOut(false);
+          try {
+            await manualCheckOut(attendance.id);
+          } finally {
+            setIsCheckingOut(false);
+          }
         }}
       >
         سجل الانصراف

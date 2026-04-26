@@ -4,22 +4,7 @@ import { Table as TanStackTable } from "@tanstack/react-table";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "../ui/button";
 
-const HINDI_DIGITS: Record<string, string> = {
-  "0": "٠",
-  "1": "١",
-  "2": "٢",
-  "3": "٣",
-  "4": "٤",
-  "5": "٥",
-  "6": "٦",
-  "7": "٧",
-  "8": "٨",
-  "9": "٩",
-};
-
-function toHindi(n: number | string): string {
-  return String(n).replace(/[0-9]/g, (d) => HINDI_DIGITS[d] ?? d);
-}
+import { toHindiDigits } from "@/lib/utils";
 
 interface DataTablePaginationProps<TData> {
   table: TanStackTable<TData>;
@@ -79,7 +64,7 @@ export function DataTablePagination<TData>({
       </Button>
 
       <div className="rounded-full bg-gray-100 px-4 py-2 text-[1.3rem] font-bold text-gray-700">
-        {toHindi(currentPage + 1)} / {toHindi(pageCount)}
+        {toHindiDigits(currentPage + 1)} / {toHindiDigits(pageCount)}
       </div>
 
       <Button
