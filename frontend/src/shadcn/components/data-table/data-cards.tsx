@@ -119,6 +119,8 @@ export function DataCards<TData, TValue>({
   });
 
   const effectiveLoadingRowsCount = loadingRowsCount ?? pageSize;
+  const hasAvailableData =
+    data.length > 0 || (manualPagination && (remoteState?.pageCount ?? 0) > 0);
   const searchValue =
     remoteState?.searchValue ??
     (searchKey
@@ -128,15 +130,17 @@ export function DataCards<TData, TValue>({
 
   return (
     <div className={className} dir="rtl">
-      <DataCardsToolbar
-        table={table}
-        searchKey={searchKey}
-        searchPlaceholder={searchPlaceholder}
-        searchValue={searchValue}
-        filters={filters}
-        isLoading={isLoading}
-        onSearchChange={onSearchChange}
-      />
+      {(isLoading || hasAvailableData) && (
+        <DataCardsToolbar
+          table={table}
+          searchKey={searchKey}
+          searchPlaceholder={searchPlaceholder}
+          searchValue={searchValue}
+          filters={filters}
+          isLoading={isLoading}
+          onSearchChange={onSearchChange}
+        />
+      )}
 
       {isLoading ? (
         <DataCardsSkeleton

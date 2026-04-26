@@ -22,13 +22,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import type { DataTableFilterConfig } from "./types";
-import { cn } from "@/lib/utils";
-import {
-  NO_SORT_VALUE,
-  SELECT_CONTENT_CLASS,
-  SELECT_ITEM_CLASS,
-  SELECT_TRIGGER_CLASS,
-} from "./toolbar-shared";
+import { NO_SORT_VALUE } from "./toolbar-shared";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -105,20 +99,14 @@ export function DataTableToolbar<TData>({
               disabled={isLoading}
               dir="rtl"
             >
-              <SelectTrigger
-                className={cn(SELECT_TRIGGER_CLASS, "flex-1 py-3 pr-5 pl-4")}
-              >
+              <SelectTrigger variant="pill" size="lg" className="flex-1">
                 <SelectValue>
                   {filter.label}: {selectedOption?.label ?? "الكل"}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent align="start" className={SELECT_CONTENT_CLASS}>
+              <SelectContent align="start" variant="pill">
                 {filter.options.map((option) => (
-                  <SelectItem
-                    key={option.value}
-                    value={option.value}
-                    className={SELECT_ITEM_CLASS}
-                  >
+                  <SelectItem key={option.value} value={option.value} size="lg">
                     {option.label}
                   </SelectItem>
                 ))}
@@ -184,13 +172,11 @@ export function DataTableToolbar<TData>({
             disabled={isLoading}
             dir="rtl"
           >
-            <SelectTrigger
-              className={cn(SELECT_TRIGGER_CLASS, "flex-1 py-3 pr-5 pl-4")}
-            >
+            <SelectTrigger variant="pill" size="lg" className="flex-1">
               <SelectValue placeholder="ترتيب حسب" />
             </SelectTrigger>
-            <SelectContent align="start" className={SELECT_CONTENT_CLASS}>
-              <SelectItem value={NO_SORT_VALUE} className={SELECT_ITEM_CLASS}>
+            <SelectContent align="start" variant="pill">
+              <SelectItem value={NO_SORT_VALUE} size="lg">
                 بدون ترتيب
               </SelectItem>
               {sortableColumns.map((col) => {
@@ -200,16 +186,10 @@ export function DataTableToolbar<TData>({
                     : col.id;
                 return (
                   <React.Fragment key={col.id}>
-                    <SelectItem
-                      value={`${col.id}:asc`}
-                      className={SELECT_ITEM_CLASS}
-                    >
+                    <SelectItem value={`${col.id}:asc`} size="lg">
                       {headerStr} ↑
                     </SelectItem>
-                    <SelectItem
-                      value={`${col.id}:desc`}
-                      className={SELECT_ITEM_CLASS}
-                    >
+                    <SelectItem value={`${col.id}:desc`} size="lg">
                       {headerStr} ↓
                     </SelectItem>
                   </React.Fragment>

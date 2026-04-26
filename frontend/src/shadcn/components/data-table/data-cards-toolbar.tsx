@@ -13,13 +13,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import type { DataTableFilterConfig } from "./types";
-import { cn } from "@/lib/utils";
-import {
-  NO_SORT_VALUE,
-  SELECT_CONTENT_CLASS,
-  SELECT_ITEM_CLASS,
-  SELECT_TRIGGER_CLASS,
-} from "./toolbar-shared";
+import { NO_SORT_VALUE } from "./toolbar-shared";
 
 interface DataCardsToolbarProps<TData> {
   table: Table<TData>;
@@ -87,16 +81,11 @@ export function DataCardsToolbar<TData>({
             disabled={isLoading}
             dir="rtl"
           >
-            <SelectTrigger
-              className={cn(SELECT_TRIGGER_CLASS, "py-3 pr-5 pl-4 md:w-64")}
-            >
+            <SelectTrigger variant="pill" size="lg">
               <SelectValue placeholder="ترتيب حسب" />
             </SelectTrigger>
-            <SelectContent
-              align="start"
-              className={cn(SELECT_CONTENT_CLASS, "min-w-[16rem]")}
-            >
-              <SelectItem value={NO_SORT_VALUE} className={SELECT_ITEM_CLASS}>
+            <SelectContent align="start" variant="pill">
+              <SelectItem value={NO_SORT_VALUE} size="lg">
                 بدون ترتيب
               </SelectItem>
               {sortableColumns.map((col) => {
@@ -106,16 +95,10 @@ export function DataCardsToolbar<TData>({
                     : col.id;
                 return (
                   <React.Fragment key={col.id}>
-                    <SelectItem
-                      value={`${col.id}:asc`}
-                      className={SELECT_ITEM_CLASS}
-                    >
+                    <SelectItem value={`${col.id}:asc`} size="lg">
                       {headerStr} ↑
                     </SelectItem>
-                    <SelectItem
-                      value={`${col.id}:desc`}
-                      className={SELECT_ITEM_CLASS}
-                    >
+                    <SelectItem value={`${col.id}:desc`} size="lg">
                       {headerStr} ↓
                     </SelectItem>
                   </React.Fragment>
@@ -147,26 +130,14 @@ export function DataCardsToolbar<TData>({
                 disabled={isLoading}
                 dir="rtl"
               >
-                <SelectTrigger
-                  className={cn(
-                    SELECT_TRIGGER_CLASS,
-                    "min-w-[18rem] py-3 pr-5 pl-4 md:w-64",
-                  )}
-                >
+                <SelectTrigger variant="pill" size="lg">
                   <SelectValue>
                     {filter.label}: {selectedOption?.label ?? "الكل"}
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent
-                  align="start"
-                  className={cn(SELECT_CONTENT_CLASS, "min-w-[18rem]")}
-                >
+                <SelectContent align="start" variant="pill">
                   {filter.options.map((option) => (
-                    <SelectItem
-                      key={option.value}
-                      value={option.value}
-                      className={SELECT_ITEM_CLASS}
-                    >
+                    <SelectItem key={option.value} value={option.value} size="lg">
                       {option.label}
                     </SelectItem>
                   ))}

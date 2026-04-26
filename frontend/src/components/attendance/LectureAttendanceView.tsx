@@ -157,6 +157,81 @@ export default function LectureAttendanceView({
   const allChecked =
     attendanceState.length > 0 && attendanceState.every((a) => a.present);
 
+  return (
+    <div className="space-y-6">
+      <div className="mb-10 flex items-center gap-10 px-16">
+        {canEditAttendance && (
+          <>
+            <AttendanceStudentIdQrCodeScannerModal
+              disabled={!canEditAttendance}
+              onScan={(studentCode) => {
+                let markedStudentName = "";
+
+                setAttendanceStateWithPersistence((prev) => {
+                  const target = prev.find(
+                    (a) => a.participant_code === studentCode,
+                  );
+
+                  if (!target || target.present) return prev;
+
+                  markedStudentName = target.participant_full_name || "";
+
+                  return prev.map((a) =>
+                    a.participant_code === studentCode
+                      ? { ...a, present: true }
+                      : a,
+                  );
+                });
+
+                if (markedStudentName) {
+                  toast.success(`تم أخذ حضور ${markedStudentName}`);
+                }
+              }}
+            />
+
+            <Button
+              variant="primary"
+              size="small"
+              className="bg-olive-300 hover:bg-olive-700 ms-auto h-15 min-w-50"
+              onClick={handleSubmit}
+              loading={isSubmitting}
+            >
+              حفظ
+            </Button>
+          </>
+        )}
+      </div>
+      <LectureAttendanceDataTable
+        attendanceState={attendanceState}
+        allChecked={allChecked}
+        canEditAttendance={canEditAttendance}
+        courseId={courseId}
+        lectureId={lecture.id}
+        setAttendanceStateWithPersistence={setAttendanceStateWithPersistence}
+      />
+    </div>
+  );
+}
+
+function LectureAttendanceDataTable({
+  attendanceState,
+  allChecked,
+  canEditAttendance,
+  courseId,
+  lectureId,
+  setAttendanceStateWithPersistence,
+}: {
+  attendanceState: LectureAttendanceDetail[];
+  allChecked: boolean;
+  canEditAttendance: boolean;
+  courseId: string;
+  lectureId: number;
+  setAttendanceStateWithPersistence: (
+    value:
+      | LectureAttendanceDetail[]
+      | ((prev: LectureAttendanceDetail[]) => LectureAttendanceDetail[]),
+  ) => void;
+}) {
   const columns = useMemo<ColumnDef<LectureAttendanceDetail>[]>(
     () => [
       {
@@ -222,7 +297,7 @@ export default function LectureAttendanceView({
       },
       {
         accessorKey: "present",
-        header: (
+        header: () => (
           <div className="flex items-center gap-5 py-0">
             <span>الحضور</span>
             <span>
@@ -281,7 +356,7 @@ export default function LectureAttendanceView({
           <div className="*:text-olive-300 *:hover:text-olive-700 *:transition-colors">
             <AddNoteModal
               name={row.original.participant_full_name || ""}
-              uniqueId={`${courseId}-${lecture.id}-${row.original.id}`}
+              uniqueId={`${courseId}-${lectureId}-${row.original.id}`}
               onSave={(notes) =>
                 setAttendanceStateWithPersistence(
                   attendanceState.map((attendance) => {
@@ -302,7 +377,7 @@ export default function LectureAttendanceView({
       attendanceState,
       canEditAttendance,
       courseId,
-      lecture.id,
+      lectureId,
       setAttendanceStateWithPersistence,
     ],
   );
@@ -373,7 +448,7 @@ export default function LectureAttendanceView({
         <div className="*:text-olive-300 *:hover:text-olive-700 flex justify-end *:transition-colors">
           <AddNoteModal
             name={attendance.participant_full_name || ""}
-            uniqueId={`${courseId}-${lecture.id}-${attendance.id}-mobile`}
+            uniqueId={`${courseId}-${lectureId}-${attendance.id}-mobile`}
             onSave={(notes) =>
               setAttendanceStateWithPersistence(
                 attendanceState.map((row) =>
@@ -391,64 +466,19 @@ export default function LectureAttendanceView({
       attendanceState,
       canEditAttendance,
       courseId,
-      lecture.id,
+      lectureId,
       setAttendanceStateWithPersistence,
     ],
   );
 
   return (
-    <div className="space-y-6">
-      <div className="mb-10 flex items-center gap-10 px-16">
-        {canEditAttendance && (
-          <>
-            <AttendanceStudentIdQrCodeScannerModal
-              disabled={!canEditAttendance}
-              onScan={(studentCode) => {
-                let markedStudentName = "";
-
-                setAttendanceStateWithPersistence((prev) => {
-                  const target = prev.find(
-                    (a) => a.participant_code === studentCode,
-                  );
-
-                  if (!target || target.present) return prev;
-
-                  markedStudentName = target.participant_full_name || "";
-
-                  return prev.map((a) =>
-                    a.participant_code === studentCode
-                      ? { ...a, present: true }
-                      : a,
-                  );
-                });
-
-                if (markedStudentName) {
-                  toast.success(`تم أخذ حضور ${markedStudentName}`);
-                }
-              }}
-            />
-
-            <Button
-              variant="primary"
-              size="small"
-              className="bg-olive-300 hover:bg-olive-700 ms-auto h-15 min-w-50"
-              onClick={handleSubmit}
-              loading={isSubmitting}
-            >
-              حفظ
-            </Button>
-          </>
-        )}
-      </div>
-
-      <DataTable
-        columns={columns}
-        data={attendanceState}
-        searchKey="participant_full_name"
-        searchPlaceholder="ابحث عن طالب..."
-        mobileConfig={mobileConfig}
-        pageSize={9999}
-      />
-    </div>
+    <DataTable
+      columns={columns}
+      data={attendanceState}
+      searchKey="participant_full_name"
+      searchPlaceholder="ابحث عن طالب..."
+      mobileConfig={mobileConfig}
+      pageSize={9999}
+    />
   );
 }
