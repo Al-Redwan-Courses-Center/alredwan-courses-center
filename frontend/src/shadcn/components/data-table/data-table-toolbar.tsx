@@ -3,6 +3,7 @@
 import { type SortingState, type Table } from "@tanstack/react-table";
 import React from "react";
 import { ChevronDown, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import {
   DropdownMenu,
@@ -12,7 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import {
   Select,
@@ -21,11 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import type { DataTableFilterConfig } from "./types";
+import type { DataTableFilterConfig, DataTableSearchConfig } from "./types";
 import { NO_SORT_VALUE } from "./toolbar-shared";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
+  searches?: DataTableSearchConfig[];
   searchKey?: string;
   searchPlaceholder: string;
   searchValue: string;
@@ -38,6 +39,7 @@ interface DataTableToolbarProps<TData> {
 
 export function DataTableToolbar<TData>({
   table,
+  searches,
   searchKey,
   searchPlaceholder,
   searchValue,
@@ -55,62 +57,116 @@ export function DataTableToolbar<TData>({
     ? `${activeSortCol.id}:${activeSortCol.desc ? "desc" : "asc"}`
     : NO_SORT_VALUE;
 
-  if (
-    !searchKey &&
-    !filters.length &&
-    !showColumnVisibilityToggle &&
-    !showMobileSortDropdown
-  ) {
-    return null;
-  }
+  const resolvedSearches: DataTableSearchConfig[] =
+    searches && searches.length > 0
+      ? searches
+      : searchKey
+        ? [{ searchKey, placeholder: searchPlaceholder }]
+        : [];
+
+  const hasSearch = resolvedSearches.length > 0;
+  const hasFilters = filters.length > 0;
+  const hasMobileSort = showMobileSortDropdown && sortableColumns.length > 0;
+  const hasAnyContent =
+    hasSearch || hasFilters || showColumnVisibilityToggle || hasMobileSort;
+
+  if (!hasAnyContent) return null;
+
   return (
     <div className="mb-6 space-y-3">
-      {searchKey && (
-        <div className="flex items-center gap-3 rounded-full border border-gray-200 bg-white px-6 py-4 shadow-sm">
-          <Search className="text-olive-400 h-6 w-6 shrink-0" />
-          <Input
-            id="data-table-search"
-            placeholder={searchPlaceholder}
-            value={searchValue}
-            onChange={(e) => {
-              const value = e.target.value;
-              table.getColumn(searchKey)?.setFilterValue(value);
-              onSearchChange?.(value);
-            }}
-            disabled={isLoading}
-            className="h-auto w-full border-none bg-transparent text-[1.6rem] shadow-none placeholder:text-gray-500 focus-visible:ring-0"
-          />
-        </div>
-      )}
+      {/*
+       * Toolbar row: search + selects share the same `bg-zinc-100 shadow` strip.
+       * Desktop: all in one horizontal row.
+       * On mobile the sort dropdown is shown separately below.
+       */}
+      <div
+        className={cn(
+          "flex items-stretch overflow-hidden",
+          "rounded-tr-[20px] rounded-bl-[20px]",
+          "bg-zinc-100",
+          "shadow-[7px_6px_14.6px_0px_rgba(0,0,0,0.08)]",
+        )}
+        dir="rtl"
+      >
+        {/* ── Search inputs ── */}
+        {resolvedSearches.map((cfg, idx) => {
+          const colValue =
+            idx === 0 && onSearchChange
+              ? searchValue
+              : ((table
+                  .getColumn(cfg.searchKey)
+                  ?.getFilterValue() as string) ?? "");
 
-      <div className="flex flex-wrap items-center gap-3">
+          return (
+            <label
+              key={cfg.searchKey}
+              htmlFor={`dt-search-${cfg.searchKey}`}
+              className={cn(
+                "flex flex-1 cursor-text items-center gap-4 px-6 py-[1.1rem]",
+                // Right-side divider when selects follow
+                (hasFilters || hasMobileSort) && "border-l border-zinc-200",
+              )}
+            >
+              <Search className="h-[1.8rem] w-[1.8rem] shrink-0 text-gray-500" />
+              <input
+                id={`dt-search-${cfg.searchKey}`}
+                type="text"
+                placeholder={cfg.placeholder ?? searchPlaceholder}
+                value={colValue}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  table.getColumn(cfg.searchKey)?.setFilterValue(value);
+                  if (idx === 0) onSearchChange?.(value);
+                }}
+                disabled={isLoading}
+                className="w-full bg-transparent text-[1.5rem] text-gray-700 outline-none placeholder:text-gray-400 disabled:opacity-50"
+              />
+            </label>
+          );
+        })}
+
+        {/* ── Filter selects ── */}
         {filters.map((filter) => {
           const currentValue =
             (table.getColumn(filter.columnId)?.getFilterValue() as
               | string
               | undefined) ?? "all";
           const selectedOption = filter.options.find(
-            (option) => option.value === currentValue,
+            (o) => o.value === currentValue,
           );
 
           return (
             <Select
               key={filter.columnId}
               value={currentValue}
-              onValueChange={(value) =>
-                table.getColumn(filter.columnId)?.setFilterValue(value)
+              onValueChange={(val) =>
+                table.getColumn(filter.columnId)?.setFilterValue(val)
               }
               disabled={isLoading}
               dir="rtl"
             >
-              <SelectTrigger variant="pill" size="lg" className="flex-1">
+              <SelectTrigger
+                className={cn(
+                  // Match the toolbar strip: no independent bg/border/shadow
+                  "h-auto min-w-[18rem] border-none bg-transparent px-6 py-[1.1rem] shadow-none",
+                  "text-[1.5rem] font-medium text-gray-700",
+                  "focus:ring-0 focus-visible:ring-0",
+                  // Divider between items
+                  "border-l border-zinc-200",
+                  "rounded-none",
+                )}
+              >
                 <SelectValue>
-                  {filter.label}: {selectedOption?.label ?? "الكل"}
+                  {selectedOption?.label ?? filter.label ?? "اختيار"}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent align="start" variant="pill">
+              <SelectContent align="start" className="min-w-[18rem] text-right" dir="rtl">
                 {filter.options.map((option) => (
-                  <SelectItem key={option.value} value={option.value} size="lg">
+                  <SelectItem
+                    key={option.value}
+                    value={option.value}
+                    className="cursor-pointer text-[1.4rem]"
+                  >
                     {option.label}
                   </SelectItem>
                 ))}
@@ -119,50 +175,8 @@ export function DataTableToolbar<TData>({
           );
         })}
 
-        {showColumnVisibilityToggle && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="h-12 rounded-full border-gray-200 bg-white px-5 text-[1.45rem] text-gray-700"
-              >
-                إخفاء / إظهار
-                <ChevronDown className="ms-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56 text-right">
-              <DropdownMenuLabel className="text-[1.35rem]">
-                الأعمدة
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  const header = column.columnDef.header;
-                  const headerLabel =
-                    typeof header === "string" ? header : column.id;
-
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(Boolean(value))
-                      }
-                      className="cursor-pointer text-[1.35rem]"
-                    >
-                      {headerLabel}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </div>
-
-      {showMobileSortDropdown && sortableColumns.length > 0 && (
-        <div className="tablet:flex hidden items-center gap-3">
+        {/* ── Mobile sort ── (shown inside the strip on desktop, hidden on true-mobile) */}
+        {hasMobileSort && (
           <Select
             value={currentSortValue}
             onValueChange={(value) => {
@@ -176,11 +190,19 @@ export function DataTableToolbar<TData>({
             disabled={isLoading}
             dir="rtl"
           >
-            <SelectTrigger variant="pill" size="lg" className="flex-1">
+            <SelectTrigger
+              className={cn(
+                "h-auto min-w-[18rem] border-none bg-transparent px-6 py-[1.1rem] shadow-none",
+                "text-[1.5rem] font-medium text-gray-700",
+                "focus:ring-0 focus-visible:ring-0",
+                "border-l border-zinc-200",
+                "rounded-none",
+              )}
+            >
               <SelectValue placeholder="ترتيب حسب" />
             </SelectTrigger>
-            <SelectContent align="start" variant="pill">
-              <SelectItem value={NO_SORT_VALUE} size="lg">
+            <SelectContent align="start" className="min-w-[18rem] text-right" dir="rtl">
+              <SelectItem value={NO_SORT_VALUE} className="text-[1.4rem]">
                 بدون ترتيب
               </SelectItem>
               {sortableColumns.map((col) => {
@@ -190,10 +212,10 @@ export function DataTableToolbar<TData>({
                     : col.id;
                 return (
                   <React.Fragment key={col.id}>
-                    <SelectItem value={`${col.id}:asc`} size="lg">
+                    <SelectItem value={`${col.id}:asc`} className="text-[1.4rem]">
                       {headerStr} ↑
                     </SelectItem>
-                    <SelectItem value={`${col.id}:desc`} size="lg">
+                    <SelectItem value={`${col.id}:desc`} className="text-[1.4rem]">
                       {headerStr} ↓
                     </SelectItem>
                   </React.Fragment>
@@ -201,8 +223,52 @@ export function DataTableToolbar<TData>({
               })}
             </SelectContent>
           </Select>
-        </div>
-      )}
+        )}
+
+        {/* ── Column visibility toggle ── */}
+        {showColumnVisibilityToggle && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "h-auto rounded-none border-l border-zinc-200 px-6 py-[1.1rem]",
+                  "bg-transparent text-[1.45rem] text-gray-700 shadow-none hover:bg-zinc-200/60",
+                  "focus-visible:ring-0",
+                )}
+              >
+                الأعمدة
+                <ChevronDown className="ms-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56 text-right">
+              <DropdownMenuLabel className="text-[1.35rem]">
+                إخفاء / إظهار الأعمدة
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {table
+                .getAllColumns()
+                .filter((col) => col.getCanHide())
+                .map((col) => {
+                  const label =
+                    typeof col.columnDef.header === "string"
+                      ? col.columnDef.header
+                      : col.id;
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={col.id}
+                      checked={col.getIsVisible()}
+                      onCheckedChange={(v) => col.toggleVisibility(Boolean(v))}
+                      className="cursor-pointer text-[1.35rem]"
+                    >
+                      {label}
+                    </DropdownMenuCheckboxItem>
+                  );
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
     </div>
   );
 }

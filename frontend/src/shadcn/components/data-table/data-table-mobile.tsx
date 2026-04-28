@@ -38,7 +38,7 @@ export function DataTableMobileView<TData>({
   }
 
   return (
-    <Accordion type="single" collapsible className="space-y-3">
+    <Accordion type="single" collapsible className="space-y-[0.8rem]">
       {rows.map((row, index) => {
         const rowData = row.original;
 
@@ -46,44 +46,46 @@ export function DataTableMobileView<TData>({
           <AccordionItem
             key={row.id}
             value={row.id}
-            className="overflow-hidden rounded-[1.2rem] border-none bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+            /* Figma: bg-zinc-100, shadow, rounded-tr-[20px] rounded-bl-[20px] */
+            className="overflow-hidden rounded-tr-[20px] rounded-bl-[20px] border-none bg-zinc-100 shadow-[7px_6px_14.6px_0px_rgba(0,0,0,0.08)]"
           >
-            <AccordionTrigger
-              className={`data-[state=open]:bg-olive-200/50 [&>svg]:text-olive-500 flex-row-reverse gap-3 px-6 py-4 text-[1.55rem] font-bold text-gray-800 hover:no-underline [&>svg]:transition-transform ${index % 2 === 0 ? "bg-gray-50/80" : "bg-white"} `}
-            >
+            <AccordionTrigger className="flex-row-reverse gap-4 px-6 py-[1.15rem] text-[1.5rem] font-medium text-[#1F1F1F] hover:no-underline data-[state=open]:rounded-b-none data-[state=open]:bg-zinc-200/60 [&>svg]:h-[1.6rem] [&>svg]:w-[1.6rem] [&>svg]:shrink-0 [&>svg]:text-gray-500">
               <span className="flex flex-1 items-center justify-between gap-3">
+                {/* Title */}
                 <span>
                   {mobileConfig?.renderTitle
                     ? mobileConfig.renderTitle(rowData, index)
                     : `${index + 1}`}
                 </span>
+                {/* Subtitle badge */}
                 {mobileConfig?.renderSubtitle && (
-                  <span className="text-[1.25rem] font-normal text-gray-500">
+                  <span className="bg-olive-200/60 text-olive-700 rounded-full px-3 py-0.5 text-[1.2rem] font-normal">
                     {mobileConfig.renderSubtitle(rowData)}
                   </span>
                 )}
               </span>
             </AccordionTrigger>
 
-            <AccordionContent className="px-6 pt-3 pb-5">
-              <div className="space-y-4">
+            {/* Expanded content — white card inside the gray shell */}
+            <AccordionContent className="px-0 pt-0 pb-0">
+              <div className="bg-white px-6 py-5">
                 {mobileConfig?.renderContent ? (
                   mobileConfig.renderContent(rowData)
                 ) : (
-                  <div className="space-y-3">
+                  /* Default: key–value list of all visible cells */
+                  <div className="space-y-4">
                     {row.getVisibleCells().map((cell) => {
                       const header = cell.column.columnDef.header;
                       if (typeof header !== "string") return null;
-
                       return (
                         <div
                           key={cell.id}
-                          className="flex items-center justify-between gap-4 border-b border-gray-100 pb-2 text-[1.4rem] last:border-none last:pb-0"
+                          className="flex items-center justify-between gap-4 border-b border-gray-100 pb-[1rem] text-[1.4rem] last:border-none last:pb-0"
                         >
-                          <span className="font-bold text-gray-500">
-                            {header} :
+                          <span className="font-semibold text-gray-500">
+                            {header}
                           </span>
-                          <span className="text-gray-800">
+                          <span className="text-[#1F1F1F]">
                             {flexRender(
                               cell.column.columnDef.cell,
                               cell.getContext(),
@@ -95,8 +97,9 @@ export function DataTableMobileView<TData>({
                   </div>
                 )}
 
+                {/* Row actions */}
                 {mobileConfig?.renderActions && (
-                  <div className="border-t border-gray-100 pt-3">
+                  <div className="mt-4 border-t border-gray-100 pt-4">
                     {mobileConfig.renderActions(rowData)}
                   </div>
                 )}

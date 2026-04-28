@@ -11,4 +11,5 @@ export type {
   DataTableFilterOption,
   DataTablePaginationOptions,
   DataTableRemoteState,
+  DataTableSearchConfig,
 } from "./types";

@@ -2,6 +2,14 @@ import type { ColumnDef } from "@tanstack/react-table";
 import type { ColumnFiltersState, SortingState } from "@tanstack/react-table";
 import type { ReactNode } from "react";
 
+/** A single search input config bound to a column key. */
+export interface DataTableSearchConfig {
+  /** Column accessorKey to filter on. */
+  searchKey: string;
+  /** Placeholder text shown inside the input. */
+  placeholder?: string;
+}
+
 export interface DataTableFilterOption {
   label: string;
   value: string;
@@ -54,7 +62,16 @@ export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   /** Row data array. */
   data: TData[];
-  /** Column `accessorKey` to bind the search input to. */
+
+  /**
+   * Array of search inputs, each bound to a different column.
+   * Use this for multiple search fields; supersedes searchKey/searchPlaceholder.
+   */
+  searches?: DataTableSearchConfig[];
+  /** @deprecated Use `searches` array instead. Single column key for search. */
+  searchKey?: string;
+  /** @deprecated Use `searches[].placeholder` instead. */
+  searchPlaceholder?: string;
 
   manualPagination?: boolean;
   /** When true, filtering logic is driven by backend. */
@@ -73,12 +90,9 @@ export interface DataTableProps<TData, TValue> {
   onSortingChange?: (sorting: SortingState) => void;
   /** Called whenever filters change. */
   onFiltersChange?: (filters: ColumnFiltersState) => void;
-  /** Called whenever search text changes. */
+  /** Called whenever search text changes (first search key). */
   onSearchChange?: (searchValue: string) => void;
 
-  searchKey?: string;
-  /** Placeholder text for the search input. */
-  searchPlaceholder?: string;
   /** Configuration for the mobile accordion view. */
   mobileConfig?: DataTableMobileConfig<TData>;
   /** Number of rows per page (default: 7). */
@@ -87,7 +101,6 @@ export interface DataTableProps<TData, TValue> {
   className?: string;
   /**
    * Whether to show a sort dropdown on mobile view.
-   * When true, a "ترتيب حسب" dropdown appears above the accordion list.
    * @default false
    */
   showMobileSortDropdown?: boolean;

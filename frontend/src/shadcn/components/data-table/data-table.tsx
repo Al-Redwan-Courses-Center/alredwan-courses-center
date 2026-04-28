@@ -15,6 +15,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -33,6 +34,7 @@ import React, { useState } from "react";
 export function DataTable<TData, TValue>({
   columns,
   data,
+  searches,
   searchKey,
   searchPlaceholder = "ابحث عن دورة أو محاضرة",
   mobileConfig,
@@ -72,36 +74,29 @@ export function DataTable<TData, TValue>({
   };
 
   const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
-    const nextSorting = functionalUpdate(updater, sorting);
-    if (!remoteState?.sorting) {
-      setLocalSorting(nextSorting);
-    }
-    onSortingChange?.(nextSorting);
+    const next = functionalUpdate(updater, sorting);
+    if (!remoteState?.sorting) setLocalSorting(next);
+    onSortingChange?.(next);
   };
 
   const handleColumnFiltersChange: OnChangeFn<ColumnFiltersState> = (
     updater,
   ) => {
-    const nextFilters = functionalUpdate(updater, columnFilters);
-    if (!remoteState?.columnFilters) {
-      setLocalColumnFilters(nextFilters);
-    }
-    onFiltersChange?.(nextFilters);
+    const next = functionalUpdate(updater, columnFilters);
+    if (!remoteState?.columnFilters) setLocalColumnFilters(next);
+    onFiltersChange?.(next);
   };
 
   const handlePaginationStateChange: OnChangeFn<PaginationState> = (
     updater,
   ) => {
-    const nextPagination = functionalUpdate(updater, pagination);
+    const next = functionalUpdate(updater, pagination);
     if (!isPageIndexControlled) {
-      setLocalPagination(nextPagination);
+      setLocalPagination(next);
     } else {
-      setLocalPagination((prev) => ({
-        ...prev,
-        pageSize: nextPagination.pageSize,
-      }));
+      setLocalPagination((prev) => ({ ...prev, pageSize: next.pageSize }));
     }
-    onPaginationChange?.(nextPagination.pageIndex, nextPagination.pageSize);
+    onPaginationChange?.(next.pageIndex, next.pageSize);
   };
 
   const table = useReactTable({
@@ -128,11 +123,14 @@ export function DataTable<TData, TValue>({
       rowSelection,
     },
   });
+
   const effectiveLoadingRowsCount = loadingRowsCount ?? pageSize;
+
+  const firstSearchKey = searches?.[0]?.searchKey ?? searchKey;
   const searchValue =
     remoteState?.searchValue ??
-    (searchKey
-      ? (table.getColumn(searchKey)?.getFilterValue() as string)
+    (firstSearchKey
+      ? (table.getColumn(firstSearchKey)?.getFilterValue() as string)
       : "") ??
     "";
 
@@ -140,6 +138,7 @@ export function DataTable<TData, TValue>({
     <div className={className} dir="rtl">
       <DataTableToolbar
         table={table}
+        searches={searches}
         searchKey={searchKey}
         searchPlaceholder={searchPlaceholder}
         searchValue={searchValue}
@@ -150,99 +149,97 @@ export function DataTable<TData, TValue>({
         onSearchChange={onSearchChange}
       />
 
+      {/* ── Desktop table ── */}
       <div className="tablet:hidden">
-        <div className="shadow-soft overflow-hidden rounded-[1.2rem]">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow
-                  key={headerGroup.id}
-                  className="bg-olive-200/70 hover:bg-olive-200/70 border-none"
-                >
-                  {headerGroup.headers.map((header) => {
-                    const canSort = header.column.getCanSort();
-                    return (
-                      <TableHead
-                        key={header.id}
-                        className="py-5 text-center text-[1.5rem] font-bold text-gray-800 select-none"
-                        onClick={
-                          canSort
-                            ? header.column.getToggleSortingHandler()
-                            : undefined
-                        }
-                        style={canSort ? { cursor: "pointer" } : {}}
-                      >
-                        <span className="inline-flex items-center justify-center gap-1">
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                          {canSort && (
-                            <ChevronDown
-                              className={`h-4 w-4 shrink-0 text-gray-600 transition-transform duration-150 ${
-                                header.column.getIsSorted() === "asc"
-                                  ? "rotate-180"
-                                  : ""
-                              } ${
-                                !header.column.getIsSorted()
-                                  ? "opacity-50"
-                                  : "opacity-100"
-                              }`}
-                            />
-                          )}
-                        </span>
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-
-            <TableBody>
-              {isLoading ? (
-                <DataTableRowsSkeleton
-                  rowsCount={effectiveLoadingRowsCount}
-                  columnsCount={columns.length}
-                />
-              ) : table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row, i) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className={`data-[state=selected]:bg-olive-100/40 hover:bg-olive-50/50 border-b border-gray-100 transition-colors ${
-                      i % 2 === 0 ? "bg-white" : "bg-gray-50/70"
-                    }`}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className="py-4 text-center text-[1.45rem] text-gray-800"
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
+        <Table className="border-separate border-spacing-y-[0.8rem]">
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow
+                key={headerGroup.id}
+                className="border-none bg-[#B9C1BD] hover:bg-[#B9C1BD]"
+              >
+                {headerGroup.headers.map((header) => {
+                  const canSort = header.column.getCanSort();
+                  return (
+                    <TableHead
+                      key={header.id}
+                      className={cn(
+                        "h-[70px] border-none py-0 text-center text-[1.5rem] font-normal text-[#535862] select-none",
+                        "first:rounded-tr-[20px] last:rounded-tl-[20px]",
+                        canSort && "cursor-pointer",
+                      )}
+                      onClick={
+                        canSort
+                          ? header.column.getToggleSortingHandler()
+                          : undefined
+                      }
+                    >
+                      <span className="inline-flex items-center justify-center gap-1">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                        {canSort && (
+                          <ChevronDown
+                            className={cn(
+                              "h-4 w-4 shrink-0 text-gray-500 transition-transform duration-150",
+                              header.column.getIsSorted() === "asc" &&
+                                "rotate-180",
+                              !header.column.getIsSorted() && "opacity-50",
+                            )}
+                          />
                         )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center text-[1.6rem] text-gray-500"
-                  >
-                    لا توجد نتائج
-                  </TableCell>
+                      </span>
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+
+          <TableBody>
+            {isLoading ? (
+              <DataTableRowsSkeleton
+                rowsCount={effectiveLoadingRowsCount}
+                columnsCount={columns.length}
+              />
+            ) : table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  className="data-[state=selected]:bg-olive-50 border-none bg-white shadow-[7px_6px_14.6px_0px_rgba(0,0,0,0.08)] transition-colors hover:bg-gray-50/60"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className="py-[1.4rem] text-center text-[1.4rem] font-medium text-[#1F1F1F] first:rounded-r-[20px] last:rounded-l-[20px]"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              ))
+            ) : (
+              <TableRow className="border-none hover:bg-transparent">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-[1.6rem] text-gray-500"
+                >
+                  لا توجد نتائج
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
+      {/* ── Mobile accordion ── */}
       <div className="tablet:block hidden">
         <DataTableMobileView
           table={table}
