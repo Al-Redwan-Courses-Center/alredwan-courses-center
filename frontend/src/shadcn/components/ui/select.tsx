@@ -60,14 +60,14 @@ function SelectTrigger({
         "data-[variant=default]:aria-invalid:border-destructive data-[variant=default]:aria-invalid:ring-destructive/20",
 
         // ── Variant: pill (white rounded-full with shadow) ─────────────────
-        "data-[variant=pill]:w-full data-[variant=pill]:min-w-[20rem] data-[variant=pill]:rounded-full",
+        "data-[variant=pill]: data-[variant=pill]:min-w-[20rem] data-[variant=pill]:rounded-full",
         "data-[variant=pill]:border data-[variant=pill]:border-gray-200 data-[variant=pill]:bg-white",
         "data-[variant=pill]:text-gray-700 data-[variant=pill]:shadow-sm",
         "data-[variant=pill]:focus-visible:ring-olive-300 data-[variant=pill]:focus-visible:border-transparent data-[variant=pill]:focus-visible:ring-2",
         "data-[variant=pill]:data-placeholder:text-gray-500",
 
         // ── Variant: toolbar (Figma card — gray-100 bg, 12px radius, shadow) ─
-        "data-[variant=toolbar]:h-12 data-[variant=toolbar]:min-h-12 data-[variant=toolbar]:w-full",
+        "data-[variant=toolbar]: data-[variant=toolbar]:h-12 data-[variant=toolbar]:min-h-12",
         "data-[variant=toolbar]:rounded-tl-[20px] data-[variant=toolbar]:rounded-br-[20px]",
         "data-[variant=toolbar]:border-none data-[variant=toolbar]:bg-[#f3f3f5]",
         "data-[variant=toolbar]:px-4 data-[variant=toolbar]:py-0",
@@ -129,7 +129,7 @@ function SelectContent({
           className={cn(
             variant === "toolbar" ? "p-0" : "p-1",
             position === "popper" &&
-              "h-(--radix-select-trigger-height) w-full min-w-(--radix-select-trigger-width) scroll-my-1",
+              "h-(--radix-select-trigger-height) min-w-(--radix-select-trigger-width) scroll-my-1",
           )}
         >
           {children}
@@ -171,7 +171,7 @@ function SelectItem({
       data-size={size}
       data-variant={variant}
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none",
+        "focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none",
         "data-disabled:pointer-events-none data-disabled:opacity-50",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         "*:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",

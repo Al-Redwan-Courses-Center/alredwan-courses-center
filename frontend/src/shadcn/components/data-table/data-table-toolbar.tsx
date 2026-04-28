@@ -65,7 +65,7 @@ export function DataTableToolbar<TData>({
   return (
     <div
       dir="rtl"
-      className="tablet:flex-row tablet:flex-wrap tablet:items-center tablet:justify-between tablet:gap-4 mb-6 flex flex-col gap-3"
+      className="mb-6 flex flex-col gap-4 md:flex-row md:flex-wrap md:items-center md:justify-between"
     >
       {resolvedSearches.map((cfg, idx) => {
         const colValue =
@@ -78,7 +78,7 @@ export function DataTableToolbar<TData>({
           <label
             key={cfg.searchKey}
             htmlFor={`dt-search-${cfg.searchKey}`}
-            className="flex h-12 min-h-12 w-full min-w-0 cursor-text items-center justify-end gap-4 rounded-tl-[20px] rounded-br-[20px] bg-[#f3f3f5] px-6"
+            className="flex h-12 min-h-12 w-full min-w-0 cursor-text items-center justify-end gap-4 rounded-tl-[20px] rounded-br-[20px] bg-[#f3f3f5] px-6 md:flex-1"
           >
             <Search className="h-5 w-5 shrink-0 text-[#a0ae99]" />
             <Input
@@ -99,7 +99,7 @@ export function DataTableToolbar<TData>({
       })}
 
       {hasSelects && (
-        <div className="tablet:flex tablet:w-auto tablet:flex-row tablet:flex-wrap tablet:items-center tablet:gap-3 flex w-full flex-col gap-3">
+        <div className="flex w-full flex-row flex-wrap items-center gap-3 md:w-auto md:flex-nowrap">
           {filters.map((filter) => {
             const currentValue =
               (table.getColumn(filter.columnId)?.getFilterValue() as
@@ -125,7 +125,7 @@ export function DataTableToolbar<TData>({
               >
                 <SelectTrigger
                   variant="toolbar"
-                  className="tablet:w-[17.4rem] w-full"
+                  className="md: w-[calc(50%-6px)] !rounded-[12px] md:w-[17.4rem]"
                 >
                   <SelectValue>{triggerLabel}</SelectValue>
                 </SelectTrigger>
@@ -160,7 +160,7 @@ export function DataTableToolbar<TData>({
             >
               <SelectTrigger
                 variant="toolbar"
-                className="tablet:w-[17.4rem] w-full"
+                className="w-[calc(50%-6px)] !rounded-[12px] md:w-[17.4rem]"
               >
                 <SelectValue placeholder="ترتيب حسب" />
               </SelectTrigger>
@@ -193,7 +193,7 @@ export function DataTableToolbar<TData>({
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="tablet:w-[17.4rem] flex h-12 w-full items-center justify-between rounded-tl-[20px] rounded-br-[20px] border-none bg-[#f3f3f5] px-4 text-[1.4rem] font-medium text-gray-600 hover:bg-[#ececef] focus-visible:ring-0"
+                  className="flex h-12 w-[calc(50%-6px)] items-center justify-between !rounded-[12px] border-none bg-[#f3f3f5] px-4 text-[1.4rem] font-medium text-gray-600 hover:bg-[#ececef] focus-visible:ring-0 md:w-[17.4rem]"
                 >
                   الأعمدة
                   <ChevronDown className="ms-2 h-4 w-4" />
@@ -202,7 +202,7 @@ export function DataTableToolbar<TData>({
 
               <DropdownMenuContent
                 align="end"
-                className="tablet:w-[17.4rem] w-full rounded-tl-[20px] rounded-br-[20px] border-none bg-[#f3f3f5] p-2 text-right shadow-md"
+                className="w-full rounded-[14px] border-none bg-[#f3f3f5] p-2 text-right shadow-md md:w-[17.4rem]"
               >
                 <DropdownMenuLabel className="px-2 py-1.5 text-[1.35rem] font-semibold text-gray-700">
                   إخفاء / إظهار الأعمدة
