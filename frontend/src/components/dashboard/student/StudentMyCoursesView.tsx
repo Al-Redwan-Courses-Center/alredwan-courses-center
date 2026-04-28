@@ -115,22 +115,20 @@ export default function StudentMyCoursesView({
       renderSubtitle: (course) => (
         <span className="text-olive-400">{course.season.name}</span>
       ),
-      renderContent: (course) => (
-        <div className="space-y-3 text-[1.4rem]">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-gray-500">البداية :</span>
-            <span>{formatDate(parseISO(course.start_date))}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-gray-500">النهاية :</span>
-            <span>
-              {course.end_date
-                ? formatDate(parseISO(course.end_date))
-                : "غير محدد"}
-            </span>
-          </div>
-        </div>
-      ),
+      getContentItems: (course) => [
+        {
+          key: "start_date",
+          label: "البداية",
+          value: formatDate(parseISO(course.start_date)),
+        },
+        {
+          key: "end_date",
+          label: "النهاية",
+          value: course.end_date
+            ? formatDate(parseISO(course.end_date))
+            : "غير محدد",
+        },
+      ],
       renderActions: (course) => renderCourseAction(course),
     }),
     [],
@@ -141,8 +139,12 @@ export default function StudentMyCoursesView({
       <DataTable
         columns={columns}
         data={courses}
-        searchKey="name"
-        searchPlaceholder="ابحث عن دورة..."
+        searches={[
+          {
+            searchKey: "name",
+            placeholder: "ابحث عن دورة...",
+          },
+        ]}
         filters={filters}
         mobileConfig={mobileConfig}
         pageSize={8}

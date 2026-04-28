@@ -8,7 +8,10 @@ import {
   AccordionTrigger,
 } from "../ui/accordion";
 import { DataTableMobileSkeleton } from "./data-table-skeletons";
-import type { DataTableMobileConfig } from "./types";
+import type {
+  DataTableMobileConfig,
+  DataTableMobileContentItem,
+} from "./types";
 
 interface DataTableMobileViewProps<TData> {
   table: TanStackTable<TData>;
@@ -38,68 +41,74 @@ export function DataTableMobileView<TData>({
   }
 
   return (
-    <Accordion type="single" collapsible className="space-y-[0.8rem]">
+    <Accordion
+      type="single"
+      collapsible
+      dir="rtl"
+      className="w-full space-y-[1.2rem]"
+    >
       {rows.map((row, index) => {
         const rowData = row.original;
+        const defaultContentItems: DataTableMobileContentItem[] = [];
+        row.getVisibleCells().forEach((cell) => {
+          const header = cell.column.columnDef.header;
+          if (typeof header !== "string" || !header.trim()) return;
+
+          defaultContentItems.push({
+            key: cell.id,
+            label: header,
+            value: flexRender(cell.column.columnDef.cell, cell.getContext()),
+          });
+        });
+
+        const contentItems =
+          mobileConfig?.getContentItems?.(rowData) ?? defaultContentItems;
 
         return (
           <AccordionItem
             key={row.id}
             value={row.id}
-            /* Figma: bg-zinc-100, shadow, rounded-tr-[20px] rounded-bl-[20px] */
-            className="overflow-hidden rounded-tr-[20px] rounded-bl-[20px] border-none bg-zinc-100 shadow-[7px_6px_14.6px_0px_rgba(0,0,0,0.08)]"
+            variant="figma-mobile"
+            className="w-full overflow-hidden rounded-[20px] border-none bg-zinc-100"
           >
-            <AccordionTrigger className="flex-row-reverse gap-4 px-6 py-[1.15rem] text-[1.5rem] font-medium text-[#1F1F1F] hover:no-underline data-[state=open]:rounded-b-none data-[state=open]:bg-zinc-200/60 [&>svg]:h-[1.6rem] [&>svg]:w-[1.6rem] [&>svg]:shrink-0 [&>svg]:text-gray-500">
-              <span className="flex flex-1 items-center justify-between gap-3">
-                {/* Title */}
-                <span>
+            <AccordionTrigger
+              variant="figma-mobile"
+              className="bg-neutral-200/60 px-5 py-4 hover:no-underline"
+            >
+              <div className="flex flex-1 items-center justify-start gap-4">
+                <span className="truncate text-[1.6rem] font-bold text-gray-800">
                   {mobileConfig?.renderTitle
                     ? mobileConfig.renderTitle(rowData, index)
-                    : `${index + 1}`}
+                    : `${index + 1}- المحاضرة`}
                 </span>
-                {/* Subtitle badge */}
                 {mobileConfig?.renderSubtitle && (
-                  <span className="bg-olive-200/60 text-olive-700 rounded-full px-3 py-0.5 text-[1.2rem] font-normal">
+                  <span className="text-[1.1rem] font-medium text-gray-500">
                     {mobileConfig.renderSubtitle(rowData)}
                   </span>
                 )}
-              </span>
+              </div>
             </AccordionTrigger>
 
-            {/* Expanded content — white card inside the gray shell */}
-            <AccordionContent className="px-0 pt-0 pb-0">
-              <div className="bg-white px-6 py-5">
-                {mobileConfig?.renderContent ? (
-                  mobileConfig.renderContent(rowData)
-                ) : (
-                  /* Default: key–value list of all visible cells */
-                  <div className="space-y-4">
-                    {row.getVisibleCells().map((cell) => {
-                      const header = cell.column.columnDef.header;
-                      if (typeof header !== "string") return null;
-                      return (
-                        <div
-                          key={cell.id}
-                          className="flex items-center justify-between gap-4 border-b border-gray-100 pb-[1rem] text-[1.4rem] last:border-none last:pb-0"
-                        >
-                          <span className="font-semibold text-gray-500">
-                            {header}
-                          </span>
-                          <span className="text-[#1F1F1F]">
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+            <AccordionContent variant="figma-mobile" className="p-5">
+              <div className="grid grid-cols-2 gap-x-2 gap-y-4 text-right">
+                {contentItems.map((item, itemIndex) => {
+                  return (
+                    <div
+                      key={item.key ?? `${row.id}-mobile-item-${itemIndex}`}
+                      className="flex items-center justify-start gap-1"
+                    >
+                      <span className="text-[1.3rem] font-semibold whitespace-nowrap text-gray-900">
+                        {item.label} :
+                      </span>
+                      <span className="truncate text-[1.3rem] font-normal text-gray-900">
+                        {item.value}
+                      </span>
+                    </div>
+                  );
+                })}
 
-                {/* Row actions */}
                 {mobileConfig?.renderActions && (
-                  <div className="mt-4 border-t border-gray-100 pt-4">
+                  <div className="flex items-center justify-end">
                     {mobileConfig.renderActions(rowData)}
                   </div>
                 )}

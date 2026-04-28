@@ -118,27 +118,30 @@ export default function TodaysLecturesTable({
       renderSubtitle: (lecture) => (
         <span className="text-olive-400">{lecture.course.name}</span>
       ),
-      renderContent: (lecture) => {
+      getContentItems: (lecture) => {
         const { label, color } = statusMap[lecture.status];
 
-        return (
-          <div className="space-y-3 text-[1.4rem]">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-500">البداية :</span>
-              <span>{formatTime(lecture.start_time)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-500">النهاية :</span>
-              <span>{formatTime(lecture.end_time)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-500">الحالة :</span>
+        return [
+          {
+            key: "start_time",
+            label: "البداية",
+            value: formatTime(lecture.start_time),
+          },
+          {
+            key: "end_time",
+            label: "النهاية",
+            value: formatTime(lecture.end_time),
+          },
+          {
+            key: "status",
+            label: "الحالة",
+            value: (
               <StatusBadge className={cn("text-[1.2rem]")} color={color}>
                 {label}
               </StatusBadge>
-            </div>
-          </div>
-        );
+            ),
+          },
+        ];
       },
       renderActions: (lecture) => (
         <div className="*:text-olive-300 *:hover:text-olive-700 flex items-center justify-end gap-6 *:transition-colors">
@@ -160,8 +163,12 @@ export default function TodaysLecturesTable({
     <DataTable
       columns={columns}
       data={todaysLectures}
-      searchKey="title"
-      searchPlaceholder="ابحث عن محاضرة..."
+      searches={[
+        {
+          searchKey: "title",
+          placeholder: "ابحث عن اسم المحاضرة...",
+        },
+      ]}
       filters={filters}
       mobileConfig={mobileConfig}
       pageSize={7}

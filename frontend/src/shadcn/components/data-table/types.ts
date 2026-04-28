@@ -40,6 +40,15 @@ export interface DataTableRemoteState {
   searchValue?: string;
 }
 
+export interface DataTableMobileContentItem {
+  /** Optional stable key for react rendering. */
+  key?: string;
+  /** Field label displayed on the right side in RTL. */
+  label: ReactNode;
+  /** Field value displayed beside the label. */
+  value: ReactNode;
+}
+
 /**
  * Configuration for how a single row renders in the mobile accordion view.
  */
@@ -49,10 +58,10 @@ export interface DataTableMobileConfig<TData> {
   /** Optional subtitle shown alongside the title. */
   renderSubtitle?: (row: TData) => ReactNode;
   /**
-   * Full custom render for the expanded accordion body.
-   * When provided, the DataTable will call this instead of auto-generating fields.
+   * Returns a standardized list of fields rendered by the mobile accordion body.
+   * This keeps the mobile layout unified across all DataTable usages.
    */
-  renderContent?: (row: TData) => ReactNode;
+  getContentItems?: (row: TData) => DataTableMobileContentItem[];
   /** Optional action row rendered at the bottom of expanded content. */
   renderActions?: (row: TData) => ReactNode;
 }
@@ -65,13 +74,9 @@ export interface DataTableProps<TData, TValue> {
 
   /**
    * Array of search inputs, each bound to a different column.
-   * Use this for multiple search fields; supersedes searchKey/searchPlaceholder.
+   * Use this for single or multiple search fields.
    */
   searches?: DataTableSearchConfig[];
-  /** @deprecated Use `searches` array instead. Single column key for search. */
-  searchKey?: string;
-  /** @deprecated Use `searches[].placeholder` instead. */
-  searchPlaceholder?: string;
 
   manualPagination?: boolean;
   /** When true, filtering logic is driven by backend. */
@@ -142,10 +147,11 @@ export interface DataCardsProps<TData, TValue> {
   data: TData[];
   /** Render function for each individual card. */
   renderCard: (row: TData, index: number) => ReactNode;
-  /** Column `accessorKey` to bind the search input to. */
-  searchKey?: string;
-  /** Placeholder text for the search input. */
-  searchPlaceholder?: string;
+  /**
+   * Array of search inputs, each bound to a different column.
+   * Use this for single or multiple search fields.
+   */
+  searches?: DataTableSearchConfig[];
   /** Number of cards per page (default: 8). */
   pageSize?: number;
   /** Additional classes on the root wrapper. */

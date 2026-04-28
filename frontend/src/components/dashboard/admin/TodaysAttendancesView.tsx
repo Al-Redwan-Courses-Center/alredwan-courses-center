@@ -350,30 +350,35 @@ export default function TodaysAttendancesView({
       renderSubtitle: (attendance) => (
         <span>{attendance.lecture_info?.course_title ?? "غير محدد"}</span>
       ),
-      renderContent: (attendance) => (
-        <div className="space-y-3 text-[1.4rem]">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-gray-500">الحضور :</span>
-            <span>{formatTime(attendance.scheduled_check_in_time)}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-gray-500">الانصراف :</span>
-            <span>{formatTime(attendance.scheduled_check_out_time)}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-gray-500">الحضور الفعلي :</span>
-            <AttendanceTimeBadge attendance={attendance} isCheckIn />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-gray-500">الانصراف الفعلي :</span>
+      getContentItems: (attendance) => [
+        {
+          key: "scheduled_check_in_time",
+          label: "الحضور",
+          value: formatTime(attendance.scheduled_check_in_time),
+        },
+        {
+          key: "scheduled_check_out_time",
+          label: "الانصراف",
+          value: formatTime(attendance.scheduled_check_out_time),
+        },
+        {
+          key: "check_in_time",
+          label: "الحضور الفعلي",
+          value: <AttendanceTimeBadge attendance={attendance} isCheckIn />,
+        },
+        {
+          key: "check_out_time",
+          label: "الانصراف الفعلي",
+          value: (
             <AttendanceTimeBadge attendance={attendance} isCheckIn={false} />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-gray-500">الحالة :</span>
-            <AttendanceStatusCell attendance={attendance} />
-          </div>
-        </div>
-      ),
+          ),
+        },
+        {
+          key: "status",
+          label: "الحالة",
+          value: <AttendanceStatusCell attendance={attendance} />,
+        },
+      ],
       renderActions: (attendance) => (
         <div className="flex justify-end">
           <AttendanceActionCell attendance={attendance} rowIndex={0} />
@@ -449,8 +454,12 @@ export default function TodaysAttendancesView({
       <DataTable
         columns={columns}
         data={attendances}
-        searchKey="instructor_name"
-        searchPlaceholder="ابحث باسم المدرس..."
+        searches={[
+          {
+            searchKey: "instructor_name",
+            placeholder: "ابحث عن اسم مدرس...",
+          },
+        ]}
         mobileConfig={mobileConfig}
         pageSize={6}
       />

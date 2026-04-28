@@ -395,14 +395,16 @@ function LectureAttendanceDataTable({
           {attendance.participant_code || "-"}
         </span>
       ),
-      renderContent: (attendance) => (
-        <div className="space-y-3 text-[1.4rem]">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-gray-500">السن :</span>
-            <span>{toHindiDigits(attendance.participant_age || "")}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-gray-500">التقييم :</span>
+      getContentItems: (attendance) => [
+        {
+          key: "participant_age",
+          label: "السن",
+          value: toHindiDigits(attendance.participant_age || ""),
+        },
+        {
+          key: "rating",
+          label: "التقييم",
+          value: (
             <RatingPopover
               disabled={!canEditAttendance}
               rating={attendance.rating ?? 7}
@@ -414,9 +416,12 @@ function LectureAttendanceDataTable({
                 )
               }
             />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-gray-500">الحضور :</span>
+          ),
+        },
+        {
+          key: "present",
+          label: "الحضور",
+          value: (
             <Checkbox
               id={`mobile-attendance-${attendance.id}`}
               checked={!!attendance.present}
@@ -433,17 +438,16 @@ function LectureAttendanceDataTable({
               }}
               disabled={!canEditAttendance}
             />
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <span className="font-bold text-gray-500">ملاحظات :</span>
-            <span className="truncate">
-              {!!attendance.notes?.trim()
-                ? attendance.notes.trim()
-                : "لا توجد ملاحظات"}
-            </span>
-          </div>
-        </div>
-      ),
+          ),
+        },
+        {
+          key: "notes",
+          label: "ملاحظات",
+          value: !!attendance.notes?.trim()
+            ? attendance.notes.trim()
+            : "لا توجد ملاحظات",
+        },
+      ],
       renderActions: (attendance) => (
         <div className="*:text-olive-300 *:hover:text-olive-700 flex justify-end *:transition-colors">
           <AddNoteModal
@@ -475,10 +479,18 @@ function LectureAttendanceDataTable({
     <DataTable
       columns={columns}
       data={attendanceState}
-      searchKey="participant_full_name"
-      searchPlaceholder="ابحث عن طالب..."
+      searches={[
+        {
+          searchKey: "participant_full_name",
+          placeholder: "ابحث عن اسم الطالب...",
+        },
+        {
+          searchKey: "participant_code",
+          placeholder: "ابحث عن كود الطالب...",
+        },
+      ]}
       mobileConfig={mobileConfig}
-      pageSize={9999}
+      pageSize={5}
     />
   );
 }

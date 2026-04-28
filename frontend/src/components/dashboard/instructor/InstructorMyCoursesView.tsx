@@ -180,43 +180,40 @@ export default function InstructorMyCoursesView({
     renderSubtitle: (course) => (
       <span className="text-olive-400">{course.season_name}</span>
     ),
-    renderContent: (course) => (
-      <div className="space-y-3 text-[1.4rem]">
-        <div className="flex items-center justify-between">
-          <span className="font-bold text-gray-500">البداية :</span>
-          <span>{formatDate(parseISO(course.start_date))}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="font-bold text-gray-500">النهاية :</span>
-          <span>
-            {course.end_date
-              ? formatDate(parseISO(course.end_date))
-              : "غير محدد"}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="font-bold text-gray-500">الحالة :</span>
-          <span>
-            {course.course_state === "ongoing"
-              ? "جارية"
-              : course.course_state === "upcoming"
-                ? "قادمة"
-                : "منتهية"}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="font-bold text-gray-500">التسجيل :</span>
-          <span>
-            {course.availability === "open" ? "متاحة للتسجيل" : "مكتملة"}
-          </span>
-        </div>
-      </div>
-    ),
+    getContentItems: (course) => [
+      {
+        key: "start_date",
+        label: "البداية",
+        value: formatDate(parseISO(course.start_date)),
+      },
+      {
+        key: "end_date",
+        label: "النهاية",
+        value: course.end_date
+          ? formatDate(parseISO(course.end_date))
+          : "غير محدد",
+      },
+      {
+        key: "course_state",
+        label: "الحالة",
+        value:
+          course.course_state === "ongoing"
+            ? "جارية"
+            : course.course_state === "upcoming"
+              ? "قادمة"
+              : "منتهية",
+      },
+      {
+        key: "availability",
+        label: "التسجيل",
+        value: course.availability === "open" ? "متاحة للتسجيل" : "مكتملة",
+      },
+    ],
     renderActions: (course) => renderCourseActions(course),
   };
 
   const paginationOptions: DataTablePaginationOptions = {
-    onNext: (_nextPage) => {},
+    onNext: () => {},
   };
 
   return (
@@ -254,8 +251,12 @@ export default function InstructorMyCoursesView({
         <DataTable
           columns={columns}
           data={viewCourses}
-          searchKey="name"
-          searchPlaceholder="ابحث عن دورة..."
+          searches={[
+            {
+              searchKey: "name",
+              placeholder: "ابحث عن دورة...",
+            },
+          ]}
           filters={filters}
           showColumnVisibilityToggle
           mobileConfig={mobileConfig}
@@ -266,8 +267,7 @@ export default function InstructorMyCoursesView({
         <DataCards
           columns={columns}
           data={viewCourses}
-          searchKey="name"
-          searchPlaceholder="ابحث عن دورة..."
+          searches={[{ searchKey: "name", placeholder: "ابحث عن دورة..." }]}
           filters={filters}
           paginationOptions={paginationOptions}
           pageSize={8}

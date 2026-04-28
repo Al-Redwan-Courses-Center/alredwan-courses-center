@@ -33,29 +33,31 @@ const mobileConfig: DataTableMobileConfig<TodaysLectureListItem> = {
     </span>
   ),
 
-  renderContent: (row) => {
+  getContentItems: (row) => {
     const { label, color } = statusMap[row.status];
 
-    return (
-      <div className="space-y-3 text-[1.4rem]">
-        <div className="flex items-center justify-between">
-          <span className="font-bold text-gray-500">الدورة :</span>
-          <span>{row.course.name}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="font-bold text-gray-500">البداية :</span>
-          <span>{formatTime(row.start_time)}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="font-bold text-gray-500">النهاية :</span>
-          <span>{formatTime(row.end_time)}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="font-bold text-gray-500">الحالة :</span>
-          <StatusBadge color={color}>{label}</StatusBadge>
-        </div>
-      </div>
-    );
+    return [
+      {
+        key: "course_name",
+        label: "الدورة",
+        value: row.course.name,
+      },
+      {
+        key: "start_time",
+        label: "البداية",
+        value: formatTime(row.start_time),
+      },
+      {
+        key: "end_time",
+        label: "النهاية",
+        value: formatTime(row.end_time),
+      },
+      {
+        key: "status",
+        label: "الحالة",
+        value: <StatusBadge color={color}>{label}</StatusBadge>,
+      },
+    ];
   },
 
   renderActions: (row) => renderLectureActions(row),
@@ -83,12 +85,16 @@ export default function TodaysLecturesTable({
       <DataTable
         columns={todaysLectureColumns}
         data={todaysLectures}
-        searchKey="title"
-        searchPlaceholder="ابحث عن محاضرة..."
+        searches={[
+          {
+            searchKey: "title",
+            placeholder: "ابحث عن اسم المحاضرة...",
+          },
+        ]}
         mobileConfig={mobileConfig}
         filters={filters}
         showColumnVisibilityToggle
-        pageSize={7}
+        pageSize={5}
       />
     </>
   );

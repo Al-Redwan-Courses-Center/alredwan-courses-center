@@ -29,14 +29,12 @@ import { DataTableMobileView } from "./data-table-mobile";
 import { DataTableRowsSkeleton } from "./data-table-skeletons";
 import { DataTableToolbar } from "./data-table-toolbar";
 import type { DataTableProps } from "./types";
-import React, { useState } from "react";
+import { useState } from "react";
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   searches,
-  searchKey,
-  searchPlaceholder = "ابحث عن دورة أو محاضرة",
   mobileConfig,
   pageSize = 7,
   className,
@@ -126,7 +124,7 @@ export function DataTable<TData, TValue>({
 
   const effectiveLoadingRowsCount = loadingRowsCount ?? pageSize;
 
-  const firstSearchKey = searches?.[0]?.searchKey ?? searchKey;
+  const firstSearchKey = searches?.[0]?.searchKey;
   const searchValue =
     remoteState?.searchValue ??
     (firstSearchKey
@@ -139,8 +137,6 @@ export function DataTable<TData, TValue>({
       <DataTableToolbar
         table={table}
         searches={searches}
-        searchKey={searchKey}
-        searchPlaceholder={searchPlaceholder}
         searchValue={searchValue}
         filters={filters}
         showColumnVisibilityToggle={showColumnVisibilityToggle}
@@ -150,7 +146,7 @@ export function DataTable<TData, TValue>({
       />
 
       {/* ── Desktop table ── */}
-      <div className="tablet:hidden">
+      <div className="tablet:hidden block">
         <Table className="border-separate border-spacing-y-[0.8rem]">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -164,7 +160,7 @@ export function DataTable<TData, TValue>({
                     <TableHead
                       key={header.id}
                       className={cn(
-                        "h-[70px] border-none py-0 text-center text-[1.5rem] font-normal text-[#535862] select-none",
+                        "h-17.5 border-none py-0 text-center text-[1.5rem] font-normal text-gray-500 select-none",
                         "first:rounded-tr-[20px] last:rounded-tl-[20px]",
                         canSort && "cursor-pointer",
                       )}

@@ -16,15 +16,14 @@ import {
 } from "@tanstack/react-table";
 import { DataTablePagination } from "./data-table-pagination";
 import { DataCardsSkeleton } from "./data-table-skeletons";
-import { DataCardsToolbar } from "./data-cards-toolbar";
+import { DataTableToolbar } from "./data-table-toolbar";
 import type { DataCardsProps } from "./types";
 import { cn } from "@/lib/utils";
 
 export function DataCards<TData, TValue>({
   columns,
   data,
-  searchKey,
-  searchPlaceholder = "ابحث عن دورة أو محاضرة",
+  searches,
   renderCard,
   pageSize = 8,
   className,
@@ -121,22 +120,23 @@ export function DataCards<TData, TValue>({
   const effectiveLoadingRowsCount = loadingRowsCount ?? pageSize;
   const hasAvailableData =
     data.length > 0 || (manualPagination && (remoteState?.pageCount ?? 0) > 0);
+  const firstSearchKey = searches?.[0]?.searchKey;
   const searchValue =
     remoteState?.searchValue ??
-    (searchKey
-      ? (table.getColumn(searchKey)?.getFilterValue() as string)
+    (firstSearchKey
+      ? (table.getColumn(firstSearchKey)?.getFilterValue() as string)
       : "") ??
     "";
-
   return (
     <div className={className} dir="rtl">
       {(isLoading || hasAvailableData) && (
-        <DataCardsToolbar
+        <DataTableToolbar
           table={table}
-          searchKey={searchKey}
-          searchPlaceholder={searchPlaceholder}
+          searches={searches}
           searchValue={searchValue}
           filters={filters}
+          showColumnVisibilityToggle={false}
+          showMobileSortDropdown={false}
           isLoading={isLoading}
           onSearchChange={onSearchChange}
         />

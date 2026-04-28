@@ -123,38 +123,38 @@ export default function CourseEnrollmentsView({
       renderSubtitle: (enrollment) => (
         <span className="text-olive-400">{enrollment.course_name}</span>
       ),
-      renderContent: (enrollment) => {
+      getContentItems: (enrollment) => {
         const { color: statusColor, label: statusLabel } =
           enrollmentStatusMap[enrollment.status];
 
-        return (
-          <div className="space-y-3 text-[1.4rem]">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-500">نوع الطالب :</span>
-              <span>
-                {enrollment.participant_type
-                  ? participantTranslationMap[enrollment.participant_type]
-                  : "غير محدد"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-500">رقم الهاتف :</span>
-              <span>
-                {enrollment.participant_phone
-                  ? toHindiDigits(enrollment.participant_phone.slice(2), true)
-                  : "غير معرف"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-500">الحالة :</span>
+        return [
+          {
+            key: "participant_type",
+            label: "نوع الطالب",
+            value: enrollment.participant_type
+              ? participantTranslationMap[enrollment.participant_type]
+              : "غير محدد",
+          },
+          {
+            key: "participant_phone",
+            label: "رقم الهاتف",
+            value: enrollment.participant_phone
+              ? toHindiDigits(enrollment.participant_phone.slice(2), true)
+              : "غير معرف",
+          },
+          {
+            key: "status",
+            label: "الحالة",
+            value: (
               <StatusBadge className={statusColor}>{statusLabel}</StatusBadge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-500">وقت الالتحاق :</span>
-              <span>{formatDate(parseISO(enrollment.enrolled_at))}</span>
-            </div>
-          </div>
-        );
+            ),
+          },
+          {
+            key: "enrolled_at",
+            label: "وقت الالتحاق",
+            value: formatDate(parseISO(enrollment.enrolled_at)),
+          },
+        ];
       },
     }),
     [],
@@ -164,8 +164,12 @@ export default function CourseEnrollmentsView({
     <DataTable
       columns={columns}
       data={enrollments}
-      searchKey="participant_name"
-      searchPlaceholder="ابحث عن طالب..."
+      searches={[
+        {
+          searchKey: "participant_name",
+          placeholder: "ابحث عن طالب...",
+        },
+      ]}
       mobileConfig={mobileConfig}
       pageSize={5}
     />

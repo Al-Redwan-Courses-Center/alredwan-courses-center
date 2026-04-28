@@ -9,6 +9,7 @@ export type {
   DataCardsProps,
   DataTableFilterConfig,
   DataTableFilterOption,
+  DataTableMobileContentItem,
   DataTablePaginationOptions,
   DataTableRemoteState,
   DataTableSearchConfig,

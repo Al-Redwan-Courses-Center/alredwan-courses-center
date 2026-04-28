@@ -20,6 +20,7 @@ import {
 import { CourseDetail, LectureListItem } from "@/types/entities";
 import { ColumnDef } from "@tanstack/react-table";
 import { parseISO } from "date-fns";
+import { Check } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 
@@ -121,7 +122,7 @@ export default function CourseLecturesView({
     () => [
       {
         columnId: "status",
-        label: "الحالة",
+        label: "اختيار حسب",
         options: [
           { label: "الكل", value: "all" },
           { label: "مسجلة", value: "completed" },
@@ -135,41 +136,53 @@ export default function CourseLecturesView({
   const mobileConfig = useMemo<DataTableMobileConfig<LectureListItem>>(
     () => ({
       renderTitle: (lecture, index) => (
-        <span>
+        <span className="truncate">
           {toHindiDigits(index + 1)}- {lecture.title}
         </span>
       ),
-      renderSubtitle: (lecture) => (
-        <span className="text-olive-400">
-          {formatDate(parseISO(lecture.scheduled_at))}
-        </span>
-      ),
-      renderContent: (lecture) => {
-        const { label, color } = statusMap[lecture.status];
-
-        return (
-          <div className="space-y-3 text-[1.4rem]">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-500">اليوم :</span>
-              <span>{getWeekDay(parseISO(lecture.scheduled_at).getDay())}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-500">البداية :</span>
-              <span>{formatTime(lecture.start_time)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-500">النهاية :</span>
-              <span>{formatTime(lecture.end_time)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-500">الحالة :</span>
-              <StatusBadge className={cn("text-[1.2rem]")} color={color}>
-                {label}
-              </StatusBadge>
-            </div>
-          </div>
-        );
-      },
+      renderSubtitle: (lecture) => <span>{lecture.day}</span>,
+      getContentItems: (lecture) => [
+        {
+          key: "start_time",
+          label: "البداية",
+          value: formatTime(lecture.start_time),
+        },
+        {
+          key: "end_time",
+          label: "النهاية",
+          value: formatTime(lecture.end_time),
+        },
+        {
+          key: "scheduled_at",
+          label: "التاريخ",
+          value: formatDate(parseISO(lecture.scheduled_at)),
+        },
+        {
+          key: "attendance_taken",
+          label: "الحضور",
+          value: (
+            <>
+              <span
+                className={cn(
+                  "flex size-[2.2rem] items-center justify-center rounded-tl-[10px] rounded-br-[10px]",
+                  lecture.attendance_taken ? "bg-olive-300" : "bg-gray-200",
+                )}
+              >
+                {lecture.attendance_taken && (
+                  <Check className="size-[1.4rem] text-white" />
+                )}
+              </span>
+              <span>{lecture.attendance_taken ? "تم" : "غير مسجل"}</span>
+            </>
+          ),
+        },
+        {
+          key: "day",
+          label: "الأيام",
+          value:
+            lecture.day || getWeekDay(parseISO(lecture.scheduled_at).getDay()),
+        },
+      ],
       renderActions: (lecture) => (
         <div className="*:text-olive-300 *:hover:text-olive-700 flex items-center justify-end gap-6 *:transition-colors">
           <button>
@@ -195,11 +208,11 @@ export default function CourseLecturesView({
     <DataTable
       columns={columns}
       data={lectures}
-      searchKey="title"
-      searchPlaceholder="ابحث عن محاضرة..."
+      searches={[{ searchKey: "title", placeholder: "ابحث عن دورة أو محاضرة" }]}
       filters={filters}
       mobileConfig={mobileConfig}
       pageSize={5}
+      showMobileSortDropdown
     />
   );
 }

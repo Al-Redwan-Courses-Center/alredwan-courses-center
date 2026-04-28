@@ -34,8 +34,7 @@ export default function DashboardAllCoursesView({
       <DataCards
         data={courses}
         columns={columns}
-        searchKey="name"
-        searchPlaceholder="ابحث عن دورة..."
+        searches={[{ searchKey: "name", placeholder: "ابحث عن دورة..." }]}
         pageSize={8}
         renderCard={(item: CourseListItem, index: number) => (
           <PublicCourseCard

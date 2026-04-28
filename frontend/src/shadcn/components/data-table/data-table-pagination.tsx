@@ -1,7 +1,7 @@
 "use client";
 
 import { Table as TanStackTable } from "@tanstack/react-table";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +23,7 @@ export function DataTablePagination<TData>({
   const pageCount = table.getPageCount();
   const currentPage = table.getState().pagination.pageIndex; // 0-based
 
-  if (pageCount <= 1) return null;
+  if (pageCount < 1) return null;
 
   const goToPrevious = () => {
     if (!table.getCanPreviousPage()) return;
@@ -49,7 +49,6 @@ export function DataTablePagination<TData>({
     else onPrevious?.(pageIndex + 1, currentPage + 1);
   };
 
-  // Sliding window: max 5 pages visible
   const getPages = (): number[] => {
     if (pageCount <= 5) return Array.from({ length: pageCount }, (_, i) => i);
     let start = Math.max(0, currentPage - 2);
@@ -59,51 +58,52 @@ export function DataTablePagination<TData>({
   };
 
   return (
-    // dir="rtl" makes pages render 3 2 1 left-to-right matching the Figma design
-    <div className="mt-6 flex items-center justify-center" dir="rtl">
-      <div className="flex items-center gap-[4px] rounded-[10px] bg-[#EAECF0] px-[8px] py-[4px]">
-        {/* Previous page — right arrow in RTL */}
+    <div className="mt-8 flex items-center justify-center" dir="rtl">
+      <div className="flex items-center gap-1 rounded-full bg-[#f3f4f6] px-4 py-2">
+        {/* Previous page */}
         <Button
           variant="ghost"
           size="icon"
           onClick={goToPrevious}
           disabled={isLoading || !table.getCanPreviousPage()}
-          className="h-[27px] w-[27px] rounded-lg text-[#5A6473] hover:bg-[#D1D5DB]/60 disabled:opacity-40"
+          className="h-8 w-8 rounded-full text-[#667085] hover:bg-transparent hover:text-[#1F1F1F] disabled:opacity-40"
           aria-label="الصفحة السابقة"
         >
-          <ChevronRight className="h-6 w-6" />
+          <ArrowRight className="h-5 w-5 stroke-[1.5]" />
         </Button>
 
         {/* Page number buttons */}
-        {getPages().map((pageIndex) => (
-          <Button
-            key={pageIndex}
-            variant="ghost"
-            size="icon"
-            onClick={() => goToPage(pageIndex)}
-            disabled={isLoading}
-            aria-current={pageIndex === currentPage ? "page" : undefined}
-            className={cn(
-              "h-[27px] w-[27px] rounded-lg font-['Inter'] text-[1.35rem] leading-5 font-medium",
-              pageIndex === currentPage
-                ? "bg-olive-100 text-olive-700 hover:bg-olive-100"
-                : "text-[#667085] hover:bg-[#D1D5DB]/60",
-            )}
-          >
-            {pageIndex + 1}
-          </Button>
-        ))}
+        <div className="flex items-center gap-1 px-2">
+          {getPages().map((pageIndex) => (
+            <Button
+              key={pageIndex}
+              variant="ghost"
+              size="icon"
+              onClick={() => goToPage(pageIndex)}
+              disabled={isLoading}
+              aria-current={pageIndex === currentPage ? "page" : undefined}
+              className={cn(
+                "h-7 w-10 rounded-[8px] font-['Inter'] text-[1.4rem] font-medium transition-colors",
+                pageIndex === currentPage
+                  ? "bg-[#C8D0CB] text-[#1F1F1F] hover:bg-[#b8c2bc]" // لون الصفحة النشطة
+                  : "text-[#667085] hover:bg-gray-200/50 hover:text-[#1F1F1F]",
+              )}
+            >
+              {pageIndex + 1}
+            </Button>
+          ))}
+        </div>
 
-        {/* Next page — left arrow in RTL */}
+        {/* Next page */}
         <Button
           variant="ghost"
           size="icon"
           onClick={goToNext}
           disabled={isLoading || !table.getCanNextPage()}
-          className="h-[27px] w-[27px] rounded-lg text-[#5A6473] hover:bg-[#D1D5DB]/60 disabled:opacity-40"
+          className="h-8 w-8 rounded-full text-[#667085] hover:bg-transparent hover:text-[#1F1F1F] disabled:opacity-40"
           aria-label="الصفحة التالية"
         >
-          <ChevronLeft className="h-6 w-6" />
+          <ArrowLeft className="h-5 w-5 stroke-[1.5]" />
         </Button>
       </div>
     </div>
