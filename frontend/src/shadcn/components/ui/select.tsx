@@ -3,8 +3,72 @@
 import * as React from "react";
 import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "lucide-react";
 import { Select as SelectPrimitive } from "radix-ui";
+import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "../../../lib/utils";
+import { cn } from "@/lib/utils";
+
+const selectTriggerVariants = cva(
+  "flex w-full items-center justify-between gap-2 whitespace-nowrap transition-all outline-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2",
+  {
+    variants: {
+      variant: {
+        default:
+          "border-input border bg-transparent shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] data-placeholder:text-muted-foreground aria-invalid:border-destructive aria-invalid:ring-destructive/20",
+        pill: "min-w-[20rem] rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm focus-visible:ring-olive-300 focus-visible:border-transparent focus-visible:ring-2 data-placeholder:text-gray-500",
+        toolbar:
+          "h-[50px] min-h-[50px] rounded-tl-[20px] rounded-br-[20px] border-none bg-[#EAEDEA] px-6 text-[1.4rem] font-medium text-gray-700 hover:bg-[#e2e6e2] focus-visible:ring-[3px] focus-visible:ring-olive-300/40 data-placeholder:text-gray-600",
+      },
+      size: {
+        default: "h-9 rounded-md px-3 py-2 text-sm",
+        sm: "h-8",
+        lg: "h-auto min-h-14 px-5 py-3.5 text-[1.45rem]",
+        none: "",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  },
+);
+
+const selectContentVariants = cva(
+  "bg-popover text-popover-foreground relative z-50 max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto border shadow-md data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+  {
+    variants: {
+      variant: {
+        default: "rounded-md",
+        pill: "z-60 min-w-[20rem] rounded-2xl border-gray-200 bg-white text-right shadow-xl",
+        toolbar:
+          "rounded-[14px] border-none bg-[#f3f3f5] p-2 text-right shadow-md",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
+
+const selectItemVariants = cva(
+  "focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-pointer items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+  {
+    variants: {
+      variant: {
+        default: "",
+        toolbar:
+          "rounded-md py-2.5 pr-10 pl-4 text-[1.35rem] font-medium text-gray-700 transition-colors focus:bg-[#ececef] focus:text-gray-900",
+      },
+      size: {
+        default: "",
+        lg: "py-2 text-[1.35rem]",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  },
+);
 
 function Select({
   ...props
@@ -26,66 +90,26 @@ function SelectValue({
 
 function SelectTrigger({
   className,
-  size = "default",
+  size = "none",
   variant = "default",
   children,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
-  size?: "sm" | "default" | "lg";
-  variant?: "default" | "pill" | "toolbar";
-}) {
+}: React.ComponentProps<typeof SelectPrimitive.Trigger> &
+  VariantProps<typeof selectTriggerVariants>) {
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
-      data-size={size}
-      data-variant={variant}
-      className={cn(
-        // ── Base ──────────────────────────────────────────────────────────
-        "flex w-fit items-center justify-between gap-2 whitespace-nowrap transition-[color,box-shadow] outline-none",
-        "disabled:cursor-not-allowed disabled:opacity-50",
-        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        "*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2",
-
-        // ── Size variants ─────────────────────────────────────────────────
-        "data-[size=sm]:h-8",
-        "data-[size=default]:h-9 data-[size=default]:rounded-md data-[size=default]:px-3 data-[size=default]:py-2 data-[size=default]:text-sm",
-        "data-[size=lg]:h-auto data-[size=lg]:min-h-14 data-[size=lg]:px-5 data-[size=lg]:py-3.5 data-[size=lg]:text-[1.45rem]",
-
-        // ── Variant: default (standard shadcn bordered) ────────────────────
-        "data-[variant=default]:border-input data-[variant=default]:rounded-md data-[variant=default]:border data-[variant=default]:bg-transparent data-[variant=default]:px-3 data-[variant=default]:py-2 data-[variant=default]:text-sm data-[variant=default]:shadow-xs",
-        "data-[variant=default]:focus-visible:border-ring data-[variant=default]:focus-visible:ring-ring/50 data-[variant=default]:focus-visible:ring-[3px]",
-        "data-[variant=default]:dark:bg-input/30 data-[variant=default]:dark:hover:bg-input/50",
-        "data-[variant=default]:data-placeholder:text-muted-foreground",
-        "[&_svg:not([class*='text-'])]:data-[variant=default]:text-muted-foreground",
-        "data-[variant=default]:aria-invalid:border-destructive data-[variant=default]:aria-invalid:ring-destructive/20",
-
-        // ── Variant: pill (white rounded-full with shadow) ─────────────────
-        "data-[variant=pill]: data-[variant=pill]:min-w-[20rem] data-[variant=pill]:rounded-full",
-        "data-[variant=pill]:border data-[variant=pill]:border-gray-200 data-[variant=pill]:bg-white",
-        "data-[variant=pill]:text-gray-700 data-[variant=pill]:shadow-sm",
-        "data-[variant=pill]:focus-visible:ring-olive-300 data-[variant=pill]:focus-visible:border-transparent data-[variant=pill]:focus-visible:ring-2",
-        "data-[variant=pill]:data-placeholder:text-gray-500",
-
-        // ── Variant: toolbar (Figma card — gray-100 bg, 12px radius, shadow) ─
-        "data-[variant=toolbar]: data-[variant=toolbar]:h-12 data-[variant=toolbar]:min-h-12",
-        "data-[variant=toolbar]:rounded-tl-[20px] data-[variant=toolbar]:rounded-br-[20px]",
-        "data-[variant=toolbar]:border-none data-[variant=toolbar]:bg-[#f3f3f5]",
-        "data-[variant=toolbar]:px-4 data-[variant=toolbar]:py-0",
-        "data-[variant=toolbar]:text-[1.4rem] data-[variant=toolbar]:leading-none data-[variant=toolbar]:font-medium data-[variant=toolbar]:text-gray-600",
-        "data-[variant=toolbar]:focus-visible:ring-0",
-        "data-[variant=toolbar]:data-placeholder:text-gray-600",
-        "data-[variant=toolbar]:pr-10 data-[variant=toolbar]:pl-4",
-
-        className,
-      )}
+      className={cn(selectTriggerVariants({ variant, size, className }))}
       {...props}
     >
       {children}
       <SelectPrimitive.Icon asChild>
         <ChevronDownIcon
           className={cn(
-            "opacity-50",
-            variant === "toolbar" ? "size-5 text-gray-600" : "size-4",
+            "transition-transform",
+            variant === "toolbar"
+              ? "!size-5 text-[#8E9B85] opacity-100"
+              : "size-4 opacity-50",
           )}
         />
       </SelectPrimitive.Icon>
@@ -93,7 +117,6 @@ function SelectTrigger({
   );
 }
 
-// ─── SelectContent ──────────────────────────────────────────────────────────
 function SelectContent({
   className,
   children,
@@ -101,24 +124,16 @@ function SelectContent({
   align = "center",
   variant = "default",
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Content> & {
-  variant?: "default" | "pill" | "toolbar";
-}) {
+}: React.ComponentProps<typeof SelectPrimitive.Content> &
+  VariantProps<typeof selectContentVariants>) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         data-slot="select-content"
-        data-variant={variant}
         className={cn(
-          "bg-popover text-popover-foreground relative z-50 max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border shadow-md",
-          "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
-          "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
-          "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
-          "data-[variant=pill]:z-60 data-[variant=pill]:min-w-[20rem] data-[variant=pill]:rounded-2xl data-[variant=pill]:border-gray-200 data-[variant=pill]:bg-white data-[variant=pill]:text-right data-[variant=pill]:shadow-xl",
-          "data-[variant=toolbar]:rounded-[20px] data-[variant=toolbar]:border-gray-200 data-[variant=toolbar]:bg-white data-[variant=toolbar]:text-right data-[variant=toolbar]:shadow-lg",
+          selectContentVariants({ variant, className }),
           position === "popper" &&
             "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
-          className,
         )}
         position={position}
         align={align}
@@ -140,7 +155,6 @@ function SelectContent({
   );
 }
 
-// ─── SelectLabel ─────────────────────────────────────────────────────────────
 function SelectLabel({
   className,
   ...props
@@ -154,32 +168,18 @@ function SelectLabel({
   );
 }
 
-// ─── SelectItem ──────────────────────────────────────────────────────────────
 function SelectItem({
   className,
   children,
   size = "default",
   variant = "default",
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Item> & {
-  size?: "default" | "lg";
-  variant?: "default" | "toolbar";
-}) {
+}: React.ComponentProps<typeof SelectPrimitive.Item> &
+  VariantProps<typeof selectItemVariants>) {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
-      data-size={size}
-      data-variant={variant}
-      className={cn(
-        "focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none",
-        "data-disabled:pointer-events-none data-disabled:opacity-50",
-        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        "*:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
-        "data-[size=lg]:py-2 data-[size=lg]:text-[1.35rem]",
-        "data-[variant=toolbar]:min-h-12 data-[variant=toolbar]:rounded-none data-[variant=toolbar]:py-0 data-[variant=toolbar]:pr-10 data-[variant=toolbar]:pl-4 data-[variant=toolbar]:text-[1.4rem] data-[variant=toolbar]:font-medium data-[variant=toolbar]:text-[#181d27]",
-        "data-[variant=toolbar]:focus:bg-[#f3f3f5] data-[variant=toolbar]:focus:text-[#181d27]",
-        className,
-      )}
+      className={cn(selectItemVariants({ variant, size, className }))}
       {...props}
     >
       <span
