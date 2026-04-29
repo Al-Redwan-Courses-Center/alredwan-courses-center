@@ -58,13 +58,13 @@ export function DataTablePagination<TData>({
   };
 
   return (
-    <div className="mt-8 flex items-center justify-center gap-10" dir="rtl">
+    <div className="mt-10 flex items-center justify-center gap-10" dir="rtl">
       {/* Previous page */}
       <Button
         variant="ghost"
         onClick={goToPrevious}
         disabled={isLoading || !table.getCanPreviousPage()}
-        className="h-auto w-auto p-2 text-gray-600 hover:bg-transparent hover:text-gray-900 disabled:opacity-40"
+        className="h-auto w-auto p-2 text-olive-400 hover:bg-transparent hover:text-olive-700 disabled:opacity-40"
         aria-label="الصفحة السابقة"
       >
         <ArrowRight className="!h-8 !w-8 stroke-[1.5]" />{" "}
@@ -95,7 +95,7 @@ export function DataTablePagination<TData>({
         variant="ghost"
         onClick={goToNext}
         disabled={isLoading || !table.getCanNextPage()}
-        className="h-auto w-auto p-2 text-gray-600 hover:bg-transparent hover:text-gray-900 disabled:opacity-40"
+        className="h-auto w-auto p-2 text-olive-400 hover:bg-transparent hover:text-olive-700 disabled:opacity-40"
         aria-label="الصفحة التالية"
       >
         <ArrowLeft className="!h-8 !w-8 stroke-[1.5]" />{" "}

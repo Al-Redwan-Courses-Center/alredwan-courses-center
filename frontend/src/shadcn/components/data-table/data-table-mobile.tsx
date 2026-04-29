@@ -45,7 +45,7 @@ export function DataTableMobileView<TData>({
       type="single"
       collapsible
       dir="rtl"
-      className="w-full space-y-[1.2rem]"
+      className="w-full space-y-[1.1rem]"
     >
       {rows.map((row, index) => {
         const rowData = row.original;
@@ -65,50 +65,42 @@ export function DataTableMobileView<TData>({
           mobileConfig?.getContentItems?.(rowData) ?? defaultContentItems;
 
         return (
-          <AccordionItem
-            key={row.id}
-            value={row.id}
-            variant="figma-mobile"
-            className="w-full overflow-hidden rounded-[20px] border-none bg-zinc-100"
-          >
-            <AccordionTrigger
-              variant="figma-mobile"
-              className="bg-neutral-200/60 px-5 py-4 hover:no-underline"
-            >
-              <div className="flex flex-1 items-center justify-start gap-4">
-                <span className="truncate text-[1.6rem] font-bold text-gray-800">
+          <AccordionItem key={row.id} value={row.id} variant="figma-mobile">
+            <AccordionTrigger variant="figma-mobile">
+              <div className="ml-2 flex flex-1 items-center justify-between gap-4">
+                <span className="truncate text-[1.45rem] leading-5 font-medium text-[#58635c]">
                   {mobileConfig?.renderTitle
                     ? mobileConfig.renderTitle(rowData, index)
                     : `${index + 1}- المحاضرة`}
                 </span>
                 {mobileConfig?.renderSubtitle && (
-                  <span className="text-[1.1rem] font-medium text-gray-500">
+                  <span className="shrink-0 text-[1.1rem] leading-5 font-medium text-[#768077]">
                     {mobileConfig.renderSubtitle(rowData)}
                   </span>
                 )}
               </div>
             </AccordionTrigger>
 
-            <AccordionContent variant="figma-mobile" className="p-5">
-              <div className="grid grid-cols-2 gap-x-2 gap-y-4 text-right">
-                {contentItems.map((item, itemIndex) => {
-                  return (
+            <AccordionContent variant="figma-mobile">
+              <div className="flex flex-col gap-[10px]">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                  {contentItems.map((item, itemIndex) => (
                     <div
                       key={item.key ?? `${row.id}-mobile-item-${itemIndex}`}
-                      className="flex items-center justify-start gap-1"
+                      className="inline-flex min-w-0 items-center justify-start gap-2"
                     >
-                      <span className="text-[1.3rem] font-semibold whitespace-nowrap text-gray-900">
+                      <span className="shrink-0 text-[1.35rem] font-semibold whitespace-nowrap text-[#58635c]">
                         {item.label} :
                       </span>
-                      <span className="truncate text-[1.3rem] font-normal text-gray-900">
+                      <span className="truncate text-[1.35rem] font-normal text-[#58635c]">
                         {item.value}
                       </span>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
 
                 {mobileConfig?.renderActions && (
-                  <div className="flex items-center justify-end">
+                  <div className="flex items-center justify-center pt-2">
                     {mobileConfig.renderActions(rowData)}
                   </div>
                 )}

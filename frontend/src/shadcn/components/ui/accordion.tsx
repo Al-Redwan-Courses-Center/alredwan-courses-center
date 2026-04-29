@@ -3,113 +3,135 @@
 import * as React from "react";
 import { ChevronDownIcon } from "lucide-react";
 import { Accordion as AccordionPrimitive } from "radix-ui";
+import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "../../../lib/utils";
 
-function Accordion({
-  ...props
-}: React.ComponentProps<typeof AccordionPrimitive.Root>) {
-  return <AccordionPrimitive.Root data-slot="accordion" {...props} />;
-}
+const accordionItemVariants = cva("", {
+  variants: {
+    variant: {
+      default: "border-b last:border-b-0",
+      "figma-mobile":
+        "mb-4 flex flex-col overflow-hidden rounded-[20px] transition-all duration-300 border " +
+        "data-[state=closed]:border-transparent data-[state=closed]:shadow-none " +
+        "data-[state=open]:border-[#d8ded8] data-[state=open]:shadow-[0_12px_28px_rgba(0,0,0,0.06)] bg-white",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
 
-function AccordionItem({
-  className,
-  variant = "default",
-  ...props
-}: React.ComponentProps<typeof AccordionPrimitive.Item> & {
-  variant?: "default" | "figma-mobile";
-}) {
-  return (
-    <AccordionPrimitive.Item
-      data-slot="accordion-item"
-      data-variant={variant}
-      className={cn(
-        // default: thin bottom border
-        "data-[variant=default]:border-b data-[variant=default]:last:border-b-0",
-        "data-[variant=figma-mobile]:overflow-hidden",
-        "data-[variant=figma-mobile]:rounded-tl-[20px] data-[variant=figma-mobile]:rounded-br-[20px]",
-        "data-[variant=figma-mobile]:bg-olive-100 data-[variant=figma-mobile]:border-none",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
+const accordionTriggerVariants = cva(
+  "flex flex-1 items-center justify-between transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180",
+  {
+    variants: {
+      variant: {
+        default:
+          "gap-4 rounded-md py-4 text-left text-sm font-medium hover:underline",
+        "figma-mobile":
+          "h-[48px] min-h-[48px] bg-[#c8d0cb] px-[24px] py-0 text-right text-[1.45rem] font-medium leading-5 text-[#58635c] duration-300 ease-in-out hover:no-underline",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
 
-function AccordionTrigger({
-  className,
-  children,
-  variant = "default",
-  ...props
-}: React.ComponentProps<typeof AccordionPrimitive.Trigger> & {
-  variant?: "default" | "figma-mobile";
-}) {
-  return (
-    <AccordionPrimitive.Header className="flex">
-      <AccordionPrimitive.Trigger
-        data-slot="accordion-trigger"
-        data-variant={variant}
-        className={cn(
-          // shared base
-          "flex flex-1 items-center justify-between gap-4 transition-all outline-none",
-          "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-          "disabled:pointer-events-none disabled:opacity-50",
-          "[&[data-state=open]>svg]:rotate-180",
+const accordionIconVariants = cva(
+  "pointer-events-none shrink-0 transition-transform duration-300",
+  {
+    variants: {
+      variant: {
+        default: "size-4 translate-y-0.5 text-muted-foreground",
+        "figma-mobile": "h-5 w-5 text-[#6f7c73]",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
 
-          // variant: default
-          "data-[variant=default]:rounded-md data-[variant=default]:py-4",
-          "data-[variant=default]:text-left data-[variant=default]:text-sm data-[variant=default]:font-medium",
-          "data-[variant=default]:hover:underline",
+const accordionContentVariants = cva(
+  "overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down",
+  {
+    variants: {
+      variant: {
+        default: "",
+        "figma-mobile": "bg-[#EFEFEF]",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
 
-          "data-[variant=figma-mobile]:h-12 data-[variant=figma-mobile]:min-h-12 data-[variant=figma-mobile]:flex-row-reverse data-[variant=figma-mobile]:items-center data-[variant=figma-mobile]:justify-between",
-          "data-[variant=figma-mobile]:text-right",
-          "data-[variant=figma-mobile]:px-6 data-[variant=figma-mobile]:py-0",
-          "data-[variant=figma-mobile]:text-[2rem] data-[variant=figma-mobile]:font-medium data-[variant=figma-mobile]:text-gray-500",
-          "data-[variant=figma-mobile]:hover:no-underline",
-          "data-[variant=figma-mobile]:bg-olive-100 data-[variant=figma-mobile]:data-[state=open]:bg-olive-100",
+const accordionContentInnerVariants = cva("", {
+  variants: {
+    variant: {
+      default: "pb-4 pt-0",
+      "figma-mobile": "p-[21px]",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
 
-          className,
-        )}
-        {...props}
-      >
-        {children}
-        <ChevronDownIcon
-          className={cn(
-            "pointer-events-none shrink-0 transition-transform duration-200",
-            variant === "figma-mobile"
-              ? "h-5 w-5 text-gray-500"
-              : "text-muted-foreground size-4 translate-y-0.5",
-          )}
-        />
-      </AccordionPrimitive.Trigger>
-    </AccordionPrimitive.Header>
-  );
-}
+const Accordion = AccordionPrimitive.Root;
 
-function AccordionContent({
-  className,
-  children,
-  variant = "default",
-  ...props
-}: React.ComponentProps<typeof AccordionPrimitive.Content> & {
-  variant?: "default" | "figma-mobile";
-}) {
-  return (
-    <AccordionPrimitive.Content
-      data-slot="accordion-content"
-      className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm"
+const AccordionItem = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Item>,
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item> &
+    VariantProps<typeof accordionItemVariants>
+>(({ className, variant, ...props }, ref) => (
+  <AccordionPrimitive.Item
+    ref={ref}
+    data-slot="accordion-item"
+    className={cn(accordionItemVariants({ variant }), className)}
+    {...props}
+  />
+));
+AccordionItem.displayName = "AccordionItem";
+
+const AccordionTrigger = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger> &
+    VariantProps<typeof accordionTriggerVariants>
+>(({ className, children, variant, ...props }, ref) => (
+  <AccordionPrimitive.Header className="flex">
+    <AccordionPrimitive.Trigger
+      ref={ref}
+      data-slot="accordion-trigger"
+      className={cn(accordionTriggerVariants({ variant }), className)}
       {...props}
     >
-      <div
-        className={cn(
-          variant === "figma-mobile" ? "bg-gray-100 p-[2.1rem]" : "pt-0 pb-4",
-          className,
-        )}
-      >
-        {children}
-      </div>
-    </AccordionPrimitive.Content>
-  );
-}
+      {children}
+      <ChevronDownIcon className={cn(accordionIconVariants({ variant }))} />
+    </AccordionPrimitive.Trigger>
+  </AccordionPrimitive.Header>
+));
+AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName;
+
+const AccordionContent = React.forwardRef<
+  React.ElementRef<typeof AccordionPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content> &
+    VariantProps<typeof accordionContentVariants>
+>(({ className, children, variant, ...props }, ref) => (
+  <AccordionPrimitive.Content
+    ref={ref}
+    data-slot="accordion-content"
+    className={cn(accordionContentVariants({ variant }), className)}
+    {...props}
+  >
+    <div className={cn(accordionContentInnerVariants({ variant }))}>
+      {children}
+    </div>
+  </AccordionPrimitive.Content>
+));
+AccordionContent.displayName = AccordionPrimitive.Content.displayName;
 
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent };

@@ -3,15 +3,15 @@
 import InfoIcon from "@/components/icons/InfoIcon";
 import { formatDate, toHindiDigits } from "@/lib/utils";
 import {
-  DataTable,
+  DataCards,
   DataTableFilterConfig,
-  DataTableMobileConfig,
 } from "@/shadcn/components/data-table";
-import { CourseDetail } from "@/types/entities";
+import type { CourseDetail, CourseListItem } from "@/types/entities";
 import { ColumnDef } from "@tanstack/react-table";
 import { parseISO } from "date-fns";
 import Link from "next/link";
 import { useMemo } from "react";
+import MyCourseCard from "@/components/courses/MyCourseCard";
 
 function renderCourseAction(course: CourseDetail) {
   return (
@@ -105,38 +105,9 @@ export default function StudentMyCoursesView({
     [seasonOptions],
   );
 
-  const mobileConfig = useMemo<DataTableMobileConfig<CourseDetail>>(
-    () => ({
-      renderTitle: (course, index) => (
-        <span>
-          {toHindiDigits(index + 1)}- {course.name}
-        </span>
-      ),
-      renderSubtitle: (course) => (
-        <span className="text-olive-400">{course.season.name}</span>
-      ),
-      getContentItems: (course) => [
-        {
-          key: "start_date",
-          label: "البداية",
-          value: formatDate(parseISO(course.start_date)),
-        },
-        {
-          key: "end_date",
-          label: "النهاية",
-          value: course.end_date
-            ? formatDate(parseISO(course.end_date))
-            : "غير محدد",
-        },
-      ],
-      renderActions: (course) => renderCourseAction(course),
-    }),
-    [],
-  );
-
   return (
     <div className="px-16">
-      <DataTable
+      <DataCards
         columns={columns}
         data={courses}
         searches={[
@@ -146,8 +117,15 @@ export default function StudentMyCoursesView({
           },
         ]}
         filters={filters}
-        mobileConfig={mobileConfig}
         pageSize={8}
+        gridClassName="grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
+        renderCard={(course, index) => (
+          <MyCourseCard
+            course={course as unknown as CourseListItem}
+            index={index}
+            key={course.id}
+          />
+        )}
       />
     </div>
   );

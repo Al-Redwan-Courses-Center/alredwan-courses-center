@@ -16,7 +16,7 @@ const selectTriggerVariants = cva(
           "border-input border bg-transparent shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] data-placeholder:text-muted-foreground aria-invalid:border-destructive aria-invalid:ring-destructive/20",
         pill: "min-w-[20rem] rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm focus-visible:ring-olive-300 focus-visible:border-transparent focus-visible:ring-2 data-placeholder:text-gray-500",
         toolbar:
-          "h-[50px] min-h-[50px] rounded-tl-[20px] rounded-br-[20px] border-none bg-[#EAEDEA] px-6 text-[1.4rem] font-medium text-gray-700 hover:bg-[#e2e6e2] focus-visible:ring-[3px] focus-visible:ring-olive-300/40 data-placeholder:text-gray-600",
+          "shadow-soft h-[50px] min-h-[50px] rounded-tl-[20px] rounded-br-[20px] border-none bg-gray-50 px-6 text-[1.4rem] font-medium text-gray-700 transition-colors hover:bg-gray-100 focus-visible:ring-[3px] focus-visible:ring-olive-300/40 data-placeholder:font-semibold data-placeholder:text-gray-600",
       },
       size: {
         default: "h-9 rounded-md px-3 py-2 text-sm",
@@ -40,7 +40,7 @@ const selectContentVariants = cva(
         default: "rounded-md",
         pill: "z-60 min-w-[20rem] rounded-2xl border-gray-200 bg-white text-right shadow-xl",
         toolbar:
-          "rounded-[14px] border-none bg-[#f3f3f5] p-2 text-right shadow-md",
+          "shadow-soft z-[150] min-w-[17.4rem] rounded-tl-[20px] rounded-br-[20px] border-none bg-gray-50 p-0 text-right",
       },
     },
     defaultVariants: {
@@ -56,7 +56,7 @@ const selectItemVariants = cva(
       variant: {
         default: "",
         toolbar:
-          "rounded-md py-2.5 pr-10 pl-4 text-[1.35rem] font-medium text-gray-700 transition-colors focus:bg-[#ececef] focus:text-gray-900",
+          "cursor-pointer rounded-none py-3 px-6 text-[1.4rem] font-medium text-gray-700 transition-colors focus:bg-olive-100 focus:text-gray-900 data-[state=checked]:bg-olive-100",
       },
       size: {
         default: "",

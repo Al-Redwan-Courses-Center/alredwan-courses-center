@@ -16,12 +16,12 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         dir="rtl"
         className={cn(
           "flex h-[50px] w-full min-w-0 items-center gap-[16px] py-[11px] ps-4 pe-[24px]",
-          "rounded-tl-[20px] rounded-br-[20px] bg-[#EAEDEA] transition-all",
+          "shadow-soft rounded-tl-[20px] rounded-br-[20px] bg-gray-50 transition-all",
           "focus-within:ring-olive-300/40 cursor-text focus-within:ring-[3px]",
           containerClassName,
         )}
       >
-        <Search className="h-5 w-5 shrink-0 text-[#8E9B85]" />
+        <Search className="h-5 w-5 shrink-0 text-olive-300" />
 
         <Input
           id={id}

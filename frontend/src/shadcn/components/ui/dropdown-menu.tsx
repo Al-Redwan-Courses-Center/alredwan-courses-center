@@ -14,7 +14,7 @@ const dropdownMenuContentVariants = cva(
       variant: {
         default: "",
         toolbar:
-          "rounded-[14px] border-none bg-[#f3f3f5] p-2 text-right shadow-md min-w-[17.4rem]",
+          "shadow-soft min-w-[17.4rem] rounded-tl-[20px] rounded-br-[20px] border-none bg-gray-50 p-0 text-right",
       },
     },
     defaultVariants: { variant: "default" },
@@ -30,7 +30,7 @@ const dropdownMenuItemVariants = cva(
         destructive:
           "text-destructive focus:bg-destructive/10 focus:text-destructive dark:focus:bg-destructive/20 *:[svg]:text-destructive!",
         toolbar:
-          "cursor-pointer rounded-md py-2.5 px-4 text-[1.35rem] font-medium text-gray-700 transition-colors focus:bg-[#ececef] focus:text-gray-900",
+          "cursor-pointer rounded-none py-3 px-6 text-[1.4rem] font-medium text-gray-700 transition-colors focus:bg-olive-100 focus:text-gray-900",
       },
       inset: {
         true: "pl-8",
@@ -48,7 +48,7 @@ const dropdownMenuCheckboxItemVariants = cva(
       variant: {
         default: "",
         toolbar:
-          "cursor-pointer rounded-md py-2.5 pr-10 pl-4 text-[1.35rem] font-medium text-gray-700 transition-colors focus:bg-[#ececef] focus:text-gray-900",
+          "cursor-pointer rounded-none py-3 pr-10 pl-6 text-[1.4rem] font-medium text-gray-700 transition-colors focus:bg-olive-100 focus:text-gray-900",
       },
     },
     defaultVariants: { variant: "default" },
@@ -59,7 +59,7 @@ const dropdownMenuLabelVariants = cva("px-2 py-1.5 text-sm font-medium", {
   variants: {
     variant: {
       default: "",
-      toolbar: "px-2 py-1.5 text-[1.35rem] font-semibold text-gray-700",
+      toolbar: "px-6 py-3 text-[1.4rem] font-semibold text-gray-700",
     },
     inset: {
       true: "pl-8",

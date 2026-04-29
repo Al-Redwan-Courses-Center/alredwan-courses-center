@@ -94,6 +94,8 @@ export function DataCards<TData, TValue>({
     onPaginationChange?.(nextPagination.pageIndex, nextPagination.pageSize);
   };
 
+  // TanStack Table intentionally returns unstable helper functions here.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

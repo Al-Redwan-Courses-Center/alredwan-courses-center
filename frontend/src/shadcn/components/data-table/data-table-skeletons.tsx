@@ -35,20 +35,16 @@ export function DataTableMobileSkeleton({
   count,
 }: DataTableMobileSkeletonProps) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {Array.from({ length: count }).map((_, index) => (
-        <div
-          key={index}
-          className="space-y-4 overflow-hidden rounded-[1.2rem] bg-white px-6 py-5 shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
-        >
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-6 w-44" />
-            <Skeleton className="h-5 w-20" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-5/6" />
-            <Skeleton className="h-4 w-2/3" />
+        <div key={index} className="flex flex-col">
+          {/* Header skeleton - matches AccordionTrigger figma-mobile */}
+          <div className="flex h-12 items-center justify-between rounded-tl-[20px] rounded-br-[20px] bg-olive-100 px-6 shadow-soft">
+            <div className="flex items-center gap-5">
+              <Skeleton className="h-5 w-32 bg-gray-300/50" />
+              <Skeleton className="h-3 w-16 bg-gray-300/40" />
+            </div>
+            <Skeleton className="h-5 w-5 rounded-full bg-gray-300/40" />
           </div>
         </div>
       ))}

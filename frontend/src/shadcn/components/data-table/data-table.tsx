@@ -97,6 +97,8 @@ export function DataTable<TData, TValue>({
     onPaginationChange?.(next.pageIndex, next.pageSize);
   };
 
+  // TanStack Table intentionally returns unstable helper functions here.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
@@ -147,20 +149,17 @@ export function DataTable<TData, TValue>({
 
       {/* ── Desktop table ── */}
       <div className="tablet:hidden block">
-        <Table className="border-separate border-spacing-y-[0.8rem]">
+        <Table className="border-separate border-spacing-y-[0.6rem]">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                key={headerGroup.id}
-                className="border-none bg-[#B9C1BD] hover:bg-[#B9C1BD]"
-              >
+              <TableRow key={headerGroup.id} className="mb-4 border-none">
                 {headerGroup.headers.map((header) => {
                   const canSort = header.column.getCanSort();
                   return (
                     <TableHead
                       key={header.id}
                       className={cn(
-                        "h-17.5 border-none py-0 text-center text-[1.5rem] font-normal text-gray-500 select-none",
+                        "bg-olive-100 h-17.5 border-none py-0 text-center text-[1.5rem] font-normal text-gray-500 select-none",
                         "first:rounded-tr-[20px] last:rounded-tl-[20px]",
                         canSort && "cursor-pointer",
                       )}
@@ -202,16 +201,25 @@ export function DataTable<TData, TValue>({
                 columnsCount={columns.length}
               />
             ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+              table.getRowModel().rows.map((row, rowIndex) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="data-[state=selected]:bg-olive-50 border-none bg-white shadow-[7px_6px_14.6px_0px_rgba(0,0,0,0.08)] transition-colors hover:bg-gray-50/60"
+                  className="group border-none drop-shadow-sm transition-all"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className="py-[1.4rem] text-center text-[1.4rem] font-medium text-[#1F1F1F] first:rounded-r-[20px] last:rounded-l-[20px]"
+                      className={cn(
+                        "py-[1.4rem] text-center text-[1.4rem] font-medium text-[#1F1F1F] transition-colors",
+                        rowIndex % 2 === 0 ? "bg-gray-50" : "bg-gray-100",
+
+                        "group-data-[state=selected]:bg-olive-50 group-hover:bg-gray-200/60",
+
+                        rowIndex % 2 === 0
+                          ? "first:rounded-br-[20px] last:rounded-bl-[20px]"
+                          : "first:rounded-tr-[20px] last:rounded-tl-[20px]",
+                      )}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
