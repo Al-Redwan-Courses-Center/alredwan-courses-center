@@ -15,6 +15,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ChevronDown } from "lucide-react";
+import { useMediaQuery } from "usehooks-ts";
 import { cn } from "@/lib/utils";
 import {
   Table,
@@ -46,6 +47,7 @@ export function DataTable<TData, TValue>({
   manualFiltering = false,
   manualSorting = false,
   isLoading = false,
+  isFetchingMore = false,
   loadingRowsCount,
   remoteState,
   onPaginationChange,
@@ -62,6 +64,7 @@ export function DataTable<TData, TValue>({
   });
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
+  const isMobile = useMediaQuery("(max-width: 900px)");
 
   const sorting = remoteState?.sorting ?? localSorting;
   const columnFilters = remoteState?.columnFilters ?? localColumnFilters;
@@ -133,6 +136,17 @@ export function DataTable<TData, TValue>({
       ? (table.getColumn(firstSearchKey)?.getFilterValue() as string)
       : "") ??
     "";
+
+  const handleLoadMore = () => {
+    if (!table.getCanNextPage()) return;
+
+    const currentPage = table.getState().pagination.pageIndex;
+    const nextPage = currentPage + 1;
+
+    table.setPageIndex(nextPage);
+    paginationOptions?.onNext?.(nextPage + 1, currentPage + 1);
+    paginationOptions?.onPageChange?.(nextPage + 1, currentPage + 1);
+  };
 
   return (
     <div className={className} dir="rtl">
@@ -249,17 +263,22 @@ export function DataTable<TData, TValue>({
           table={table}
           mobileConfig={mobileConfig}
           isLoading={isLoading}
+          isFetchingMore={isFetchingMore}
           loadingRowsCount={effectiveLoadingRowsCount}
+          onLoadMore={handleLoadMore}
+          hasMore={isMobile && table.getCanNextPage()}
         />
       </div>
 
-      <DataTablePagination
-        table={table}
-        onNext={paginationOptions?.onNext}
-        onPrevious={paginationOptions?.onPrevious}
-        onPageChange={paginationOptions?.onPageChange}
-        isLoading={isLoading}
-      />
+      <div className="tablet:hidden block">
+        <DataTablePagination
+          table={table}
+          onNext={paginationOptions?.onNext}
+          onPrevious={paginationOptions?.onPrevious}
+          onPageChange={paginationOptions?.onPageChange}
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 }

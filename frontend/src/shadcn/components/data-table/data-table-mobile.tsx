@@ -8,25 +8,37 @@ import {
   AccordionTrigger,
 } from "../ui/accordion";
 import { DataTableMobileSkeleton } from "./data-table-skeletons";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import type {
   DataTableMobileConfig,
   DataTableMobileContentItem,
 } from "./types";
+import Loader from "@/components/ui/Loader";
 
 interface DataTableMobileViewProps<TData> {
   table: TanStackTable<TData>;
   mobileConfig?: DataTableMobileConfig<TData>;
   isLoading?: boolean;
+  isFetchingMore?: boolean;
   loadingRowsCount?: number;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
 }
 
 export function DataTableMobileView<TData>({
   table,
   mobileConfig,
   isLoading = false,
+  isFetchingMore = false,
   loadingRowsCount = 4,
+  onLoadMore,
+  hasMore = false,
 }: DataTableMobileViewProps<TData>) {
   const rows = table.getRowModel().rows;
+  const loadMoreRef = useIntersectionObserver({
+    enabled: Boolean(onLoadMore && hasMore && !isLoading && !isFetchingMore),
+    onIntersect: () => onLoadMore?.(),
+  });
 
   if (isLoading) {
     return <DataTableMobileSkeleton count={loadingRowsCount} />;
@@ -109,6 +121,18 @@ export function DataTableMobileView<TData>({
           </AccordionItem>
         );
       })}
+
+      {isFetchingMore && (
+        <div className="flex items-center justify-center py-6">
+          <div className="h-10 w-10">
+            <Loader />
+          </div>
+        </div>
+      )}
+
+      {hasMore && onLoadMore && !isFetchingMore && (
+        <div ref={loadMoreRef} aria-hidden="true" className="h-px w-full" />
+      )}
     </Accordion>
   );
 }

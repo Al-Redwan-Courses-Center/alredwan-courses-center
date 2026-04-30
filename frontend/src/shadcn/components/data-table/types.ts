@@ -85,6 +85,8 @@ export interface DataTableProps<TData, TValue> {
   manualSorting?: boolean;
   /** Controls loading skeleton for table + mobile UI. */
   isLoading?: boolean;
+  /** Shows a spinner at the bottom of the mobile list while loading more pages. */
+  isFetchingMore?: boolean;
   /** Number of skeleton rows/cards to show while loading. */
   loadingRowsCount?: number;
   /** Controlled state for backend mode; optional and granular. */
@@ -129,6 +131,8 @@ export interface DataCardsProps<TData, TValue> {
   manualSorting?: boolean;
   /** Controls loading skeleton for card grid UI. */
   isLoading?: boolean;
+  /** Shows a spinner at the bottom of the mobile card grid while fetching the next page. */
+  isFetchingMore?: boolean;
   /** Number of skeleton cards to show while loading. */
   loadingRowsCount?: number;
   /** Controlled state for backend mode; optional and granular. */

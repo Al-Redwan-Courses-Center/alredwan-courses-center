@@ -19,6 +19,9 @@ import { DataCardsSkeleton } from "./data-table-skeletons";
 import { DataTableToolbar } from "./data-table-toolbar";
 import type { DataCardsProps } from "./types";
 import { cn } from "@/lib/utils";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+import { useMediaQuery } from "usehooks-ts";
+import Loader from "@/components/ui/Loader";
 
 export function DataCards<TData, TValue>({
   columns,
@@ -34,6 +37,7 @@ export function DataCards<TData, TValue>({
   manualFiltering = false,
   manualSorting = false,
   isLoading = false,
+  isFetchingMore = false,
   loadingRowsCount,
   remoteState,
   onPaginationChange,
@@ -52,6 +56,7 @@ export function DataCards<TData, TValue>({
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
+  const isMobile = useMediaQuery("(max-width: 900px)");
 
   const sorting = remoteState?.sorting ?? localSorting;
   const columnFilters = remoteState?.columnFilters ?? localColumnFilters;
@@ -129,6 +134,23 @@ export function DataCards<TData, TValue>({
       ? (table.getColumn(firstSearchKey)?.getFilterValue() as string)
       : "") ??
     "";
+
+  const handleLoadMore = () => {
+    if (!table.getCanNextPage()) return;
+
+    const currentPage = table.getState().pagination.pageIndex;
+    const nextPage = currentPage + 1;
+
+    table.setPageIndex(nextPage);
+    paginationOptions?.onNext?.(nextPage + 1, currentPage + 1);
+    paginationOptions?.onPageChange?.(nextPage + 1, currentPage + 1);
+  };
+
+  const loadMoreRef = useIntersectionObserver({
+    enabled:
+      isMobile && table.getCanNextPage() && !isLoading && !isFetchingMore,
+    onIntersect: handleLoadMore,
+  });
   return (
     <div className={className} dir="rtl">
       {(isLoading || hasAvailableData) && (
@@ -150,31 +172,47 @@ export function DataCards<TData, TValue>({
           gridClassName={gridClassName}
         />
       ) : table.getRowModel().rows?.length ? (
-        <div
-          className={cn(
-            "grid grid-cols-1 items-start gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4",
-            gridClassName,
+        <>
+          <div
+            className={cn(
+              "grid grid-cols-1 items-start gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4",
+              gridClassName,
+            )}
+          >
+            {table.getRowModel().rows.map((row, i) => (
+              <React.Fragment key={row.id}>
+                {renderCard(row.original, i)}
+              </React.Fragment>
+            ))}
+          </div>
+
+          {isFetchingMore && (
+            <div className="flex items-center justify-center py-6">
+              <div className="h-10 w-10">
+                <Loader />
+              </div>
+            </div>
           )}
-        >
-          {table.getRowModel().rows.map((row, i) => (
-            <React.Fragment key={row.id}>
-              {renderCard(row.original, i)}
-            </React.Fragment>
-          ))}
-        </div>
+
+          {isMobile && table.getCanNextPage() && !isFetchingMore && (
+            <div ref={loadMoreRef} aria-hidden="true" className="h-px w-full" />
+          )}
+        </>
       ) : (
         <div className="py-24 text-center text-[1.6rem] text-gray-500">
           لا توجد نتائج
         </div>
       )}
 
-      <DataTablePagination
-        table={table}
-        onNext={paginationOptions?.onNext}
-        onPrevious={paginationOptions?.onPrevious}
-        onPageChange={paginationOptions?.onPageChange}
-        isLoading={isLoading}
-      />
+      <div className="tablet:hidden block">
+        <DataTablePagination
+          table={table}
+          onNext={paginationOptions?.onNext}
+          onPrevious={paginationOptions?.onPrevious}
+          onPageChange={paginationOptions?.onPageChange}
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 }
