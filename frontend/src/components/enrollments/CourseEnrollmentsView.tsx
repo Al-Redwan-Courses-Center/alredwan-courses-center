@@ -1,15 +1,18 @@
 "use client";
 
+import DataViewLegacy from "@/components/ui/data-view/DataView";
+import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
+import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
+import {
+  DataViewHeaderLegacy,
+  DataViewRowLegacy,
+} from "@/components/ui/data-view/DataViewRow";
+import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { cn, formatDate, toHindiDigits } from "@/lib/utils";
-import {
-  DataTable,
-  DataTableMobileConfig,
-} from "@/shadcn/components/data-table";
 import { InstructorEnrollmentListItem } from "@/types/entities";
-import { ColumnDef } from "@tanstack/react-table";
 import { parseISO } from "date-fns";
-import { useMemo } from "react";
 
 const participantTranslationMap: Record<
   NonNullable<InstructorEnrollmentListItem["participant_type"]>,
@@ -50,128 +53,68 @@ export default function CourseEnrollmentsView({
 }: {
   enrollments: InstructorEnrollmentListItem[];
 }) {
-  const columns = useMemo<ColumnDef<InstructorEnrollmentListItem>[]>(
-    () => [
-      {
-        id: "index",
-        header: "م",
-        enableSorting: false,
-        cell: ({ row }) => <span>{toHindiDigits(row.index + 1)}</span>,
-      },
-      {
-        accessorKey: "course_name",
-        header: "الدورة",
-      },
-      {
-        accessorKey: "participant_name",
-        header: "الطالب",
-      },
-      {
-        accessorKey: "participant_type",
-        header: "نوع الطالب",
-        cell: ({ row }) => (
-          <span>
-            {row.original.participant_type
-              ? participantTranslationMap[row.original.participant_type]
-              : "غير محدد"}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "participant_phone",
-        header: "رقم الهاتف",
-        cell: ({ row }) => (
-          <span>
-            {row.original.participant_phone
-              ? toHindiDigits(row.original.participant_phone.slice(2), true)
-              : "غير معرف"}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "status",
-        header: "الحالة",
-        cell: ({ row }) => {
-          const { color: statusColor, label: statusLabel } =
-            enrollmentStatusMap[row.original.status];
-
-          return (
-            <StatusBadge className={statusColor}>{statusLabel}</StatusBadge>
-          );
-        },
-      },
-      {
-        accessorKey: "enrolled_at",
-        header: "وقت الالتحاق",
-        cell: ({ row }) => (
-          <span>{formatDate(parseISO(row.original.enrolled_at))}</span>
-        ),
-      },
-    ],
-    [],
-  );
-
-  const mobileConfig = useMemo<
-    DataTableMobileConfig<InstructorEnrollmentListItem>
-  >(
-    () => ({
-      renderTitle: (enrollment, index) => (
-        <span>
-          {toHindiDigits(index + 1)}- {enrollment.participant_name}
-        </span>
-      ),
-      renderSubtitle: (enrollment) => (
-        <span className="text-olive-400">{enrollment.course_name}</span>
-      ),
-      getContentItems: (enrollment) => {
-        const { color: statusColor, label: statusLabel } =
-          enrollmentStatusMap[enrollment.status];
-
-        return [
-          {
-            key: "participant_type",
-            label: "نوع الطالب",
-            value: enrollment.participant_type
-              ? participantTranslationMap[enrollment.participant_type]
-              : "غير محدد",
-          },
-          {
-            key: "participant_phone",
-            label: "رقم الهاتف",
-            value: enrollment.participant_phone
-              ? toHindiDigits(enrollment.participant_phone.slice(2), true)
-              : "غير معرف",
-          },
-          {
-            key: "status",
-            label: "الحالة",
-            value: (
-              <StatusBadge className={statusColor}>{statusLabel}</StatusBadge>
-            ),
-          },
-          {
-            key: "enrolled_at",
-            label: "وقت الالتحاق",
-            value: formatDate(parseISO(enrollment.enrolled_at)),
-          },
-        ];
-      },
-    }),
-    [],
-  );
-
   return (
-    <DataTable
-      columns={columns}
+    <DataViewLegacy
       data={enrollments}
-      searches={[
-        {
-          searchKey: "participant_name",
-          placeholder: "ابحث عن طالب...",
-        },
-      ]}
-      mobileConfig={mobileConfig}
-      pageSize={5}
-    />
+      gridLayout={cn("grid-cols-[0.25fr_1.5fr_1.5fr_1fr_1fr_1fr_1fr]")}
+      maxItemsPerPage={5}
+      filterConfig={{}}
+      sortConfig={{}}
+    >
+      <div className="relative z-100 mb-14 flex items-center gap-32">
+        <DataViewSearchLegacy />
+        {/* <DataViewSort />
+        <DataViewFilter /> */}
+      </div>
+
+      <DataViewHeaderLegacy>
+        <DataViewCellLegacy>م</DataViewCellLegacy>
+        <DataViewCellLegacy>الدورة</DataViewCellLegacy>
+        <DataViewCellLegacy>الطالب</DataViewCellLegacy>
+        <DataViewCellLegacy>نوع الطالب</DataViewCellLegacy>
+        <DataViewCellLegacy>رقم الهاتف</DataViewCellLegacy>
+        <DataViewCellLegacy>الحالة</DataViewCellLegacy>
+        <DataViewCellLegacy>وقت الالتحاق</DataViewCellLegacy>
+      </DataViewHeaderLegacy>
+
+      <DataViewBodyLegacy<InstructorEnrollmentListItem>
+        render={{
+          table: (item, i) => {
+            const { color: statusColor, label: statusLabel } =
+              enrollmentStatusMap[item.status];
+
+            return (
+              <DataViewRowLegacy key={item.id} index={i}>
+                <DataViewCellLegacy>{toHindiDigits(i + 1)}</DataViewCellLegacy>
+                <DataViewCellLegacy>{item.course_name}</DataViewCellLegacy>
+                <DataViewCellLegacy>{item.participant_name}</DataViewCellLegacy>
+                <DataViewCellLegacy>
+                  {item.participant_type
+                    ? participantTranslationMap[item.participant_type]
+                    : "غير محدد"}
+                </DataViewCellLegacy>
+                <DataViewCellLegacy>
+                  {item.participant_phone
+                    ? toHindiDigits(item.participant_phone.slice(2), true)
+                    : "غير معرف"}
+                </DataViewCellLegacy>
+                <DataViewCellLegacy>
+                  <StatusBadge className={statusColor}>
+                    {statusLabel}
+                  </StatusBadge>
+                </DataViewCellLegacy>
+                <DataViewCellLegacy>
+                  {formatDate(parseISO(item.enrolled_at))}
+                </DataViewCellLegacy>
+              </DataViewRowLegacy>
+            );
+          },
+
+          cards: () => null,
+        }}
+      />
+
+      <DataViewPaginationLegacy />
+    </DataViewLegacy>
   );
 }

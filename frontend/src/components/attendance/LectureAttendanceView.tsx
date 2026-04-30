@@ -3,25 +3,32 @@
 import { markLectureAttendanceInBulk } from "@/actions/attendances";
 import AddNoteModal from "@/components/attendance/AddNoteModal";
 import AttendanceStudentIdQrCodeScannerModal from "@/components/attendance/AttendanceStudentIdQrCodeScannerModal";
+import lectureAttendanceViewConfig from "@/components/attendance/lecture-attendance-view.config";
 import RatingPopover from "@/components/attendance/RatingPopover";
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
-import { persistInLocalStorage, toHindiDigits } from "@/lib/utils";
+import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
 import {
-  DataTable,
-  DataTableMobileConfig,
-} from "@/shadcn/components/data-table";
+  DataViewHeaderLegacy,
+  DataViewRowLegacy,
+} from "@/components/ui/data-view/DataViewRow";
+
+import { cn, persistInLocalStorage, toHindiDigits } from "@/lib/utils";
 import {
   BulkLectureAttendanceBody,
   LectureAttendanceDetail,
   LectureAttendanceViewOptions,
   LectureDetail,
 } from "@/types/entities";
-import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import DataViewLegacy from "../ui/data-view/DataView";
+import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
+
+const { filterConfig, sortConfig } = lectureAttendanceViewConfig;
 
 export default function LectureAttendanceView({
   attendances,
@@ -154,12 +161,17 @@ export default function LectureAttendanceView({
 
   if (!lecture) return null;
 
-  const allChecked =
-    attendanceState.length > 0 && attendanceState.every((a) => a.present);
-
   return (
-    <div className="space-y-6">
+    <DataViewLegacy
+      gridLayout={cn("grid-cols-[0.25fr_1fr_1.5fr_1fr_1fr_1fr_1fr_2fr_1fr]")}
+      data={attendanceState}
+      filterConfig={filterConfig}
+      sortConfig={sortConfig}
+      maxItemsPerPage={9999}
+    >
       <div className="mb-10 flex items-center gap-10 px-16">
+        <DataViewSearchLegacy />
+
         {canEditAttendance && (
           <>
             <AttendanceStudentIdQrCodeScannerModal
@@ -201,296 +213,145 @@ export default function LectureAttendanceView({
           </>
         )}
       </div>
-      <LectureAttendanceDataTable
-        attendanceState={attendanceState}
-        allChecked={allChecked}
-        canEditAttendance={canEditAttendance}
-        courseId={courseId}
-        lectureId={lecture.id}
-        setAttendanceStateWithPersistence={setAttendanceStateWithPersistence}
-      />
-    </div>
-  );
-}
 
-function LectureAttendanceDataTable({
-  attendanceState,
-  allChecked,
-  canEditAttendance,
-  courseId,
-  lectureId,
-  setAttendanceStateWithPersistence,
-}: {
-  attendanceState: LectureAttendanceDetail[];
-  allChecked: boolean;
-  canEditAttendance: boolean;
-  courseId: string;
-  lectureId: number;
-  setAttendanceStateWithPersistence: (
-    value:
-      | LectureAttendanceDetail[]
-      | ((prev: LectureAttendanceDetail[]) => LectureAttendanceDetail[]),
-  ) => void;
-}) {
-  const columns = useMemo<ColumnDef<LectureAttendanceDetail>[]>(
-    () => [
-      {
-        id: "index",
-        header: "م",
-        enableSorting: false,
-        cell: ({ row }) => <span>{toHindiDigits(row.index + 1)}</span>,
-      },
-      {
-        id: "participant_image",
-        header: "الصورة",
-        enableSorting: false,
-        cell: ({ row }) => {
-          const image = row.original.participant_image;
-          return (
-            <div className="aspect-square h-auto w-15 place-items-center overflow-clip rounded-full bg-gray-300">
-              {!!image && (
-                <div className="relative h-full w-full">
-                  <Image
-                    src={image}
-                    alt="Student Image"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              )}
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: "participant_full_name",
-        header: "اسم الطالب",
-      },
-      {
-        accessorKey: "participant_code",
-        header: "الكود",
-      },
-      {
-        accessorKey: "participant_age",
-        header: "السن",
-        cell: ({ row }) => (
-          <span>{toHindiDigits(row.original.participant_age || "")}</span>
-        ),
-      },
-      {
-        accessorKey: "rating",
-        header: "التقييم",
-        cell: ({ row }) => (
-          <RatingPopover
-            disabled={!canEditAttendance}
-            rating={row.original.rating ?? 7}
-            onSelectRating={(n) =>
-              setAttendanceStateWithPersistence(
-                attendanceState.map((attendance) => {
-                  if (attendance.id !== row.original.id) return attendance;
-                  return { ...attendance, rating: n };
-                }),
-              )
-            }
-          />
-        ),
-      },
-      {
-        accessorKey: "present",
-        header: () => (
-          <div className="flex items-center gap-5 py-0">
-            <span>الحضور</span>
-            <span>
-              <Checkbox
-                id="all-attendance"
-                checked={allChecked}
-                onCheckedChange={(willBe) => {
-                  if (!canEditAttendance) return;
-
-                  setAttendanceStateWithPersistence(
-                    attendanceState.map((attendance) => ({
-                      ...attendance,
-                      present: willBe,
-                    })),
-                  );
-                }}
-                disabled={!canEditAttendance}
-              />
-            </span>
-          </div>
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            id={`attendance-${row.original.id}`}
-            checked={!!row.original.present}
-            onCheckedChange={(willBe) => {
-              if (!canEditAttendance) return;
-
-              setAttendanceStateWithPersistence(
-                attendanceState.map((attendance) => {
-                  if (attendance.id !== row.original.id) return attendance;
-                  return { ...attendance, present: willBe };
-                }),
-              );
-            }}
-            disabled={!canEditAttendance}
-          />
-        ),
-      },
-      {
-        accessorKey: "notes",
-        header: "ملاحظات",
-        cell: ({ row }) => (
-          <span className="block max-w-80 truncate text-start">
-            {!!row.original.notes?.trim()
-              ? row.original.notes.trim()
-              : "لا توجد ملاحظات"}
-          </span>
-        ),
-      },
-      {
-        id: "actions",
-        header: "",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <div className="*:text-olive-300 *:hover:text-olive-700 *:transition-colors">
-            <AddNoteModal
-              name={row.original.participant_full_name || ""}
-              uniqueId={`${courseId}-${lectureId}-${row.original.id}`}
-              onSave={(notes) =>
-                setAttendanceStateWithPersistence(
-                  attendanceState.map((attendance) => {
-                    if (attendance.id !== row.original.id) return attendance;
-                    return { ...attendance, notes };
-                  }),
-                )
-              }
-              notes={row.original.notes || ""}
-              disabled={!canEditAttendance}
-            />
-          </div>
-        ),
-      },
-    ],
-    [
-      allChecked,
-      attendanceState,
-      canEditAttendance,
-      courseId,
-      lectureId,
-      setAttendanceStateWithPersistence,
-    ],
-  );
-
-  const mobileConfig = useMemo<DataTableMobileConfig<LectureAttendanceDetail>>(
-    () => ({
-      renderTitle: (attendance, index) => (
-        <span>
-          {toHindiDigits(index + 1)}-{" "}
-          {attendance.participant_full_name || "غير معروف"}
-        </span>
-      ),
-      renderSubtitle: (attendance) => (
-        <span className="text-olive-400">
-          {attendance.participant_code || "-"}
-        </span>
-      ),
-      getContentItems: (attendance) => [
-        {
-          key: "participant_age",
-          label: "السن",
-          value: toHindiDigits(attendance.participant_age || ""),
-        },
-        {
-          key: "rating",
-          label: "التقييم",
-          value: (
-            <RatingPopover
-              disabled={!canEditAttendance}
-              rating={attendance.rating ?? 7}
-              onSelectRating={(n) =>
-                setAttendanceStateWithPersistence(
-                  attendanceState.map((row) =>
-                    row.id === attendance.id ? { ...row, rating: n } : row,
-                  ),
-                )
-              }
-            />
-          ),
-        },
-        {
-          key: "present",
-          label: "الحضور",
-          value: (
+      <DataViewHeaderLegacy className="mx-16">
+        <DataViewCellLegacy>م</DataViewCellLegacy>
+        <DataViewCellLegacy>الصورة</DataViewCellLegacy>
+        <DataViewCellLegacy>اسم الطالب</DataViewCellLegacy>
+        <DataViewCellLegacy>الكود</DataViewCellLegacy>
+        <DataViewCellLegacy>السن</DataViewCellLegacy>
+        <DataViewCellLegacy>التقييم</DataViewCellLegacy>
+        <DataViewCellLegacy className="felx items-center gap-5 py-0">
+          <span>الحضور</span>
+          <span>
             <Checkbox
-              id={`mobile-attendance-${attendance.id}`}
-              checked={!!attendance.present}
+              id="all-attendance"
+              checked={
+                attendanceState.length > 0 &&
+                attendanceState.every((a) => a.present)
+              }
               onCheckedChange={(willBe) => {
                 if (!canEditAttendance) return;
 
                 setAttendanceStateWithPersistence(
-                  attendanceState.map((row) =>
-                    row.id === attendance.id
-                      ? { ...row, present: willBe }
-                      : row,
-                  ),
+                  attendanceState.map((a) => ({ ...a, present: willBe })),
                 );
               }}
               disabled={!canEditAttendance}
             />
-          ),
-        },
-        {
-          key: "notes",
-          label: "ملاحظات",
-          value: !!attendance.notes?.trim()
-            ? attendance.notes.trim()
-            : "لا توجد ملاحظات",
-        },
-      ],
-      renderActions: (attendance) => (
-        <div className="*:text-olive-300 *:hover:text-olive-700 flex justify-end *:transition-colors">
-          <AddNoteModal
-            name={attendance.participant_full_name || ""}
-            uniqueId={`${courseId}-${lectureId}-${attendance.id}-mobile`}
-            onSave={(notes) =>
-              setAttendanceStateWithPersistence(
-                attendanceState.map((row) =>
-                  row.id === attendance.id ? { ...row, notes } : row,
-                ),
-              )
-            }
-            notes={attendance.notes || ""}
-            disabled={!canEditAttendance}
-          />
-        </div>
-      ),
-    }),
-    [
-      attendanceState,
-      canEditAttendance,
-      courseId,
-      lectureId,
-      setAttendanceStateWithPersistence,
-    ],
-  );
+          </span>
+        </DataViewCellLegacy>
+        <DataViewCellLegacy className="justify-start!">
+          ملاحظات
+        </DataViewCellLegacy>
+        <DataViewCellLegacy></DataViewCellLegacy>
+      </DataViewHeaderLegacy>
 
-  return (
-    <DataTable
-      columns={columns}
-      data={attendanceState}
-      searches={[
-        {
-          searchKey: "participant_full_name",
-          placeholder: "ابحث عن اسم الطالب...",
-        },
-        {
-          searchKey: "participant_code",
-          placeholder: "ابحث عن كود الطالب...",
-        },
-      ]}
-      mobileConfig={mobileConfig}
-      pageSize={5}
-    />
+      <DataViewBodyLegacy<LectureAttendanceDetail>
+        className="max-h-[52dvh] overflow-y-auto px-[4rem_calc(4rem-10px)] pt-3 pb-10"
+        render={{
+          table: (a, i) => {
+            if (!a) return null;
+
+            const {
+              participant_image: image,
+              participant_full_name: name,
+              participant_code: code,
+              participant_age: age,
+              id,
+            } = a;
+
+            const currentRecord = attendanceState.find((a) => a.id === id);
+
+            return (
+              <DataViewRowLegacy className="min-h-26" index={i} key={id}>
+                <DataViewCellLegacy>{toHindiDigits(i + 1)}</DataViewCellLegacy>
+
+                <DataViewCellLegacy className="py-0">
+                  <div className="aspect-square h-auto w-15 place-items-center overflow-clip rounded-full bg-gray-300">
+                    {!!image && (
+                      <div className="relative h-full w-full">
+                        <Image
+                          src={image}
+                          alt="Student Image"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </DataViewCellLegacy>
+
+                <DataViewCellLegacy>{name}</DataViewCellLegacy>
+                <DataViewCellLegacy>{code}</DataViewCellLegacy>
+                <DataViewCellLegacy>
+                  {toHindiDigits(age || "")}
+                </DataViewCellLegacy>
+
+                <DataViewCellLegacy className="py-0 font-bold">
+                  <RatingPopover
+                    disabled={!canEditAttendance}
+                    rating={currentRecord?.rating ?? 7}
+                    onSelectRating={(n) =>
+                      setAttendanceStateWithPersistence(
+                        attendanceState.map((a) => {
+                          if (a.id !== id) return a;
+
+                          return { ...a, rating: n };
+                        }),
+                      )
+                    }
+                  />
+                </DataViewCellLegacy>
+
+                <DataViewCellLegacy className="py-0">
+                  <Checkbox
+                    id={`attendance-${id}`}
+                    checked={!!currentRecord?.present}
+                    onCheckedChange={(willBe) => {
+                      if (!canEditAttendance) return;
+
+                      setAttendanceStateWithPersistence(
+                        attendanceState.map((a) => {
+                          if (a.id !== id) return a;
+                          return { ...a, present: willBe };
+                        }),
+                      );
+                    }}
+                    disabled={!canEditAttendance}
+                  />
+                </DataViewCellLegacy>
+
+                <DataViewCellLegacy className="justify-start! overflow-hidden pe-0!">
+                  <span className="truncate">
+                    {!!currentRecord?.notes?.trim()
+                      ? currentRecord.notes.trim()
+                      : "لا توجد ملاحظات"}
+                  </span>
+                </DataViewCellLegacy>
+
+                <DataViewCellLegacy className="*:text-olive-300 *:hover:text-olive-700 *:transition-colors">
+                  <AddNoteModal
+                    name={name || ""}
+                    uniqueId={`${courseId}-${lecture.id}-${id}`}
+                    onSave={(notes) =>
+                      setAttendanceStateWithPersistence(
+                        attendanceState.map((a) => {
+                          if (a.id !== id) return a;
+                          return { ...a, notes };
+                        }),
+                      )
+                    }
+                    notes={currentRecord?.notes || ""}
+                    disabled={!canEditAttendance}
+                  />
+                </DataViewCellLegacy>
+              </DataViewRowLegacy>
+            );
+          },
+          cards: () => null,
+        }}
+      />
+    </DataViewLegacy>
   );
 }

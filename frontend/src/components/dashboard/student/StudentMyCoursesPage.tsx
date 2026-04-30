@@ -1,6 +1,6 @@
 import { getUser } from "@/actions/auth";
 import { getStudentCourses } from "@/actions/courses";
-import StudentMyCoursesView from "./StudentMyCoursesView";
+import StudentMyCoursesView from "@/components/dashboard/student/StudentMyCoursesView";
 import { getChildOngoingEnrollments, getMyChildById } from "@/dev-data/db";
 import { Suspense } from "react";
 

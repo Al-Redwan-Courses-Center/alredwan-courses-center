@@ -1,177 +1,101 @@
+// PASSING CONFIG FUNCTIONS TO THE TABLE COMPONENT (NON-SERIALIZABLE DATA WHILE SERVER -> CLIENT)
 "use client";
 
 import EditIcon from "@/components/icons/EditIcon";
 import InfoIcon from "@/components/icons/InfoIcon";
 import lecturesViewConfig from "@/components/dashboard/instructor/lectures-view.config";
 import StatusBadge from "@/components/ui/StatusBadge";
-import { cn, formatTime, toHindiDigits } from "@/lib/utils";
-import {
-  DataTable,
-  DataTableFilterConfig,
-  DataTableMobileConfig,
-} from "@/shadcn/components/data-table";
-import { TodaysLectureListItem } from "@/types/config";
-import { ColumnDef } from "@tanstack/react-table";
-import Link from "next/link";
-import { useMemo } from "react";
 
-const { statusMap } = lecturesViewConfig;
+import { cn, formatTime, toHindiDigits } from "@/lib/utils";
+import Link from "next/link";
+import {
+  DataViewHeaderLegacy,
+  DataViewRowLegacy,
+} from "../../ui/data-view/DataViewRow";
+import { TodaysLectureListItem } from "@/types/config";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
+import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
+import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
+import DataViewSortLegacy from "@/components/ui/data-view/DataViewSort";
+import DataViewFilterLegacy from "@/components/ui/data-view/DataViewFilter";
+import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
+import DataViewLegacy from "@/components/ui/data-view/DataView";
+
+const { sortConfig, filterConfig, statusMap } = lecturesViewConfig;
 
 export default function TodaysLecturesTable({
   todaysLectures = [],
 }: {
   todaysLectures?: TodaysLectureListItem[];
 }) {
-  const columns = useMemo<ColumnDef<TodaysLectureListItem>[]>(
-    () => [
-      {
-        id: "index",
-        header: "م",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <span className="font-bold">{toHindiDigits(row.index + 1)}</span>
-        ),
-      },
-      {
-        accessorKey: "title",
-        header: "المحاضرة",
-      },
-      {
-        id: "course_name",
-        accessorFn: (row) => row.course.name,
-        header: "الدورة",
-      },
-      {
-        accessorKey: "start_time",
-        header: "البداية",
-        cell: ({ row }) => (
-          <span className="font-bold">
-            {formatTime(row.original.start_time)}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "end_time",
-        header: "النهاية",
-        cell: ({ row }) => (
-          <span className="font-bold">{formatTime(row.original.end_time)}</span>
-        ),
-      },
-      {
-        accessorKey: "status",
-        header: "الحالة",
-        cell: ({ row }) => {
-          const { label, color } = statusMap[row.original.status];
-          return <StatusBadge color={color}>{label}</StatusBadge>;
-        },
-        filterFn: (row, columnId, value: string) => {
-          if (!value || value === "all") return true;
-          if (value === "submitted")
-            return row.getValue(columnId) === "completed";
-          return row.getValue(columnId) !== "completed";
-        },
-      },
-      {
-        id: "actions",
-        header: "",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <div className="*:text-olive-300 *:hover:text-olive-700 flex items-center justify-center gap-6 *:transition-colors">
-            <button>
-              <EditIcon />
-            </button>
-
-            <Link
-              href={`/dashboard/my-courses/${row.original.course.id}/lectures/${row.original.id}`}
-            >
-              <InfoIcon />
-            </Link>
-          </div>
-        ),
-      },
-    ],
-    [],
-  );
-
-  const filters = useMemo<DataTableFilterConfig[]>(
-    () => [
-      {
-        columnId: "status",
-        label: "الحالة",
-        options: [
-          { label: "الكل", value: "all" },
-          { label: "مسجلة", value: "submitted" },
-          { label: "غير مسجلة", value: "not-submitted" },
-        ],
-      },
-    ],
-    [],
-  );
-
-  const mobileConfig = useMemo<DataTableMobileConfig<TodaysLectureListItem>>(
-    () => ({
-      renderTitle: (lecture, index) => (
-        <span>
-          {toHindiDigits(index + 1)}- {lecture.title}
-        </span>
-      ),
-      renderSubtitle: (lecture) => (
-        <span className="text-olive-400">{lecture.course.name}</span>
-      ),
-      getContentItems: (lecture) => {
-        const { label, color } = statusMap[lecture.status];
-
-        return [
-          {
-            key: "start_time",
-            label: "البداية",
-            value: formatTime(lecture.start_time),
-          },
-          {
-            key: "end_time",
-            label: "النهاية",
-            value: formatTime(lecture.end_time),
-          },
-          {
-            key: "status",
-            label: "الحالة",
-            value: (
-              <StatusBadge className={cn("text-[1.2rem]")} color={color}>
-                {label}
-              </StatusBadge>
-            ),
-          },
-        ];
-      },
-      renderActions: (lecture) => (
-        <div className="*:text-olive-300 *:hover:text-olive-700 flex items-center justify-end gap-6 *:transition-colors">
-          <button>
-            <EditIcon />
-          </button>
-          <Link
-            href={`/dashboard/my-courses/${lecture.course.id}/lectures/${lecture.id}`}
-          >
-            <InfoIcon />
-          </Link>
-        </div>
-      ),
-    }),
-    [],
-  );
-
   return (
-    <DataTable
-      columns={columns}
+    <DataViewLegacy
       data={todaysLectures}
-      searches={[
-        {
-          searchKey: "title",
-          placeholder: "ابحث عن اسم المحاضرة...",
-        },
-      ]}
-      filters={filters}
-      mobileConfig={mobileConfig}
-      pageSize={7}
-    />
+      sortConfig={sortConfig}
+      filterConfig={filterConfig}
+      gridLayout={cn(
+        "grid-cols-[minmax(0,0.5fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)_minmax(0,0.5fr)]",
+      )}
+    >
+      <div className="relative z-100 mb-14 flex items-center gap-32">
+        <DataViewSearchLegacy />
+        <DataViewSortLegacy />
+        <DataViewFilterLegacy />
+      </div>
+
+      <DataViewHeaderLegacy>
+        <DataViewCellLegacy>م</DataViewCellLegacy>
+        <DataViewCellLegacy>المحاضرة</DataViewCellLegacy>
+        <DataViewCellLegacy>الدورة</DataViewCellLegacy>
+        <DataViewCellLegacy>البداية</DataViewCellLegacy>
+        <DataViewCellLegacy>النهاية</DataViewCellLegacy>
+        <DataViewCellLegacy>الحالة</DataViewCellLegacy>
+        <DataViewCellLegacy></DataViewCellLegacy>
+      </DataViewHeaderLegacy>
+
+      <DataViewBodyLegacy<TodaysLectureListItem>
+        render={{
+          table: (lecture, i) => {
+            const { label, color } = statusMap[lecture.status];
+
+            return (
+              <DataViewRowLegacy key={lecture.id} index={i}>
+                <DataViewCellLegacy className="font-bold">
+                  {toHindiDigits(i + 1)}
+                </DataViewCellLegacy>
+                <DataViewCellLegacy>{lecture.title}</DataViewCellLegacy>
+                <DataViewCellLegacy>{lecture.course.name}</DataViewCellLegacy>
+                <DataViewCellLegacy className="font-bold">
+                  {formatTime(lecture.start_time)}
+                </DataViewCellLegacy>
+                <DataViewCellLegacy className="font-bold">
+                  {formatTime(lecture.end_time)}
+                </DataViewCellLegacy>
+                <DataViewCellLegacy>
+                  <StatusBadge color={color}>{label}</StatusBadge>
+                </DataViewCellLegacy>
+                <DataViewCellLegacy>
+                  <div className="*:text-olive-300 *:hover:text-olive-700 flex items-center justify-center gap-6 *:transition-colors">
+                    <button>
+                      <EditIcon />
+                    </button>
+
+                    <Link
+                      href={`/dashboard/my-courses/${lecture.course.id}/lectures/${lecture.id}`}
+                    >
+                      <InfoIcon />
+                    </Link>
+                  </div>
+                </DataViewCellLegacy>
+              </DataViewRowLegacy>
+            );
+          },
+
+          cards: () => null,
+        }}
+      />
+
+      <DataViewPaginationLegacy />
+    </DataViewLegacy>
   );
 }
