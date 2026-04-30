@@ -27,9 +27,7 @@ export function useIntersectionObserver<T extends Element = HTMLDivElement>({
     onIntersectRef.current = onIntersect;
   }, [onIntersect]);
 
-  const thresholdString = Array.isArray(threshold)
-    ? threshold.join(",")
-    : threshold.toString();
+  const thresholdJSON = JSON.stringify(threshold);
 
   useEffect(() => {
     const target = targetRef.current;
@@ -60,6 +58,7 @@ export function useIntersectionObserver<T extends Element = HTMLDivElement>({
       {
         root,
         rootMargin,
+        threshold: JSON.parse(thresholdJSON),
       },
     );
 
@@ -69,7 +68,7 @@ export function useIntersectionObserver<T extends Element = HTMLDivElement>({
       observer.disconnect();
       hasTriggeredRef.current = false;
     };
-  }, [enabled, root, rootMargin, thresholdString, triggerOnce]);
+  }, [enabled, root, rootMargin, thresholdJSON, triggerOnce]);
 
   return targetRef;
 }
