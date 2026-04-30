@@ -48,7 +48,7 @@ export const DataViewContext =
 
 const MAX_ITEMS_PER_PAGE = 6;
 
-export default function DataView<T extends Record<string, any>>({
+export default function DataViewLegacy<T extends Record<string, any>>({
   gridLayout,
   data,
   maxItemsPerPage = MAX_ITEMS_PER_PAGE,

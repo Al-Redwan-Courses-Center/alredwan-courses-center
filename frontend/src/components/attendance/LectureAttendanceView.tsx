@@ -7,14 +7,12 @@ import lectureAttendanceViewConfig from "@/components/attendance/lecture-attenda
 import RatingPopover from "@/components/attendance/RatingPopover";
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
-import DataView from "@/components/ui/data-view/DataView";
-import DataViewBody from "@/components/ui/data-view/DataViewBody";
-import DataViewCell from "@/components/ui/data-view/DataViewCell";
+import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
 import {
-  DataViewHeader,
-  DataViewRow,
+  DataViewHeaderLegacy,
+  DataViewRowLegacy,
 } from "@/components/ui/data-view/DataViewRow";
-import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 
 import { cn, persistInLocalStorage, toHindiDigits } from "@/lib/utils";
 import {
@@ -27,6 +25,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import DataViewLegacy from "../ui/data-view/DataView";
+import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
 
 const { filterConfig, sortConfig } = lectureAttendanceViewConfig;
 
@@ -162,7 +162,7 @@ export default function LectureAttendanceView({
   if (!lecture) return null;
 
   return (
-    <DataView
+    <DataViewLegacy
       gridLayout={cn("grid-cols-[0.25fr_1fr_1.5fr_1fr_1fr_1fr_1fr_2fr_1fr]")}
       data={attendanceState}
       filterConfig={filterConfig}
@@ -170,7 +170,7 @@ export default function LectureAttendanceView({
       maxItemsPerPage={9999}
     >
       <div className="mb-10 flex items-center gap-10 px-16">
-        <DataViewSearch />
+        <DataViewSearchLegacy />
 
         {canEditAttendance && (
           <>
@@ -214,14 +214,14 @@ export default function LectureAttendanceView({
         )}
       </div>
 
-      <DataViewHeader className="mx-16">
-        <DataViewCell>م</DataViewCell>
-        <DataViewCell>الصورة</DataViewCell>
-        <DataViewCell>اسم الطالب</DataViewCell>
-        <DataViewCell>الكود</DataViewCell>
-        <DataViewCell>السن</DataViewCell>
-        <DataViewCell>التقييم</DataViewCell>
-        <DataViewCell className="felx items-center gap-5 py-0">
+      <DataViewHeaderLegacy className="mx-16">
+        <DataViewCellLegacy>م</DataViewCellLegacy>
+        <DataViewCellLegacy>الصورة</DataViewCellLegacy>
+        <DataViewCellLegacy>اسم الطالب</DataViewCellLegacy>
+        <DataViewCellLegacy>الكود</DataViewCellLegacy>
+        <DataViewCellLegacy>السن</DataViewCellLegacy>
+        <DataViewCellLegacy>التقييم</DataViewCellLegacy>
+        <DataViewCellLegacy className="felx items-center gap-5 py-0">
           <span>الحضور</span>
           <span>
             <Checkbox
@@ -240,12 +240,14 @@ export default function LectureAttendanceView({
               disabled={!canEditAttendance}
             />
           </span>
-        </DataViewCell>
-        <DataViewCell className="justify-start!">ملاحظات</DataViewCell>
-        <DataViewCell></DataViewCell>
-      </DataViewHeader>
+        </DataViewCellLegacy>
+        <DataViewCellLegacy className="justify-start!">
+          ملاحظات
+        </DataViewCellLegacy>
+        <DataViewCellLegacy></DataViewCellLegacy>
+      </DataViewHeaderLegacy>
 
-      <DataViewBody<LectureAttendanceDetail>
+      <DataViewBodyLegacy<LectureAttendanceDetail>
         className="max-h-[52dvh] overflow-y-auto px-[4rem_calc(4rem-10px)] pt-3 pb-10"
         render={{
           table: (a, i) => {
@@ -262,10 +264,10 @@ export default function LectureAttendanceView({
             const currentRecord = attendanceState.find((a) => a.id === id);
 
             return (
-              <DataViewRow className="min-h-26" index={i} key={id}>
-                <DataViewCell>{toHindiDigits(i + 1)}</DataViewCell>
+              <DataViewRowLegacy className="min-h-26" index={i} key={id}>
+                <DataViewCellLegacy>{toHindiDigits(i + 1)}</DataViewCellLegacy>
 
-                <DataViewCell className="py-0">
+                <DataViewCellLegacy className="py-0">
                   <div className="aspect-square h-auto w-15 place-items-center overflow-clip rounded-full bg-gray-300">
                     {!!image && (
                       <div className="relative h-full w-full">
@@ -278,13 +280,15 @@ export default function LectureAttendanceView({
                       </div>
                     )}
                   </div>
-                </DataViewCell>
+                </DataViewCellLegacy>
 
-                <DataViewCell>{name}</DataViewCell>
-                <DataViewCell>{code}</DataViewCell>
-                <DataViewCell>{toHindiDigits(age || "")}</DataViewCell>
+                <DataViewCellLegacy>{name}</DataViewCellLegacy>
+                <DataViewCellLegacy>{code}</DataViewCellLegacy>
+                <DataViewCellLegacy>
+                  {toHindiDigits(age || "")}
+                </DataViewCellLegacy>
 
-                <DataViewCell className="py-0 font-bold">
+                <DataViewCellLegacy className="py-0 font-bold">
                   <RatingPopover
                     disabled={!canEditAttendance}
                     rating={currentRecord?.rating ?? 7}
@@ -298,9 +302,9 @@ export default function LectureAttendanceView({
                       )
                     }
                   />
-                </DataViewCell>
+                </DataViewCellLegacy>
 
-                <DataViewCell className="py-0">
+                <DataViewCellLegacy className="py-0">
                   <Checkbox
                     id={`attendance-${id}`}
                     checked={!!currentRecord?.present}
@@ -316,17 +320,17 @@ export default function LectureAttendanceView({
                     }}
                     disabled={!canEditAttendance}
                   />
-                </DataViewCell>
+                </DataViewCellLegacy>
 
-                <DataViewCell className="justify-start! overflow-hidden pe-0!">
+                <DataViewCellLegacy className="justify-start! overflow-hidden pe-0!">
                   <span className="truncate">
                     {!!currentRecord?.notes?.trim()
                       ? currentRecord.notes.trim()
                       : "لا توجد ملاحظات"}
                   </span>
-                </DataViewCell>
+                </DataViewCellLegacy>
 
-                <DataViewCell className="*:text-olive-300 *:hover:text-olive-700 *:transition-colors">
+                <DataViewCellLegacy className="*:text-olive-300 *:hover:text-olive-700 *:transition-colors">
                   <AddNoteModal
                     name={name || ""}
                     uniqueId={`${courseId}-${lecture.id}-${id}`}
@@ -341,13 +345,13 @@ export default function LectureAttendanceView({
                     notes={currentRecord?.notes || ""}
                     disabled={!canEditAttendance}
                   />
-                </DataViewCell>
-              </DataViewRow>
+                </DataViewCellLegacy>
+              </DataViewRowLegacy>
             );
           },
           cards: () => null,
         }}
       />
-    </DataView>
+    </DataViewLegacy>
   );
 }

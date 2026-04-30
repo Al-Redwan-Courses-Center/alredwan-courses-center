@@ -19,7 +19,7 @@ const rowStyles = cva(
   },
 );
 
-export function DataViewRow({
+export function DataViewRowLegacy({
   className,
   index,
   children,
@@ -51,7 +51,7 @@ export function DataViewRow({
   );
 }
 
-export function DataViewHeader({
+export function DataViewHeaderLegacy({
   className,
   children,
 }: {
@@ -63,8 +63,8 @@ export function DataViewHeader({
   if (layout === "cards") return null;
 
   return (
-    <DataViewRow className={className} index={-1}>
+    <DataViewRowLegacy className={className} index={-1}>
       {children}
-    </DataViewRow>
+    </DataViewRowLegacy>
   );
 }

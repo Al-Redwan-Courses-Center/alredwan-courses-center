@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 
-export default function DataViewCell({
+export default function DataViewCellLegacy({
   className = "",
   title = "",
   children = null,

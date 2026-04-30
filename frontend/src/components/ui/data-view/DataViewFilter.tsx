@@ -14,7 +14,7 @@ import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import { cn } from "@/lib/utils";
 import { useContext } from "react";
 
-export default function DataViewFilter() {
+export default function DataViewFilterLegacy() {
   const { filterConfig } = useContext(DataViewContext);
   const { searchParams, mutateSearchParams } = useMutateSearchParams();
   const filters = searchParams.get("filter")?.split(",") || [];

@@ -1,14 +1,14 @@
 "use client";
 
 import StudentCourseCard from "@/components/dashboard/student/StudentCourseCard";
-import DataView from "@/components/ui/data-view/DataView";
-import DataViewBody from "@/components/ui/data-view/DataViewBody";
-import DataViewCell from "@/components/ui/data-view/DataViewCell";
-import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
-import { DataViewPagination } from "@/components/ui/data-view/DataViewPagination";
-import { DataViewHeader } from "@/components/ui/data-view/DataViewRow";
-import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
-import DataViewSort from "@/components/ui/data-view/DataViewSort";
+import DataViewLegacy from "@/components/ui/data-view/DataView";
+import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
+import DataViewFilterLegacy from "@/components/ui/data-view/DataViewFilter";
+import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
+import { DataViewHeaderLegacy } from "@/components/ui/data-view/DataViewRow";
+import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
+import DataViewSortLegacy from "@/components/ui/data-view/DataViewSort";
 import { cn } from "@/lib/utils";
 import { CourseDetail } from "@/types/entities";
 
@@ -20,7 +20,7 @@ export default function StudentMyCoursesView({
   role?: string;
 }) {
   return (
-    <DataView
+    <DataViewLegacy
       data={courses}
       maxItemsPerPage={8}
       gridLayout={cn(
@@ -41,21 +41,21 @@ export default function StudentMyCoursesView({
       viewLayout="cards"
     >
       <div className="mb-14 flex items-center gap-32 ps-16">
-        <DataViewSearch />
-        <DataViewSort />
-        <DataViewFilter />
+        <DataViewSearchLegacy />
+        <DataViewSortLegacy />
+        <DataViewFilterLegacy />
       </div>
 
-      <DataViewHeader className="mx-16">
-        <DataViewCell>م</DataViewCell>
-        <DataViewCell>الدورة</DataViewCell>
-        <DataViewCell>الموسم</DataViewCell>
-        <DataViewCell>البداية</DataViewCell>
-        <DataViewCell>النهاية</DataViewCell>
-        <DataViewCell></DataViewCell>
-      </DataViewHeader>
+      <DataViewHeaderLegacy className="mx-16">
+        <DataViewCellLegacy>م</DataViewCellLegacy>
+        <DataViewCellLegacy>الدورة</DataViewCellLegacy>
+        <DataViewCellLegacy>الموسم</DataViewCellLegacy>
+        <DataViewCellLegacy>البداية</DataViewCellLegacy>
+        <DataViewCellLegacy>النهاية</DataViewCellLegacy>
+        <DataViewCellLegacy></DataViewCellLegacy>
+      </DataViewHeaderLegacy>
 
-      <DataViewBody
+      <DataViewBodyLegacy
         className="px-16"
         render={{
           table: () => null,
@@ -69,7 +69,7 @@ export default function StudentMyCoursesView({
         }}
       />
 
-      <DataViewPagination />
-    </DataView>
+      <DataViewPaginationLegacy />
+    </DataViewLegacy>
   );
 }

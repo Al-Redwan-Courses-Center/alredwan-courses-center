@@ -6,11 +6,7 @@ import InfoIcon from "@/components/icons/InfoIcon";
 import TrashIcon from "@/components/icons/TrashIcon";
 import StatusBadge from "@/components/ui/StatusBadge";
 import DataView from "@/components/ui/data-view/DataView";
-import DataViewBody from "@/components/ui/data-view/DataViewBody";
-import DataViewCell from "@/components/ui/data-view/DataViewCell";
-import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
-import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
-import DataViewSort from "@/components/ui/data-view/DataViewSort";
+
 import {
   cn,
   formatDate,
@@ -21,8 +17,16 @@ import {
 import { CourseDetail, LectureListItem } from "@/types/entities";
 import { parseISO } from "date-fns";
 import Link from "next/link";
-import { DataViewPagination } from "../ui/data-view/DataViewPagination";
-import { DataViewHeader, DataViewRow } from "../ui/data-view/DataViewRow";
+import { DataViewPaginationLegacy } from "../ui/data-view/DataViewPagination";
+import {
+  DataViewHeaderLegacy,
+  DataViewRowLegacy,
+} from "../ui/data-view/DataViewRow";
+import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
+import DataViewSortLegacy from "@/components/ui/data-view/DataViewSort";
+import DataViewFilterLegacy from "@/components/ui/data-view/DataViewFilter";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
+import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
 
 const { sortConfig, filterConfig, statusMap } = courseLecturesViewConfig;
 
@@ -46,55 +50,57 @@ export default function CourseLecturesView({
       )}
     >
       <div className="relative z-100 mb-14 flex items-center gap-32">
-        <DataViewSearch />
-        <DataViewSort />
-        <DataViewFilter />
+        <DataViewSearchLegacy />
+        <DataViewSortLegacy />
+        <DataViewFilterLegacy />
       </div>
 
-      <DataViewHeader>
-        <DataViewCell>م</DataViewCell>
-        <DataViewCell>المحاضرة</DataViewCell>
-        <DataViewCell>التاريخ</DataViewCell>
-        <DataViewCell>اليوم</DataViewCell>
-        <DataViewCell>البداية</DataViewCell>
-        <DataViewCell>النهاية</DataViewCell>
-        <DataViewCell>الحالة</DataViewCell>
-        <DataViewCell></DataViewCell>
-      </DataViewHeader>
+      <DataViewHeaderLegacy>
+        <DataViewCellLegacy>م</DataViewCellLegacy>
+        <DataViewCellLegacy>المحاضرة</DataViewCellLegacy>
+        <DataViewCellLegacy>التاريخ</DataViewCellLegacy>
+        <DataViewCellLegacy>اليوم</DataViewCellLegacy>
+        <DataViewCellLegacy>البداية</DataViewCellLegacy>
+        <DataViewCellLegacy>النهاية</DataViewCellLegacy>
+        <DataViewCellLegacy>الحالة</DataViewCellLegacy>
+        <DataViewCellLegacy></DataViewCellLegacy>
+      </DataViewHeaderLegacy>
 
-      <DataViewBody
+      <DataViewBodyLegacy
         render={{
           table: (lecture: LectureListItem, i: number) => {
             const { label, color } = statusMap[lecture.status];
             const weekday = getWeekDay(parseISO(lecture.scheduled_at).getDay());
 
             return (
-              <DataViewRow key={lecture.id} index={i}>
-                <DataViewCell className="font-bold">
+              <DataViewRowLegacy key={lecture.id} index={i}>
+                <DataViewCellLegacy className="font-bold">
                   {toHindiDigits(i + 1)}
-                </DataViewCell>
+                </DataViewCellLegacy>
 
-                <DataViewCell>{lecture.title}</DataViewCell>
+                <DataViewCellLegacy>{lecture.title}</DataViewCellLegacy>
 
-                <DataViewCell>
+                <DataViewCellLegacy>
                   {formatDate(parseISO(lecture.scheduled_at))}
-                </DataViewCell>
+                </DataViewCellLegacy>
 
-                <DataViewCell className="font-bold">{weekday}</DataViewCell>
+                <DataViewCellLegacy className="font-bold">
+                  {weekday}
+                </DataViewCellLegacy>
 
-                <DataViewCell className="font-bold">
+                <DataViewCellLegacy className="font-bold">
                   {formatTime(lecture.start_time)}
-                </DataViewCell>
+                </DataViewCellLegacy>
 
-                <DataViewCell className="font-bold">
+                <DataViewCellLegacy className="font-bold">
                   {formatTime(lecture.end_time)}
-                </DataViewCell>
+                </DataViewCellLegacy>
 
-                <DataViewCell>
+                <DataViewCellLegacy>
                   <StatusBadge color={color}>{label}</StatusBadge>
-                </DataViewCell>
+                </DataViewCellLegacy>
 
-                <DataViewCell>
+                <DataViewCellLegacy>
                   <div className="*:text-olive-300 *:hover:text-olive-700 flex items-center justify-center gap-6 *:transition-colors">
                     <button>
                       <TrashIcon />
@@ -112,8 +118,8 @@ export default function CourseLecturesView({
                       <InfoIcon />
                     </Link>
                   </div>
-                </DataViewCell>
-              </DataViewRow>
+                </DataViewCellLegacy>
+              </DataViewRowLegacy>
             );
           },
 
@@ -121,7 +127,7 @@ export default function CourseLecturesView({
         }}
       />
 
-      <DataViewPagination />
+      <DataViewPaginationLegacy />
     </DataView>
   );
 }

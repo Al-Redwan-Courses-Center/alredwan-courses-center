@@ -10,7 +10,7 @@ const paginationBtnStyles = cn(
   "text-olive-400 h-auto w-5 disabled:pointer-events-none disabled:text-gray-600",
 );
 
-export function DataViewPagination() {
+export function DataViewPaginationLegacy() {
   const { numPages, page, nextPage, prevPage, setPage } =
     useContext(DataViewContext);
 

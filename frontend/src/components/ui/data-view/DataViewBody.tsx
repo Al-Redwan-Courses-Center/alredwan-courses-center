@@ -4,7 +4,7 @@ import { DataViewContext } from "@/components/ui/data-view/DataView";
 import { cn } from "@/lib/utils";
 import { ReactNode, useContext } from "react";
 
-export default function DataViewBody<T>({
+export default function DataViewBodyLegacy<T>({
   render,
   className,
 }: {

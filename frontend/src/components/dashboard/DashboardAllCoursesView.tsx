@@ -2,13 +2,10 @@
 
 import PublicCourseCard from "@/components/courses/PublicCourseCard";
 import DataView from "@/components/ui/data-view/DataView";
-import DataViewBody from "@/components/ui/data-view/DataViewBody";
-import DataViewCell from "@/components/ui/data-view/DataViewCell";
-import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
-import { DataViewPagination } from "@/components/ui/data-view/DataViewPagination";
-import { DataViewHeader } from "@/components/ui/data-view/DataViewRow";
-import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
-import DataViewSort from "@/components/ui/data-view/DataViewSort";
+
+import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
+import { DataViewHeaderLegacy } from "@/components/ui/data-view/DataViewRow";
+
 import { cn } from "@/lib/utils";
 import { CourseListItem } from "@/types/entities";
 import {
@@ -16,6 +13,11 @@ import {
   getAllCoursesFilterConfig,
   sortConfig,
 } from "@/components/dashboard/dashboard-all-courses-view-config";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
+import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
+import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
+import DataViewSortLegacy from "../ui/data-view/DataViewSort";
+import DataViewFilterLegacy from "@/components/ui/data-view/DataViewFilter";
 
 export default function DashboardAllCoursesView({
   courses: inputCourses = [],
@@ -37,21 +39,21 @@ export default function DashboardAllCoursesView({
       viewLayout="cards"
     >
       <div className="mb-14 flex items-center gap-32 ps-16">
-        <DataViewSearch />
-        <DataViewSort />
-        <DataViewFilter />
+        <DataViewSearchLegacy />
+        <DataViewSortLegacy />
+        <DataViewFilterLegacy />
       </div>
 
-      <DataViewHeader className="mx-16">
-        <DataViewCell>م</DataViewCell>
-        <DataViewCell>الدورة</DataViewCell>
-        <DataViewCell>الموسم</DataViewCell>
-        <DataViewCell>البداية</DataViewCell>
-        <DataViewCell>النهاية</DataViewCell>
-        <DataViewCell></DataViewCell>
-      </DataViewHeader>
+      <DataViewHeaderLegacy className="mx-16">
+        <DataViewCellLegacy>م</DataViewCellLegacy>
+        <DataViewCellLegacy>الدورة</DataViewCellLegacy>
+        <DataViewCellLegacy>الموسم</DataViewCellLegacy>
+        <DataViewCellLegacy>البداية</DataViewCellLegacy>
+        <DataViewCellLegacy>النهاية</DataViewCellLegacy>
+        <DataViewCellLegacy></DataViewCellLegacy>
+      </DataViewHeaderLegacy>
 
-      <DataViewBody
+      <DataViewBodyLegacy
         className="px-16"
         render={{
           table: () => null,
@@ -67,7 +69,7 @@ export default function DashboardAllCoursesView({
         }}
       />
 
-      <DataViewPagination />
+      <DataViewPaginationLegacy />
     </DataView>
   );
 }

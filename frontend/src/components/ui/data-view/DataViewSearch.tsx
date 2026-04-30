@@ -6,7 +6,7 @@ import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import { cn, debounceFn } from "@/lib/utils";
 import { useMemo, useState } from "react";
 
-export default function DataViewSearch() {
+export default function DataViewSearchLegacy() {
   const { searchParams, mutateSearchParams } = useMutateSearchParams();
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get("search") || "",

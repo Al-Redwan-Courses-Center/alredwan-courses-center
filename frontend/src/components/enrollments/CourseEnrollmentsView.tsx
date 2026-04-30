@@ -1,14 +1,14 @@
 "use client";
 
-import DataView from "@/components/ui/data-view/DataView";
-import DataViewBody from "@/components/ui/data-view/DataViewBody";
-import DataViewCell from "@/components/ui/data-view/DataViewCell";
-import { DataViewPagination } from "@/components/ui/data-view/DataViewPagination";
+import DataViewLegacy from "@/components/ui/data-view/DataView";
+import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
+import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
 import {
-  DataViewHeader,
-  DataViewRow,
+  DataViewHeaderLegacy,
+  DataViewRowLegacy,
 } from "@/components/ui/data-view/DataViewRow";
-import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
+import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { cn, formatDate, toHindiDigits } from "@/lib/utils";
 import { InstructorEnrollmentListItem } from "@/types/entities";
@@ -54,7 +54,7 @@ export default function CourseEnrollmentsView({
   enrollments: InstructorEnrollmentListItem[];
 }) {
   return (
-    <DataView
+    <DataViewLegacy
       data={enrollments}
       gridLayout={cn("grid-cols-[0.25fr_1.5fr_1.5fr_1fr_1fr_1fr_1fr]")}
       maxItemsPerPage={5}
@@ -62,51 +62,51 @@ export default function CourseEnrollmentsView({
       sortConfig={{}}
     >
       <div className="relative z-100 mb-14 flex items-center gap-32">
-        <DataViewSearch />
+        <DataViewSearchLegacy />
         {/* <DataViewSort />
         <DataViewFilter /> */}
       </div>
 
-      <DataViewHeader>
-        <DataViewCell>م</DataViewCell>
-        <DataViewCell>الدورة</DataViewCell>
-        <DataViewCell>الطالب</DataViewCell>
-        <DataViewCell>نوع الطالب</DataViewCell>
-        <DataViewCell>رقم الهاتف</DataViewCell>
-        <DataViewCell>الحالة</DataViewCell>
-        <DataViewCell>وقت الالتحاق</DataViewCell>
-      </DataViewHeader>
+      <DataViewHeaderLegacy>
+        <DataViewCellLegacy>م</DataViewCellLegacy>
+        <DataViewCellLegacy>الدورة</DataViewCellLegacy>
+        <DataViewCellLegacy>الطالب</DataViewCellLegacy>
+        <DataViewCellLegacy>نوع الطالب</DataViewCellLegacy>
+        <DataViewCellLegacy>رقم الهاتف</DataViewCellLegacy>
+        <DataViewCellLegacy>الحالة</DataViewCellLegacy>
+        <DataViewCellLegacy>وقت الالتحاق</DataViewCellLegacy>
+      </DataViewHeaderLegacy>
 
-      <DataViewBody<InstructorEnrollmentListItem>
+      <DataViewBodyLegacy<InstructorEnrollmentListItem>
         render={{
           table: (item, i) => {
             const { color: statusColor, label: statusLabel } =
               enrollmentStatusMap[item.status];
 
             return (
-              <DataViewRow key={item.id} index={i}>
-                <DataViewCell>{toHindiDigits(i + 1)}</DataViewCell>
-                <DataViewCell>{item.course_name}</DataViewCell>
-                <DataViewCell>{item.participant_name}</DataViewCell>
-                <DataViewCell>
+              <DataViewRowLegacy key={item.id} index={i}>
+                <DataViewCellLegacy>{toHindiDigits(i + 1)}</DataViewCellLegacy>
+                <DataViewCellLegacy>{item.course_name}</DataViewCellLegacy>
+                <DataViewCellLegacy>{item.participant_name}</DataViewCellLegacy>
+                <DataViewCellLegacy>
                   {item.participant_type
                     ? participantTranslationMap[item.participant_type]
                     : "غير محدد"}
-                </DataViewCell>
-                <DataViewCell>
+                </DataViewCellLegacy>
+                <DataViewCellLegacy>
                   {item.participant_phone
                     ? toHindiDigits(item.participant_phone.slice(2), true)
                     : "غير معرف"}
-                </DataViewCell>
-                <DataViewCell>
+                </DataViewCellLegacy>
+                <DataViewCellLegacy>
                   <StatusBadge className={statusColor}>
                     {statusLabel}
                   </StatusBadge>
-                </DataViewCell>
-                <DataViewCell>
+                </DataViewCellLegacy>
+                <DataViewCellLegacy>
                   {formatDate(parseISO(item.enrolled_at))}
-                </DataViewCell>
-              </DataViewRow>
+                </DataViewCellLegacy>
+              </DataViewRowLegacy>
             );
           },
 
@@ -114,7 +114,7 @@ export default function CourseEnrollmentsView({
         }}
       />
 
-      <DataViewPagination />
-    </DataView>
+      <DataViewPaginationLegacy />
+    </DataViewLegacy>
   );
 }

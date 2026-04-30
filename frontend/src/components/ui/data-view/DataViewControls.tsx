@@ -2,7 +2,7 @@ import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
 import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
 
-export default function DataViewControls({
+export default function DataViewControlsLegacy({
   showSearch = true,
   showSort = true,
   showFilter = true,

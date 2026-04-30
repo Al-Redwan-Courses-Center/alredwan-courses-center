@@ -21,7 +21,7 @@ const dropdownItemStyles = cn(
   "[direction:rtl;] flex cursor-pointer justify-between px-10 text-[1.8rem] transition-all hover:bg-gray-400",
 );
 
-export default function DataViewSort() {
+export default function DataViewSortLegacy() {
   const { searchParams, mutateSearchParams } = useMutateSearchParams();
   const currentSort = searchParams.get("sort-by");
   const [fieldName, direction] = currentSort?.split("-") || [];

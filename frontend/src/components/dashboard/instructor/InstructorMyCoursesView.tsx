@@ -4,13 +4,12 @@ import MyCourseCard from "@/components/courses/MyCourseCard";
 import InfoIcon from "@/components/icons/InfoIcon";
 import DataView from "@/components/ui/data-view/DataView";
 import DataViewBody from "@/components/ui/data-view/DataViewBody";
-import DataViewCell from "@/components/ui/data-view/DataViewCell";
 import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
 import DataViewLayoutToggle from "@/components/ui/data-view/DataViewLayoutToggle";
-import { DataViewPagination } from "@/components/ui/data-view/DataViewPagination";
+import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
 import {
-  DataViewHeader,
-  DataViewRow,
+  DataViewHeaderLegacy,
+  DataViewRowLegacy,
 } from "@/components/ui/data-view/DataViewRow";
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
@@ -21,6 +20,7 @@ import buildInstructorMyCoursesConfig, {
 import { parseISO } from "date-fns";
 import Link from "next/link";
 import { CourseListItem } from "@/types/entities";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
 
 export default function InstructorMyCoursesView({
   courses,
@@ -49,32 +49,32 @@ export default function InstructorMyCoursesView({
         <DataViewLayoutToggle />
       </div>
 
-      <DataViewHeader className="mx-16">
-        <DataViewCell>م</DataViewCell>
-        <DataViewCell>الدورة</DataViewCell>
-        <DataViewCell>الموسم</DataViewCell>
-        <DataViewCell>البداية</DataViewCell>
-        <DataViewCell>النهاية</DataViewCell>
-        <DataViewCell></DataViewCell>
-      </DataViewHeader>
+      <DataViewHeaderLegacy className="mx-16">
+        <DataViewCellLegacy>م</DataViewCellLegacy>
+        <DataViewCellLegacy>الدورة</DataViewCellLegacy>
+        <DataViewCellLegacy>الموسم</DataViewCellLegacy>
+        <DataViewCellLegacy>البداية</DataViewCellLegacy>
+        <DataViewCellLegacy>النهاية</DataViewCellLegacy>
+        <DataViewCellLegacy></DataViewCellLegacy>
+      </DataViewHeaderLegacy>
 
       <DataViewBody
         className="px-16"
         render={{
           table: (course: CourseViewItem, i) => (
-            <DataViewRow index={i} key={course.id}>
-              <DataViewCell>{toHindiDigits(i + 1)}</DataViewCell>
-              <DataViewCell>{course.name}</DataViewCell>
-              <DataViewCell>{course.season?.name}</DataViewCell>
-              <DataViewCell>
+            <DataViewRowLegacy index={i} key={course.id}>
+              <DataViewCellLegacy>{toHindiDigits(i + 1)}</DataViewCellLegacy>
+              <DataViewCellLegacy>{course.name}</DataViewCellLegacy>
+              <DataViewCellLegacy>{course.season?.name}</DataViewCellLegacy>
+              <DataViewCellLegacy>
                 {formatDate(parseISO(course.start_date))}
-              </DataViewCell>
-              <DataViewCell>
+              </DataViewCellLegacy>
+              <DataViewCellLegacy>
                 {course.end_date
                   ? formatDate(parseISO(course.end_date))
                   : "غير محدد"}
-              </DataViewCell>
-              <DataViewCell>
+              </DataViewCellLegacy>
+              <DataViewCellLegacy>
                 <div className="flex items-center justify-center gap-6">
                   <Link
                     href={`/dashboard/my-courses/${course.id}/lectures`}
@@ -83,8 +83,8 @@ export default function InstructorMyCoursesView({
                     <InfoIcon />
                   </Link>
                 </div>
-              </DataViewCell>
-            </DataViewRow>
+              </DataViewCellLegacy>
+            </DataViewRowLegacy>
           ),
 
           cards: (item: CourseViewItem, index) => (
@@ -93,7 +93,7 @@ export default function InstructorMyCoursesView({
         }}
       />
 
-      <DataViewPagination />
+      <DataViewPaginationLegacy />
     </DataView>
   );
 }

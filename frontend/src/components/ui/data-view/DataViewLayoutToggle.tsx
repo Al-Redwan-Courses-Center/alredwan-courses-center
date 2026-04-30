@@ -6,7 +6,7 @@ import { DataViewContext } from "@/components/ui/data-view/DataView";
 import Toggle from "@/components/ui/Toggle";
 import { useContext } from "react";
 
-export default function DataViewLayoutToggle() {
+export default function DataViewLayoutToggleLegacy() {
   const { layout, setLayout } = useContext(DataViewContext);
 
   return (

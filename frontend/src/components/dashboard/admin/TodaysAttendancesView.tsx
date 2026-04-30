@@ -1,23 +1,26 @@
 "use client";
 
 import useWebSocket from "react-use-websocket";
-import {StaffAttendanceServerEvent} from "@/types/entities/staff-attendance-events";
-import {ReactNode, useEffect, useState} from "react";
-import {getClientAccessToken} from "@/actions/temp";
+import { StaffAttendanceServerEvent } from "@/types/entities/staff-attendance-events";
+import { ReactNode, useEffect, useState } from "react";
+import { getClientAccessToken } from "@/actions/temp";
 import DataView from "@/components/ui/data-view/DataView";
-import {DataViewHeader, DataViewRow,} from "@/components/ui/data-view/DataViewRow";
-import DataViewCell from "@/components/ui/data-view/DataViewCell";
+import {
+  DataViewHeaderLegacy,
+  DataViewRowLegacy,
+} from "@/components/ui/data-view/DataViewRow";
 import DataViewControls from "@/components/ui/data-view/DataViewControls";
-import {cn, formatTime, toHindiDigits} from "@/lib/utils";
-import {StaffAttendanceListItem} from "@/types/entities/staff-attendance";
-import DataViewBody from "@/components/ui/data-view/DataViewBody";
+import { cn, formatTime, toHindiDigits } from "@/lib/utils";
+import { StaffAttendanceListItem } from "@/types/entities/staff-attendance";
 import StatusBadge from "@/components/ui/StatusBadge";
 import ClientLocalTime from "@/components/ui/ClientLocalTime";
-import {cva, VariantProps} from "class-variance-authority";
-import {parseISO} from "date-fns";
+import { cva, VariantProps } from "class-variance-authority";
+import { parseISO } from "date-fns";
 import Button from "@/components/ui/Button";
-import {manualCheckIn, manualCheckOut} from "@/actions/admin-attendances";
-import {DataViewPagination} from "@/components/ui/data-view/DataViewPagination";
+import { manualCheckIn, manualCheckOut } from "@/actions/admin-attendances";
+import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
+import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
 
 function calcPositionalStatus(
   checkInTime: string | null,
@@ -176,29 +179,29 @@ function StaffAttendanceRow({
   }, [delayUntilCheckInLate]);
 
   return (
-    <DataViewRow index={index} key={attendance.id}>
-      <DataViewCell>{toHindiDigits(index + 1)}</DataViewCell>
-      <DataViewCell
+    <DataViewRowLegacy index={index} key={attendance.id}>
+      <DataViewCellLegacy>{toHindiDigits(index + 1)}</DataViewCellLegacy>
+      <DataViewCellLegacy
         className="overflow-clip text-ellipsis whitespace-nowrap"
         {...(attendance.instructor_name.length > 15
           ? { title: attendance.instructor_name }
           : {})}
       >
         {attendance.instructor_name}
-      </DataViewCell>
-      <DataViewCell title={attendance.lecture_info?.lecture_title}>
+      </DataViewCellLegacy>
+      <DataViewCellLegacy title={attendance.lecture_info?.lecture_title}>
         {attendance.lecture_info?.course_title}
-      </DataViewCell>
-      <DataViewCell>
+      </DataViewCellLegacy>
+      <DataViewCellLegacy>
         <span>{formatTime(attendance.scheduled_check_in_time)}</span>
-      </DataViewCell>
-      <DataViewCell>
+      </DataViewCellLegacy>
+      <DataViewCellLegacy>
         <span>{formatTime(attendance.scheduled_check_out_time)}</span>
-      </DataViewCell>
+      </DataViewCellLegacy>
 
-      <DataViewCell />
+      <DataViewCellLegacy />
 
-      <DataViewCell className="py-0">
+      <DataViewCellLegacy className="py-0">
         <TimeBadge
           status={
             isCheckInEarly ? "bonus" : isCheckInLate ? "penalty" : "neutral"
@@ -207,8 +210,8 @@ function StaffAttendanceRow({
         >
           <ClientLocalTime iso={attendance.check_in_time} />
         </TimeBadge>
-      </DataViewCell>
-      <DataViewCell className="py-0">
+      </DataViewCellLegacy>
+      <DataViewCellLegacy className="py-0">
         <TimeBadge
           status={
             isCheckOutEarly ? "penalty" : isCheckOutLate ? "bonus" : "neutral"
@@ -216,8 +219,8 @@ function StaffAttendanceRow({
         >
           <ClientLocalTime iso={attendance.check_out_time} />
         </TimeBadge>
-      </DataViewCell>
-      <DataViewCell>
+      </DataViewCellLegacy>
+      <DataViewCellLegacy>
         <StatusBadge
           className={cn(
             "transition-colors",
@@ -231,8 +234,8 @@ function StaffAttendanceRow({
         >
           {statusLabel}
         </StatusBadge>
-      </DataViewCell>
-      <DataViewCell className="py-0">
+      </DataViewCellLegacy>
+      <DataViewCellLegacy className="py-0">
         {statusValue === "away" && (
           <Button
             size="small"
@@ -272,8 +275,8 @@ function StaffAttendanceRow({
             تم التسجيل
           </Button>
         )}
-      </DataViewCell>
-    </DataViewRow>
+      </DataViewCellLegacy>
+    </DataViewRowLegacy>
   );
 }
 
@@ -365,20 +368,20 @@ export default function TodaysAttendancesView({
         Test Fetch Summary Data
       </button>
 
-      <DataViewHeader>
-        <DataViewCell>م</DataViewCell>
-        <DataViewCell>الاسم</DataViewCell>
-        <DataViewCell>الهدف</DataViewCell>
-        <DataViewCell>الحضور</DataViewCell>
-        <DataViewCell>الانصراف</DataViewCell>
-        <DataViewCell />
-        <DataViewCell>الحضور الفعلي</DataViewCell>
-        <DataViewCell>الانصراف الفعلي</DataViewCell>
-        <DataViewCell>الحالة</DataViewCell>
-        <DataViewCell></DataViewCell>
-      </DataViewHeader>
+      <DataViewHeaderLegacy>
+        <DataViewCellLegacy>م</DataViewCellLegacy>
+        <DataViewCellLegacy>الاسم</DataViewCellLegacy>
+        <DataViewCellLegacy>الهدف</DataViewCellLegacy>
+        <DataViewCellLegacy>الحضور</DataViewCellLegacy>
+        <DataViewCellLegacy>الانصراف</DataViewCellLegacy>
+        <DataViewCellLegacy />
+        <DataViewCellLegacy>الحضور الفعلي</DataViewCellLegacy>
+        <DataViewCellLegacy>الانصراف الفعلي</DataViewCellLegacy>
+        <DataViewCellLegacy>الحالة</DataViewCellLegacy>
+        <DataViewCellLegacy></DataViewCellLegacy>
+      </DataViewHeaderLegacy>
 
-      <DataViewBody<StaffAttendanceListItem>
+      <DataViewBodyLegacy<StaffAttendanceListItem>
         render={{
           table: (item, i) => (
             <StaffAttendanceRow key={item.id} attendance={item} index={i} />
@@ -387,7 +390,7 @@ export default function TodaysAttendancesView({
         }}
       />
 
-      <DataViewPagination />
+      <DataViewPaginationLegacy />
     </DataView>
   );
 }
