@@ -38,7 +38,8 @@ export default async function StudentOverviewPage({
     );
 
     // TODO(api): Replace mock child details when the API provides child info.
-    name = getMyChildById(childId).name;
+    const child = getMyChildById(childId);
+    name = child ? child.name : "طفل جديد";
   } else {
     // TODO(api): Replace mock active courses once course detail endpoints are wired.
     myActiveCourses = await getStudentCourses();

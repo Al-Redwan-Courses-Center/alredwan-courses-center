@@ -26,9 +26,19 @@ export default function EnrollmentRequestsList({
 
   return (
     <div className={cn("flex flex-col ps-0! pb-10 *:ps-29", wrapperStyles)}>
-      <h4 className="text-olive-700 mb-6 text-5xl font-bold">
-        آخر الطلبات {childNames.length === 1 && `ل${childNames[0]}`}
-      </h4>
+      <div className="mb-6 flex items-center justify-between">
+        <h4 className="text-olive-700 text-5xl font-bold">
+          اخر الطلبات المعلقة {childNames.length === 1 && `ل${childNames[0]}`}
+        </h4>
+        <div className="flex items-center gap-4 text-white">
+          <div className="bg-olive-300 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-transform hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>
+          </div>
+          <div className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-red-800 transition-transform hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          </div>
+        </div>
+      </div>
 
       <div
         className={cn(

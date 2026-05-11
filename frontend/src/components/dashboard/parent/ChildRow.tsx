@@ -4,6 +4,7 @@ import ChildCard from "@/components/dashboard/parent/ChildCard";
 import { getChildEnrollmentRequests } from "@/dev-data/db";
 import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
 import { toHindiDigits } from "@/lib/utils";
+import AcademicLevelChart from "@/components/dashboard/parent/AcademicLevelChart";
 
 export default function ChildRow({
   child,
@@ -25,7 +26,7 @@ export default function ChildRow({
   );
 
   return (
-    <div className="grid grid-cols-[15rem_auto_1.5fr_1fr] gap-x-10">
+    <div className="grid grid-cols-[14rem_minmax(0,1.1fr)_minmax(0,1.3fr)_minmax(0,1.2fr)] gap-x-8">
       <span className="text-olive-500 text-[2.4rem] font-bold">
         {`( ${toHindiDigits(index + 1)} ) ${child.first_name}`}
       </span>
@@ -39,7 +40,9 @@ export default function ChildRow({
           wrapperStyles="*:px-7!"
         />
       </div>
-      <div></div>
+      <div>
+        <AcademicLevelChart childName={child.first_name} />
+      </div>
     </div>
   );
 }
