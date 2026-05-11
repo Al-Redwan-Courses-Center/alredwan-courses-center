@@ -1,9 +1,28 @@
 import { getParentChildren, getChildEnrollments, getChildEnrollmentRequests } from "@/actions/user";
 import MyChildrenList from "@/components/dashboard/parent/MyChildrenList";
 import { EnrollmentRequestListItem } from "@/types/entities";
+import { Plus } from "lucide-react";
+import Button from "@/components/ui/Button";
 
 export default async function Page() {
   const myChildren = await getParentChildren();
+
+  if (myChildren.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-8 text-center px-6">
+        <div className="bg-olive-50 p-10 rounded-full">
+          <Plus size={80} className="text-olive-500" />
+        </div>
+        <div className="flex flex-col gap-2">
+          <h3 className="text-olive-700 font-medad text-5xl">لا يوجد أطفال مضافون بعد</h3>
+          <p className="text-gray-600 text-2xl">ابدأ بإضافة أطفالك لتتمكن من إلحاقهم بالدورات التدريبية</p>
+        </div>
+        <Button href="/dashboard/my-children/new" className="bg-olive-500 hover:bg-olive-600 text-white px-12 py-5 rounded-[0.5rem_2rem] font-bold text-3xl flex items-center gap-4 shadow-lg transition-transform hover:scale-105">
+          إضافة أول طفل الآن
+        </Button>
+      </div>
+    );
+  }
 
   // Fetch enrollments and enrollment requests for all children in parallel
   const childrenData = await Promise.all(
