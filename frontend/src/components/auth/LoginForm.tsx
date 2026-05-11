@@ -6,6 +6,7 @@ import FieldSetInput from "@/components/ui/FieldSetInput";
 import { LoginInputs } from "@/types/auth";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -165,12 +166,12 @@ export default function LoginForm({
           تسجيل الدخول
         </Button>
 
-        {/* <Link
-          href="#"
+        <Link
+          href="/forgot-password"
           className="text-olive-900 hover:text-olive-300 self-center text-2xl font-bold underline transition-colors"
         >
           نسيت كلمة المرور؟
-        </Link> */}
+        </Link>
 
         <div className="flex flex-col">
           <span className="self-center text-2xl">ليس لديك حساب؟</span>

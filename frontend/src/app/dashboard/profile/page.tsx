@@ -4,6 +4,7 @@ import Button from "@/components/ui/Button";
 import ProfileImageUploader from "@/components/dashboard/profile/ProfileImageUploader";
 import { getMe } from "@/actions/profile";
 import { getFullImageUrl } from "@/lib/image-utils";
+import ChangePasswordForm from "@/components/dashboard/profile/ChangePasswordForm";
 
 export default async function ProfilePage() {
   const sessionUser = await getUser();
@@ -38,31 +39,35 @@ export default async function ProfilePage() {
         </div>
 
         {/* Details Card */}
-        <div className="lg:col-span-2 bg-white/60 backdrop-blur-md p-10 rounded-[0_3rem] shadow-soft border border-white/40">
-          <h4 className="text-3xl font-bold text-olive-800 mb-8 pb-4 border-b border-olive-100">البيانات الأساسية</h4>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-12">
-            <InfoItem 
-              icon={<Phone className="text-olive-500" />} 
-              label="رقم الهاتف" 
-              value={user.phone_number1} 
-            />
-            <InfoItem 
-              icon={<Mail className="text-olive-500" />} 
-              label="البريد الإلكتروني" 
-              value={user.email || "غير محدد"} 
-            />
-            <InfoItem 
-              icon={<Calendar className="text-olive-500" />} 
-              label="تاريخ الميلاد" 
-              value={user.dob} 
-            />
-            <InfoItem 
-              icon={<MapPin className="text-olive-500" />} 
-              label="العنوان" 
-              value={user.address && user.address.trim() !== "" ? user.address : "غير محدد"} 
-            />
+        <div className="lg:col-span-2 flex flex-col gap-10">
+          <div className="bg-white/60 backdrop-blur-md p-10 rounded-[0_3rem] shadow-soft border border-white/40">
+            <h4 className="text-3xl font-bold text-olive-800 mb-8 pb-4 border-b border-olive-100">البيانات الأساسية</h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-12">
+              <InfoItem 
+                icon={<Phone className="text-olive-500" />} 
+                label="رقم الهاتف" 
+                value={user.phone_number1} 
+              />
+              <InfoItem 
+                icon={<Mail className="text-olive-500" />} 
+                label="البريد الإلكتروني" 
+                value={user.email || "غير محدد"} 
+              />
+              <InfoItem 
+                icon={<Calendar className="text-olive-500" />} 
+                label="تاريخ الميلاد" 
+                value={user.dob} 
+              />
+              <InfoItem 
+                icon={<MapPin className="text-olive-500" />} 
+                label="العنوان" 
+                value={user.address && user.address.trim() !== "" ? user.address : "غير محدد"} 
+              />
+            </div>
           </div>
+
+          <ChangePasswordForm />
         </div>
       </div>
     </div>
