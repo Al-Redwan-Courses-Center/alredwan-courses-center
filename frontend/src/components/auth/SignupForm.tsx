@@ -116,7 +116,12 @@ export default function SignupForm() {
           redirect: false,
         });
 
-        if (res?.ok) return window.location.replace("/dashboard");
+        if (res?.ok) {
+          const redirectPath = formattedData.role === "parent" 
+            ? "/dashboard/my-children/new" 
+            : "/dashboard";
+          return window.location.replace(redirectPath);
+        }
         toast.error(res?.error || "حدث خطأ أثناء تسجيل الدخول! حاول مرة أخرى!");
       }, 3000);
     }
