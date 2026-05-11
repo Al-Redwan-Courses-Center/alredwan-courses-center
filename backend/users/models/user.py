@@ -105,6 +105,9 @@ class CustomUser(AbstractUser):
 
     address = models.TextField(null=True, blank=True)
     location = models.URLField(max_length=512, null=True, blank=True)
+    image = models.ImageField(
+        _("صورة الملف الشخصي"), upload_to="profile_pics/", null=True, blank=True
+    )
     role = models.CharField(
         max_length=20,
         choices=[
