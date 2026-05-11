@@ -1,3 +1,5 @@
+"use server";
+
 import { getAuthApiClient } from "@/lib/auth-api";
 import { PaginatedResponse } from "@/types/config";
 import { isAxiosError } from "axios";
@@ -37,6 +39,27 @@ export async function getParentChildren(): Promise<ParentChildDetail[]> {
     }
 
     return [];
+  }
+}
+
+export async function addChild(data: {
+  first_name: string;
+  last_name: string;
+  dob: string;
+  gender: "boy" | "girl";
+}) {
+  try {
+    const apiClient = await getAuthApiClient();
+    const response = await apiClient.post("/api/parents/children/create/", data);
+    return { data: response.data, error: null };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        data: null,
+        error: error.response?.data ?? "حدث خطأ أثناء إضافة الطفل",
+      };
+    }
+    return { data: null, error: "حدث خطأ غير متوقع" };
   }
 }
 
