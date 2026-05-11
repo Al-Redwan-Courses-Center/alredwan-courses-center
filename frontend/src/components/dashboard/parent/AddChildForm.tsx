@@ -55,7 +55,6 @@ export default function AddChildForm({ initialData }: { initialData?: ParentChil
     } else {
       toast.success(initialData ? "تم تحديث البيانات بنجاح!" : "تم إضافة الطفل بنجاح!");
       router.push("/dashboard/my-children");
-      router.refresh();
     }
   };
 
