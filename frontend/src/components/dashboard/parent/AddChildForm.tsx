@@ -5,7 +5,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import FieldSetInput from "@/components/ui/FieldSetInput";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { addChild } from "@/actions/user";
+import { addChild, updateChild, ParentChildDetail } from "@/actions/user";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
@@ -16,13 +16,16 @@ interface AddChildInputs {
   gender: "boy" | "girl";
 }
 
-export default function AddChildForm() {
+export default function AddChildForm({ initialData }: { initialData?: ParentChildDetail }) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<AddChildInputs>({
     defaultValues: {
-      gender: "boy"
+      first_name: initialData?.first_name || "",
+      last_name: initialData?.last_name || "",
+      dob: initialData?.dob || "",
+      gender: initialData?.gender || "boy"
     }
   });
 
@@ -30,10 +33,15 @@ export default function AddChildForm() {
 
   const onSubmit: SubmitHandler<AddChildInputs> = async (data) => {
     setIsLoading(true);
-    const { error } = await addChild(data);
+    
+    const result = initialData 
+      ? await updateChild(initialData.id, data)
+      : await addChild(data);
+    
+    const { error } = result;
     
     if (error) {
-      let errorMessage = "حدث خطأ أثناء حفظ البيانات";
+      let errorMessage = initialData ? "حدث خطأ أثناء تحديث البيانات" : "حدث خطأ أثناء حفظ البيانات";
       if (typeof error === "string") {
         errorMessage = error;
       } else if (typeof error === "object") {
@@ -45,7 +53,7 @@ export default function AddChildForm() {
       toast.error(errorMessage);
       setIsLoading(false);
     } else {
-      toast.success("تم إضافة الطفل بنجاح!");
+      toast.success(initialData ? "تم تحديث البيانات بنجاح!" : "تم إضافة الطفل بنجاح!");
       router.push("/dashboard/my-children");
       router.refresh();
     }

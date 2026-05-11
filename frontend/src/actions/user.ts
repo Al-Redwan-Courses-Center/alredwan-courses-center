@@ -63,6 +63,53 @@ export async function addChild(data: {
   }
 }
 
+export async function updateChild(id: string, data: {
+  first_name: string;
+  last_name: string;
+  dob: string;
+  gender: "boy" | "girl";
+}) {
+  try {
+    const apiClient = await getAuthApiClient();
+    const response = await apiClient.patch(`/api/parents/children/${id}/update/`, data);
+    return { data: response.data, error: null };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        data: null,
+        error: error.response?.data ?? "حدث خطأ أثناء تحديث بيانات الطفل",
+      };
+    }
+    return { data: null, error: "حدث خطأ غير متوقع" };
+  }
+}
+
+export async function deleteChild(id: string) {
+  try {
+    const apiClient = await getAuthApiClient();
+    await apiClient.delete(`/api/parents/children/${id}/delete/`);
+    return { error: null };
+  } catch (error) {
+    if (isAxiosError(error)) {
+      return {
+        error: error.response?.data ?? "حدث خطأ أثناء حذف الطفل",
+      };
+    }
+    return { error: "حدث خطأ غير متوقع" };
+  }
+}
+
+export async function getChildById(id: string): Promise<ParentChildDetail | null> {
+  try {
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.get<ParentChildDetail>(`/api/parents/children/${id}/`);
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch child details:", error);
+    return null;
+  }
+}
+
 // export async function getInstructorId(phoneNum: string) {
 //   try {
 //     const formattedPhoneNum = phoneNum.replaceAll(/\D/g, "");

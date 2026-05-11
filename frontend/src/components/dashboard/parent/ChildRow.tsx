@@ -5,6 +5,9 @@ import { getChildEnrollmentRequests } from "@/dev-data/db";
 import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
 import { toHindiDigits } from "@/lib/utils";
 import AcademicLevelChart from "@/components/dashboard/parent/AcademicLevelChart";
+import Link from "next/link";
+import { Pencil } from "lucide-react";
+import DeleteChildButton from "@/components/dashboard/parent/DeleteChildButton";
 
 export default function ChildRow({
   child,
@@ -27,9 +30,21 @@ export default function ChildRow({
 
   return (
     <div className="grid grid-cols-[14rem_minmax(0,1.1fr)_minmax(0,1.3fr)_minmax(0,1.2fr)] gap-x-8">
-      <span className="text-olive-500 text-[2.4rem] font-bold">
-        {`( ${toHindiDigits(index + 1)} ) ${child.first_name}`}
-      </span>
+      <div className="flex flex-col gap-4">
+        <span className="text-olive-500 text-[2.4rem] font-bold">
+          {`( ${toHindiDigits(index + 1)} ) ${child.first_name}`}
+        </span>
+        <div className="flex items-center gap-4 px-4">
+          <Link 
+            href={`/dashboard/my-children/${child.id}/edit`}
+            className="text-olive-600 hover:text-olive-800 transition-colors p-2"
+            title="تعديل"
+          >
+            <Pencil size={24} />
+          </Link>
+          <DeleteChildButton childId={child.id} childName={child.first_name} />
+        </div>
+      </div>
       <div>
         <ChildCard child={child} index={index} />
       </div>
