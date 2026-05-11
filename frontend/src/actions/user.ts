@@ -3,6 +3,7 @@
 import { getAuthApiClient } from "@/lib/auth-api";
 import { PaginatedResponse } from "@/types/config";
 import { isAxiosError } from "axios";
+import { revalidatePath } from "next/cache";
 
 export interface ParentChildDetail {
   id: string;
@@ -51,6 +52,7 @@ export async function addChild(data: {
   try {
     const apiClient = await getAuthApiClient();
     const response = await apiClient.post("/api/parents/children/create/", data);
+    revalidatePath("/dashboard/my-children");
     return { data: response.data, error: null };
   } catch (error) {
     if (isAxiosError(error)) {
@@ -72,6 +74,7 @@ export async function updateChild(id: string, data: {
   try {
     const apiClient = await getAuthApiClient();
     const response = await apiClient.patch(`/api/parents/children/${id}/update/`, data);
+    revalidatePath("/dashboard/my-children");
     return { data: response.data, error: null };
   } catch (error) {
     if (isAxiosError(error)) {
