@@ -66,15 +66,22 @@ class CustomUserCreateSerializer(UserCreatePasswordRetypeSerializer):
         return value
 
 
-class CustomUserSerializer(UserSerializer):
+class CustomUserSerializer(serializers.ModelSerializer):
     """
     Serializer for retrieving and updating user profile.
 
     Security: Prevents users from modifying sensitive fields.
     """
     instructor_id = serializers.SerializerMethodField()
+    profile_image = serializers.SerializerMethodField()
+    image = serializers.ImageField(write_only=True, required=False, allow_null=True)
 
-    class Meta(UserSerializer.Meta):
+    def get_profile_image(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
+
+    class Meta:
         model = CustomUser
         fields = (
             'id',
@@ -92,13 +99,15 @@ class CustomUserSerializer(UserSerializer):
             'role',
             'is_verified',
             'date_joined',
+            'profile_image',
+            'image',
             'instructor_id',
         )
         read_only_fields = (
             'id',
-            'phone_number1',  # Cannot change primary phone after registration
-            'role',           # Only admins can change role
-            'is_verified',    # Only admins can verify users
+            'phone_number1',
+            'role',
+            'is_verified',
             'date_joined',
             'instructor_id',
         )
