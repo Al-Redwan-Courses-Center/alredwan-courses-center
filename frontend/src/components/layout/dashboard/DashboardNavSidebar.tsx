@@ -56,7 +56,7 @@ export default function DashboardNavSidebar({
       <Avatar
         src={image}
         alt={`صورة ${firstName}`}
-        className="border-olive-300 aspect-square h-auto w-46 border-4"
+        className="border-olive-300 aspect-square h-44 w-44 shrink-0 border-4"
       />
 
       {/* 
