@@ -51,6 +51,7 @@ export const buttonStyles = cva(
         small: "px-12 py-4 text-xl",
         medium: "px-13 py-6 text-3xl",
         wide: "w-105 px-10 py-4 text-[1.8rem]",
+        large: "px-16 py-6 text-4xl",
       },
 
       revert: {

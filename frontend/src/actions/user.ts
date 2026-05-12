@@ -138,3 +138,13 @@ export async function getChildById(id: string): Promise<ParentChildDetail | null
 //     return null;
 //   }
 // }
+export async function getInstructorById(id: string | number) {
+  try {
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.get(`/api/users/instructors/${id}/`);
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch instructor details:", error);
+    return null;
+  }
+}

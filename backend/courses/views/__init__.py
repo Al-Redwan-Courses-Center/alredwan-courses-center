@@ -5,7 +5,7 @@ Module for importing all Course views to make them accessible from courses.views
 from .course import CourseListView, CourseDetailView, CourseUpdateView
 from .landing_page_courses import LandingPageCourseListView
 from .lecture import LectureListCreateView, LectureNumberCheckView, LectureUpdateView, LectureDetailView, InstructorTodayLecturesView
-from .ratings import CourseRatingsView
+from .ratings import CourseRatingsView, CourseRateView
 
 __all__ = [
     'CourseListView',
@@ -18,4 +18,5 @@ __all__ = [
     'LectureDetailView',
     'InstructorTodayLecturesView',
     'CourseRatingsView',
+    'CourseRateView',
 ]
