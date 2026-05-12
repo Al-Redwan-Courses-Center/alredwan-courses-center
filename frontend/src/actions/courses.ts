@@ -10,6 +10,19 @@ import { apiRequest, getAuthApiClient, unwrapPaginated } from "@/lib/api";
 import { PaginatedResponse } from "@/types/config";
 import { CourseDetail, CourseListItem } from "@/types/entities";
 
+export async function getPublicCourses(): Promise<CourseListItem[]> {
+  try {
+    const { data } = await axios.get<
+      PaginatedResponse<CourseListItem> | CourseListItem[]
+    >(`${process.env.REST_API_URL}/api/courses/?page_size=100`);
+
+    return Array.isArray(data) ? data : data.results;
+  } catch (error) {
+    console.error("Failed to load public courses:", error);
+    return [];
+  }
+}
+
 export async function getAllCourses(): Promise<CourseListItem[]> {
   return apiRequest(
     "Failed to load courses:",

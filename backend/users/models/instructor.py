@@ -138,5 +138,34 @@ class Instructor(models.Model):
                     season=season,
                     defaults={"course": course, "status": cls.Status.PENDING},
                 )
-# add ratings here, and figure out the rating system
-'''
+    @property
+    def average_rating(self):
+        """Calculate and return the average rating for the instructor.
+        
+        Aggregates ratings from both students and parents.
+        """
+        from django.db.models import Sum, Count
+        from .student_instructor_rating import StudentInstructorRating, ParentInstructorRating
+
+        student_stats = StudentInstructorRating.objects.filter(instructor=self).aggregate(
+            total=Sum('rating'), count=Count('id')
+        )
+        parent_stats = ParentInstructorRating.objects.filter(instructor=self).aggregate(
+            total=Sum('rating'), count=Count('id')
+        )
+
+        total_sum = (student_stats['total'] or 0) + (parent_stats['total'] or 0)
+        total_count = (student_stats['count'] or 0) + (parent_stats['count'] or 0)
+
+        if total_count == 0:
+            return None
+        return round(total_sum / total_count, 2)
+
+    @property
+    def rating_count(self):
+        """Return total number of ratings for this instructor."""
+        from .student_instructor_rating import StudentInstructorRating, ParentInstructorRating
+
+        student_count = StudentInstructorRating.objects.filter(instructor=self).count()
+        parent_count = ParentInstructorRating.objects.filter(instructor=self).count()
+        return student_count + parent_count

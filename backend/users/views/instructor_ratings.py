@@ -86,3 +86,54 @@ class InstructorRatingsView(generics.RetrieveAPIView):
         }
 
         return Response(response_data)
+
+
+class InstructorRateView(generics.CreateAPIView):
+    """
+    API endpoint for submitting a rating for a specific instructor.
+    POST /api/instructors/{id}/rate/
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.request.user.role == 'parent':
+            from users.serializers import ParentInstructorRateSerializer
+            return ParentInstructorRateSerializer
+        from users.serializers import StudentInstructorRateSerializer
+        return StudentInstructorRateSerializer
+
+    def create(self, request, *args, **kwargs):
+        instructor_id = self.kwargs.get('pk')
+        instructor = get_object_or_404(Instructor, pk=instructor_id)
+
+        serializer = self.get_serializer(
+            data=request.data, 
+            context={'request': request, 'instructor': instructor}
+        )
+        serializer.is_valid(raise_exception=True)
+        
+        if request.user.role == 'parent':
+            rating, created = ParentInstructorRating.objects.update_or_create(
+                parent=request.user.parent_profile,
+                instructor=instructor,
+                defaults={
+                    'course': serializer.validated_data['course'],
+                    'rating': serializer.validated_data['rating'], 
+                    'feedback': serializer.validated_data.get('feedback', '')
+                }
+            )
+        else:
+            rating, created = StudentInstructorRating.objects.update_or_create(
+                student=request.user.student_profile,
+                instructor=instructor,
+                defaults={
+                    'course': serializer.validated_data['course'],
+                    'rating': serializer.validated_data['rating'], 
+                    'feedback': serializer.validated_data.get('feedback', '')
+                }
+            )
+
+        return Response(
+            {"detail": "تم حفظ التقييم بنجاح.", "created": created},
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        )

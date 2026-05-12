@@ -25,10 +25,10 @@ class CourseRatingsView(generics.RetrieveAPIView):
     def get_object(self):
         """Get course by ID or slug"""
         lookup_value = self.kwargs.get('pk')
-
-        if lookup_value.isdigit():
-            return get_object_or_404(Course, pk=lookup_value)
-        return get_object_or_404(Course, slug=lookup_value)
+        try:
+            return Course.objects.get(pk=lookup_value)
+        except (Course.DoesNotExist, ValueError):
+            return get_object_or_404(Course, slug=lookup_value)
 
     def retrieve(self, request, *args, **kwargs):
         """Retrieve course ratings and statistics"""
@@ -90,3 +90,49 @@ class CourseRatingsView(generics.RetrieveAPIView):
         }
 
         return Response(response_data)
+
+
+class CourseRateView(generics.CreateAPIView):
+    """
+    API endpoint for submitting a rating for a specific course.
+    POST /api/courses/{id}/rate/
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.request.user.role == 'parent':
+            from courses.serializers import ParentCourseRateSerializer
+            return ParentCourseRateSerializer
+        from courses.serializers import StudentCourseRateSerializer
+        return StudentCourseRateSerializer
+
+    def create(self, request, *args, **kwargs):
+        lookup_value = self.kwargs.get('pk')
+        try:
+            course = Course.objects.get(pk=lookup_value)
+        except (Course.DoesNotExist, ValueError):
+            course = get_object_or_404(Course, slug=lookup_value)
+
+        serializer = self.get_serializer(
+            data=request.data, 
+            context={'request': request, 'course': course}
+        )
+        serializer.is_valid(raise_exception=True)
+        
+        if request.user.role == 'parent':
+            rating, created = ParentCourseRating.objects.update_or_create(
+                parent=request.user.parent_profile,
+                course=course,
+                defaults={'rating': serializer.validated_data['rating'], 'feedback': serializer.validated_data.get('feedback', '')}
+            )
+        else:
+            rating, created = StudentCourseRating.objects.update_or_create(
+                student=request.user.student_profile,
+                course=course,
+                defaults={'rating': serializer.validated_data['rating'], 'feedback': serializer.validated_data.get('feedback', '')}
+            )
+
+        return Response(
+            {"detail": "تم حفظ التقييم بنجاح.", "created": created},
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        )

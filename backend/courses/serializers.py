@@ -2,6 +2,7 @@
 """Serializers for Course app"""
 from rest_framework import serializers
 from .models import Course, Tag, Season, CourseSchedule, LandingPageCourse, Lecture, LectureStatus
+from users.models.student_instructor_rating import StudentCourseRating, ParentCourseRating
 from users.serializers import InstructorSerializer
 
 
@@ -524,3 +525,59 @@ class CourseRatingDetailSerializer(serializers.Serializer):
     course_name = serializers.CharField(read_only=True)
     statistics = serializers.DictField(read_only=True)
     ratings = serializers.DictField(read_only=True)
+
+
+class StudentCourseRateSerializer(serializers.ModelSerializer):
+    """Serializer for students to rate courses"""
+    class Meta:
+        model = StudentCourseRating
+        fields = ['rating', 'feedback']
+
+    def validate(self, data):
+        user = self.context['request'].user
+        if user.role != 'student':
+            raise serializers.ValidationError("هذا الحساب ليس حساب طالب.")
+            
+        student = getattr(user, 'student_profile', None)
+        if not student:
+            raise serializers.ValidationError("لم يتم العثور على ملف تعريف طالب.")
+            
+        course = self.context['course']
+        
+        # Check if student is enrolled in the course
+        from enrollments_payments.models import Enrollment
+        if not Enrollment.objects.filter(student=student, course=course).exists():
+            raise serializers.ValidationError("يجب أن تكون مشتركاً في الدورة لتتمكن من تقييمها.")
+            
+        return data
+
+class ParentCourseRateSerializer(serializers.ModelSerializer):
+    """Serializer for parents to rate courses"""
+    class Meta:
+        model = ParentCourseRating
+        fields = ['rating', 'feedback']
+
+    def validate(self, data):
+        user = self.context['request'].user
+        if user.role != 'parent':
+            raise serializers.ValidationError("هذا الحساب ليس حساب ولي أمر.")
+            
+        parent = getattr(user, 'parent_profile', None)
+        if not parent:
+            raise serializers.ValidationError("لم يتم العثور على ملف تعريف ولي أمر.")
+            
+        course = self.context['course']
+        
+        # Check if parent has a child enrolled in the course
+        from enrollments_payments.models import Enrollment
+        from parents.models import Child
+        
+        # Get parent's children
+        child_ids = list(Child.objects.filter(primary_parent=parent).values_list('id', flat=True))
+        extra_child_ids = list(parent.extra_children.values_list('child_id', flat=True))
+        all_child_ids = set(child_ids + extra_child_ids)
+        
+        if not Enrollment.objects.filter(child_id__in=all_child_ids, course=course).exists():
+            raise serializers.ValidationError("يجب أن يكون أحد أبنائك مشتركاً في الدورة لتتمكن من تقييمها.")
+            
+        return data
