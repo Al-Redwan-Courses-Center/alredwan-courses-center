@@ -1,7 +1,5 @@
-import {
-  StaffAttendanceStatus,
-  StaffAttendanceSummaryData,
-} from "@/types/entities/staff-attendance-events";
+import { StaffAttendanceStatus } from "@/types/entities/staff-attendance-events";
+import type { StaffAttendanceSummaryData } from "@/types/entities/staff-attendance-events";
 import { Schedule } from "@/types/entities/schedules";
 
 export type CheckInMethod =

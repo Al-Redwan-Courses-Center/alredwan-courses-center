@@ -1,9 +1,7 @@
 "use client";
 
-import useWebSocket from "react-use-websocket";
-import { StaffAttendanceServerEvent } from "@/types/entities/staff-attendance-events";
-import { ReactNode, useEffect, useState } from "react";
-import { getClientAccessToken } from "@/actions/temp";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { useStaffAttendanceWebSocket } from "@/hooks/useStaffAttendanceWebSocket";
 import DataView from "@/components/ui/data-view/DataView";
 import {
   DataViewHeaderLegacy,
@@ -21,6 +19,7 @@ import { manualCheckIn, manualCheckOut } from "@/actions/admin-attendances";
 import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
 import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
 import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
+import toast from "react-hot-toast";
 
 function calcPositionalStatus(
   checkInTime: string | null,
@@ -285,74 +284,106 @@ export default function TodaysAttendancesView({
 }: {
   dbAttendances: StaffAttendanceListItem[];
 }) {
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [attendances, setAttendances] =
     useState<StaffAttendanceListItem[]>(dbAttendances);
 
-  const wsUrl = accessToken
-    ? `ws://100.73.83.8:8001/ws/attendance/?token=${accessToken}`
-    : null;
+  const { lastJsonMessage, readyState, fatalCloseCode, reconnectExhausted } =
+    useStaffAttendanceWebSocket(true);
 
-  const { sendJsonMessage, lastJsonMessage } =
-    useWebSocket<StaffAttendanceServerEvent>(wsUrl, {
-      onClose: (event) => {
-        console.log(event);
-      },
-      shouldReconnect: () => true,
-      reconnectAttempts: 10,
-      reconnectInterval: 10000,
-    });
-
-  function handleWebSocketServerEvent(event: StaffAttendanceServerEvent) {
-    switch (event.type) {
-      case "connection_established": {
-        console.log(event.message);
-        break;
-      }
-      case "summary_response": {
-        console.log(event);
-        break;
-      }
-      case "attendance_update": {
-        console.log(event);
-
-        const { check_in_time, check_out_time, instructor_id, status } =
-          event.data;
-
-        setAttendances((attendances) =>
-          attendances.map((a) => {
-            if (a.instructor !== instructor_id) return a;
-
-            return {
-              ...a,
-              check_in_time,
-              check_out_time,
-              status,
-            };
-          }),
-        );
-
-        break;
-      }
-      default: {
-        console.log("NO EVENT");
-      }
-    }
-  }
+  const fatalToastRef = useRef<number | null>(null);
+  const exhaustedToastRef = useRef(false);
 
   useEffect(() => {
-    const getToken: () => void = async () => {
-      const token = await getClientAccessToken();
-      setAccessToken(token ?? null);
+    if (!reconnectExhausted || exhaustedToastRef.current) return;
+    exhaustedToastRef.current = true;
+    toast.error("تعذر الاتصال بتحديثات الحضور بعد عدة محاولات. حدّث الصفحة لاحقًا.");
+  }, [reconnectExhausted]);
+
+  useEffect(() => {
+    if (fatalCloseCode == null) return;
+    if (fatalToastRef.current === fatalCloseCode) return;
+    fatalToastRef.current = fatalCloseCode;
+
+    const messages: Record<number, string> = {
+      4001: "تعذر الاتصال: لم يُرسل رمز الدخول",
+      4002: "انتهت صلاحية ربط الحضور أو أصبح غير صالح",
+      4003: "غير مصرح لك بعرض تحديثات الحضور المباشرة",
     };
-    getToken();
-  }, []);
+    toast.error(
+      messages[fatalCloseCode] ?? "تعذر الاتصال بتحديثات الحضور المباشرة",
+    );
+  }, [fatalCloseCode]);
 
   useEffect(() => {
     if (!lastJsonMessage) return;
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    handleWebSocketServerEvent(lastJsonMessage);
+    const event = lastJsonMessage;
+
+    switch (event.type) {
+      case "connection_established":
+        break;
+
+      case "pong":
+        break;
+
+      case "summary_response": {
+        const d = event.data;
+        const absent = d.absent ?? 0;
+        const checkedIn = d.checked_in ?? 0;
+        const total = d.total_expected ?? 0;
+        toast.success(
+          `ملخص الحضور اليوم: سجّل ${checkedIn} من ${total} — غائب ${absent}`,
+          { duration: 5000 },
+        );
+        break;
+      }
+
+      case "attendance_update": {
+        const d = event.data;
+        const checkIn = d.time ?? d.check_in_time ?? null;
+        const checkOut = d.check_out_time;
+
+        setAttendances((rows: StaffAttendanceListItem[]) =>
+          rows.map((a: StaffAttendanceListItem) => {
+            if (a.id !== d.id) return a;
+            return {
+              ...a,
+              ...(checkIn != null ? { check_in_time: checkIn } : {}),
+              ...(checkOut !== undefined ? { check_out_time: checkOut } : {}),
+              status: d.status,
+            };
+          }),
+        );
+
+        toast.success(`${d.instructor} — تم تسجيل الحضور`);
+        break;
+      }
+
+      case "attendance_check_out": {
+        const d = event.data;
+        setAttendances((rows: StaffAttendanceListItem[]) =>
+          rows.map((a: StaffAttendanceListItem) =>
+            a.id === d.id ? { ...a, check_out_time: d.check_out_time } : a,
+          ),
+        );
+        toast.success(`${d.instructor} — تم تسجيل الانصراف`);
+        break;
+      }
+
+      case "attendance_rated": {
+        const d = event.data;
+        setAttendances((rows: StaffAttendanceListItem[]) =>
+          rows.map((a: StaffAttendanceListItem) =>
+            a.id === d.id ? { ...a, rating: d.rating, status: d.status } : a,
+          ),
+        );
+        toast.success(`${d.instructor} — تم التقييم (${d.rating})`);
+        break;
+      }
+
+      default:
+        break;
+    }
   }, [lastJsonMessage]);
 
   return (
@@ -362,11 +393,33 @@ export default function TodaysAttendancesView({
       filterConfig={{}}
       sortConfig={{}}
     >
-      <DataViewControls />
-
-      <button onClick={() => sendJsonMessage({ type: "request_summary" })}>
-        Test Fetch Summary Data
-      </button>
+      <div className="mb-6 flex flex-wrap items-center gap-6">
+        <DataViewControls />
+        {fatalCloseCode != null && (
+          <span className="text-[#952B2B] text-2xl">
+            توقفت التحديثات المباشرة
+          </span>
+        )}
+        {fatalCloseCode == null && reconnectExhausted && (
+          <span className="text-[#952B2B] text-2xl">
+            تعذر الاتصال بتحديثات الحضور
+          </span>
+        )}
+        {fatalCloseCode == null &&
+          !reconnectExhausted &&
+          readyState === "connecting" && (
+            <span className="text-olive-600 text-2xl">
+              جاري الاتصال بتحديثات الحضور…
+            </span>
+          )}
+        {fatalCloseCode == null &&
+          !reconnectExhausted &&
+          readyState === "open" && (
+            <span className="text-[#027243] text-2xl">
+              متصل — تحديثات مباشرة
+            </span>
+          )}
+      </div>
 
       <DataViewHeaderLegacy>
         <DataViewCellLegacy>م</DataViewCellLegacy>

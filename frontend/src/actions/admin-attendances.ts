@@ -72,3 +72,29 @@ export async function manualCheckOut(id: number) {
     return null;
   }
 }
+
+export interface AttendanceWsTicketResponse {
+  ticket: string;
+  expires_in_seconds: number;
+  message?: string;
+}
+
+export async function requestAttendanceWsTicket(): Promise<AttendanceWsTicketResponse | null> {
+  try {
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.post<AttendanceWsTicketResponse>(
+      "/api/attendance/ws-ticket/",
+    );
+    return data;
+  } catch (error) {
+    const errMssg = "Failed to obtain attendance WebSocket ticket: ";
+
+    if (isAxiosError(error)) {
+      console.error(errMssg, error.response?.data ?? error.message);
+    } else {
+      console.error(errMssg, error);
+    }
+
+    return null;
+  }
+}
