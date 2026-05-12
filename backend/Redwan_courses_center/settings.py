@@ -70,7 +70,8 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     # white noise middleware
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "corsheaders.middleware.CorsMiddleware",  # CORS must be before CommonMiddleware
+    # CORS must be before CommonMiddleware
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     # 'django.middleware.locale.LocaleMiddleware',  # ← ADD THIS
     "django.middleware.common.CommonMiddleware",
@@ -303,6 +304,7 @@ DJOSER = {
     # Prevents users from setting is_staff, is_superuser, role via API
     "SERIALIZERS": {
         "user_create": "users.serializers.CustomUserCreateSerializer",
+        "user_create_password_retype": "users.serializers.CustomUserCreateSerializer",
         "user": "users.serializers.CustomUserSerializer",
         "current_user": "users.serializers.CustomUserSerializer",
     },
@@ -320,21 +322,21 @@ if not DEBUG:
     # HTTPS/SSL settings
     SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    
+
     # HSTS settings
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    
+
     # Cookie settings
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    
+
     # Additional security headers
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = "DENY"
-    
+
     # CSRF trusted origins for Render - build from RENDER_EXTERNAL_HOSTNAME
     if RENDER_EXTERNAL_HOSTNAME:
         CSRF_TRUSTED_ORIGINS = [f"https://{RENDER_EXTERNAL_HOSTNAME}"]

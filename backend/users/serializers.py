@@ -5,12 +5,12 @@ These serializers ensure security by controlling which fields can be set via API
 """
 import phonenumbers
 from django.utils.translation import gettext_lazy as _
-from djoser.serializers import UserCreateSerializer, UserSerializer
+from djoser.serializers import UserCreatePasswordRetypeSerializer, UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 from .models import CustomUser, Instructor, LandingPageInstructor
 
 
-class CustomUserCreateSerializer(UserCreateSerializer):
+class CustomUserCreateSerializer(UserCreatePasswordRetypeSerializer):
     """
     Serializer for user registration.
 
@@ -33,7 +33,6 @@ class CustomUserCreateSerializer(UserCreateSerializer):
             'first_name',
             'last_name',
             'password',
-            're_password',  # Required when USER_CREATE_PASSWORD_RETYPE=True
             'dob',
             'gender',
             'identity_number',
