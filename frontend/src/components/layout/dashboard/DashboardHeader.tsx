@@ -38,7 +38,7 @@ export default function DashboardHeader({
         <Avatar
           src={image}
           alt={`صورة ${firstName}`}
-          className="h-14 w-auto min-[1000px]:h-20"
+          className="h-14 w-14 shrink-0 min-[1000px]:h-20 min-[1000px]:w-20"
           fallbackClassName="border-olive-300 border-3"
         />
         <span className="text-olive-700 text-2xl min-[1000px]:text-4xl whitespace-nowrap">

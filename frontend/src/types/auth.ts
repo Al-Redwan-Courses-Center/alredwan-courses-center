@@ -22,6 +22,8 @@ export interface UserEntity {
   exp: number;
   error?: string;
   instructor_id?: string;
+  profile_image: string | null;
+  image: string | null;
 }
 
 export type UserSession = (Session | null) & {

@@ -71,10 +71,10 @@ function FeatureCard({
   return (
     <div
       className={cn(
-        "bg-olive-300 flex flex-col items-center justify-center px-15 py-12 text-gray-100 shadow-inner",
+        "bg-olive-300 flex flex-col items-center justify-center px-8 md:px-15 py-8 md:py-12 text-gray-100 shadow-inner",
         reversed
-          ? "rounded-tl-[10rem] rounded-br-[10rem] [&_p]:pr-10"
-          : "rounded-tr-[10rem] rounded-bl-[10rem]",
+          ? "rounded-tl-[5rem] md:rounded-tl-[10rem] rounded-br-[5rem] md:rounded-br-[10rem] [&_p]:pr-4 md:[&_p]:pr-10"
+          : "rounded-tr-[5rem] md:rounded-tr-[10rem] rounded-bl-[5rem] md:rounded-bl-[10rem]",
       )}
     >
       <div className="mb-5 flex w-full items-center gap-10">
@@ -89,7 +89,7 @@ function FeatureCard({
 
 export default function FeaturesGrid() {
   return (
-    <div className="tablet:grid-cols-1 tablet:grid-rows-8 laptop:grid-cols-2 grid w-full grid-cols-4 grid-rows-2 gap-13">
+    <div className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-13">
       {featureCardsConfig.map((feature, i) => (
         <FeatureCard
           key={i}
