@@ -1,16 +1,19 @@
 import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
 import { Metadata } from "next";
 import { Suspense } from "react";
+import { getPublicCourses } from "@/actions/courses";
 
 export const metadata: Metadata = {
   title: "الدورات",
 };
 
-export default function Page() {
+export default async function Page() {
+  const courses = await getPublicCourses();
+  
   return (
     <div className="mx-auto max-h-full w-fit pt-10 pb-50">
       <Suspense fallback={null}>
-        <DashboardAllCoursesView />
+        <DashboardAllCoursesView courses={courses} />
       </Suspense>
     </div>
   );
