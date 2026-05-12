@@ -11,7 +11,7 @@ export default async function ProfilePage() {
   const user = await getMe() || sessionUser;
 
   return (
-    <div className="px-16 pt-64 flex flex-col gap-12 h-full overflow-auto pb-20 relative z-20">
+    <div className="px-4 md:px-8 min-[1000px]:px-16 pt-32 md:pt-64 flex flex-col gap-8 md:gap-12 h-full overflow-auto pb-20 relative z-20">
       <div className="flex justify-between items-center">
         <h3 className="text-olive-700 font-medad text-6xl">الملف الشخصي</h3>
         <Button href="/dashboard/profile/edit" variant="secondary" className="px-10 py-4 text-2xl">

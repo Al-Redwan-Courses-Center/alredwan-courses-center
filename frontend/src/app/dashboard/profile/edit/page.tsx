@@ -9,7 +9,7 @@ export default async function EditProfilePage() {
   const user = await getMe() || sessionUser;
 
   return (
-    <div className="px-10 md:px-16 pt-64 flex flex-col gap-10 h-full overflow-auto pb-20 relative z-20 w-full">
+    <div className="px-4 md:px-8 min-[1000px]:px-16 pt-32 md:pt-64 flex flex-col gap-10 h-full overflow-auto pb-20 relative z-20 w-full">
       <h3 className="text-olive-700 font-medad text-6xl text-right w-full">تعديل الملف الشخصي</h3>
       
       <div className="w-full lg:w-3/4">

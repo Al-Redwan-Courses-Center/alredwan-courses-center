@@ -23,7 +23,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
 }) => {
     return (
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                 <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
                         <User className="w-6 h-6" />
@@ -43,7 +43,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                         </div>
                     </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
+                <div className="flex flex-col items-start sm:items-end gap-1">
                     <RatingStars rating={rating} size="sm" />
                     <div className="flex items-center gap-1 text-[10px] text-gray-400">
                         <Calendar className="w-3 h-3" />

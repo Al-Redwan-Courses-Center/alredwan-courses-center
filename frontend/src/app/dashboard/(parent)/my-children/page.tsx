@@ -10,15 +10,16 @@ export default async function Page() {
 
   if (myChildren.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-8 text-center px-6">
-        <div className="bg-olive-50 p-10 rounded-full">
-          <Plus size={80} className="text-olive-500" />
+      <div className="flex flex-col items-center justify-center h-full gap-8 text-center px-4 md:px-8">
+        <div className="bg-olive-50 p-6 md:p-10 rounded-full">
+          <Plus size={40} className="text-olive-500 md:hidden" />
+          <Plus size={80} className="text-olive-500 hidden md:block" />
         </div>
         <div className="flex flex-col gap-2">
-          <h3 className="text-olive-700 font-medad text-5xl">لا يوجد أطفال مضافون بعد</h3>
-          <p className="text-gray-600 text-2xl">ابدأ بإضافة أطفالك لتتمكن من إلحاقهم بالدورات التدريبية</p>
+          <h3 className="text-olive-700 font-medad text-3xl md:text-5xl">لا يوجد أطفال مضافون بعد</h3>
+          <p className="text-gray-600 text-lg md:text-2xl">ابدأ بإضافة أطفالك لتتمكن من إلحاقهم بالدورات التدريبية</p>
         </div>
-        <Button href="/dashboard/my-children/new" className="bg-olive-500 hover:bg-olive-600 text-white px-12 py-5 rounded-[0.5rem_2rem] font-bold text-3xl flex items-center gap-4 shadow-lg transition-transform hover:scale-105">
+        <Button href="/dashboard/my-children/new" className="bg-olive-500 hover:bg-olive-600 text-white px-8 md:px-12 py-3 md:py-5 rounded-[0.5rem_2rem] font-bold text-xl md:text-3xl flex items-center gap-4 shadow-lg transition-transform hover:scale-105">
           إضافة أول طفل الآن
         </Button>
       </div>
@@ -26,7 +27,7 @@ export default async function Page() {
   }
 
   return (
-    <div className="max-h-[calc(100dvh-10%)] overflow-auto px-6 pt-8 pb-9 flex flex-col h-full">
+    <div className="max-h-[calc(100dvh-10%)] overflow-auto px-4 md:px-8 pt-8 pb-9 flex flex-col h-full">
       <div className="flex-1">
         {myChildren.map((c, i) => (
           <Fragment key={c.id}>

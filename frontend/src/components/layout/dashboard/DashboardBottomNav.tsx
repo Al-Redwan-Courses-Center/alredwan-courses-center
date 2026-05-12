@@ -33,10 +33,10 @@ export default function DashboardBottomNav({
               precision="startsWith"
               boldWidth={false}
               icon={navLink.icon}
-              className="flex translate-x-0 flex-col items-center justify-center gap-2 rounded-xl px-2 py-2 text-2xl shadow-none"
-              wrapperStyles="flex-col gap-2"
+              className="flex translate-x-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-xl min-[400px]:text-2xl shadow-none"
+              wrapperStyles="flex-col gap-1 [&_svg]:h-6 min-[400px]:[&_svg]:h-8 [&_svg]:w-auto"
             >
-              {navLink.label}
+              <span className="text-[1.2rem] min-[400px]:text-xl text-center leading-tight">{navLink.label}</span>
             </NavLink>
           </li>
         ))}

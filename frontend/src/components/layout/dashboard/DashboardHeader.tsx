@@ -18,11 +18,11 @@ export default function DashboardHeader({
   role: UserEntity["role"];
 }) {
   return (
-    <div className="relative z-50 col-span-1 flex items-center bg-gray-100 py-2 ps-8 pe-8 min-[1000px]:col-span-2 min-[1000px]:ps-112 min-[1000px]:pe-200">
+    <div className="relative z-40 col-span-1 flex items-center bg-gray-100 py-1 px-4 md:px-8 min-[1000px]:col-span-2 min-[1000px]:ps-112 min-[1000px]:pe-200 shadow-sm">
       <Image
         src={RightDecoration}
         alt="Decorative Illustration"
-        className="absolute right-0 -bottom-22 hidden min-[1000px]:block"
+        className="absolute right-0 -bottom-12 hidden min-[1000px]:block pointer-events-none"
         draggable={false}
       />
 
@@ -34,14 +34,14 @@ export default function DashboardHeader({
         تسجيل الخروج
       </LogoutButton>
 
-      <div className="me-auto flex items-center gap-6 min-[1000px]:gap-10">
+      <div className="me-auto flex items-center gap-3 min-[1000px]:gap-10">
         <Avatar
           src={image}
           alt={`صورة ${firstName}`}
-          className="h-20 w-auto"
+          className="h-14 w-auto min-[1000px]:h-20"
           fallbackClassName="border-olive-300 border-3"
         />
-        <span className="text-olive-700 text-3xl min-[1000px]:text-4xl">
+        <span className="text-olive-700 text-2xl min-[1000px]:text-4xl whitespace-nowrap">
           {role === "instructor" && "أخ"} {firstName}
         </span>
       </div>
@@ -63,7 +63,7 @@ export default function DashboardHeader({
       <Image
         src={LeftDecoration}
         alt="Decorative Illustration"
-        className="absolute -bottom-54 left-0 hidden min-[1000px]:block"
+        className="absolute -bottom-24 left-0 hidden min-[1000px]:block pointer-events-none"
         draggable={false}
       />
     </div>
