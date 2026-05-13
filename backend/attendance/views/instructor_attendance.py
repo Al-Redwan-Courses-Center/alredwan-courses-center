@@ -743,7 +743,10 @@ class InstructorAttendanceHistoryView(generics.ListAPIView):
         return InstructorAttendance.objects.filter(
             instructor_id=instructor_id
         ).select_related(
-            'instructor__user'
+            'instructor__user',
+            'lecture',
+            'lecture__course',
+            'schedule'
         ).order_by('-date')
 
 

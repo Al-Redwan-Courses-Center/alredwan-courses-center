@@ -26,6 +26,11 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       href: "/dashboard/todays-staff-attendances",
       icon: <ClipboardIcon />,
     },
+    {
+      label: "المعلمون",
+      href: "/dashboard/instructors",
+      icon: <PeopleIcon />,
+    },
   ],
 
   instructor: [
@@ -70,7 +75,7 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
     {
       label: "أطفالي",
       href: "/dashboard/my-children",
-      icon: <PeopleIcon className="h-auto w-[2.4rem]" />,
+      icon: <PeopleIcon />,
       nestedNavLinks: [
         {
           href: "",
