@@ -3,13 +3,19 @@ import { Tag } from "./common";
 export interface Instructor {
   id: number;
   name: string;
-  // gender: "male" | "female";
   tags: Tag[];
   bio: string;
   image_url: string;
-  type: string;
+  type: "supervisor" | "normal";
   type_display: string;
   joined_date: string;
+}
+
+export interface InstructorDetail extends Instructor {
+  email: string | null;
+  phone: string | null;
+  average_rating: number | null;
+  rating_count: number;
 }
 
 export interface LandingPageInstructorDetail {
