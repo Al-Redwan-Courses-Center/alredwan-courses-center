@@ -113,19 +113,19 @@ function StaffAttendanceRow({
     className: statusClassName,
   } = calcPositionalStatus(attendance.check_in_time, attendance.check_out_time);
 
-  const [checkOutHours, checkOutMinutes] = attendance.scheduled_check_out_time
-    .split(":")
-    .map((str) => Number(str));
-  const checkOutTimestamp = !!attendance.check_out_time
-    ? parseISO(attendance.check_out_time).getTime()
-    : null;
-
-  const [checkInHours, checkInMinutes] = attendance.scheduled_check_in_time
+  const [checkInHours, checkInMinutes] = (attendance.scheduled_check_in_time || "00:00")
     .split(":")
     .map((str) => Number(str));
   const checkInTimestamp = !!attendance.check_in_time
     ? parseISO(attendance.check_in_time).getTime()
-    : null;
+    : 0;
+
+  const [checkOutHours, checkOutMinutes] = (attendance.scheduled_check_out_time || "00:00")
+    .split(":")
+    .map((str) => Number(str));
+  const checkOutTimestamp = !!attendance.check_out_time
+    ? parseISO(attendance.check_out_time).getTime()
+    : 0;
 
   const isCheckInEarly =
     !!checkInTimestamp &&
