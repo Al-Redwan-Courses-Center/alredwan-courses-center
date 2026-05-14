@@ -20,6 +20,7 @@ import DataViewSortLegacy from "@/components/ui/data-view/DataViewSort";
 import DataViewFilterLegacy from "@/components/ui/data-view/DataViewFilter";
 import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
 import DataViewLegacy from "@/components/ui/data-view/DataView";
+import DataViewExportLegacy from "@/components/ui/data-view/DataViewExportLegacy";
 
 const { sortConfig, filterConfig, statusMap } = lecturesViewConfig;
 
@@ -38,6 +39,7 @@ export default function TodaysLecturesTable({
       )}
     >
       <div className="relative z-100 mb-14 flex items-center gap-32">
+        <DataViewExportLegacy onExport={() => alert("جاري التصدير...")} />
         <DataViewSearchLegacy />
         <DataViewSortLegacy />
         <DataViewFilterLegacy />

@@ -202,3 +202,4 @@ class EnrollmentProgressView(APIView):
         progress = enrollment.get_completion_progress()
         serializer = EnrollmentProgressSerializer(progress)
         return Response(serializer.data)
+

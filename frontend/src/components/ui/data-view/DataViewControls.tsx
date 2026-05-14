@@ -1,21 +1,29 @@
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
 import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
+import DataViewExportLegacy from "@/components/ui/data-view/DataViewExportLegacy";
 
 export default function DataViewControlsLegacy({
   showSearch = true,
   showSort = true,
   showFilter = true,
+  showExport = false,
+  onExport,
 }: {
   showSearch?: boolean;
   showSort?: boolean;
   showFilter?: boolean;
+  showExport?: boolean;
+  onExport?: () => void;
 }) {
   return (
-    <div className="relative z-100 mb-14 flex items-center gap-32">
-      {showSearch && <DataViewSearch />}
-      {showSort && <DataViewSort />}
-      {showFilter && <DataViewFilter />}
+    <div className="relative z-100 mb-14 flex items-center justify-between w-full gap-16">
+      <div className="flex items-center gap-16 flex-1">
+        {showSearch && <div className="flex-1 max-w-[400px]"><DataViewSearch /></div>}
+        {showSort && <DataViewSort />}
+        {showFilter && <DataViewFilter />}
+      </div>
+      {showExport && <DataViewExportLegacy onExport={onExport} />}
     </div>
   );
 }
