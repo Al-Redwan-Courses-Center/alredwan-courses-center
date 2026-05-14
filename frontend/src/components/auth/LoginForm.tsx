@@ -1,7 +1,11 @@
 "use client";
 
 import Button from "@/components/ui/Button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/DropdownMenu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
 import FieldSetInput from "@/components/ui/FieldSetInput";
 import { LoginInputs } from "@/types/auth";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
@@ -42,7 +46,7 @@ export default function LoginForm({
       redirect: false,
       ...credentials,
     });
-
+    console.log(res);
     if (res?.ok) {
       // if (pathname === "/") {
       toast.success("السلام عليكم و رحمة الله و بركاته");
