@@ -1321,3 +1321,4 @@ class GenerateAttendanceView(views.APIView):
             "end_date": str(end_date),
             "season": season.name if season else "Active season"
         }, status=status.HTTP_201_CREATED)
+

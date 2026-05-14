@@ -23,9 +23,13 @@ export default function DataViewSearchLegacy() {
   return (
     <Input
       id="searchbar"
-      icon={<SearchIcon className="text-olive-300" />}
-      placeholder="ابحث عن دورة أو محاضرة"
-      inputStyles={cn("w-228")}
+      unstyled
+      icon={<SearchIcon className="text-stone-400 w-18 h-18" />}
+      iconAlignment="end"
+      placeholder="ابحث عن دورة أو محاضرة..."
+      inputStyles={cn("w-full h-[50px] rounded-full bg-white border border-stone-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] text-[1.2rem] px-20 flex-1")}
+      wrapperStyles="flex-1 max-w-[400px]"
+      containerStyles="w-full"
       onChange={(e) => {
         setSearchQuery(e.target.value);
         debouncedSearch(e.target.value);

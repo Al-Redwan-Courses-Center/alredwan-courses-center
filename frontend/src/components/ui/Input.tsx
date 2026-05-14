@@ -28,6 +28,7 @@ interface BaseInput {
   inputStyles?: string;
   wrapperStyles?: string;
   type?: InputHTMLAttributes<HTMLInputElement>["type"];
+  unstyled?: boolean;
 }
 
 interface UncontrolledInput extends BaseInput {
@@ -55,13 +56,14 @@ export default function Input({
   onChange = null,
   value,
   registerReturn,
+  unstyled = false,
 }: UncontrolledInput | ControlledInput) {
   return (
     <div
       className={cn(
         "[&_svg]:text-olive-300 flex items-center gap-6",
         wrapperStyles,
-        icon && containerStyles({ shape }),
+        !unstyled && icon && containerStyles({ shape }),
       )}
     >
       {iconAlignment === "start" && icon}
@@ -72,7 +74,7 @@ export default function Input({
         {...registerReturn}
         placeholder={placeholder}
         className={cn(
-          !icon && containerStyles({ shape }),
+          !unstyled && !icon && containerStyles({ shape }),
           "focus:outline-none",
           inputStyles,
         )}

@@ -362,11 +362,11 @@ export default function TodaysAttendancesView({
       filterConfig={{}}
       sortConfig={{}}
     >
-      <DataViewControls />
+      <DataViewControls 
+        showExport 
+        onExport={() => alert("جاري تصدير بيانات الحضور...")} 
+      />
 
-      <button onClick={() => sendJsonMessage({ type: "request_summary" })}>
-        Test Fetch Summary Data
-      </button>
 
       <DataViewHeaderLegacy>
         <DataViewCellLegacy>م</DataViewCellLegacy>
