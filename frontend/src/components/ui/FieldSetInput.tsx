@@ -11,6 +11,7 @@ interface BaseInput {
   icon?: ReactNode;
   label?: string;
   inputStyles?: string;
+  max?: InputHTMLAttributes<HTMLInputElement>["max"];
   type?: InputHTMLAttributes<HTMLInputElement>["type"];
 }
 
@@ -48,6 +49,7 @@ export default function FieldSetInput({
   button,
   label,
   inputStyles,
+  max,
   type,
   onChange,
   value,
@@ -67,6 +69,7 @@ export default function FieldSetInput({
         value={value}
         {...registerReturn}
         placeholder={placeholder}
+        max={max}
         className={cn(
           "w-full focus:outline-none",
           inputStyles,

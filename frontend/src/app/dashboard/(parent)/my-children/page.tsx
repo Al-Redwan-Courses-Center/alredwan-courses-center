@@ -1,5 +1,7 @@
 import { getParentChildren } from "@/actions/user";
 import ChildRow from "@/components/dashboard/parent/ChildRow";
+import ChildFormModal from "@/components/dashboard/parent/ChildFormModal";
+import Button from "@/components/ui/Button";
 import { Fragment } from "react/jsx-runtime";
 
 export default async function Page() {
@@ -7,6 +9,10 @@ export default async function Page() {
 
   return (
     <div className="max-h-[calc(100dvh-10%)] overflow-auto px-6 pt-8 pb-9">
+      <div className="mb-8">
+        <h2 className="text-olive-700 text-5xl font-bold">أطفالي</h2>
+      </div>
+
       {myChildren.map((c, i) => (
         <Fragment key={c.id}>
           <ChildRow child={c} index={i} />
@@ -16,6 +22,13 @@ export default async function Page() {
           )}
         </Fragment>
       ))}
+
+      <div className="mt-12 flex justify-end" dir="rtl">
+        <ChildFormModal
+          mode="create"
+          trigger={<Button size="small">إضافة طفل جديد</Button>}
+        />
+      </div>
     </div>
   );
 }

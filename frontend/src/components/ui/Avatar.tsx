@@ -25,7 +25,17 @@ export default function Avatar({
   draggable = false,
   priority = false,
 }: AvatarProps) {
-  const hasSrc = typeof src === "string" && src.trim().length > 0;
+  const isValidUrl = (url: string): boolean => {
+    if (!url || url.trim().length === 0) return false;
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  }; 
+
+  const hasSrc = typeof src === "string" && isValidUrl(src);
 
   return (
     <div

@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import CopyToClipboardButton from "@/components/ui/CopyToClipboardButton";
 import ItemCard from "@/components/ui/ItemCard";
 import ProgressBarWithLabel from "@/components/ui/ProgressBarWithLabel";
+import ParentChildCrudActions from "@/components/dashboard/parent/ParentChildCrudActions";
 import {
   getChildAttendanceRate,
   getChildOngoingEnrollments,
@@ -88,7 +89,8 @@ export default function ChildCard({
         </div>
       }
       cardFooter={
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-between gap-4">
+          <ParentChildCrudActions child={child} />
           <Button
             size="small"
             className="bg-olive-300"
