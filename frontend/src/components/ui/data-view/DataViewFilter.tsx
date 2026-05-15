@@ -22,7 +22,7 @@ export default function DataViewFilterLegacy() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="light" size="wide">
+        <Button variant="light" size="wide" className="!w-96 !px-8 !py-3 !text-[1.6rem]">
           <div className="flex w-full items-center justify-between">
             <span>تصفية</span>
             <ArrowDownHead />
