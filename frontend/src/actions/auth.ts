@@ -1,7 +1,7 @@
 "use server";
 
 import { authConfig } from "@/app/api/auth/[...nextauth]/route";
-import apiClient from "@/lib/axios";
+import { publicApiClient } from "@/lib/api";
 import { SignupInputs, UserEntity } from "@/types/auth";
 import axios from "axios";
 import { getServerSession, Session } from "next-auth";
@@ -13,7 +13,7 @@ export async function signUp(data: SignupInputs) {
   let errors: Record<keyof SignupInputs, string[]> | null = null;
 
   try {
-    await apiClient.post("/auth/users/", data);
+    await publicApiClient.post("/auth/users/", data);
   } catch (err) {
     if (axios.isAxiosError(err)) errors = err.response?.data;
   }

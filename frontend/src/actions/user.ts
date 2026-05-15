@@ -1,6 +1,6 @@
 "use server";
 
-import { getAuthApiClient } from "@/lib/auth-api";
+import { apiRequest, getAuthApiClient, unwrapPaginated } from "@/lib/api";
 import { PaginatedResponse } from "@/types/config";
 import { isAxiosError } from "axios";
 import { EnrollmentListItem, EnrollmentRequestListItem } from "@/types/entities";
@@ -23,27 +23,20 @@ export interface ParentChildDetail {
 }
 
 export async function getParentChildren(): Promise<ParentChildDetail[]> {
-  try {
-    const apiClient = await getAuthApiClient();
+  return apiRequest(
+    "Failed to load parent's children:",
+    async () => {
+      const apiClient = await getAuthApiClient();
 
-    const { data } = await apiClient.get<
-      PaginatedResponse<ParentChildDetail> | ParentChildDetail[]
-    >("/api/parents/children/?page_size=100");
+      const { data } = await apiClient.get<
+        PaginatedResponse<ParentChildDetail> | ParentChildDetail[]
+      >("/api/parents/children/?page_size=100");
 
-    const childrenList = Array.isArray(data) ? data : data.results;
-    return childrenList.sort((a, b) => b.age - a.age);
-  } catch (error) {
-    if (isAxiosError(error)) {
-      console.error(
-        "Failed to load parent's children:",
-        error.response?.data ?? error.message,
-      );
-    } else {
-      console.error("Failed to load parent's children:", error);
-    }
-
-    return [];
-  }
+      const childrenList = unwrapPaginated(data);
+      return childrenList.sort((a, b) => b.age - a.age);
+    },
+    [],
+  );
 }
 
 export async function addChild(data: {
