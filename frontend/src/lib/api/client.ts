@@ -9,18 +9,23 @@ const baseConfig = {
 
 export const publicApiClient: AxiosInstance = axios.create(baseConfig);
 
-export async function getAuthApiClient(): Promise<AxiosInstance> {
+const authApiClient: AxiosInstance = axios.create(baseConfig);
+
+authApiClient.interceptors.request.use(async (config) => {
   const token = await getServerJwtToken();
   const jwtAccessToken = token?.jwt_access_token;
 
   if (!jwtAccessToken) {
-    throw new Error("Missing JWT access token for protected request.");
+    return Promise.reject(
+      new Error("Missing JWT access token for protected request."),
+    );
   }
 
-  return axios.create({
-    ...baseConfig,
-    headers: {
-      Authorization: `JWT ${jwtAccessToken}`,
-    },
-  });
+  config.headers.Authorization = `JWT ${jwtAccessToken}`;
+  return config;
+});
+
+/** Shared instance; JWT is applied per request via interceptor (no `axios.create` per call). */
+export async function getAuthApiClient(): Promise<AxiosInstance> {
+  return authApiClient;
 }

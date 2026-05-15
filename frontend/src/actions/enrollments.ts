@@ -93,31 +93,35 @@ export async function getInstructorEnrollmentsByCourseId(courseId: string) {
 export async function createEnrollmentRequest(
   payload: EnrollmentRequestCreateBody,
 ): Promise<CreateEnrollmentRequestResult> {
-  try {
-    const apiClient = await getAuthApiClient();
+  const unexpectedMessage = "حدث خطأ غير متوقع أثناء إرسال الطلب.";
+  const axiosFallbackMessage =
+    "تعذر إرسال طلب الإلتحاق. يرجى المحاولة مرة أخرى.";
 
-    await apiClient.post("/api/enrollment-requests/", payload);
+  return apiRequest<CreateEnrollmentRequestResult>(
+    "Failed to create enrollment request:",
+    async () => {
+      const apiClient = await getAuthApiClient();
 
-    return {
-      ok: true,
-      message: "تم إرسال طلب الإلتحاق بنجاح.",
-    };
-  } catch (error) {
-    if (isAxiosError(error)) {
+      await apiClient.post("/api/enrollment-requests/", payload);
+
       return {
-        ok: false,
-        message:
-          getApiErrorDetail(error) ||
-          "تعذر إرسال طلب الإلتحاق. يرجى المحاولة مرة أخرى.",
-        fieldErrors: parseApiFieldErrors(error),
+        ok: true,
+        message: "تم إرسال طلب الإلتحاق بنجاح.",
       };
-    }
+    },
+    { ok: false, message: unexpectedMessage },
+    (error) => {
+      if (isAxiosError(error)) {
+        return {
+          ok: false,
+          message: getApiErrorDetail(error) || axiosFallbackMessage,
+          fieldErrors: parseApiFieldErrors(error),
+        };
+      }
 
-    return {
-      ok: false,
-      message: "حدث خطأ غير متوقع أثناء إرسال الطلب.",
-    };
-  }
+      return { ok: false, message: unexpectedMessage };
+    },
+  );
 }
 
 export async function deleteEnrollmentRequestById(
