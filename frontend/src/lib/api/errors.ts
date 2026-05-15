@@ -9,7 +9,31 @@ export function logApiError(context: string, error: unknown): void {
   console.error(context, error);
 }
 
-type ApiErrorPayload = Record<string, string[] | string> | { detail?: string | string[] };
+type ApiErrorPayload = Record<string, string[] | string>;
+
+function normalizeFieldErrors(value: unknown): string[] {
+  if (value == null) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => normalizeFieldErrors(item));
+  }
+
+  if (typeof value === "string") {
+    return [value];
+  }
+
+  if (typeof value === "number" || typeof value === "boolean") {
+    return [String(value)];
+  }
+
+  if (typeof value === "object") {
+    return [JSON.stringify(value)];
+  }
+
+  return [String(value)];
+}
 
 export function parseApiFieldErrors(
   error: unknown,
@@ -23,7 +47,7 @@ export function parseApiFieldErrors(
   return Object.fromEntries(
     Object.entries(responseData).map(([key, value]) => [
       key,
-      Array.isArray(value) ? value : [String(value)],
+      normalizeFieldErrors(value),
     ]),
   );
 }
