@@ -5,6 +5,22 @@ import StudentCourseCard from "@/components/dashboard/student/StudentCourseCard"
 import StudentOverviewHeader from "@/components/dashboard/student/StudentOverviewHeader";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
+import EmptyState from "@/components/ui/EmptyState";
+
+const emptyActionClassName =
+  "!shadow-[0_4px_14px_rgba(47,61,56,0.2)] hover:!shadow-[0_6px_18px_rgba(47,61,56,0.24)]";
+
+function BrowseCoursesButton() {
+  return (
+    <Button
+      href="/dashboard/courses"
+      size="small"
+      className={emptyActionClassName}
+    >
+      جميع الدورات
+    </Button>
+  );
+}
 
 export default function StudentOverviewPage({
   name,
@@ -25,9 +41,9 @@ export default function StudentOverviewPage({
 
   return (
     <div className="ps-16 pt-15 *:pe-16 max-[1000px]:px-0 max-[1000px]:*:pe-0">
-      <h3 className="text-olive-700 font-medad mb-8 text-6xl max-[1000px]:px-8">
+      <h1 className="dashboard-greeting mb-8 max-[1000px]:px-8">
         السلام عليكم يا {name}
-      </h3>
+      </h1>
 
       <StudentOverviewHeader
         activeCoursesCount={activeCoursesCount}
@@ -37,9 +53,7 @@ export default function StudentOverviewPage({
 
       <div className="[&>div]:separators-[7.25rem] [&>div]:border-olive-200 grid grid-cols-2 pe-0! max-[1000px]:grid-cols-1 max-[1000px]:gap-8 max-[1000px]:px-8 [&>div]:max-[1000px]:border-0">
         <div className="flex flex-col gap-6">
-          <h4 className="text-olive-700 text-5xl font-bold">
-            آخر الكورسات المسجلة
-          </h4>
+          <h2 className="dashboard-section-title">آخر الكورسات المسجلة</h2>
 
           <div className="hidden min-[1000px]:flex min-[1000px]:grow min-[1000px]:items-center min-[1000px]:gap-12">
             {overviewCourses.length > 0 ? (
@@ -47,13 +61,11 @@ export default function StudentOverviewPage({
                 <StudentCourseCard key={c.id} course={c} index={i} />
               ))
             ) : (
-              <div className="flex w-full flex-col items-center justify-center gap-4 py-40 text-4xl font-bold">
-                <span className="text-red-800">لا توجد دورات مسجلة!</span>
-                <span className="mb-10">اشترك في دورة جديدة الآن!</span>
-                <Button href="/dashboard/courses" size="small">
-                  جميع الدورات
-                </Button>
-              </div>
+              <EmptyState
+                title="لا توجد دورات مسجلة!"
+                description="اشترك في دورة جديدة الآن!"
+                action={<BrowseCoursesButton />}
+              />
             )}
           </div>
 
@@ -61,13 +73,12 @@ export default function StudentOverviewPage({
             {overviewCourses.length > 0 ? (
               <StudentOverviewCoursesAccordion courses={overviewCourses} />
             ) : (
-              <div className="flex w-full flex-col items-center justify-center gap-4 py-16 text-3xl font-bold">
-                <span className="text-red-800">لا توجد دورات مسجلة!</span>
-                <span className="mb-4">اشترك في دورة جديدة الآن!</span>
-                <Button href="/dashboard/courses" size="small">
-                  جميع الدورات
-                </Button>
-              </div>
+              <EmptyState
+                className="py-16"
+                title="لا توجد دورات مسجلة!"
+                description="اشترك في دورة جديدة الآن!"
+                action={<BrowseCoursesButton />}
+              />
             )}
           </div>
         </div>
@@ -87,13 +98,12 @@ export default function StudentOverviewPage({
                 enrollmentRequests={enrollmentRequests}
               />
             ) : (
-              <div className="flex w-full flex-col items-center justify-center gap-4 py-16 text-3xl font-bold">
-                <span className="text-red-800">لا توجد دورات مسجلة!</span>
-                <span className="mb-4">اشترك في دورتك الأولى الآن!</span>
-                <Button href="/dashboard/courses" size="small">
-                  جميع الدورات
-                </Button>
-              </div>
+              <EmptyState
+                className="py-16"
+                title="لا توجد طلبات تسجيل!"
+                description="اشترك في دورتك الأولى الآن!"
+                action={<BrowseCoursesButton />}
+              />
             )}
           </div>
         </div>

@@ -14,11 +14,11 @@ import { cn } from "@/lib/utils";
 import { useContext } from "react";
 
 const baseStyles = cn(
-  "shadow-soft w-105 rounded-[2rem_0] bg-gray-50 text-[1.8rem]",
+  "shadow-soft w-96 rounded-[2rem_0] bg-gray-50 text-[1.6rem]",
 );
 
 const dropdownItemStyles = cn(
-  "[direction:rtl;] flex cursor-pointer justify-between px-10 text-[1.8rem] transition-all hover:bg-gray-400",
+  "[direction:rtl;] flex cursor-pointer justify-between px-8 text-[1.6rem] transition-all hover:bg-gray-400",
 );
 
 export default function DataViewSortLegacy() {
@@ -37,7 +37,7 @@ export default function DataViewSortLegacy() {
       <DropdownMenuTrigger
         className={cn(
           baseStyles,
-          "px-10 py-4 transition-colors hover:bg-gray-100",
+          "px-8 py-3 transition-colors hover:bg-gray-100",
         )}
       >
         <div className="flex items-center justify-between">

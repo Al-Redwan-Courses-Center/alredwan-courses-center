@@ -25,7 +25,8 @@ export default function DataViewSearchLegacy() {
       id="searchbar"
       icon={<SearchIcon className="text-olive-300" />}
       placeholder="ابحث عن دورة أو محاضرة"
-      inputStyles={cn("w-228")}
+      wrapperStyles="!px-8 !py-3 [&_input]:text-[1.6rem] [&_input::placeholder]:text-[1.6rem]"
+      inputStyles={cn("w-full max-w-2xl min-w-0")}
       onChange={(e) => {
         setSearchQuery(e.target.value);
         debouncedSearch(e.target.value);

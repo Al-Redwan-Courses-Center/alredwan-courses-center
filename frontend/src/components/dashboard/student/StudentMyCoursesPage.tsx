@@ -23,9 +23,9 @@ export default async function StudentMyCoursesPage({
 
   return (
     <div className="flex h-full max-h-73/100 flex-col pt-15">
-      <h3 className="text-olive-700 font-medad mb-14 ps-16 text-6xl">
+      <h1 className="dashboard-greeting mb-14 ps-16">
         السلام عليكم يا {name}
-      </h3>
+      </h1>
 
       <div className="max-h-full w-full">
         <Suspense fallback={null}>
