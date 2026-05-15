@@ -5,8 +5,9 @@ RUN corepack enable pnpm
 
 # 2. Dependencies stage 
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json pnpm-lock.yaml .npmrc ./
+# Mazin: Fix for pnpm
+RUN pnpm install --no-frozen-lockfile --ignore-scripts
 
 # 3. Local dev stage
 FROM deps AS dev

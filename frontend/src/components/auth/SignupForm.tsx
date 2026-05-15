@@ -8,10 +8,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import FieldSetInput from "@/components/ui/FieldSetInput";
+import {
+  ARABIC_NAME_PATTERN,
+  ARABIC_ONLY_MESSAGE,
+  getMaxDobForAge,
+  validateMinimumAge,
+  MINIMUM_ALLOWED_AGE,
+} from "@/lib/validation";
 import { cn, toHindiDigits } from "@/lib/utils";
 import { SignupInputs } from "@/types/auth";
 import { signIn } from "next-auth/react";
-import { FocusEvent, ReactNode, useState } from "react";
+import { FocusEvent, ReactNode, useState, useEffect } from "react";
 import {
   FieldErrors,
   FieldValues,
@@ -55,6 +62,7 @@ const fieldMap: Record<keyof SignupInputs, string> = {
 export default function SignupForm() {
   const [countryCode, setCountryCode] = useState("20");
   const [showCountryCodeList, setShowCountryCodeList] = useState(false);
+  const dobMaxDate = getMaxDobForAge(MINIMUM_ALLOWED_AGE);
 
   const {
     register,
@@ -82,12 +90,28 @@ export default function SignupForm() {
   const roleValue = watch("role");
   // const identityTypeValue = watch("identity_type");
 
+  // DEBUG: Log role changes in real-time
+  useEffect(() => {
+    console.log("[SIGNUP DEBUG] Role field changed:", roleValue);
+  }, [roleValue]);
+
   // useEffect(() => {
   //   setValue("identity_number", "");
   //   clearErrors("identity_number");
   // }, [identityTypeValue, setValue, clearErrors]);
 
   const onSubmit: SubmitHandler<SignupInputs> = async (data) => {
+    // DEBUG: Log raw form submission data
+    console.log("[SIGNUP DEBUG] ===== FORM SUBMISSION START =====");
+    console.log("[SIGNUP DEBUG] Raw form data:", {
+      ...data,
+      password: "[REDACTED]",
+      re_password: "[REDACTED]",
+    });
+    console.log("[SIGNUP DEBUG] Role value in data object:", data.role);
+    console.log("[SIGNUP DEBUG] roleValue from watch():", roleValue);
+    console.log("[SIGNUP DEBUG] countryCode:", countryCode);
+
     const formattedData = {
       ...data,
       phone_number1: `+${countryCode + data.phone_number1.replace(/^0+/, "")}`,
@@ -95,6 +119,14 @@ export default function SignupForm() {
         ? `+${countryCode + data.phone_number2.replace(/^0+/, "")}`
         : undefined,
     };
+
+    // DEBUG: Log formatted data before API call
+    console.log("[SIGNUP DEBUG] Formatted data before API call:", {
+      ...formattedData,
+      password: "[REDACTED]",
+      re_password: "[REDACTED]",
+    });
+    console.log("[SIGNUP DEBUG] Role in formatted data:", formattedData.role);
 
     const { errors: apiErrors } = await signUp(formattedData);
 
@@ -139,8 +171,8 @@ export default function SignupForm() {
               },
 
               pattern: {
-                value: /^[\u0621-\u064A ]+$/,
-                message: "مسموح بالحروف العربية فقط",
+                value: ARABIC_NAME_PATTERN,
+                message: ARABIC_ONLY_MESSAGE,
               },
 
               onBlur: (e: FocusEvent<HTMLInputElement>) =>
@@ -166,8 +198,8 @@ export default function SignupForm() {
               },
 
               pattern: {
-                value: /^[\u0621-\u064A ]+$/,
-                message: "مسموح بالحروف العربية فقط",
+                value: ARABIC_NAME_PATTERN,
+                message: ARABIC_ONLY_MESSAGE,
               },
 
               onBlur: (e: FocusEvent<HTMLInputElement>) =>
@@ -301,19 +333,15 @@ export default function SignupForm() {
           <FieldSetInput
             type="date"
             label="تاريخ الميلاد"
+            max={dobMaxDate}
             registerReturn={register("dob", {
               required: {
                 value: true,
                 message: "هذا الحقل إجباري",
               },
 
-              validate: (data) => {
-                const date = new Date(data);
-                const now = new Date();
-
-                if (date.getTime() >= now.getTime())
-                  return "غير مسموح بتاريخ في المستقبل";
-              },
+              validate: (value) =>
+                validateMinimumAge(value, MINIMUM_ALLOWED_AGE),
             })}
             inputStyles={cn("[direction:ltr]")}
           />
