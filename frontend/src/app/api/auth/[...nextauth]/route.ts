@@ -1,8 +1,7 @@
-import apiClient from "@/lib/axios";
+import { logApiError, publicApiClient } from "@/lib/api";
 import { UserEntity } from "@/types/auth";
 import { PaginatedResponse } from "@/types/config";
 import { Instructor } from "@/types/entities";
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import NextAuth, { AuthOptions } from "next-auth";
 import { JWT } from "next-auth/jwt";
@@ -17,7 +16,7 @@ export const authConfig: AuthOptions = {
         password: {},
       },
       async authorize(credentials) {
-        const tokenRes = await apiClient.post<{
+        const tokenRes = await publicApiClient.post<{
           access: string;
           refresh: string;
         }>("/auth/jwt/create/", credentials);
@@ -28,7 +27,7 @@ export const authConfig: AuthOptions = {
 
         if (!access || !refresh) return null;
 
-        const userRes = await apiClient.get<UserEntity>("/auth/users/me/", {
+        const userRes = await publicApiClient.get<UserEntity>("/auth/users/me/", {
           headers: {
             Authorization: `JWT ${access}`,
           },
@@ -45,7 +44,7 @@ export const authConfig: AuthOptions = {
             data: {
               results: [{ id }],
             },
-          } = await apiClient.get<PaginatedResponse<Instructor>>(
+          } = await publicApiClient.get<PaginatedResponse<Instructor>>(
             `/api/users/instructors/?user__phone_number1__icontains=${user.phone_number1}`,
             {
               headers: {
@@ -80,7 +79,7 @@ export const authConfig: AuthOptions = {
       if (tokenAgeLeft <= 60) {
         try {
           const { jwt_refresh_token } = token as JWT & UserEntity;
-          const res = await apiClient.post<{ access: string }>(
+          const res = await publicApiClient.post<{ access: string }>(
             "/auth/jwt/refresh/",
             {
               refresh: jwt_refresh_token,
@@ -91,10 +90,7 @@ export const authConfig: AuthOptions = {
           const { exp } = jwtDecode(access);
           return { ...token, jwt_access_token: access, exp, error: undefined };
         } catch (err) {
-          if (axios.isAxiosError(err)) {
-            console.error("Backend Error Data:", err.response?.data);
-          }
-          console.error("Error Refreshing Token:", err);
+          logApiError("Error Refreshing Token:", err);
           return { ...token, error: "TokenRefreshmentError" };
         }
       }
