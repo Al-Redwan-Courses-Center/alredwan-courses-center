@@ -136,9 +136,11 @@ class CustomUser(AbstractUser):
             )
 
     def save(self, *args, **kwargs):
-        """Convert empty identity_number to None to maintain unique constraint."""
+        """Convert empty identity_number and email to None to maintain unique constraint."""
         if self.identity_number == '':
             self.identity_number = None
+        if self.email == '':
+            self.email = None
         super().save(*args, **kwargs)
 
     class Meta:
