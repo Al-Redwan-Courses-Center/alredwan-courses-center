@@ -61,8 +61,17 @@ export interface PongEvent {
   type: "pong";
 }
 
+export interface AttendanceRatedEvent {
+  type: "attendance_rated";
+  data: {
+    id: number;
+    rating: number;
+  };
+}
+
 export type StaffAttendanceServerEvent =
   | ConnectionEstablishedEvent
   | AttendanceUpdateEvent
   | SummaryResponseEvent
-  | PongEvent;
+  | PongEvent
+  | AttendanceRatedEvent;
