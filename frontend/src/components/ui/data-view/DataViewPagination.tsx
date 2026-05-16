@@ -17,7 +17,7 @@ export function DataViewPaginationLegacy() {
   if (numPages <= 0) return null;
 
   return (
-    <div className="absolute right-1/2 bottom-10 flex translate-x-[50%] items-center gap-10">
+    <div className="relative flex items-center justify-center gap-10 w-full">
       <button
         disabled={page - 1 < 1}
         onClick={prevPage}
