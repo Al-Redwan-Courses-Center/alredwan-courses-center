@@ -775,7 +775,7 @@ class AdminAllAttendanceListView(generics.ListAPIView):
     - GET /api/attendance/all/?instructor=<uuid>&status=present
     - GET /api/attendance/all/?attendance_type=supervision&has_rating=false
     """
-    serializer_class = InstructorAttendanceSerializer
+    serializer_class = InstructorAttendanceListSerializer
     permission_classes = [IsAuthenticated, IsAdminOrSupervisorRole]
     filter_backends = [DjangoFilterBackend]
     filterset_class = InstructorAttendanceFilter
