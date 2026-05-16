@@ -138,3 +138,20 @@ export async function rateAttendance(
     return null;
   }
 }
+
+export async function generateAttendances(startDate: string, endDate: string) {
+  try {
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.post("/api/attendance/generate/", {
+      start_date: startDate,
+      end_date: endDate,
+    });
+    return { success: true, data };
+  } catch (error) {
+    let message = "Failed to generate attendances";
+    if (isAxiosError(error)) {
+      message = error.response?.data?.error || error.response?.data?.detail || message;
+    }
+    return { success: false, error: message };
+  }
+}

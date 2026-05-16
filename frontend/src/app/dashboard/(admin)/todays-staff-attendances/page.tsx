@@ -1,5 +1,5 @@
 import { getTodaysAttendances } from "@/actions/admin-attendances";
-import TodaysAttendancesView from "@/components/dashboard/admin/TodaysAttendancesView";
+import AdminAttendancesView from "@/components/dashboard/admin/AdminAttendancesView";
 
 export default async function Page() {
   const attendances = await getTodaysAttendances();
@@ -11,7 +11,7 @@ export default async function Page() {
         <span>حضور و مهام اليوم</span>
       </div>
 
-      <TodaysAttendancesView dbAttendances={attendances} />
+      <AdminAttendancesView initialAttendances={attendances} hideDateFilter={true} />
     </div>
   );
 }
