@@ -22,12 +22,14 @@ import {
   manualCheckIn,
   manualCheckOut,
   markAbsent,
+  generateAttendances,
 } from "@/actions/admin-attendances";
 import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
 import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
 import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
 import AttendanceRatingModal from "./AttendanceRatingModal";
-import { Star, ChevronDown } from "lucide-react";
+import AttendanceGenerationModal from "./AttendanceGenerationModal";
+import { Star, ChevronDown, PlusCircle } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
 import { Calendar } from "@/components/ui/Calendar";
 import {
@@ -270,7 +272,15 @@ function StaffAttendanceRow({
 
 // ─── Filter Bar ───────────────────────────────────────────────────────────────
 
-function FilterBar({ onExport }: { onExport: () => void }) {
+function FilterBar({ 
+  onExport, 
+  hideDate, 
+  onGenerate 
+}: { 
+  onExport: () => void; 
+  hideDate?: boolean;
+  onGenerate: () => void;
+}) {
   const { mutateSearchParams, searchParams } = useMutateSearchParams();
   const dateParam = searchParams.get("date") || format(new Date(), "yyyy-MM-dd");
   const [localDate, setLocalDate] = useState(dateParam);
@@ -297,39 +307,41 @@ function FilterBar({ onExport }: { onExport: () => void }) {
       </div>
 
       {/* Date Filter */}
-      <div 
-        onClick={(e) => {
-          const input = e.currentTarget.querySelector('input');
-          if (e.target !== input && input && 'showPicker' in HTMLInputElement.prototype) {
-            try { input.showPicker(); } catch (err) {}
-          }
-        }}
-        className="shadow-soft bg-[#F3F3F5] rounded-[0_2rem] flex items-center gap-4 px-8 py-3 hover:bg-gray-100 transition-colors cursor-pointer"
-      >
-        <span className="text-[1.6rem] text-gray-500 pointer-events-none">التاريخ:</span>
-        <input
-          type="date"
-          value={localDate}
-          onChange={(e) => {
-            setLocalDate(e.target.value);
-            // Only update URL if it looks like a full date (YYYY-MM-DD)
-            if (e.target.value && e.target.value.length === 10) {
-              mutateSearchParams([{ key: "date", val: e.target.value }]);
+      {!hideDate && (
+        <div 
+          onClick={(e) => {
+            const input = e.currentTarget.querySelector('input');
+            if (e.target !== input && input && 'showPicker' in HTMLInputElement.prototype) {
+              try { input.showPicker(); } catch (err) {}
             }
           }}
-          onBlur={() => {
-            // Reset to today if cleared, or sync with URL if different and valid
-            if (!localDate) {
-              const today = format(new Date(), "yyyy-MM-dd");
-              setLocalDate(today);
-              mutateSearchParams([{ key: "date", val: today }]);
-            } else if (localDate.length === 10 && localDate !== dateParam) {
-              mutateSearchParams([{ key: "date", val: localDate }]);
-            }
-          }}
-          className="bg-transparent focus:outline-none text-[1.6rem] font-bold text-gray-700 cursor-pointer"
-        />
-      </div>
+          className="shadow-soft bg-[#F3F3F5] rounded-[0_2rem] flex items-center gap-4 px-8 py-3 hover:bg-gray-100 transition-colors cursor-pointer"
+        >
+          <span className="text-[1.6rem] text-gray-500 pointer-events-none">التاريخ:</span>
+          <input
+            type="date"
+            value={localDate}
+            onChange={(e) => {
+              setLocalDate(e.target.value);
+              // Only update URL if it looks like a full date (YYYY-MM-DD)
+              if (e.target.value && e.target.value.length === 10) {
+                mutateSearchParams([{ key: "date", val: e.target.value }]);
+              }
+            }}
+            onBlur={() => {
+              // Reset to today if cleared, or sync with URL if different and valid
+              if (!localDate) {
+                const today = format(new Date(), "yyyy-MM-dd");
+                setLocalDate(today);
+                mutateSearchParams([{ key: "date", val: today }]);
+              } else if (localDate.length === 10 && localDate !== dateParam) {
+                mutateSearchParams([{ key: "date", val: localDate }]);
+              }
+            }}
+            className="bg-transparent focus:outline-none text-[1.6rem] font-bold text-gray-700 cursor-pointer"
+          />
+        </div>
+      )}
 
       {/* Status Filter */}
       <DropdownMenu>
@@ -387,6 +399,15 @@ function FilterBar({ onExport }: { onExport: () => void }) {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Generate Records Button */}
+      <button 
+        onClick={onGenerate}
+        className="shadow-soft bg-olive-700 text-white rounded-lg flex items-center gap-4 px-6 py-3 hover:bg-olive-800 transition-colors mr-auto"
+      >
+        <PlusCircle className="size-6" />
+        <span className="text-[1.6rem] font-bold">توليد سجلات</span>
+      </button>
+
       {/* Excel export */}
       <button 
         onClick={onExport}
@@ -402,8 +423,10 @@ function FilterBar({ onExport }: { onExport: () => void }) {
 
 export default function AdminAttendancesView({
   initialAttendances,
+  hideDateFilter = false,
 }: {
   initialAttendances: StaffAttendanceListItem[];
+  hideDateFilter?: boolean;
 }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [attendances, setAttendances] = useState<StaffAttendanceListItem[]>(initialAttendances);
@@ -413,6 +436,8 @@ export default function AdminAttendancesView({
     isOpen: boolean;
     attendance?: StaffAttendanceListItem;
   }>({ isOpen: false });
+
+  const [generationModalOpen, setGenerationModalOpen] = useState(false);
 
   const wsUrl = accessToken
     ? `ws://${typeof window !== "undefined" ? window.location.hostname : "localhost"}:8001/ws/attendance/?token=${accessToken}`
@@ -489,8 +514,12 @@ export default function AdminAttendancesView({
   };
 
   return (
-    <div className="flex flex-col flex-1">
-      <FilterBar onExport={handleExport} />
+    <div className="flex flex-col h-full flex-1">
+      <FilterBar 
+        onExport={handleExport} 
+        hideDate={hideDateFilter} 
+        onGenerate={() => setGenerationModalOpen(true)}
+      />
 
       <DataViewLegacy
         gridLayout="grid-cols-[minmax(0,0.4fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,0.25fr)_minmax(0,1.5fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)]"
@@ -549,6 +578,15 @@ export default function AdminAttendancesView({
           }
         />
       )}
+
+      <AttendanceGenerationModal
+        isOpen={generationModalOpen}
+        onClose={() => setGenerationModalOpen(false)}
+        onSuccess={() => {
+          // You might want to refresh the page or show a toast
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }
