@@ -1,6 +1,7 @@
-import { getAuthApiClient } from "@/lib/auth-api";
+"use server";
+
+import { apiRequest, getAuthApiClient, unwrapPaginated } from "@/lib/api";
 import { PaginatedResponse } from "@/types/config";
-import { isAxiosError } from "axios";
 
 export interface ParentChildDetail {
   id: string;
@@ -18,50 +19,17 @@ export interface ParentChildDetail {
 }
 
 export async function getParentChildren(): Promise<ParentChildDetail[]> {
-  try {
-    const apiClient = await getAuthApiClient();
+  return apiRequest(
+    "Failed to load parent's children:",
+    async () => {
+      const apiClient = await getAuthApiClient();
 
-    const { data } = await apiClient.get<
-      PaginatedResponse<ParentChildDetail> | ParentChildDetail[]
-    >("/api/parents/children/?page_size=100");
+      const { data } = await apiClient.get<
+        PaginatedResponse<ParentChildDetail> | ParentChildDetail[]
+      >("/api/parents/children/?page_size=100");
 
-    return Array.isArray(data) ? data : data.results;
-  } catch (error) {
-    if (isAxiosError(error)) {
-      console.error(
-        "Failed to load parent's children:",
-        error.response?.data ?? error.message,
-      );
-    } else {
-      console.error("Failed to load parent's children:", error);
-    }
-
-    return [];
-  }
+      return unwrapPaginated(data);
+    },
+    [],
+  );
 }
-
-// export async function getInstructorId(phoneNum: string) {
-//   try {
-//     const formattedPhoneNum = phoneNum.replaceAll(/\D/g, "");
-
-//     const apiClient = await getAuthApiClient();
-//     const { data } = await apiClient.get<PaginatedResponse<Instructor>>(
-//       `/api/users/instructors/?user__phone_number1__icontains=${formattedPhoneNum}`,
-//     );
-
-//     const instructorId = String(data.results[0].id);
-
-//     return instructorId;
-//   } catch (err) {
-//     if (isAxiosError(err)) {
-//       console.error(
-//         "Failed to get the instructor: ",
-//         err.response?.data ?? err.message,
-//       );
-//     } else {
-//       console.error("Failed to get today's lectures: ", err);
-//     }
-
-//     return null;
-//   }
-// }
