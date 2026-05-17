@@ -38,6 +38,7 @@ export default async function StudentOverviewPage({
   let myActiveCourses: any[], myEnrollmentRequests: any[], name: string;
 
   if (role === "parent") {
+    // TODO(api): Child-specific enrollment data is not available yet.
     myActiveCourses = getChildOngoingEnrollments(childId).map((e) => e.course);
 
     myEnrollmentRequests = getChildEnrollmentRequests(childId).sort(
@@ -50,8 +51,10 @@ export default async function StudentOverviewPage({
         ],
     );
 
+    // TODO(api): Replace mock child details when the API provides child info.
     name = getMyChildById(childId).name;
   } else {
+    // TODO(api): Replace mock active courses once course detail endpoints are wired.
     myActiveCourses = await getStudentCourses();
 
     const requests = await getMyEnrollmentRequests();
@@ -117,7 +120,7 @@ export default async function StudentOverviewPage({
             className={
               myEnrollmentRequests.length > 0
                 ? "hidden min-[1000px]:flex min-[1000px]:max-h-[calc(100dvh-44rem)] min-[1000px]:flex-col min-[1000px]:gap-10 min-[1000px]:overflow-y-auto min-[1000px]:pe-16 min-[1000px]:pt-6 min-[1000px]:pb-10"
-                : "hidden min-[1000px]:flex min-[1000px]:min-h-80 min-[1000px]:flex-col min-[1000px]:justify-center min-[1000px]:pe-16 min-[1000px]:py-12"
+                : "hidden min-[1000px]:flex min-[1000px]:min-h-80 min-[1000px]:flex-col min-[1000px]:justify-center min-[1000px]:py-12 min-[1000px]:pe-16"
             }
           >
             {myEnrollmentRequests.length > 0 ? (

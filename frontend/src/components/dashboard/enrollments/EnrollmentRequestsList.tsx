@@ -31,7 +31,7 @@ export default function EnrollmentRequestsList({
 
   return (
     <div className={cn("flex flex-col ps-0! pb-10 *:ps-29", wrapperStyles)}>
-      <h2 className="dashboard-section-title -mb-1">
+      <h2 className="dashboard-section-title mb-6">
         آخر الطلبات {childNames.length === 1 && `ل${childNames[0]}`}
       </h2>
 

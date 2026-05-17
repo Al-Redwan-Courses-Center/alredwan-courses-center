@@ -1,17 +1,27 @@
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 
+type HeadingLevel = "h2" | "h3" | "h4";
+
 export default function EmptyState({
   title,
   description,
   action,
   className,
+  titleClassName,
+  descriptionClassName,
+  headingLevel = "h2",
 }: {
   title: string;
   description?: string;
   action?: ReactNode;
   className?: string;
+  titleClassName?: string;
+  descriptionClassName?: string;
+  headingLevel?: HeadingLevel;
 }) {
+  const Heading = headingLevel;
+
   return (
     <div
       className={cn(
@@ -19,9 +29,18 @@ export default function EmptyState({
         className,
       )}
     >
-      <p className="text-olive-700 text-4xl font-bold">{title}</p>
+      <Heading
+        className={cn("text-4xl font-bold text-gray-600", titleClassName)}
+      >
+        {title}
+      </Heading>
       {description && (
-        <p className="text-olive-500 max-w-md text-2xl leading-relaxed font-normal">
+        <p
+          className={cn(
+            "max-w-md text-2xl leading-relaxed font-normal text-gray-900",
+            descriptionClassName,
+          )}
+        >
           {description}
         </p>
       )}

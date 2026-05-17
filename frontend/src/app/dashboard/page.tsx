@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-
 export default function Page() {
-  redirect("/dashboard/overview");
+  // Role-based redirects are handled in src/proxy.ts for /dashboard.
+  return null;
 }
