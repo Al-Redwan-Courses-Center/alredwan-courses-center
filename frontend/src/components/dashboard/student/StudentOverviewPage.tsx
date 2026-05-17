@@ -37,7 +37,48 @@ export default function StudentOverviewPage({
   pendingRequestsCount: number;
   attendanceRate: number;
 }) {
+<<<<<<< HEAD
   const overviewCourses = activeCourses.slice(0, 2);
+=======
+  const { first_name, role } = await getUser();
+  let myActiveCourses: any[], myEnrollmentRequests: any[], name: string;
+
+  if (role === "parent") {
+    // TODO(api): Child-specific enrollment data is not available yet.
+    myActiveCourses = getChildOngoingEnrollments(childId).map((e) => e.course);
+
+    myEnrollmentRequests = getChildEnrollmentRequests(childId).sort(
+      (a, b) =>
+        ENROLLMENT_REQUEST_STATUS_WEIGHTS[
+          a.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
+        ] -
+        ENROLLMENT_REQUEST_STATUS_WEIGHTS[
+          b.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
+        ],
+    );
+
+    // TODO(api): Replace mock child details when the API provides child info.
+    name = getMyChildById(childId).name;
+  } else {
+    // TODO(api): Replace mock active courses once course detail endpoints are wired.
+    myActiveCourses = await getStudentCourses();
+
+    const requests = await getMyEnrollmentRequests();
+
+    myEnrollmentRequests = requests.sort(
+      (a, b) =>
+        ENROLLMENT_REQUEST_STATUS_WEIGHTS[
+          a.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
+        ] -
+        ENROLLMENT_REQUEST_STATUS_WEIGHTS[
+          b.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
+        ],
+    );
+
+    name = first_name;
+  }
+  const overviewCourses = myActiveCourses.slice(0, 2);
+>>>>>>> 872bb46 (Address PR review feedback for dashboard UI polish)
 
   return (
     <div className="ps-16 pt-15 *:pe-16 max-[1000px]:px-0 max-[1000px]:*:pe-0">
