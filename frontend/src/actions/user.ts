@@ -3,6 +3,9 @@
 import { getAuthApiClient } from "@/lib/auth-api";
 import { PaginatedResponse } from "@/types/config";
 import { isAxiosError } from "axios";
+import { EnrollmentListItem, EnrollmentRequestListItem } from "@/types/entities";
+import { getCourseById } from "@/actions/courses";
+import { getEnrollmentProgressById } from "@/actions/enrollments";
 
 export interface ParentChildDetail {
   id: string;
@@ -107,6 +110,57 @@ export async function getChildById(id: string): Promise<ParentChildDetail | null
   } catch (error) {
     console.error("Failed to fetch child details:", error);
     return null;
+  }
+}
+
+export async function getChildEnrollments(childId: string): Promise<EnrollmentListItem[]> {
+  try {
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.get<
+      PaginatedResponse<EnrollmentListItem> | EnrollmentListItem[]
+    >(`/api/enrollments/my-enrollments/?child=${childId}&page_size=100`);
+
+    return Array.isArray(data) ? data : data.results;
+  } catch (error) {
+    console.error("Failed to load child enrollments:", error);
+    return [];
+  }
+}
+
+export async function getChildEnrollmentRequests(childId: string): Promise<EnrollmentRequestListItem[]> {
+  try {
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.get<
+      PaginatedResponse<EnrollmentRequestListItem> | EnrollmentRequestListItem[]
+    >(`/api/enrollment-requests/my-requests/?child=${childId}&page_size=100`);
+
+    return Array.isArray(data) ? data : data.results;
+  } catch (error) {
+    console.error("Failed to load child enrollment requests:", error);
+    return [];
+  }
+}
+
+export async function getChildCourses(childId: string) {
+  try {
+    const myEnrollments = await getChildEnrollments(childId);
+
+    const myCoursesInitial = await Promise.all(
+      myEnrollments.map((e) => getCourseById(e.course)),
+    );
+    const myEnrollmentsProgresses = await Promise.all(
+      myEnrollments.map((e) => getEnrollmentProgressById(e.id)),
+    );
+
+    const myCourses = myCoursesInitial.map((c, i) => ({
+      ...c,
+      course_progress: myEnrollmentsProgresses[i]?.percentage,
+    }));
+
+    return myCourses;
+  } catch (error) {
+    console.error("Failed to load child courses:", error);
+    return [];
   }
 }
 

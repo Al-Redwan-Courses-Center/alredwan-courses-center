@@ -57,13 +57,23 @@ export default async function ParentOverviewPage() {
 
       <div className="[&>div]:separators-[7.25rem] [&>div]:border-olive-200 grid grid-cols-2 pe-0!">
         <div className="flex flex-col gap-6">
-          <h4 className="text-olive-700 mb-6 text-5xl font-bold">
-            آخر الكورسات المسجلة
-          </h4>
+          <div className="mb-6 flex items-center justify-between">
+            <h4 className="text-olive-700 text-5xl font-bold">
+              أطفالي المسجلين
+            </h4>
+            {myChildren.length > 2 && (
+              <Link
+                href="/dashboard/my-children"
+                className="text-olive-600 hover:text-olive-800 text-2xl font-bold transition-colors"
+              >
+                عرض الكل
+              </Link>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 items-center gap-12">
             {myChildren.length > 0 ? (
-              myChildren.map((c, i) => (
+              myChildren.slice(0, 2).map((c, i) => (
                 <ChildCard key={c.id} index={i} child={c} />
               ))
             ) : (

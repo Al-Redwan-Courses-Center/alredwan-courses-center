@@ -16,7 +16,13 @@ interface AddChildInputs {
   gender: "boy" | "girl";
 }
 
-export default function AddChildForm({ initialData }: { initialData?: ParentChildDetail }) {
+export default function AddChildForm({
+  initialData,
+  onSuccess,
+}: {
+  initialData?: ParentChildDetail;
+  onSuccess?: () => void;
+}) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -34,9 +40,40 @@ export default function AddChildForm({ initialData }: { initialData?: ParentChil
   const onSubmit: SubmitHandler<AddChildInputs> = async (data) => {
     setIsLoading(true);
     
+    // 1. Trimming names and checking for empty values
+    const trimmedFirstName = data.first_name.trim();
+    const trimmedLastName = data.last_name.trim();
+    
+    if (!trimmedFirstName || !trimmedLastName) {
+      toast.error("الاسم الأول والاسم الأخير لا يمكن أن يكونا فارغين.");
+      setIsLoading(false);
+      return;
+    }
+    
+    // 2. Validate date of birth (Age must be > 0)
+    const dobDate = new Date(data.dob);
+    const today = new Date();
+    
+    // Reset hours, minutes, seconds, ms for date-only comparison
+    today.setHours(0, 0, 0, 0);
+    dobDate.setHours(0, 0, 0, 0);
+    
+    if (dobDate >= today || Number.isNaN(dobDate.getTime())) {
+      toast.error("تاريخ الميلاد غير صالح! يجب أن يكون عمر الطفل أكبر من 0.");
+      setIsLoading(false);
+      return;
+    }
+
+    const payload = {
+      first_name: trimmedFirstName,
+      last_name: trimmedLastName,
+      dob: data.dob,
+      gender: data.gender,
+    };
+    
     const result = initialData 
-      ? await updateChild(initialData.id, data)
-      : await addChild(data);
+      ? await updateChild(initialData.id, payload)
+      : await addChild(payload);
     
     const { error } = result;
     
@@ -45,7 +82,6 @@ export default function AddChildForm({ initialData }: { initialData?: ParentChil
       if (typeof error === "string") {
         errorMessage = error;
       } else if (typeof error === "object") {
-        // DRF returns errors as { field: [messages] }
         errorMessage = Object.entries(error)
           .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : value}`)
           .join("\n");
@@ -54,14 +90,18 @@ export default function AddChildForm({ initialData }: { initialData?: ParentChil
       setIsLoading(false);
     } else {
       toast.success(initialData ? "تم تحديث البيانات بنجاح!" : "تم إضافة الطفل بنجاح!");
-      router.push("/dashboard/my-children");
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push("/dashboard/my-children");
+      }
       router.refresh();
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-x-12 gap-y-10 bg-white/50 p-10 rounded-[2rem_0] shadow-soft">
-      <div className="flex flex-col gap-2">
+    <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-x-6 lg:gap-x-12 gap-y-6 lg:gap-y-10 bg-white/50 p-4 sm:p-10 rounded-[2rem_0] shadow-soft">
+      <div className="flex flex-col gap-2 col-span-1">
         <FieldSetInput 
             label="الاسم الأول والثاني" 
             placeholder="مثال: محمد أحمد" 
@@ -70,7 +110,7 @@ export default function AddChildForm({ initialData }: { initialData?: ParentChil
         {errors.first_name && <span className="text-red-800 text-xl px-4">{errors.first_name.message}</span>}
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 col-span-1">
         <FieldSetInput 
             label="الاسم الثالث والرابع" 
             placeholder="مثال: علي حسن" 
@@ -79,7 +119,7 @@ export default function AddChildForm({ initialData }: { initialData?: ParentChil
         {errors.last_name && <span className="text-red-800 text-xl px-4">{errors.last_name.message}</span>}
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 col-span-1">
         <FieldSetInput 
             type="date" 
             label="تاريخ الميلاد" 
@@ -88,7 +128,7 @@ export default function AddChildForm({ initialData }: { initialData?: ParentChil
         {errors.dob && <span className="text-red-800 text-xl px-4">{errors.dob.message}</span>}
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 col-span-1">
           <span className="text-2xl font-bold px-3">الجنس</span>
           <div className="flex gap-4">
               <div 
@@ -113,8 +153,8 @@ export default function AddChildForm({ initialData }: { initialData?: ParentChil
           <input type="hidden" {...register("gender")} />
       </div>
       
-      <div className="col-span-2 flex justify-center mt-10">
-          <Button type="submit" loading={isLoading} className="px-20 py-6 text-4xl">
+      <div className="col-span-1 md:col-span-2 flex justify-center mt-6 lg:mt-10">
+          <Button type="submit" loading={isLoading} className="w-full sm:w-auto px-12 sm:px-20 py-4 sm:py-6 text-2xl sm:text-4xl">
               حفظ البيانات
           </Button>
       </div>

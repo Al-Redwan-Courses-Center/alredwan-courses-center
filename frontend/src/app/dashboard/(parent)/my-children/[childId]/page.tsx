@@ -1,11 +1,62 @@
+import { protect } from "@/actions/auth";
+import {
+  getChildById,
+  getChildCourses,
+  getChildEnrollments,
+  getChildEnrollmentRequests,
+} from "@/actions/user";
+import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
 import StudentOverviewPage from "@/components/dashboard/student/StudentOverviewPage";
+import { notFound } from "next/navigation";
 
 export default async function Page({
   params,
 }: {
   params: Promise<{ childId: string }>;
 }) {
+  await protect(["parent"]);
   const { childId } = await params;
 
-  return <StudentOverviewPage childId={childId} />;
+  const child = await getChildById(childId);
+  if (!child) {
+    return notFound();
+  }
+
+  const [activeCourses, enrollmentRequests, enrollments] = await Promise.all([
+    getChildCourses(childId),
+    getChildEnrollmentRequests(childId),
+    getChildEnrollments(childId),
+  ]);
+
+  const sortedRequests = enrollmentRequests.sort(
+    (a, b) =>
+      ENROLLMENT_REQUEST_STATUS_WEIGHTS[
+        a.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
+      ] -
+      ENROLLMENT_REQUEST_STATUS_WEIGHTS[
+        b.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
+      ],
+  );
+
+  const activeCoursesCount = enrollments.filter((e) => e.status === "active").length;
+  const pendingRequestsCount = enrollmentRequests.filter((e) => e.status === "pending").length;
+  const attendanceRate = enrollments.length
+    ? Math.round(
+        enrollments.reduce(
+          (acc, enrollment) => acc + (enrollment.completion_percentage || 0),
+          0,
+        ) / enrollments.length,
+      )
+    : 0;
+
+  return (
+    <StudentOverviewPage
+      name={child.first_name}
+      activeCourses={activeCourses}
+      enrollmentRequests={sortedRequests}
+      activeCoursesCount={activeCoursesCount}
+      pendingRequestsCount={pendingRequestsCount}
+      attendanceRate={attendanceRate}
+    />
+  );
 }

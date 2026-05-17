@@ -28,7 +28,7 @@ export default function EnrollmentRequestsList({
     <div className={cn("flex flex-col ps-0! pb-10 *:ps-29", wrapperStyles)}>
       <div className="mb-6 flex items-center justify-between">
         <h4 className="text-olive-700 text-5xl font-bold">
-          اخر الطلبات المعلقة {childNames.length === 1 && `ل${childNames[0]}`}
+          طلبات الاشتراك
         </h4>
         <div className="flex items-center gap-4 text-white">
           <div className="bg-olive-300 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-transform hover:scale-105">
@@ -48,7 +48,11 @@ export default function EnrollmentRequestsList({
       >
         {enrollments.length > 0 ? (
           enrollments.map((e) => (
-            <EnrollmentRequestCard key={e.id} enrollmentRequest={e} />
+            <EnrollmentRequestCard 
+              key={e.id} 
+              enrollmentRequest={e} 
+              childName={e.child?.name || e.participant_name}
+            />
           ))
         ) : (
           <div className="my-auto flex w-full flex-col items-center justify-center gap-4 text-4xl font-bold">
