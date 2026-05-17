@@ -70,8 +70,13 @@ export default function ChildCard({
             />
           </div>
 
-          <div className="flex flex-col pe-30">
-            <span className="text-[1.6rem] font-bold">{child.first_name}</span>
+          <div className="flex flex-col pe-30 overflow-hidden">
+            <span
+              className="text-[1.6rem] font-bold truncate block"
+              title={`${child.first_name} ${child.last_name}`}
+            >
+              {child.first_name}
+            </span>
             <span>
               {child.age}{" "}
               {getArabicPlural(child.age, {

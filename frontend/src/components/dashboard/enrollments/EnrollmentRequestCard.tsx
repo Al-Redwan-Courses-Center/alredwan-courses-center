@@ -14,8 +14,10 @@ const statusMap = {
 
 export default function EnrollmentRequestCard({
   enrollmentRequest,
+  childName,
 }: {
   enrollmentRequest: EnrollmentRequestListItem;
+  childName?: string;
 }) {
   const courseTitle = enrollmentRequest.course_name;
   const displayPrice =
@@ -34,6 +36,12 @@ export default function EnrollmentRequestCard({
         >
           {statusMap[enrollmentRequest.status].label}
         </span>
+
+        {childName && (
+          <span className="bg-olive-500/10 text-olive-700 rounded-[0.5rem_0] px-3 py-2 font-bold text-[1.3rem]">
+            الطفل: {childName}
+          </span>
+        )}
       </div>
 
       <div className="flex items-center">
