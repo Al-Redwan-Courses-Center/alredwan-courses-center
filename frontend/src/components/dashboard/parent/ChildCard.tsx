@@ -75,7 +75,7 @@ export default function ChildCard({
               className="text-[1.6rem] font-bold truncate block"
               title={`${child.first_name} ${child.last_name}`}
             >
-              {child.first_name}
+              {child.first_name} {child.last_name}
             </span>
             <span>
               {child.age}{" "}
