@@ -4,7 +4,7 @@ import PeopleIcon from "@/components/icons/PeopleIcon";
 import { cn } from "@/lib/utils";
 import { ComponentProps, FC } from "react";
 
-function StatPoint({
+function DataPoint({
   label,
   icon: Icon,
   value,
@@ -18,29 +18,18 @@ function StatPoint({
   iconClassName?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "text-olive-300 flex min-w-0 items-center justify-center gap-3 font-bold",
-        "not-first:border-olive-200 separators-[4.25rem] px-2",
-        "max-[1000px]:gap-2 max-[1000px]:separators-2 max-[1000px]:justify-start max-[1000px]:px-1 max-[1000px]:not-first:border-0",
-        "min-[1000px]:gap-6 min-[1000px]:px-4",
-      )}
-    >
+    <div className="text-olive-300 not-first:border-olive-200 separators-[4.25rem] grid grid-cols-[auto_1fr] grid-rows-2 gap-x-7 gap-y-4 text-4xl font-bold">
       <Icon
         className={cn(
-          "drop-shadow-soft h-10 w-10 shrink-0 min-[1000px]:h-14 min-[1000px]:w-14",
+          "drop-shadow-soft row-span-full h-20 w-auto self-center max-[1000px]:row-span-1 max-[1000px]:row-start-2 max-[1000px]:h-10",
           iconClassName,
         )}
       />
-      <div className="flex min-w-0 flex-col gap-3">
-        <span className="text-lg leading-none min-[1000px]:text-2xl">
-          {label}
-        </span>
-        <span className="text-olive-500 text-xl leading-none whitespace-nowrap tabular-nums min-[1000px]:text-3xl">
-          {value}
-          {suffix && <span className="ms-1">{suffix}</span>}
-        </span>
-      </div>
+      <span className="self-end max-[1000px]:col-span-2">{label}</span>
+      <span className="text-olive-500 whitespace-nowrap tabular-nums">
+        {value}
+        {suffix && <span className="ms-1">{suffix}</span>}
+      </span>
     </div>
   );
 }
@@ -56,31 +45,38 @@ export default function ParentOverviewHeader({
 }) {
   const paidAmount = Math.round(totalPaid || 0);
 
+  const dataPoints = [
+    {
+      label: "عدد الأطفال",
+      icon: PeopleIcon,
+      value: myChildrenCount,
+      iconClassName: "h-auto w-28",
+    },
+    {
+      label: "الطلبات المعلقة",
+      icon: PendingTransactionIcon,
+      value: pendingEnrollmentsCount,
+    },
+    {
+      label: "إجمالي المدفوعات",
+      icon: MoneyIcon,
+      value: paidAmount.toLocaleString("en-US"),
+      suffix: "جنيه",
+    },
+  ];
+
   return (
-    <div
-      className={cn(
-        "mb-10 grid h-auto w-full rounded-[0_0_1.5951rem_1.5951rem] bg-[linear-gradient(164deg,#EDF0ED_12.23%,#F8F9F8_88.43%)] shadow-inner",
-        "grid-cols-3 gap-y-6 px-8 py-8",
-        "min-[1000px]:mb-14 min-[1000px]:h-76 min-[1000px]:w-fit min-[1000px]:max-w-3xl min-[1000px]:gap-y-0 min-[1000px]:px-14 min-[1000px]:py-10",
-      )}
-    >
-      <StatPoint
-        label="عدد الأطفال"
-        icon={PeopleIcon}
-        value={myChildrenCount}
-        iconClassName="h-14 w-auto"
-      />
-      <StatPoint
-        label="الطلبات المعلقة"
-        icon={PendingTransactionIcon}
-        value={pendingEnrollmentsCount}
-      />
-      <StatPoint
-        label="إجمالي المدفوعات"
-        icon={MoneyIcon}
-        value={paidAmount.toLocaleString("en-US")}
-        suffix="جنيه"
-      />
+    <div className="mb-14 grid h-auto w-full grid-cols-[repeat(3,minmax(0,auto))] gap-y-8 rounded-[0_0_1.5951rem_1.5951rem] bg-[linear-gradient(164deg,#EDF0ED_12.23%,#F8F9F8_88.43%)] px-8 py-8 shadow-inner min-[1000px]:h-76 min-[1000px]:w-6/10 min-[1000px]:grid-cols-[repeat(3,minmax(0,auto))] min-[1000px]:gap-y-0 min-[1000px]:px-14 min-[1000px]:py-10">
+      {dataPoints.map((dataPoint) => (
+        <DataPoint
+          key={dataPoint.label}
+          label={dataPoint.label}
+          icon={dataPoint.icon}
+          value={dataPoint.value}
+          suffix={dataPoint.suffix}
+          iconClassName={dataPoint.iconClassName}
+        />
+      ))}
     </div>
   );
 }
