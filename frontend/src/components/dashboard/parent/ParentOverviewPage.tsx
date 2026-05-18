@@ -54,7 +54,7 @@ export default async function ParentOverviewPage() {
 
       <div className="[&>div]:separators-[7.25rem] [&>div]:border-olive-200 grid grid-cols-2 pe-0!">
         <div className="flex flex-col gap-6">
-          <h2 className="dashboard-section-title mb-6">أبنائي</h2>
+          <h2 className="dashboard-section-title mb-6">أطفالي</h2>
 
           <div
             className={
