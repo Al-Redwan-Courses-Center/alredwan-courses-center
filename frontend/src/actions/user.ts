@@ -118,9 +118,10 @@ export async function getChildEnrollments(childId: string): Promise<EnrollmentLi
     const apiClient = await getAuthApiClient();
     const { data } = await apiClient.get<
       PaginatedResponse<EnrollmentListItem> | EnrollmentListItem[]
-    >(`/api/enrollments/my-enrollments/?child=${childId}&page_size=100`);
+    >("/api/enrollments/my-enrollments/?page_size=100");
 
-    return Array.isArray(data) ? data : data.results;
+    const results = Array.isArray(data) ? data : data.results;
+    return results.filter((e) => e.child_id === childId);
   } catch (error) {
     console.error("Failed to load child enrollments:", error);
     return [];
@@ -132,9 +133,10 @@ export async function getChildEnrollmentRequests(childId: string): Promise<Enrol
     const apiClient = await getAuthApiClient();
     const { data } = await apiClient.get<
       PaginatedResponse<EnrollmentRequestListItem> | EnrollmentRequestListItem[]
-    >(`/api/enrollment-requests/my-requests/?child=${childId}&page_size=100`);
+    >("/api/enrollment-requests/my-requests/?page_size=100");
 
-    return Array.isArray(data) ? data : data.results;
+    const results = Array.isArray(data) ? data : data.results;
+    return results.filter((req) => req.child_id === childId);
   } catch (error) {
     console.error("Failed to load child enrollment requests:", error);
     return [];

@@ -62,15 +62,16 @@ export default async function ParentOverviewPage() {
               أطفالي المسجلين
             </h4>
             {myChildren.length > 2 && (
-              <Link
+              <Button
                 href="/dashboard/my-children"
-                className="text-olive-600 hover:text-olive-800 text-2xl font-bold transition-colors"
+                variant="light"
+                size="small"
               >
                 عرض الكل
-              </Link>
+              </Button>
             )}
           </div>
-
+ 
           <div className="grid grid-cols-2 items-center gap-12">
             {myChildren.length > 0 ? (
               myChildren.slice(0, 2).map((c, i) => (
@@ -80,9 +81,9 @@ export default async function ParentOverviewPage() {
               <div className="flex w-full flex-col items-center justify-center gap-4 py-40 text-4xl font-bold">
                 <span className="text-red-800">لا توجد دورات مسجلة!</span>
                 <span className="mb-10">اشترك في دورة جديدة الآن!</span>
-                <Link href="/dashboard/courses">
-                  <Button size="small">جميع الدورات</Button>
-                </Link>
+                <Button href="/dashboard/courses" size="small">
+                  جميع الدورات
+                </Button>
               </div>
             )}
           </div>

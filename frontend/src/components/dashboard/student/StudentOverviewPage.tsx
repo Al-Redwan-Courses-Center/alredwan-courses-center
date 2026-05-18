@@ -50,9 +50,9 @@ export default function StudentOverviewPage({
               <div className="flex w-full flex-col items-center justify-center gap-4 py-40 text-4xl font-bold">
                 <span className="text-red-800">لا توجد دورات مسجلة!</span>
                 <span className="mb-10">اشترك في دورة جديدة الآن!</span>
-                <Link href="/dashboard/courses">
-                  <Button size="small">جميع الدورات</Button>
-                </Link>
+                <Button href="/dashboard/courses" size="small">
+                  جميع الدورات
+                </Button>
               </div>
             )}
           </div>
@@ -64,9 +64,9 @@ export default function StudentOverviewPage({
               <div className="flex w-full flex-col items-center justify-center gap-4 py-16 text-3xl font-bold">
                 <span className="text-red-800">لا توجد دورات مسجلة!</span>
                 <span className="mb-4">اشترك في دورة جديدة الآن!</span>
-                <Link href="/dashboard/courses">
-                  <Button size="small">جميع الدورات</Button>
-                </Link>
+                <Button href="/dashboard/courses" size="small">
+                  جميع الدورات
+                </Button>
               </div>
             )}
           </div>
@@ -84,9 +84,9 @@ export default function StudentOverviewPage({
               <div className="flex w-full flex-col items-center justify-center gap-4 py-40 text-4xl font-bold">
                 <span className="text-red-800">لا توجد دورات مسجلة!</span>
                 <span className="mb-10">اشترك في دورتك الأولى الآن!</span>
-                <Link href="/dashboard/courses">
-                  <Button size="small">جميع الدورات</Button>
-                </Link>
+                <Button href="/dashboard/courses" size="small">
+                  جميع الدورات
+                </Button>
               </div>
             )}
           </div>
@@ -100,9 +100,9 @@ export default function StudentOverviewPage({
               <div className="flex w-full flex-col items-center justify-center gap-4 py-16 text-3xl font-bold">
                 <span className="text-red-800">لا توجد دورات مسجلة!</span>
                 <span className="mb-4">اشترك في دورتك الأولى الآن!</span>
-                <Link href="/dashboard/courses">
-                  <Button size="small">جميع الدورات</Button>
-                </Link>
+                <Button href="/dashboard/courses" size="small">
+                  جميع الدورات
+                </Button>
               </div>
             )}
           </div>
