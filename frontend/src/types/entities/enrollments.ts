@@ -3,6 +3,7 @@ export interface EnrollmentRequestListItem {
   course: number;
   course_name: string;
   course_price: string;
+  child_id: string | null;
   participant_name: string | null;
   price: string | null;
   status: "pending" | "processing" | "rejected" | "accepted";
@@ -21,6 +22,7 @@ export interface EnrollmentListItem {
   course_start_date: string;
   course_end_date: string | null;
   course_instructor: string | null;
+  child_id: string | null;
   participant_name: string | null;
   participant_type: "child" | "student" | null;
   status: string;
