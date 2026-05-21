@@ -100,7 +100,7 @@ export default function AddChildForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-x-6 lg:gap-x-12 gap-y-6 lg:gap-y-10 bg-white/50 p-4 sm:p-10 rounded-[2rem_0] shadow-soft">
+    <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 tablet:grid-cols-1 gap-x-12 tablet:gap-x-6 gap-y-10 tablet:gap-y-6 bg-white/50 p-10 tablet-sm:p-4 rounded-[2rem_0] shadow-soft">
       <div className="flex flex-col gap-2 col-span-1">
         <FieldSetInput 
             label="الاسم الأول والثاني" 
@@ -130,20 +130,38 @@ export default function AddChildForm({
 
       <div className="flex flex-col gap-4 col-span-1">
           <span className="text-2xl font-bold px-3">الجنس</span>
-          <div className="flex gap-4">
+          <div className="flex gap-4" role="radiogroup" aria-label="الجنس">
               <div 
+                role="radio"
+                aria-checked={genderValue === "boy"}
+                tabIndex={0}
                 onClick={() => setValue("gender", "boy")}
+                onKeyDown={(e) => {
+                  if (e.key === " " || e.key === "Enter") {
+                    e.preventDefault();
+                    setValue("gender", "boy");
+                  }
+                }}
                 className={cn(
-                  "flex-1 text-center py-4 rounded-lg cursor-pointer transition-all text-2xl font-bold",
+                  "flex-1 text-center py-4 rounded-lg cursor-pointer transition-all text-2xl font-bold outline-hidden focus-visible:ring-2 focus-visible:ring-olive-500",
                   genderValue === "boy" ? "bg-olive-500 text-white shadow-md" : "bg-gray-100 hover:bg-gray-200"
                 )}
               >
                 ولد
               </div>
               <div 
+                role="radio"
+                aria-checked={genderValue === "girl"}
+                tabIndex={0}
                 onClick={() => setValue("gender", "girl")}
+                onKeyDown={(e) => {
+                  if (e.key === " " || e.key === "Enter") {
+                    e.preventDefault();
+                    setValue("gender", "girl");
+                  }
+                }}
                 className={cn(
-                  "flex-1 text-center py-4 rounded-lg cursor-pointer transition-all text-2xl font-bold",
+                  "flex-1 text-center py-4 rounded-lg cursor-pointer transition-all text-2xl font-bold outline-hidden focus-visible:ring-2 focus-visible:ring-olive-500",
                   genderValue === "girl" ? "bg-olive-500 text-white shadow-md" : "bg-gray-100 hover:bg-gray-200"
                 )}
               >
@@ -153,8 +171,8 @@ export default function AddChildForm({
           <input type="hidden" {...register("gender")} />
       </div>
       
-      <div className="col-span-1 md:col-span-2 flex justify-center mt-6 lg:mt-10">
-          <Button type="submit" loading={isLoading} className="w-full sm:w-auto px-12 sm:px-20 py-4 sm:py-6 text-2xl sm:text-4xl">
+      <div className="col-span-2 tablet:col-span-1 flex justify-center mt-10 tablet:mt-6">
+          <Button type="submit" loading={isLoading} className="w-auto px-20 py-6 text-4xl tablet-sm:w-full tablet-sm:px-12 tablet-sm:py-4 tablet-sm:text-2xl">
               حفظ البيانات
           </Button>
       </div>
