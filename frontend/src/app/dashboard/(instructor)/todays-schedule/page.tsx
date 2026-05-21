@@ -16,7 +16,7 @@ export default async function Page() {
 
   return (
     <div className="px-16 pt-15">
-      <h1 className="text-olive-700 font-medad mb-14 text-6xl">
+      <h1 className="dashboard-greeting mb-14">
         السلام عليكم يا أخ {first_name}
       </h1>
 

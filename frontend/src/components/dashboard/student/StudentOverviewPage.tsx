@@ -7,13 +7,27 @@ import StudentOverviewEnrollmentRequestsAccordion from "@/components/dashboard/s
 import StudentCourseCard from "@/components/dashboard/student/StudentCourseCard";
 import StudentOverviewHeader from "@/components/dashboard/student/StudentOverviewHeader";
 import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
 import {
   getChildEnrollmentRequests,
   getChildOngoingEnrollments,
   getMyChildById,
 } from "@/dev-data/db";
 import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
-import Link from "next/link";
+const emptyActionClassName =
+  "!shadow-[0_4px_14px_rgba(47,61,56,0.2)] hover:!shadow-[0_6px_18px_rgba(47,61,56,0.24)]";
+
+function BrowseCoursesButton() {
+  return (
+    <Button
+      href="/dashboard/courses"
+      size="small"
+      className={emptyActionClassName}
+    >
+      جميع الدورات
+    </Button>
+  );
+}
 
 export default async function StudentOverviewPage({
   childId = "",
@@ -24,7 +38,7 @@ export default async function StudentOverviewPage({
   let myActiveCourses: any[], myEnrollmentRequests: any[], name: string;
 
   if (role === "parent") {
-    // TODO(api): Child-specific enrollments are not available yet.
+    // TODO(api): Child-specific enrollment data is not available yet.
     myActiveCourses = getChildOngoingEnrollments(childId).map((e) => e.course);
 
     myEnrollmentRequests = getChildEnrollmentRequests(childId).sort(
@@ -61,17 +75,15 @@ export default async function StudentOverviewPage({
 
   return (
     <div className="ps-16 pt-15 *:pe-16 max-[1000px]:px-0 max-[1000px]:*:pe-0">
-      <h3 className="text-olive-700 font-medad mb-8 text-6xl max-[1000px]:px-8">
+      <h1 className="dashboard-greeting mb-8 max-[1000px]:px-8">
         السلام عليكم يا {name}
-      </h3>
+      </h1>
 
       <StudentOverviewHeader childId={childId} />
 
       <div className="[&>div]:separators-[7.25rem] [&>div]:border-olive-200 grid grid-cols-2 pe-0! max-[1000px]:grid-cols-1 max-[1000px]:gap-8 max-[1000px]:px-8 [&>div]:max-[1000px]:border-0">
         <div className="flex flex-col gap-6">
-          <h4 className="text-olive-700 text-5xl font-bold">
-            آخر الكورسات المسجلة
-          </h4>
+          <h2 className="dashboard-section-title">آخر الكورسات المسجلة</h2>
 
           <div className="hidden min-[1000px]:flex min-[1000px]:grow min-[1000px]:items-center min-[1000px]:gap-12">
             {overviewCourses.length > 0 ? (
@@ -79,13 +91,11 @@ export default async function StudentOverviewPage({
                 <StudentCourseCard key={c.id} course={c} index={i} />
               ))
             ) : (
-              <div className="flex w-full flex-col items-center justify-center gap-4 py-40 text-4xl font-bold">
-                <span className="text-red-800">لا توجد دورات مسجلة!</span>
-                <span className="mb-10">اشترك في دورة جديدة الآن!</span>
-                <Link href="/dashboard/courses">
-                  <Button size="small">جميع الدورات</Button>
-                </Link>
-              </div>
+              <EmptyState
+                title="لا توجد دورات مسجلة!"
+                description="اشترك في دورة جديدة الآن!"
+                action={<BrowseCoursesButton />}
+              />
             )}
           </div>
 
@@ -93,33 +103,36 @@ export default async function StudentOverviewPage({
             {overviewCourses.length > 0 ? (
               <StudentOverviewCoursesAccordion courses={overviewCourses} />
             ) : (
-              <div className="flex w-full flex-col items-center justify-center gap-4 py-16 text-3xl font-bold">
-                <span className="text-red-800">لا توجد دورات مسجلة!</span>
-                <span className="mb-4">اشترك في دورة جديدة الآن!</span>
-                <Link href="/dashboard/courses">
-                  <Button size="small">جميع الدورات</Button>
-                </Link>
-              </div>
+              <EmptyState
+                className="py-16"
+                title="لا توجد دورات مسجلة!"
+                description="اشترك في دورة جديدة الآن!"
+                action={<BrowseCoursesButton />}
+              />
             )}
           </div>
         </div>
 
         <div className="flex flex-col ps-0! *:ps-29 max-[1000px]:*:ps-0">
-          <h4 className="text-olive-700 text-5xl font-bold">آخر الطلبات</h4>
+          <h2 className="dashboard-section-title">آخر الطلبات</h2>
 
-          <div className="hidden min-[1000px]:flex min-[1000px]:max-h-[calc(100dvh-44rem)] min-[1000px]:flex-col min-[1000px]:gap-10 min-[1000px]:overflow-y-auto min-[1000px]:pe-16 min-[1000px]:pt-6 min-[1000px]:pb-10">
+          <div
+            className={
+              myEnrollmentRequests.length > 0
+                ? "hidden min-[1000px]:flex min-[1000px]:max-h-[calc(100dvh-44rem)] min-[1000px]:flex-col min-[1000px]:gap-10 min-[1000px]:overflow-y-auto min-[1000px]:pe-16 min-[1000px]:pt-6 min-[1000px]:pb-10"
+                : "hidden min-[1000px]:flex min-[1000px]:min-h-80 min-[1000px]:flex-col min-[1000px]:justify-center min-[1000px]:py-12 min-[1000px]:pe-16"
+            }
+          >
             {myEnrollmentRequests.length > 0 ? (
               myEnrollmentRequests.map((e) => (
                 <EnrollmentRequestCard key={e.id} enrollmentRequest={e} />
               ))
             ) : (
-              <div className="flex w-full flex-col items-center justify-center gap-4 py-40 text-4xl font-bold">
-                <span className="text-red-800">لا توجد دورات مسجلة!</span>
-                <span className="mb-10">اشترك في دورتك الأولى الآن!</span>
-                <Link href="/dashboard/courses">
-                  <Button size="small">جميع الدورات</Button>
-                </Link>
-              </div>
+              <EmptyState
+                title="لا توجد طلبات تسجيل!"
+                description="اشترك في دورتك الأولى الآن!"
+                action={<BrowseCoursesButton />}
+              />
             )}
           </div>
 
@@ -129,13 +142,12 @@ export default async function StudentOverviewPage({
                 enrollmentRequests={myEnrollmentRequests}
               />
             ) : (
-              <div className="flex w-full flex-col items-center justify-center gap-4 py-16 text-3xl font-bold">
-                <span className="text-red-800">لا توجد دورات مسجلة!</span>
-                <span className="mb-4">اشترك في دورتك الأولى الآن!</span>
-                <Link href="/dashboard/courses">
-                  <Button size="small">جميع الدورات</Button>
-                </Link>
-              </div>
+              <EmptyState
+                className="py-16"
+                title="لا توجد طلبات تسجيل!"
+                description="اشترك في دورتك الأولى الآن!"
+                action={<BrowseCoursesButton />}
+              />
             )}
           </div>
         </div>

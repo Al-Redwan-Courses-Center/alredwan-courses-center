@@ -1,3 +1,4 @@
+import ComingSoon from "@/components/ui/ComingSoon";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -5,9 +6,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return (
-    <div className="content-center py-150 text-center text-8xl font-bold">
-      About Page
-    </div>
-  );
+  return <ComingSoon title="عن الواحة" />;
 }

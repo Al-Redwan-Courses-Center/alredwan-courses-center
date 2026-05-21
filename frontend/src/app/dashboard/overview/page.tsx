@@ -10,5 +10,5 @@ export default async function Page() {
   if (role === "student") return <StudentOverviewPage />;
   if (role === "parent") return <ParentOverviewPage />;
 
-  return <div>Hello Overview!</div>;
+  return null;
 }

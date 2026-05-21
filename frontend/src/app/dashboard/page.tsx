@@ -1,3 +1,4 @@
 export default function Page() {
-  return <div className="bg-green-100">Hello Dashboard!</div>;
+  // Role-based redirects are handled in src/proxy.ts for /dashboard.
+  return null;
 }
