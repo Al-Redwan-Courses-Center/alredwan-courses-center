@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Fragment } from "react";
+import { useState, Fragment } from "react";
 import { Plus } from "lucide-react";
 import { ParentChildDetail } from "@/actions/user";
 import ChildRow from "@/components/dashboard/parent/ChildRow";
@@ -12,6 +11,7 @@ import {
   ModalContent,
   ModalTitle,
 } from "@/components/ui/Modal";
+import { cn } from "@/lib/utils";
 
 export default function MyChildrenList({
   initialChildren,
@@ -23,13 +23,13 @@ export default function MyChildrenList({
 
   return (
     <div className="relative flex flex-col h-full overflow-hidden">
-      {/* Premium Glassmorphic Sticky Header */}
-      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md pb-6 pt-2 mb-8 flex flex-col sm:flex-row gap-4 sm:items-center justify-between px-6 border-b border-olive-100/50">
-        <div className="flex flex-col gap-1">
-          <h3 className="text-olive-700 font-bold text-4xl sm:text-5xl">
+      {/* Transparent Header matching standard page headers */}
+      <div className="pb-6 pt-2 mb-8 flex flex-row justify-between items-center px-6 gap-4 tablet-sm:flex-col tablet-sm:items-start">
+        <div className="flex flex-col gap-2">
+          <h3 className="text-olive-700 font-medad text-6xl">
             إدارة الأطفال
           </h3>
-          <p className="text-lg sm:text-xl text-gray-500">
+          <p className="text-2xl text-gray-500 tablet-sm:text-xl">
             أضف وتابع المسيرة الدراسية لأطفالك بكل سهولة.
           </p>
         </div>
@@ -37,7 +37,10 @@ export default function MyChildrenList({
         {initialChildren.length > 0 && (
           <Button
             onClick={() => setIsAddOpen(true)}
-            className="bg-olive-600 hover:bg-olive-500 text-white px-8 py-3 sm:py-4 rounded-[1.8rem_0] font-bold text-xl sm:text-2xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all self-start sm:self-auto w-full sm:w-auto"
+            className={cn(
+              "bg-olive-700 hover:bg-olive-500 text-white px-8 py-4 rounded-[1.8rem_0] font-bold text-2xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all self-auto w-auto",
+              "tablet-sm:py-3 tablet-sm:text-xl tablet-sm:self-start tablet-sm:w-full"
+            )}
           >
             <Plus size={20} />
             إضافة طفل جديد
@@ -77,7 +80,12 @@ export default function MyChildrenList({
 
       {/* Add Child Modal */}
       <Modal open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <ModalContent className="sm:max-w-2xl [&>div,&>form]:px-4 sm:[&>div,&>form]:px-20 [&>div,&>form]:last:p-[1.5rem_1.5rem_2rem_1.5rem] sm:[&>div,&>form]:last:p-[2rem_5rem_5rem_5rem]">
+        <ModalContent
+          className={cn(
+            "max-w-2xl [&>div,&>form]:px-20 [&>div,&>form]:last:p-[2rem_5rem_5rem_5rem]",
+            "tablet-sm:max-w-full tablet-sm:[&>div,&>form]:px-4 tablet-sm:[&>div,&>form]:last:p-[1.5rem_1.5rem_2rem_1.5rem]"
+          )}
+        >
           <ModalTitle className="text-olive-700 text-center font-bold">إضافة طفل جديد</ModalTitle>
           <div className="p-0">
             <AddChildForm onSuccess={() => setIsAddOpen(false)} />
@@ -87,7 +95,12 @@ export default function MyChildrenList({
 
       {/* Edit Child Modal */}
       <Modal open={!!editingChild} onOpenChange={(open) => !open && setEditingChild(null)}>
-        <ModalContent className="sm:max-w-2xl [&>div,&>form]:px-4 sm:[&>div,&>form]:px-20 [&>div,&>form]:last:p-[1.5rem_1.5rem_2rem_1.5rem] sm:[&>div,&>form]:last:p-[2rem_5rem_5rem_5rem]">
+        <ModalContent
+          className={cn(
+            "max-w-2xl [&>div,&>form]:px-20 [&>div,&>form]:last:p-[2rem_5rem_5rem_5rem]",
+            "tablet-sm:max-w-full tablet-sm:[&>div,&>form]:px-4 tablet-sm:[&>div,&>form]:last:p-[1.5rem_1.5rem_2rem_1.5rem]"
+          )}
+        >
           <ModalTitle className="text-olive-700 text-center font-bold">تعديل بيانات الطفل</ModalTitle>
           <div className="p-0">
             {editingChild && (

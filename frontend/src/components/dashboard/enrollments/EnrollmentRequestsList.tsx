@@ -2,6 +2,8 @@ import EnrollmentRequestCard from "@/components/dashboard/enrollments/Enrollment
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Refresh from "@/components/ui/Refresh";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 export default function EnrollmentRequestsList({
   enrollments,
@@ -31,12 +33,8 @@ export default function EnrollmentRequestsList({
           طلبات الاشتراك
         </h4>
         <div className="flex items-center gap-4 text-white">
-          <div className="bg-olive-300 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-transform hover:scale-105">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>
-          </div>
-          <div className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-red-800 transition-transform hover:scale-105">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-          </div>
+          <Refresh />
+          <InfoTooltip content="طلبات الاشتراك قيد الانتظار يتم معالجتها حالياً من قبل إدارة المعهد. للاستفسار، يرجى التواصل مع إدارة المعهد مباشرة." />
         </div>
       </div>
 

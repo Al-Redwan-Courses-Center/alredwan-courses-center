@@ -11,8 +11,7 @@ import StudentOverviewPage from "@/components/dashboard/student/StudentOverviewP
 export default async function Page() {
   await protect(["student", "parent"]);
 
-  const user = await getUser();
-  const { role, first_name } = user;
+  const { role, first_name } = await getUser();
 
   if (role === "student") {
     const [activeCourses, requests, enrollments] = await Promise.all([
@@ -56,5 +55,5 @@ export default async function Page() {
 
   if (role === "parent") return <ParentOverviewPage />;
 
-  return <div>Hello Overview!</div>;
+  return null;
 }
