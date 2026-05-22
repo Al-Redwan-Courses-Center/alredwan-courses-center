@@ -14,6 +14,8 @@ import {
 } from "@/dev-data/db";
 import { cn, getArabicPlural, toHindiDigits } from "@/lib/utils";
 import { FunctionComponent, SVGProps } from "react";
+import { Pencil } from "lucide-react";
+import DeleteChildButton from "@/components/dashboard/parent/DeleteChildButton";
 
 function StatCard({
   icon: Icon,
@@ -38,9 +40,11 @@ function StatCard({
 export default function ChildCard({
   index,
   child,
+  onEdit,
 }: {
   index: number;
   child: ParentChildDetail;
+  onEdit?: (child: ParentChildDetail) => void;
 }) {
   // TODO(api): Child-level enrollments/attendance are not available yet.
   const activeCourses = getChildOngoingEnrollments(child.id);
@@ -70,12 +74,12 @@ export default function ChildCard({
             />
           </div>
 
-          <div className="flex flex-col pe-30 overflow-hidden">
+          <div className="flex flex-col pe-30 overflow-hidden text-right">
             <span
               className="text-[1.6rem] font-bold truncate block"
               title={`${child.first_name} ${child.last_name}`}
             >
-              {child.first_name} {child.last_name}
+              {`(${toHindiDigits(index + 1)}) ${child.first_name} ${child.last_name}`}
             </span>
             <span>
               {child.age}{" "}
@@ -93,7 +97,22 @@ export default function ChildCard({
         </div>
       }
       cardFooter={
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-between gap-4 w-full">
+          {onEdit ? (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onEdit(child)}
+                className="text-olive-700 hover:text-olive-900 transition-colors p-2 cursor-pointer flex items-center justify-center rounded-lg hover:bg-olive-100/50 focus:outline-hidden"
+                title="تعديل"
+              >
+                <Pencil size={20} />
+              </button>
+              <DeleteChildButton childId={child.id} childName={child.first_name} />
+            </div>
+          ) : (
+            <div />
+          )}
           <Button
             size="small"
             className="bg-olive-300"

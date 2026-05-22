@@ -34,7 +34,7 @@ export default function EnrollmentRequestsList({
         </h4>
         <div className="flex items-center gap-4 text-white">
           <Refresh />
-          <InfoTooltip content="طلبات الاشتراك قيد الانتظار يتم معالجتها حالياً من قبل إدارة المعهد. للاستفسار، يرجى التواصل مع إدارة المعهد مباشرة." />
+          <InfoTooltip content="طلبات الاشتراك قيد الانتظار يتم معالجتها حالياً من قبل إدارة المسجد. للاستفسار، يرجى التواصل مع إدارة المسجد مباشرة." />
         </div>
       </div>
 

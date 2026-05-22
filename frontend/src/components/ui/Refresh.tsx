@@ -1,28 +1,45 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 export default function Refresh({ className }: { className?: string }) {
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleRefresh = () => {
+    if (isRefreshing) return;
+
     setIsRefreshing(true);
     router.refresh();
-    // Provide a short visual feedback delay
-    setTimeout(() => {
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    timerRef.current = setTimeout(() => {
       setIsRefreshing(false);
     }, 500);
   };
 
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
   return (
     <button
+      type="button"
       onClick={handleRefresh}
+      disabled={isRefreshing}
       className={cn(
-        "bg-olive-300 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-all hover:scale-105 text-white active:scale-95 border-none outline-none",
-        isRefreshing && "animate-spin",
+        "bg-olive-300 flex h-8 w-8 items-center justify-center rounded-full transition-all hover:scale-105 text-white active:scale-95 border-none outline-none",
+        isRefreshing ? "animate-spin cursor-not-allowed opacity-60" : "cursor-pointer",
         className
       )}
       title="تحديث"
