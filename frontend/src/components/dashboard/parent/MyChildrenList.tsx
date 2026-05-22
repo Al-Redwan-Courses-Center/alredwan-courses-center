@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Fragment, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Plus } from "lucide-react";
 import { ParentChildDetail, getChildEnrollmentRequests } from "@/actions/user";
 import ChildCard from "@/components/dashboard/parent/ChildCard";
@@ -16,6 +16,7 @@ import {
   ModalTitle,
 } from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
+import { EnrollmentRequestListItem } from "@/types/entities";
 
 function AddChildCard({ onClick }: { onClick: () => void }) {
   return (
@@ -51,7 +52,7 @@ export default function MyChildrenList({
   
   // State for tabbed enrollment requests
   const [activeTab, setActiveTab] = useState<string>("all");
-  const [allRequests, setAllRequests] = useState<{ [childId: string]: any[] }>({});
+  const [allRequests, setAllRequests] = useState<{ [childId: string]: EnrollmentRequestListItem[] }>({});
   const [loading, setLoading] = useState(true);
 
   // Fetch enrollment requests for all children in parallel
@@ -76,13 +77,11 @@ export default function MyChildrenList({
   }, [initialChildren]);
 
   // Determine which enrollment requests to display based on active tab
-  const getDisplayedRequests = () => {
-    let list: any[] = [];
-    if (activeTab === "all") {
-      list = Object.values(allRequests).flat();
-    } else {
-      list = allRequests[activeTab] || [];
-    }
+  const displayedRequests = useMemo(() => {
+    const list: EnrollmentRequestListItem[] =
+      activeTab === "all"
+        ? Object.values(allRequests).flat()
+        : allRequests[activeTab] || [];
 
     return [...list].sort(
       (a, b) =>
@@ -93,9 +92,7 @@ export default function MyChildrenList({
           b.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
         ]
     );
-  };
-
-  const displayedRequests = getDisplayedRequests();
+  }, [allRequests, activeTab]);
 
   return (
     <div className="relative flex flex-col h-full overflow-hidden">
@@ -110,7 +107,7 @@ export default function MyChildrenList({
       </div>
 
       {/* Children List Container */}
-      <div className="flex-1 overflow-y-auto px-6 pb-20">
+      <div className="flex-1 overflow-y-auto pt-2 px-6 pb-20">
         {initialChildren.length > 0 ? (
           <div className="flex flex-col gap-16">
             {/* The First Row: Grid of Cards (Add Child + Child Cards) */}
