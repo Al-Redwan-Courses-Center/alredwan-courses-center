@@ -18,6 +18,7 @@ export default function InfoTooltip({
     <Popover>
       <PopoverTrigger asChild>
         <button
+          type="button"
           className={cn(
             "flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-red-800 hover:bg-red-700 transition-all hover:scale-105 text-white border-none outline-none active:scale-95",
             className

@@ -6,7 +6,7 @@ export default async function Page() {
   const sortedChildren = [...myChildren].sort((a, b) => b.age - a.age);
 
   return (
-    <div className="h-[calc(100dvh-10rem)] overflow-hidden pt-24">
+    <div className="h-full flex flex-col pt-15">
       <MyChildrenList initialChildren={sortedChildren} />
     </div>
   );
