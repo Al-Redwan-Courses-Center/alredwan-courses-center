@@ -1,4 +1,4 @@
-import { ParentChildDetail } from "@/actions/user";
+import { getChildEnrollments, getChildEnrollmentRequests, ParentChildDetail } from "@/actions/user";
 import ActiveCourseIcon from "@/components/icons/ActiveCourseIcon";
 import CheckBadgeIcon from "@/components/icons/CheckBadgeIcon";
 import PendingTransactionIcon from "@/components/icons/PendingTransactionIcon";
@@ -7,13 +7,8 @@ import Button from "@/components/ui/Button";
 import CopyToClipboardButton from "@/components/ui/CopyToClipboardButton";
 import ItemCard from "@/components/ui/ItemCard";
 import ProgressBarWithLabel from "@/components/ui/ProgressBarWithLabel";
-import {
-  getChildAttendanceRate,
-  getChildOngoingEnrollments,
-  getChildPendingEnrollments,
-} from "@/dev-data/db";
 import { cn, getArabicPlural, toHindiDigits } from "@/lib/utils";
-import { FunctionComponent, SVGProps } from "react";
+import { FunctionComponent, SVGProps, useEffect, useState } from "react";
 import { Pencil } from "lucide-react";
 import DeleteChildButton from "@/components/dashboard/parent/DeleteChildButton";
 
@@ -46,10 +41,43 @@ export default function ChildCard({
   child: ParentChildDetail;
   onEdit?: (child: ParentChildDetail) => void;
 }) {
-  // TODO(api): Child-level enrollments/attendance are not available yet.
-  const activeCourses = getChildOngoingEnrollments(child.id);
-  const pendingEnrollments = getChildPendingEnrollments(child.id);
-  const attendanceRate = getChildAttendanceRate(child.id);
+  const [stats, setStats] = useState({
+    activeCoursesCount: 0,
+    pendingEnrollmentsCount: 0,
+    attendanceRate: 0,
+  });
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      getChildEnrollments(child.id),
+      getChildEnrollmentRequests(child.id),
+    ]).then(([enrollments, enrollmentRequests]) => {
+      if (!active) return;
+      
+      const activeCoursesCount = enrollments.filter((e) => e.status === "active").length;
+      const pendingEnrollmentsCount = enrollmentRequests.filter(
+        (req) => ["pending", "processing"].includes(req.status)
+      ).length;
+      const attendanceRate = enrollments.length
+        ? Math.round(
+            enrollments.reduce(
+              (acc, enrollment) => acc + (enrollment.completion_percentage || 0),
+              0,
+            ) / enrollments.length,
+          )
+        : 0;
+
+      setStats({
+        activeCoursesCount,
+        pendingEnrollmentsCount,
+        attendanceRate,
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, [child.id]);
 
   // console.log(activeCourses);
   // console.log(pendingEnrollments);
@@ -98,7 +126,7 @@ export default function ChildCard({
       }
       cardFooter={
         <div className="flex items-center justify-between gap-4 w-full">
-          {onEdit ? (
+          {onEdit && (
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -110,12 +138,10 @@ export default function ChildCard({
               </button>
               <DeleteChildButton childId={child.id} childName={child.first_name} />
             </div>
-          ) : (
-            <div />
           )}
           <Button
             size="small"
-            className="bg-olive-300"
+            className="bg-olive-300 ms-auto"
             href={`/dashboard/my-children/${child.id}`}
           >
             عرض لوحة التحكم
@@ -127,17 +153,17 @@ export default function ChildCard({
         <StatCard
           icon={ActiveCourseIcon}
           label="الدورات النشطة"
-          value={toHindiDigits(activeCourses.length)}
+          value={toHindiDigits(stats.activeCoursesCount)}
         />
         <StatCard
           icon={PendingTransactionIcon}
           label="الطلبات المعلقة"
-          value={toHindiDigits(pendingEnrollments.length)}
+          value={toHindiDigits(stats.pendingEnrollmentsCount)}
         />
         <ProgressBarWithLabel
           icon={CheckBadgeIcon}
           label="معدل الحضور"
-          progress={attendanceRate}
+          progress={stats.attendanceRate}
         />
       </div>
     </ItemCard>

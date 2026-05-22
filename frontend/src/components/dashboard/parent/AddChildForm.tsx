@@ -25,6 +25,7 @@ export default function AddChildForm({
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const isEditing = !!initialData;
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<AddChildInputs>({
     defaultValues: {
@@ -130,21 +131,27 @@ export default function AddChildForm({
 
       <div className="flex flex-col gap-4 col-span-1">
           <span className="text-2xl font-bold px-3">الجنس</span>
-          <div className="flex gap-4" role="radiogroup" aria-label="الجنس">
+          <div className="flex gap-4" role="radiogroup" aria-label="الجنس" aria-disabled={isEditing}>
               <div 
                 role="radio"
                 aria-checked={genderValue === "boy"}
-                tabIndex={0}
-                onClick={() => setValue("gender", "boy")}
-                onKeyDown={(e) => {
+                tabIndex={isEditing ? -1 : 0}
+                onClick={isEditing ? undefined : () => setValue("gender", "boy")}
+                onKeyDown={isEditing ? undefined : (e) => {
                   if (e.key === " " || e.key === "Enter") {
                     e.preventDefault();
                     setValue("gender", "boy");
                   }
                 }}
                 className={cn(
-                  "flex-1 text-center py-4 rounded-lg cursor-pointer transition-all text-2xl font-bold outline-hidden focus-visible:ring-2 focus-visible:ring-olive-500",
-                  genderValue === "boy" ? "bg-olive-500 text-white shadow-md" : "bg-gray-100 hover:bg-gray-200"
+                  "flex-1 text-center py-4 rounded-lg transition-all text-2xl font-bold outline-hidden focus-visible:ring-2 focus-visible:ring-olive-500",
+                  isEditing
+                    ? genderValue === "boy"
+                      ? "bg-olive-500 text-white shadow-md cursor-not-allowed"
+                      : "bg-gray-100 opacity-40 cursor-not-allowed"
+                    : genderValue === "boy"
+                      ? "bg-olive-500 text-white shadow-md cursor-pointer"
+                      : "bg-gray-100 hover:bg-gray-200 cursor-pointer"
                 )}
               >
                 ولد
@@ -152,17 +159,23 @@ export default function AddChildForm({
               <div 
                 role="radio"
                 aria-checked={genderValue === "girl"}
-                tabIndex={0}
-                onClick={() => setValue("gender", "girl")}
-                onKeyDown={(e) => {
+                tabIndex={isEditing ? -1 : 0}
+                onClick={isEditing ? undefined : () => setValue("gender", "girl")}
+                onKeyDown={isEditing ? undefined : (e) => {
                   if (e.key === " " || e.key === "Enter") {
                     e.preventDefault();
                     setValue("gender", "girl");
                   }
                 }}
                 className={cn(
-                  "flex-1 text-center py-4 rounded-lg cursor-pointer transition-all text-2xl font-bold outline-hidden focus-visible:ring-2 focus-visible:ring-olive-500",
-                  genderValue === "girl" ? "bg-olive-500 text-white shadow-md" : "bg-gray-100 hover:bg-gray-200"
+                  "flex-1 text-center py-4 rounded-lg transition-all text-2xl font-bold outline-hidden focus-visible:ring-2 focus-visible:ring-olive-500",
+                  isEditing
+                    ? genderValue === "girl"
+                      ? "bg-olive-500 text-white shadow-md cursor-not-allowed"
+                      : "bg-gray-100 opacity-40 cursor-not-allowed"
+                    : genderValue === "girl"
+                      ? "bg-olive-500 text-white shadow-md cursor-pointer"
+                      : "bg-gray-100 hover:bg-gray-200 cursor-pointer"
                 )}
               >
                 بنت
