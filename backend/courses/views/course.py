@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """Views for Course model"""
 from rest_framework import generics, filters
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Count, Q, Sum, Value
 from django.db.models.functions import Coalesce
+from django.shortcuts import get_object_or_404
 
-from courses.models import Course
-from courses.serializers import CourseListSerializer, CourseDetailSerializer, CourseUpdateSerializer
+from courses.models import Course, CourseSchedule
+from courses.serializers import CourseListSerializer, CourseDetailSerializer, CourseUpdateSerializer, CourseScheduleSerializer
 from courses.permissions import IsAdminOrCourseInstructor
 from core.utils.pagination import CustomPageNumberPagination
 
@@ -161,3 +163,59 @@ class CourseUpdateView(generics.UpdateAPIView):
         # Return detailed course information
         output_serializer = CourseDetailSerializer(instance)
         return Response(output_serializer.data)
+
+
+def _require_schedule_admin(user):
+    """Raise PermissionDenied if user is not an admin or supervisor."""
+    if not (
+        user.is_staff
+        or user.is_superuser
+        or (hasattr(user, 'role') and user.role in ['admin'])
+    ):
+        raise PermissionDenied("Only admins can modify course schedules.")
+
+
+class CourseScheduleListView(generics.ListCreateAPIView):
+    """
+    List or create schedules for a specific course.
+
+    GET  /api/courses/<course_id>/schedules/  — any authenticated user
+    POST /api/courses/<course_id>/schedules/  — admin/supervisor only
+    """
+
+    serializer_class = CourseScheduleSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        course = get_object_or_404(Course, pk=self.kwargs['course_id'])
+        return CourseSchedule.objects.filter(course=course).order_by('weekday', 'start_time')
+
+    def perform_create(self, serializer):
+        _require_schedule_admin(self.request.user)
+        course = get_object_or_404(Course, pk=self.kwargs['course_id'])
+        serializer.save(course=course)
+
+
+class CourseScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update, or delete a course schedule.
+
+    GET    /api/courses/<course_id>/schedules/<pk>/  — any authenticated user
+    PATCH  /api/courses/<course_id>/schedules/<pk>/  — admin/supervisor only
+    DELETE /api/courses/<course_id>/schedules/<pk>/  — admin/supervisor only
+    """
+
+    serializer_class = CourseScheduleSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        course = get_object_or_404(Course, pk=self.kwargs['course_id'])
+        return CourseSchedule.objects.filter(course=course)
+
+    def update(self, request, *args, **kwargs):
+        _require_schedule_admin(request.user)
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        _require_schedule_admin(request.user)
+        return super().destroy(request, *args, **kwargs)
