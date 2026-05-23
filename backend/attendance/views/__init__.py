@@ -32,6 +32,7 @@ from .instructor_attendance import (
     SupervisorScheduleListView,
     SupervisorScheduleDetailView,
     MyScheduleView,
+    MyAttendanceView,
     # Function-based Views
     manual_check_in,
     manual_check_out,
@@ -72,6 +73,7 @@ __all__ = [
     'SupervisorScheduleListView',
     'SupervisorScheduleDetailView',
     'MyScheduleView',
+    'MyAttendanceView',
     # Function-based Views
     'manual_check_in',
     'manual_check_out',

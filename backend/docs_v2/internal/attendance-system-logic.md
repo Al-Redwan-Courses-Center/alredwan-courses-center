@@ -88,6 +88,37 @@ executed_at  → DateTimeField (auto)
 details      → TextField
 ```
 
+### FingerprintScanLog
+
+Audit trail for every raw fingerprint scan from a device, regardless of the action the system took.
+
+```
+attendance       → InstructorAttendance (FK, nullable)  # null if creation failed
+instructor       → Instructor (FK)
+scan_time        → DateTimeField                        # device timestamp (offline-sync aware)
+received_time    → DateTimeField (auto)                 # server arrival time
+device           → AttendanceDevice (FK, nullable)
+action           → ScanAction (see Enums)
+is_processed     → BooleanField (default True)
+notes            → TextField (nullable)
+device_sequence  → IntegerField (nullable)              # for ordering offline-batch scans
+```
+
+### WebSocketTicket
+
+Short-lived, single-use token that authenticates a WebSocket connection without exposing a JWT in the URL.
+
+```
+token       → CharField (unique, auto-generated, 64 chars)
+user        → CustomUser (FK)
+created_at  → DateTimeField (auto)
+expires_at  → DateTimeField (default: now + 30 s)
+used_at     → DateTimeField (nullable)
+is_used     → BooleanField (default False)
+ip_address  → GenericIPAddressField (nullable)
+user_agent  → CharField (nullable)
+```
+
 ---
 
 ## Enums
@@ -118,6 +149,18 @@ details      → TextField
 | `manual` | Admin manual entry |
 | `qr_code` | QR code scan |
 
+### ScanAction
+
+System-determined outcome logged in `FingerprintScanLog` for every scan.
+
+| Value | Description |
+|-------|-------------|
+| `check_in` | Scan recorded as check-in |
+| `check_out` | Scan recorded as check-out |
+| `re_entry` | Re-entry after check-out (check-out cleared) |
+| `ignored` | Duplicate scan (< 2 min since last scan) |
+| `auto_created` | Attendance record auto-created before check-in |
+
 ---
 
 ## Business Logic
@@ -132,7 +175,22 @@ details      → TextField
 4. Skips lectures without assigned instructor
 5. Logs to `AttendanceCronLog`
 
-### Check-in Flow
+### Unified Scan Flow (Recommended)
+
+The `/api/attendance/scan/` endpoint auto-determines the action from the current attendance state.
+
+```
+Fingerprint Scan → Validate fingerprint_id + device_id
+      → Log scan to FingerprintScanLog
+      → Rapid scan? (< 2 min since last scan) → action=IGNORED, return
+      → No attendance record for today → auto-create + check-in (action=AUTO_CREATED)
+      → Has record, not checked in → check-in (action=CHECK_IN)
+      → Checked in, not checked out → check-out (action=CHECK_OUT)
+      → Already checked out → re-entry: clear check-out (action=RE_ENTRY)
+      → Broadcast via WebSocket
+```
+
+### Check-in Flow (Legacy)
 
 ```
 Fingerprint Scan → Validate fingerprint_id + device_id
@@ -143,7 +201,7 @@ Fingerprint Scan → Validate fingerprint_id + device_id
       → Broadcast via WebSocket
 ```
 
-### Check-out Flow
+### Check-out Flow (Legacy)
 
 - Validates check-in exists (cannot check out without checking in)
 - Check-out time must be after check-in time
