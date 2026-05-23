@@ -20,6 +20,7 @@ from .instructor_attendance import (
     SupervisorScheduleSerializer,
     TodayAttendanceSummarySerializer,
     GenerateAttendanceSerializer,
+    InstructorCourseScheduleSerializer,
 )
 
 __all__ = [
@@ -41,4 +42,5 @@ __all__ = [
     'SupervisorScheduleSerializer',
     'TodayAttendanceSummarySerializer',
     'GenerateAttendanceSerializer',
+    'InstructorCourseScheduleSerializer',
 ]

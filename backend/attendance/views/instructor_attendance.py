@@ -11,7 +11,7 @@ from attendance.models import (
     FingerprintScanLog,
     ScanAction,
 )
-from courses.models import Season
+from courses.models import Season, CourseSchedule
 from users.models import Instructor
 from attendance.filters import InstructorAttendanceFilter, SupervisorScheduleFilter
 from attendance.serializers import (
@@ -25,6 +25,7 @@ from attendance.serializers import (
     SupervisorScheduleSerializer,
     TodayAttendanceSummarySerializer,
     GenerateAttendanceSerializer,
+    InstructorCourseScheduleSerializer,
 )
 from attendance.models.attendance_cron_log import AttendanceCronLog
 from rest_framework import generics, status, views
@@ -1010,30 +1011,151 @@ class SupervisorScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):
         return super().destroy(request, *args, **kwargs)
 
 
-class MyScheduleView(generics.ListAPIView):
+class MyScheduleView(views.APIView):
     """
-    Get the current instructor's weekly schedule.
+    Get the current instructor's full weekly schedule across a season.
+
+    Combines two schedule types:
+    - **supervisor_schedules**: recurring weekly supervision shifts
+      (SupervisorSchedule — day-of-week + time window)
+    - **course_schedules**: lecture-day schedules for courses assigned to
+      the instructor in the given season (CourseSchedule — weekday + time)
 
     GET /api/attendance/my-schedule/
+    GET /api/attendance/my-schedule/?season_id=3
 
-    This endpoint is specifically for instructors to view their own
-    weekly supervision schedule. Returns schedules ordered by day and time.
+    Query parameters:
+    - ``season_id`` (optional): restrict course_schedules to this season.
+      Defaults to the currently active season.  Pass ``season_id=all`` to
+      return course schedules across every season.
 
-    Response includes all days of the week with the instructor's shifts.
+    Performance: both querysets use select_related to avoid N+1 queries.
     """
-    serializer_class = SupervisorScheduleSerializer
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        if not hasattr(user, 'instructor_profile'):
+            return Response(
+                {"detail": "No instructor profile found for this user."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        instructor = user.instructor_profile
+
+        # --- Supervisor schedules (not season-scoped; they repeat weekly) ---
+        supervisor_qs = (
+            SupervisorSchedule.objects
+            .filter(instructor=instructor)
+            .select_related('instructor__user')
+            .order_by('day_of_week', 'start_time')
+        )
+
+        # --- Course schedules (season-scoped) ---
+        season_param = request.query_params.get('season_id')
+
+        course_qs = (
+            CourseSchedule.objects
+            .filter(course__instructor=instructor)
+            .select_related('course__season')
+            .order_by('weekday', 'start_time')
+        )
+
+        if season_param and season_param != 'all':
+            try:
+                season_id = int(season_param)
+            except ValueError:
+                return Response(
+                    {"detail": "season_id must be an integer or 'all'."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            course_qs = course_qs.filter(course__season_id=season_id)
+        elif season_param != 'all':
+            # Default: active season only
+            active_season = Season.objects.filter(is_active=True).first()
+            if active_season:
+                course_qs = course_qs.filter(course__season=active_season)
+            else:
+                course_qs = course_qs.none()
+
+        return Response({
+            "supervisor_schedules": SupervisorScheduleSerializer(
+                supervisor_qs, many=True
+            ).data,
+            "course_schedules": InstructorCourseScheduleSerializer(
+                course_qs, many=True
+            ).data,
+        })
+
+
+class MyAttendanceView(generics.ListAPIView):
+    """
+    List all attendance records (past and future) for the authenticated instructor.
+
+    GET /api/attendance/my-attendance/
+    GET /api/attendance/my-attendance/?season_id=3
+    GET /api/attendance/my-attendance/?status=present
+    GET /api/attendance/my-attendance/?attendance_type=lecture
+
+    Query parameters:
+    - ``season_id``       – filter by season (default: active season; ``all`` = no filter)
+    - ``status``          – one of: present, absent, late, pending, not_started
+    - ``attendance_type`` – lecture | supervision
+    - ``date_from``       – YYYY-MM-DD (inclusive lower bound)
+    - ``date_to``         – YYYY-MM-DD (inclusive upper bound)
+
+    Performance: uses select_related to avoid N+1 queries on lecture/schedule/season.
+    """
+
+    serializer_class = InstructorAttendanceListSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Return only the current instructor's schedules."""
         user = self.request.user
 
         if not hasattr(user, 'instructor_profile'):
-            return SupervisorSchedule.objects.none()
+            return InstructorAttendance.objects.none()
 
-        return SupervisorSchedule.objects.filter(
-            instructor=user.instructor_profile
-        ).select_related('instructor__user').order_by('day_of_week', 'start_time')
+        qs = (
+            InstructorAttendance.objects
+            .filter(instructor=user.instructor_profile)
+            .select_related(
+                'instructor__user',
+                'lecture__course',
+                'schedule',
+                'season',
+            )
+            .order_by('-date', 'attendance_type')
+        )
+
+        params = self.request.query_params
+        season_param = params.get('season_id')
+
+        if season_param and season_param != 'all':
+            try:
+                qs = qs.filter(season_id=int(season_param))
+            except ValueError:
+                return InstructorAttendance.objects.none()
+        elif season_param != 'all':
+            active_season = Season.objects.filter(is_active=True).first()
+            if active_season:
+                qs = qs.filter(season=active_season)
+
+        if status_filter := params.get('status'):
+            qs = qs.filter(status=status_filter)
+
+        if atype := params.get('attendance_type'):
+            qs = qs.filter(attendance_type=atype)
+
+        if date_from := params.get('date_from'):
+            qs = qs.filter(date__gte=date_from)
+
+        if date_to := params.get('date_to'):
+            qs = qs.filter(date__lte=date_to)
+
+        return qs
 
 
 @api_view(['POST'])

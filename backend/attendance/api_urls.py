@@ -62,4 +62,5 @@ urlpatterns = [
     path('schedules/<int:pk>/',
          views.SupervisorScheduleDetailView.as_view(), name='schedule-detail'),
     path('my-schedule/', views.MyScheduleView.as_view(), name='my-schedule'),
+    path('my-attendance/', views.MyAttendanceView.as_view(), name='my-attendance'),
 ]

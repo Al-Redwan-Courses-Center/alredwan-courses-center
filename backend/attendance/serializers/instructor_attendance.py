@@ -10,6 +10,7 @@ from attendance.models import (
     SupervisorSchedule,
     CheckInMethod,
 )
+from courses.models import CourseSchedule
 from users.models import Instructor
 
 
@@ -366,3 +367,39 @@ class GenerateAttendanceSerializer(serializers.Serializer):
             })
 
         return data
+
+
+class InstructorCourseScheduleSerializer(serializers.ModelSerializer):
+    """
+    Serializer for CourseSchedule entries scoped to an instructor.
+
+    Used in the my-schedule endpoint to surface lecture-day schedules
+    alongside supervision schedules.  All related objects are fetched
+    via select_related in the view so no extra queries are issued here.
+    """
+
+    course_id = serializers.IntegerField(source="course.id", read_only=True)
+    course_name = serializers.CharField(source="course.name", read_only=True)
+    season_id = serializers.IntegerField(
+        source="course.season.id", read_only=True, allow_null=True
+    )
+    season_name = serializers.CharField(
+        source="course.season.name", read_only=True, allow_null=True
+    )
+    weekday_display = serializers.CharField(
+        source="get_weekday_display", read_only=True
+    )
+
+    class Meta:
+        model = CourseSchedule
+        fields = [
+            "id",
+            "course_id",
+            "course_name",
+            "season_id",
+            "season_name",
+            "weekday",
+            "weekday_display",
+            "start_time",
+            "end_time",
+        ]
