@@ -8,9 +8,9 @@ import CopyToClipboardButton from "@/components/ui/CopyToClipboardButton";
 import ItemCard from "@/components/ui/ItemCard";
 import ProgressBarWithLabel from "@/components/ui/ProgressBarWithLabel";
 import { cn, getArabicPlural, toHindiDigits } from "@/lib/utils";
-import { FunctionComponent, SVGProps, useEffect, useState } from "react";
-import { Pencil } from "lucide-react";
+import { FunctionComponent, SVGProps } from "react";
 import DeleteChildButton from "@/components/dashboard/parent/DeleteChildButton";
+import EditChildButton from "@/components/dashboard/parent/EditChildButton";
 
 function StatCard({
   icon: Icon,
@@ -32,55 +32,32 @@ function StatCard({
   );
 }
 
-export default function ChildCard({
+export default async function ChildCard({
   index,
   child,
-  onEdit,
+  showActions = true,
 }: {
   index: number;
   child: ParentChildDetail;
-  onEdit?: (child: ParentChildDetail) => void;
+  showActions?: boolean;
 }) {
-  const [stats, setStats] = useState({
-    activeCoursesCount: 0,
-    pendingEnrollmentsCount: 0,
-    attendanceRate: 0,
-  });
+  const [enrollments, enrollmentRequests] = await Promise.all([
+    getChildEnrollments(child.id),
+    getChildEnrollmentRequests(child.id),
+  ]);
 
-  useEffect(() => {
-    let active = true;
-    Promise.all([
-      getChildEnrollments(child.id),
-      getChildEnrollmentRequests(child.id),
-    ]).then(([enrollments, enrollmentRequests]) => {
-      if (!active) return;
-      
-      const activeCoursesCount = enrollments.filter((e) => e.status === "active").length;
-      const pendingEnrollmentsCount = enrollmentRequests.filter(
-        (req) => ["pending", "processing"].includes(req.status)
-      ).length;
-      const attendanceRate = enrollments.length
-        ? Math.round(
-            enrollments.reduce(
-              (acc, enrollment) => acc + (enrollment.completion_percentage || 0),
-              0,
-            ) / enrollments.length,
-          )
-        : 0;
-
-      setStats({
-        activeCoursesCount,
-        pendingEnrollmentsCount,
-        attendanceRate,
-      });
-    });
-    return () => {
-      active = false;
-    };
-  }, [child.id]);
-
-  // console.log(activeCourses);
-  // console.log(pendingEnrollments);
+  const activeCoursesCount = enrollments.filter((e) => e.status === "active").length;
+  const pendingEnrollmentsCount = enrollmentRequests.filter(
+    (req) => ["pending", "processing"].includes(req.status)
+  ).length;
+  const attendanceRate = enrollments.length
+    ? Math.round(
+        enrollments.reduce(
+          (acc, enrollment) => acc + (enrollment.completion_percentage || 0),
+          0,
+        ) / enrollments.length,
+      )
+    : 0;
 
   return (
     <ItemCard
@@ -126,16 +103,9 @@ export default function ChildCard({
       }
       cardFooter={
         <div className="flex items-center justify-between gap-4 w-full">
-          {onEdit && (
+          {showActions && (
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => onEdit(child)}
-                className="text-olive-700 hover:text-olive-900 transition-colors p-2 cursor-pointer flex items-center justify-center rounded-lg hover:bg-olive-100/50 focus:outline-hidden"
-                title="تعديل"
-              >
-                <Pencil size={20} />
-              </button>
+              <EditChildButton child={child} />
               <DeleteChildButton childId={child.id} childName={child.first_name} />
             </div>
           )}
@@ -153,17 +123,17 @@ export default function ChildCard({
         <StatCard
           icon={ActiveCourseIcon}
           label="الدورات النشطة"
-          value={toHindiDigits(stats.activeCoursesCount)}
+          value={toHindiDigits(activeCoursesCount)}
         />
         <StatCard
           icon={PendingTransactionIcon}
           label="الطلبات المعلقة"
-          value={toHindiDigits(stats.pendingEnrollmentsCount)}
+          value={toHindiDigits(pendingEnrollmentsCount)}
         />
         <ProgressBarWithLabel
           icon={CheckBadgeIcon}
           label="معدل الحضور"
-          progress={stats.attendanceRate}
+          progress={attendanceRate}
         />
       </div>
     </ItemCard>
