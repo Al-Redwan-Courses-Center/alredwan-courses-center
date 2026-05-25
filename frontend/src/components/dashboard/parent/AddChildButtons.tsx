@@ -1,25 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Plus } from "lucide-react";
 import { Modal, ModalContent, ModalTitle } from "@/components/ui/Modal";
 import AddChildForm from "@/components/dashboard/parent/AddChildForm";
 import ItemCard from "@/components/ui/ItemCard";
 import Button from "@/components/ui/Button";
 
-export function AddChildCard() {
+export function AddChildWrapper({
+  children,
+}: {
+  children: React.ReactElement<{ onClick?: React.MouseEventHandler<any> }>;
+}) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
-      <ItemCard
-        shape="square"
-        index={0}
-        className="border-2 border-dashed border-olive-300 hover:border-olive-500 hover:bg-olive-50/20 transition-all cursor-pointer h-full min-h-[35rem]"
-      >
+      {React.cloneElement(children, {
+        onClick: (e: React.MouseEvent) => {
+          if (children.props.onClick) {
+            children.props.onClick(e);
+          }
+          setIsOpen(true);
+        },
+      })}
+      <AddChildModal isOpen={isOpen} setIsOpen={setIsOpen} />
+    </>
+  );
+}
+
+export function AddChildCard() {
+  return (
+    <ItemCard
+      shape="square"
+      index={0}
+      className="border-2 border-dashed border-olive-300 hover:border-olive-500 hover:bg-olive-50/20 transition-all cursor-pointer h-full min-h-[35rem]"
+    >
+      <AddChildWrapper>
         <button
           type="button"
-          onClick={() => setIsOpen(true)}
           className="w-full h-full flex flex-col items-center justify-center text-center gap-6 py-12 focus:outline-hidden cursor-pointer"
         >
           <div className="w-20 h-20 rounded-full bg-olive-100 flex items-center justify-center text-olive-700 shadow-sm">
@@ -30,24 +49,18 @@ export function AddChildCard() {
             أضف بيانات طفلك للبدء بالتسجيل في الحلقات والدورات بسهولة.
           </p>
         </button>
-      </ItemCard>
-
-      <AddChildModal isOpen={isOpen} setIsOpen={setIsOpen} />
-    </>
+      </AddChildWrapper>
+    </ItemCard>
   );
 }
 
 export function AddChildButton({ className }: { className?: string }) {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
-    <>
-      <Button onClick={() => setIsOpen(true)} className={className}>
+    <AddChildWrapper>
+      <Button className={className}>
         إضافة طفل جديد الآن
       </Button>
-
-      <AddChildModal isOpen={isOpen} setIsOpen={setIsOpen} />
-    </>
+    </AddChildWrapper>
   );
 }
 
@@ -65,3 +78,4 @@ function AddChildModal({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (ope
     </Modal>
   );
 }
+

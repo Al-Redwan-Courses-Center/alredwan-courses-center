@@ -1,4 +1,5 @@
-import { getChildEnrollments, getChildEnrollmentRequests, ParentChildDetail } from "@/actions/user";
+import { ParentChildDetail } from "@/actions/user";
+import { EnrollmentListItem, EnrollmentRequestListItem } from "@/types/entities";
 import ActiveCourseIcon from "@/components/icons/ActiveCourseIcon";
 import CheckBadgeIcon from "@/components/icons/CheckBadgeIcon";
 import PendingTransactionIcon from "@/components/icons/PendingTransactionIcon";
@@ -32,19 +33,20 @@ function StatCard({
   );
 }
 
-export default async function ChildCard({
+export default function ChildCard({
   index,
   child,
+  enrollments,
+  enrollmentRequests,
   showActions = true,
 }: {
   index: number;
   child: ParentChildDetail;
+  enrollments: EnrollmentListItem[];
+  enrollmentRequests: EnrollmentRequestListItem[];
   showActions?: boolean;
 }) {
-  const [enrollments, enrollmentRequests] = await Promise.all([
-    getChildEnrollments(child.id),
-    getChildEnrollmentRequests(child.id),
-  ]);
+
 
   const activeCoursesCount = enrollments.filter((e) => e.status === "active").length;
   const pendingEnrollmentsCount = enrollmentRequests.filter(

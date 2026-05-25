@@ -2,11 +2,22 @@ import { ParentChildDetail } from "@/actions/user";
 import ChildCard from "@/components/dashboard/parent/ChildCard";
 import { AddChildCard, AddChildButton } from "@/components/dashboard/parent/AddChildButtons";
 import ChildEnrollmentRequestsFeed from "@/components/dashboard/parent/ChildEnrollmentRequestsFeed";
+import { EnrollmentListItem, EnrollmentRequestListItem } from "@/types/entities";
+
+export interface ChildWithData {
+  child: ParentChildDetail;
+  enrollments: EnrollmentListItem[];
+  enrollmentRequests: EnrollmentRequestListItem[];
+}
 
 export default function MyChildrenList({
   initialChildren,
+  childrenData,
+  initialRequests,
 }: {
   initialChildren: ParentChildDetail[];
+  childrenData: ChildWithData[];
+  initialRequests: { [childId: string]: EnrollmentRequestListItem[] };
 }) {
   return (
     <div className="relative flex flex-col h-full overflow-hidden">
@@ -26,14 +37,14 @@ export default function MyChildrenList({
           <div className="flex flex-col gap-16">
             {/* The First Row: Grid of Cards (Add Child + Child Cards) */}
             <div className="grid grid-cols-3 gap-8 tablet:grid-cols-1">
-              <div>
-                <AddChildCard />
-              </div>
-              {initialChildren.map((c, i) => (
-                <div key={c.id}>
+              <AddChildCard />
+              {childrenData.map((data, i) => (
+                <div key={data.child.id}>
                   <ChildCard
                     index={i}
-                    child={c}
+                    child={data.child}
+                    enrollments={data.enrollments}
+                    enrollmentRequests={data.enrollmentRequests}
                   />
                 </div>
               ))}
@@ -43,7 +54,10 @@ export default function MyChildrenList({
             <div className="bg-olive-100 mx-auto h-px w-2/3 my-2" />
 
             {/* Tabbed Enrollment Requests Feed */}
-            <ChildEnrollmentRequestsFeed children={initialChildren} />
+            <ChildEnrollmentRequestsFeed
+              childrenList={initialChildren}
+              initialRequests={initialRequests}
+            />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-40 gap-6 text-center">
@@ -56,3 +70,4 @@ export default function MyChildrenList({
     </div>
   );
 }
+
