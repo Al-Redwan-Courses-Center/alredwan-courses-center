@@ -44,10 +44,13 @@ export default async function ParentOverviewPage() {
   console.log("Enrollments", myEnrollments);
 
   return (
-    <div className="ps-16 pt-15 *:pe-16">
-      <h3 className="text-olive-700 font-medad mb-8 text-6xl">
-        السلام عليكم يا {first_name}
-      </h3>
+    <div className="px-16 pt-12 pb-20 flex flex-col gap-12 w-full">
+      <div className="flex flex-col gap-2">
+        <h3 className="text-olive-700 font-medad text-6xl font-black">
+          السلام عليكم يا {first_name}
+        </h3>
+        <p className="text-2xl text-gray-500">مرحباً بك في لوحة تحكم ولي الأمر. يمكنك متابعة أطفالك وإدارة طلبات اشتراكهم.</p>
+      </div>
 
       <ParentOverviewHeader
         myChildrenCount={myChildren.length}
@@ -55,9 +58,10 @@ export default async function ParentOverviewPage() {
         totalPaid={totalPaid}
       />
 
-      <div className="[&>div]:separators-[7.25rem] [&>div]:border-olive-200 grid grid-cols-2 pe-0!">
-        <div className="flex flex-col gap-6">
-          <div className="mb-6 flex items-center justify-between">
+      <div className="grid grid-cols-12 gap-16 items-start w-full tablet:grid-cols-1">
+        {/* Left Column: Children (7 cols) */}
+        <div className="col-span-7 flex flex-col gap-8 w-full tablet:col-span-12">
+          <div className="flex items-center justify-between">
             <h4 className="text-olive-700 text-5xl font-bold">
               أطفالي المسجلين
             </h4>
@@ -72,27 +76,56 @@ export default async function ParentOverviewPage() {
             )}
           </div>
  
-          <div className="grid grid-cols-2 items-center gap-12">
+          <div className="grid grid-cols-2 gap-8 items-stretch w-full tablet-sm:grid-cols-1">
             {myChildren.length > 0 ? (
-              myChildren.slice(0, 2).map((c, i) => (
-                <ChildCard key={c.id} index={i} child={c} />
-              ))
+              myChildren.slice(0, 2).map((c, i) => {
+                const childEnrollments = myEnrollments.filter((e) => e.child_id === c.id);
+                const childRequests = myEnrollmentRequests.filter((req) => req.child_id === c.id);
+
+                const activeCoursesCount = childEnrollments.filter((e) => e.status === "active").length;
+                const pendingEnrollmentsCount = childRequests.filter(
+                  (req) => ["pending", "processing"].includes(req.status)
+                ).length;
+                const attendanceRate = childEnrollments.length
+                  ? Math.round(
+                      childEnrollments.reduce(
+                        (acc, enrollment) => acc + (enrollment.completion_percentage || 0),
+                        0,
+                      ) / childEnrollments.length,
+                    )
+                  : 0;
+
+                return (
+                  <ChildCard
+                    key={c.id}
+                    index={i}
+                    child={c}
+                    activeCoursesCount={activeCoursesCount}
+                    pendingEnrollmentsCount={pendingEnrollmentsCount}
+                    attendanceRate={attendanceRate}
+                  />
+                );
+              })
             ) : (
-              <div className="flex w-full flex-col items-center justify-center gap-4 py-40 text-4xl font-bold">
-                <span className="text-red-800">لا توجد دورات مسجلة!</span>
-                <span className="mb-10">اشترك في دورة جديدة الآن!</span>
-                <Button href="/dashboard/courses" size="small">
-                  جميع الدورات
+              <div className="col-span-2 flex w-full flex-col items-center justify-center gap-6 py-36 border-2 border-dashed border-olive-200 rounded-[2rem_0] bg-gray-50/50 text-center px-8 tablet-sm:col-span-1">
+                <span className="text-red-800 text-3xl font-bold">لا يوجد أطفال مسجلين حالياً!</span>
+                <p className="text-2xl text-gray-500 max-w-[32rem]">ابدأ بإضافة أطفالك للتسجيل في الدورات والورش المتاحة بسهولة.</p>
+                <Button href="/dashboard/my-children" size="small">
+                  إدارة الأطفال وإضافتهم
                 </Button>
               </div>
             )}
           </div>
         </div>
 
-        <EnrollmentRequestsList
-          enrollments={sortedEnrollmentResquests}
-          listStyles="max-h-[calc(100dvh-55rem)]"
-        />
+        {/* Right Column: Enrollment Requests (5 cols) */}
+        <div className="col-span-5 flex flex-col gap-8 border-s border-olive-150 ps-12 w-full tablet:col-span-12 tablet:border-s-0 tablet:ps-0">
+          <EnrollmentRequestsList
+            enrollments={sortedEnrollmentResquests}
+            listStyles="max-h-[calc(100dvh-52rem)]"
+            wrapperStyles="p-0! *:ps-0!"
+          />
+        </div>
       </div>
     </div>
   );

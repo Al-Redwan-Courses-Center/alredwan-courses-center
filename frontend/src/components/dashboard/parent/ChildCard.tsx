@@ -1,5 +1,4 @@
 import { ParentChildDetail } from "@/actions/user";
-import { EnrollmentListItem, EnrollmentRequestListItem } from "@/types/entities";
 import ActiveCourseIcon from "@/components/icons/ActiveCourseIcon";
 import CheckBadgeIcon from "@/components/icons/CheckBadgeIcon";
 import PendingTransactionIcon from "@/components/icons/PendingTransactionIcon";
@@ -36,30 +35,18 @@ function StatCard({
 export default function ChildCard({
   index,
   child,
-  enrollments,
-  enrollmentRequests,
+  activeCoursesCount,
+  pendingEnrollmentsCount,
+  attendanceRate,
   showActions = true,
 }: {
   index: number;
   child: ParentChildDetail;
-  enrollments: EnrollmentListItem[];
-  enrollmentRequests: EnrollmentRequestListItem[];
+  activeCoursesCount: number;
+  pendingEnrollmentsCount: number;
+  attendanceRate: number;
   showActions?: boolean;
 }) {
-
-
-  const activeCoursesCount = enrollments.filter((e) => e.status === "active").length;
-  const pendingEnrollmentsCount = enrollmentRequests.filter(
-    (req) => ["pending", "processing"].includes(req.status)
-  ).length;
-  const attendanceRate = enrollments.length
-    ? Math.round(
-        enrollments.reduce(
-          (acc, enrollment) => acc + (enrollment.completion_percentage || 0),
-          0,
-        ) / enrollments.length,
-      )
-    : 0;
 
   return (
     <ItemCard

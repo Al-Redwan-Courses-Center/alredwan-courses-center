@@ -10,20 +10,13 @@ import Button from "@/components/ui/Button";
 export function AddChildWrapper({
   children,
 }: {
-  children: React.ReactElement<{ onClick?: React.MouseEventHandler<any> }>;
+  children: (openModal: () => void) => React.ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
-      {React.cloneElement(children, {
-        onClick: (e: React.MouseEvent) => {
-          if (children.props.onClick) {
-            children.props.onClick(e);
-          }
-          setIsOpen(true);
-        },
-      })}
+      {children(() => setIsOpen(true))}
       <AddChildModal isOpen={isOpen} setIsOpen={setIsOpen} />
     </>
   );
@@ -37,18 +30,21 @@ export function AddChildCard() {
       className="border-2 border-dashed border-olive-300 hover:border-olive-500 hover:bg-olive-50/20 transition-all cursor-pointer h-full min-h-[35rem]"
     >
       <AddChildWrapper>
-        <button
-          type="button"
-          className="w-full h-full flex flex-col items-center justify-center text-center gap-6 py-12 focus:outline-hidden cursor-pointer"
-        >
-          <div className="w-20 h-20 rounded-full bg-olive-100 flex items-center justify-center text-olive-700 shadow-sm">
-            <Plus size={40} />
-          </div>
-          <span className="text-3xl font-bold text-olive-700">إضافة طفل جديد</span>
-          <p className="text-2xl text-gray-500 max-w-[24rem] leading-relaxed">
-            أضف بيانات طفلك للبدء بالتسجيل في الحلقات والدورات بسهولة.
-          </p>
-        </button>
+        {(openModal) => (
+          <button
+            type="button"
+            onClick={openModal}
+            className="w-full h-full flex flex-col items-center justify-center text-center gap-6 py-12 focus:outline-hidden cursor-pointer"
+          >
+            <div className="w-20 h-20 rounded-full bg-olive-100 flex items-center justify-center text-olive-700 shadow-sm">
+              <Plus size={40} />
+            </div>
+            <span className="text-3xl font-bold text-olive-700">إضافة طفل جديد</span>
+            <p className="text-2xl text-gray-500 max-w-[24rem] leading-relaxed">
+              أضف بيانات طفلك للبدء بالتسجيل في الحلقات والدورات بسهولة.
+            </p>
+          </button>
+        )}
       </AddChildWrapper>
     </ItemCard>
   );
@@ -57,9 +53,11 @@ export function AddChildCard() {
 export function AddChildButton({ className }: { className?: string }) {
   return (
     <AddChildWrapper>
-      <Button className={className}>
-        إضافة طفل جديد الآن
-      </Button>
+      {(openModal) => (
+        <Button className={className} onClick={openModal}>
+          إضافة طفل جديد الآن
+        </Button>
+      )}
     </AddChildWrapper>
   );
 }
