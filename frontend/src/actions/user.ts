@@ -30,7 +30,8 @@ export async function getParentChildren(): Promise<ParentChildDetail[]> {
       PaginatedResponse<ParentChildDetail> | ParentChildDetail[]
     >("/api/parents/children/?page_size=100");
 
-    return Array.isArray(data) ? data : data.results;
+    const childrenList = Array.isArray(data) ? data : data.results;
+    return childrenList.sort((a, b) => b.age - a.age);
   } catch (error) {
     if (isAxiosError(error)) {
       console.error(

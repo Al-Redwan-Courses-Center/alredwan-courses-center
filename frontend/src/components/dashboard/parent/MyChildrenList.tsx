@@ -38,16 +38,32 @@ export default function MyChildrenList({
             {/* The First Row: Grid of Cards (Add Child + Child Cards) */}
             <div className="grid grid-cols-3 gap-8 tablet:grid-cols-1">
               <AddChildCard />
-              {childrenData.map((data, i) => (
-                <div key={data.child.id}>
-                  <ChildCard
-                    index={i}
-                    child={data.child}
-                    enrollments={data.enrollments}
-                    enrollmentRequests={data.enrollmentRequests}
-                  />
-                </div>
-              ))}
+              {childrenData.map((data, i) => {
+                const activeCoursesCount = data.enrollments.filter((e) => e.status === "active").length;
+                const pendingEnrollmentsCount = data.enrollmentRequests.filter(
+                  (req) => ["pending", "processing"].includes(req.status)
+                ).length;
+                const attendanceRate = data.enrollments.length
+                  ? Math.round(
+                      data.enrollments.reduce(
+                        (acc, enrollment) => acc + (enrollment.completion_percentage || 0),
+                        0,
+                      ) / data.enrollments.length,
+                    )
+                  : 0;
+
+                return (
+                  <div key={data.child.id}>
+                    <ChildCard
+                      index={i}
+                      child={data.child}
+                      activeCoursesCount={activeCoursesCount}
+                      pendingEnrollmentsCount={pendingEnrollmentsCount}
+                      attendanceRate={attendanceRate}
+                    />
+                  </div>
+                );
+              })}
             </div>
 
             {/* Separator */}

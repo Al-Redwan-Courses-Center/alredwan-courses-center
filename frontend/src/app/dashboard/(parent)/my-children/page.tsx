@@ -4,11 +4,10 @@ import { EnrollmentRequestListItem } from "@/types/entities";
 
 export default async function Page() {
   const myChildren = await getParentChildren();
-  const sortedChildren = [...myChildren].sort((a, b) => b.age - a.age);
 
   // Fetch enrollments and enrollment requests for all children in parallel
   const childrenData = await Promise.all(
-    sortedChildren.map(async (child) => {
+    myChildren.map(async (child) => {
       const [enrollments, enrollmentRequests] = await Promise.all([
         getChildEnrollments(child.id),
         getChildEnrollmentRequests(child.id),
@@ -30,7 +29,7 @@ export default async function Page() {
   return (
     <div className="h-full flex flex-col pt-15">
       <MyChildrenList
-        initialChildren={sortedChildren}
+        initialChildren={myChildren}
         childrenData={childrenData}
         initialRequests={initialRequests}
       />

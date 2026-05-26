@@ -3,14 +3,6 @@ import PendingTransactionIcon from "@/components/icons/PendingTransactionIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import { cn, toHindiDigits } from "@/lib/utils";
 
-const dataPointWrapperStyles = cn(
-  "text-olive-300 not-first:border-olive-200 separators-[4.25rem] grid grid-cols-[auto_1fr] grid-rows-2 gap-x-7 gap-y-4 text-4xl font-bold",
-);
-
-const dataPointIconStyles = cn(
-  "drop-shadow-soft row-span-full h-20 w-auto self-center",
-);
-
 export default function ParentOverviewHeader({
   myChildrenCount,
   pendingEnrollmentsCount,
@@ -21,29 +13,42 @@ export default function ParentOverviewHeader({
   totalPaid: number;
 }) {
   return (
-    <div>
-      <div className="mb-14 grid h-76 w-6/10 grid-cols-[repeat(3,minmax(0,auto))] rounded-[0_0_1.5951rem_1.5951rem] bg-[linear-gradient(164deg,#EDF0ED_12.23%,#F8F9F8_88.43%)] px-14 py-10 shadow-inner">
-        <div className={dataPointWrapperStyles}>
-          <PeopleIcon className={cn(dataPointIconStyles, "h-auto w-28")} />
-          <span className="self-end">عدد الأطفال</span>
-          <span className="text-olive-500">
+    <div className="mb-12 grid grid-cols-3 gap-8 w-full tablet:grid-cols-1">
+      {/* Card 1: Children Count */}
+      <div className="flex items-center gap-6 rounded-[2rem_0] border border-olive-100 bg-gray-50/50 p-8 shadow-sm transition-all hover:shadow-md hover:bg-gray-50">
+        <div className="w-20 h-20 rounded-full bg-olive-100/50 flex items-center justify-center text-olive-700 shadow-inner">
+          <PeopleIcon className="h-10 w-auto" />
+        </div>
+        <div className="flex flex-col gap-2">
+          <span className="text-2xl font-bold text-gray-500">عدد الأطفال المسجلين</span>
+          <span className="text-5xl font-black text-olive-700">
             {toHindiDigits(myChildrenCount)}
           </span>
         </div>
+      </div>
 
-        <div className={dataPointWrapperStyles}>
-          <PendingTransactionIcon className={dataPointIconStyles} />
-          <span className="self-end">الطلبات المعلقة</span>
-          <span className="text-olive-500">
+      {/* Card 2: Pending Requests */}
+      <div className="flex items-center gap-6 rounded-[2rem_0] border border-olive-100 bg-gray-50/50 p-8 shadow-sm transition-all hover:shadow-md hover:bg-gray-50">
+        <div className="w-20 h-20 rounded-full bg-olive-100/50 flex items-center justify-center text-olive-700 shadow-inner">
+          <PendingTransactionIcon className="h-10 w-auto" />
+        </div>
+        <div className="flex flex-col gap-2">
+          <span className="text-2xl font-bold text-gray-500">طلبات الاشتراك المعلقة</span>
+          <span className="text-5xl font-black text-olive-700">
             {toHindiDigits(pendingEnrollmentsCount)}
           </span>
         </div>
+      </div>
 
-        <div className={dataPointWrapperStyles}>
-          <MoneyIcon className={dataPointIconStyles} />
-          <span className="self-end">إجمالي المدفوعات</span>
-          <span className="text-olive-500">
-            {toHindiDigits(totalPaid)} جنيه
+      {/* Card 3: Total Paid */}
+      <div className="flex items-center gap-6 rounded-[2rem_0] border border-olive-100 bg-gray-50/50 p-8 shadow-sm transition-all hover:shadow-md hover:bg-gray-50">
+        <div className="w-20 h-20 rounded-full bg-olive-100/50 flex items-center justify-center text-olive-700 shadow-inner">
+          <MoneyIcon className="h-10 w-auto" />
+        </div>
+        <div className="flex flex-col gap-2">
+          <span className="text-2xl font-bold text-gray-500">إجمالي المدفوعات</span>
+          <span className="text-5xl font-black text-olive-700">
+            {toHindiDigits(totalPaid)} <span className="text-2xl font-bold text-olive-500">جنيه</span>
           </span>
         </div>
       </div>
