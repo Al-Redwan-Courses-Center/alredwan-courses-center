@@ -14,18 +14,6 @@ export default function EnrollmentRequestsList({
   listStyles?: string;
   wrapperStyles?: string;
 }) {
-  const childNames = [
-    ...new Set(
-      enrollments
-        .map((e) => {
-          if (e.child?.name) return e.child.name.split(" ")[0];
-          if (e.participant_name) return e.participant_name.split(" ")[0];
-          return null;
-        })
-        .filter(Boolean),
-    ),
-  ];
-
   return (
     <div className={cn("flex flex-col ps-0! pb-10 *:ps-29", wrapperStyles)}>
       <div className="mb-6 flex items-center justify-between">
@@ -49,7 +37,7 @@ export default function EnrollmentRequestsList({
             <EnrollmentRequestCard 
               key={e.id} 
               enrollmentRequest={e} 
-              childName={e.child?.name || e.participant_name}
+              childName={e.child?.name}
             />
           ))
         ) : (
