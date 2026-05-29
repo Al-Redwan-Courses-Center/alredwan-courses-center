@@ -1,4 +1,4 @@
-import EnrollmentRequestCard from "@/components/dashboard/enrollments/EnrollmentRequestCard";
+import EnrollmentRequestsList from "@/components/dashboard/enrollments/EnrollmentRequestsList";
 import StudentOverviewCoursesAccordion from "@/components/dashboard/student/StudentOverviewCoursesAccordion";
 import StudentOverviewEnrollmentRequestsAccordion from "@/components/dashboard/student/StudentOverviewEnrollmentRequestsAccordion";
 import StudentCourseCard from "@/components/dashboard/student/StudentCourseCard";
@@ -72,26 +72,16 @@ export default function StudentOverviewPage({
           </div>
         </div>
 
-        <div className="flex flex-col ps-0! *:ps-29 max-[1000px]:*:ps-0">
-          <h4 className="text-olive-700 text-5xl font-bold">آخر الطلبات</h4>
-
-          <div className="hidden min-[1000px]:flex min-[1000px]:max-h-[calc(100dvh-44rem)] min-[1000px]:flex-col min-[1000px]:gap-10 min-[1000px]:overflow-y-auto min-[1000px]:pe-16 min-[1000px]:pt-6 min-[1000px]:pb-10">
-            {enrollmentRequests.length > 0 ? (
-              enrollmentRequests.map((e) => (
-                <EnrollmentRequestCard key={e.id} enrollmentRequest={e} />
-              ))
-            ) : (
-              <div className="flex w-full flex-col items-center justify-center gap-4 py-40 text-4xl font-bold">
-                <span className="text-red-800">لا توجد دورات مسجلة!</span>
-                <span className="mb-10">اشترك في دورتك الأولى الآن!</span>
-                <Button href="/dashboard/courses" size="small">
-                  جميع الدورات
-                </Button>
-              </div>
-            )}
+        <div>
+          <div className="hidden min-[1000px]:block">
+            <EnrollmentRequestsList
+              enrollments={enrollmentRequests}
+              listStyles="max-h-[calc(100dvh-44rem)]"
+            />
           </div>
 
-          <div className="min-[1000px]:hidden">
+          <div className="min-[1000px]:hidden flex flex-col ps-0! *:ps-29 max-[1000px]:*:ps-0">
+            <h4 className="text-olive-700 text-5xl font-bold mb-6">آخر الطلبات</h4>
             {enrollmentRequests.length > 0 ? (
               <StudentOverviewEnrollmentRequestsAccordion
                 enrollmentRequests={enrollmentRequests}
