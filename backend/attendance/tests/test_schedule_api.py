@@ -18,6 +18,8 @@ from users.models import CustomUser, Instructor
 from courses.models import Season, Course, CourseSchedule
 from attendance.models import SupervisorSchedule, InstructorAttendance, AttendanceStatus, AttendanceType
 
+TEST_PASSWORD = 'a' * 12
+
 
 class ScheduleAPIBaseTestCase(TestCase):
     """Base test case with common setup for schedule API tests."""
@@ -28,7 +30,7 @@ class ScheduleAPIBaseTestCase(TestCase):
         # Create admin user
         cls.admin_user = CustomUser.objects.create_user(
             phone_number1='+201100000001',
-            password='adminpass123',
+            password=TEST_PASSWORD,
             first_name='Admin',
             last_name='User',
             email='admin_sched@test.com',
@@ -42,7 +44,7 @@ class ScheduleAPIBaseTestCase(TestCase):
         # Create supervisor user (has role='supervisor')
         cls.supervisor_user = CustomUser.objects.create_user(
             phone_number1='+201100000002',
-            password='supervisorpass123',
+            password=TEST_PASSWORD,
             first_name='Supervisor',
             last_name='User',
             email='supervisor_sched@test.com',
@@ -60,7 +62,7 @@ class ScheduleAPIBaseTestCase(TestCase):
         # Create regular instructor user 1
         cls.instructor_user1 = CustomUser.objects.create_user(
             phone_number1='+201100000003',
-            password='instrpass123',
+            password=TEST_PASSWORD,
             first_name='Instructor',
             last_name='One',
             email='instructor1_sched@test.com',
@@ -78,7 +80,7 @@ class ScheduleAPIBaseTestCase(TestCase):
         # Create regular instructor user 2
         cls.instructor_user2 = CustomUser.objects.create_user(
             phone_number1='+201100000004',
-            password='instrpass123',
+            password=TEST_PASSWORD,
             first_name='Instructor',
             last_name='Two',
             email='instructor2_sched@test.com',
@@ -96,7 +98,7 @@ class ScheduleAPIBaseTestCase(TestCase):
         # Create regular user without instructor profile
         cls.regular_user = CustomUser.objects.create_user(
             phone_number1='+201100000005',
-            password='userpass123',
+            password=TEST_PASSWORD,
             first_name='Regular',
             last_name='User',
             email='regular_sched@test.com',
@@ -629,7 +631,7 @@ class MyScheduleCourseSchedulesTest(TestCase):
     def setUpTestData(cls):
         cls.instructor_user = CustomUser.objects.create_user(
             phone_number1='+201200000001',
-            password='pass123',
+            password=TEST_PASSWORD,
             first_name='Sched',
             last_name='Instructor',
             email='sched_instr@test.com',
@@ -645,7 +647,7 @@ class MyScheduleCourseSchedulesTest(TestCase):
 
         cls.other_instructor_user = CustomUser.objects.create_user(
             phone_number1='+201200000002',
-            password='pass123',
+            password=TEST_PASSWORD,
             first_name='Other',
             last_name='Instructor',
             email='other_instr@test.com',
@@ -813,7 +815,7 @@ class MyAttendanceViewTest(TestCase):
     def setUpTestData(cls):
         cls.instructor_user = CustomUser.objects.create_user(
             phone_number1='+201500000001',
-            password='pass123',
+            password=TEST_PASSWORD,
             first_name='Attend',
             last_name='Instructor',
             email='attend_instr@test.com',
@@ -829,7 +831,7 @@ class MyAttendanceViewTest(TestCase):
 
         cls.other_instructor_user = CustomUser.objects.create_user(
             phone_number1='+201500000002',
-            password='pass123',
+            password=TEST_PASSWORD,
             first_name='Other',
             last_name='Attend',
             email='other_attend@test.com',
@@ -845,7 +847,7 @@ class MyAttendanceViewTest(TestCase):
 
         cls.regular_user = CustomUser.objects.create_user(
             phone_number1='+201500000003',
-            password='pass123',
+            password=TEST_PASSWORD,
             first_name='Regular',
             last_name='User',
             dob='1990-01-01',
