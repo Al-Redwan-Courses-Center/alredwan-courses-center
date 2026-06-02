@@ -15,6 +15,8 @@ from rest_framework.test import APIClient
 from courses.models import Course, CourseSchedule, Season, Weekday
 from users.models import CustomUser, Instructor
 
+TEST_PASSWORD = 'a' * 12
+
 
 class CourseScheduleBaseTest(TestCase):
     """Shared setup for course schedule API tests."""
@@ -23,7 +25,7 @@ class CourseScheduleBaseTest(TestCase):
     def setUpTestData(cls):
         cls.admin_user = CustomUser.objects.create_user(
             phone_number1='+201100000010',
-            password='pass123',
+            password=TEST_PASSWORD,
             first_name='Admin',
             last_name='User',
             email='admin_sched@test.com',
@@ -35,7 +37,7 @@ class CourseScheduleBaseTest(TestCase):
 
         cls.supervisor_user = CustomUser.objects.create_user(
             phone_number1='+201100000011',
-            password='pass123',
+            password=TEST_PASSWORD,
             first_name='Supervisor',
             last_name='User',
             email='supervisor_sched@test.com',
@@ -46,7 +48,7 @@ class CourseScheduleBaseTest(TestCase):
 
         cls.instructor_user = CustomUser.objects.create_user(
             phone_number1='+201100000012',
-            password='pass123',
+            password=TEST_PASSWORD,
             first_name='Instructor',
             last_name='User',
             email='instructor_sched@test.com',
@@ -62,7 +64,7 @@ class CourseScheduleBaseTest(TestCase):
 
         cls.regular_user = CustomUser.objects.create_user(
             phone_number1='+201100000013',
-            password='pass123',
+            password=TEST_PASSWORD,
             first_name='Regular',
             last_name='User',
             dob='1985-01-01',
