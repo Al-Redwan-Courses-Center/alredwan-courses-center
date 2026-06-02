@@ -58,6 +58,14 @@
     @apply relative flex flex-col items-center px-53!;
 }
 
+@utility dashboard-greeting {
+    @apply text-olive-700 font-medad text-6xl;
+}
+
+@utility dashboard-section-title {
+    @apply text-olive-700 text-5xl font-bold;
+}
+
 @custom-variant desktop-sm (@media (max-width: 1600px));
 
 @custom-variant laptop (@media (max-width: 1366px));

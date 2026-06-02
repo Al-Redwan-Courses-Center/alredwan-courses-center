@@ -12,6 +12,8 @@ from .views import (
     LectureNumberCheckView,
     InstructorTodayLecturesView,
     CourseRatingsView,
+    CourseScheduleListView,
+    CourseScheduleDetailView,
 )
 
 app_name = 'courses'
@@ -34,4 +36,10 @@ urlpatterns = [
          LectureListCreateView.as_view(), name='lecture-list-create'),
     path('<str:course_id>/lectures/check-datetime/',
          LectureNumberCheckView.as_view(), name='lecture-check-datetime'),
+
+    # Course schedule endpoints (admin CRUD)
+    path('<int:course_id>/schedules/',
+         CourseScheduleListView.as_view(), name='course-schedule-list'),
+    path('<int:course_id>/schedules/<int:pk>/',
+         CourseScheduleDetailView.as_view(), name='course-schedule-detail'),
 ]

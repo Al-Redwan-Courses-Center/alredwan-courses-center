@@ -12,12 +12,14 @@ Instructor attendance tracking (fingerprint devices, manual entry, ratings) and 
 4. [Rating System](#rating-system)
 5. [Device Management](#device-management)
 6. [Schedule Management](#schedule-management)
-7. [Student Lecture Attendance](#student-lecture-attendance)
-8. [Time Restrictions](#time-restrictions)
-9. [Filters](#filters)
-10. [WebSocket Real-Time Updates](#websocket-real-time-updates)
-11. [Automated Cron Jobs](#automated-cron-jobs)
-12. [Quick Reference](#quick-reference)
+7. [My Schedule](#my-schedule)
+8. [My Attendance](#my-attendance)
+9. [Student Lecture Attendance](#student-lecture-attendance)
+10. [Time Restrictions](#time-restrictions)
+11. [Filters](#filters)
+12. [WebSocket Real-Time Updates](#websocket-real-time-updates)
+13. [Automated Cron Jobs](#automated-cron-jobs)
+14. [Quick Reference](#quick-reference)
 
 ---
 
@@ -516,6 +518,161 @@ Manage weekly supervisor schedules.
 ```
 
 **Day of Week:** 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
+
+---
+
+## My Schedule
+
+Returns the authenticated instructor's full weekly schedule — both recurring supervision shifts and course lecture days — in a single response.
+
+| | |
+|--|--|
+| **URL** | `GET /api/attendance/my-schedule/` |
+| **Auth** | ✅ Instructor (JWT required) |
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `season_id` | integer \| `all` | active season | Filter course schedules by season. Pass `all` to include every season. |
+
+**Response (200):**
+
+```json
+{
+  "supervisor_schedules": [
+    {
+      "id": 1,
+      "instructor": 1,
+      "instructor_name": "محمد أحمد",
+      "day_of_week": 0,
+      "day_display": "الأحد",
+      "start_time": "08:00:00",
+      "end_time": "14:00:00",
+      "grace_period_minutes": 15,
+      "auto_absent_after_minutes": 60
+    }
+  ],
+  "course_schedules": [
+    {
+      "id": 5,
+      "course_id": 3,
+      "course_name": "تحفيظ القرآن - المستوى 1",
+      "season_id": 2,
+      "season_name": "الفصل الدراسي 2026",
+      "weekday": 1,
+      "weekday_display": "الاثنين",
+      "start_time": "09:00:00",
+      "end_time": "11:00:00"
+    }
+  ]
+}
+```
+
+**Notes:**
+- `supervisor_schedules` are not season-scoped — they repeat every week year-round.
+- `course_schedules` default to the currently active season. Use `?season_id=all` to see schedules across all seasons.
+- Non-instructor users (no instructor profile) receive **404**.
+- `day_of_week` / `weekday`: 0=Sunday … 6=Saturday.
+
+**Errors:**
+
+| Code | Cause |
+|------|-------|
+| 401 | Unauthenticated |
+| 404 | User has no instructor profile |
+| 400 | `season_id` is not an integer or `all` |
+
+---
+
+## My Attendance
+
+Returns all attendance records (past and future) for the authenticated instructor, newest first. Includes both lecture and supervision records.
+
+| | |
+|--|--|
+| **URL** | `GET /api/attendance/my-attendance/` |
+| **Auth** | ✅ Instructor (JWT required) |
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `season_id` | integer \| `all` | active season | Filter by season. Pass `all` to return records across every season. |
+| `status` | string | — | `present`, `absent`, `late`, `pending`, `not_started` |
+| `attendance_type` | string | — | `lecture` or `supervision` |
+| `date_from` | date | — | Lower bound (inclusive). Format: `YYYY-MM-DD` |
+| `date_to` | date | — | Upper bound (inclusive). Format: `YYYY-MM-DD` |
+
+**Examples:**
+
+```http
+GET /api/attendance/my-attendance/
+GET /api/attendance/my-attendance/?season_id=all
+GET /api/attendance/my-attendance/?status=absent&season_id=all
+GET /api/attendance/my-attendance/?attendance_type=lecture&date_from=2026-01-01
+```
+
+**Response (200):**
+
+```json
+{
+  "count": 25,
+  "next": "http://example.com/api/attendance/my-attendance/?page=2",
+  "previous": null,
+  "results": [
+    {
+      "id": 123,
+      "instructor": 1,
+      "instructor_name": "محمد أحمد",
+      "lecture_info": {
+        "lecture_title": "الدرس الأول",
+        "course_title": "تحفيظ القرآن"
+      },
+      "date": "2026-05-20",
+      "scheduled_check_in_time": "08:00:00",
+      "scheduled_check_out_time": "14:00:00",
+      "check_in_time": "2026-05-20T08:05:00+02:00",
+      "check_out_time": "2026-05-20T14:00:00+02:00",
+      "status": "present",
+      "status_display": "حاضر",
+      "attendance_type": "lecture",
+      "attendance_type_display": "محاضرة",
+      "rating": "8.50"
+    }
+  ]
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | integer | Record ID |
+| `instructor` | integer | Instructor ID |
+| `instructor_name` | string | Full name |
+| `lecture_info` | object \| null | `lecture_title` + `course_title` (null for supervision records) |
+| `date` | date | Attendance date |
+| `scheduled_check_in_time` | time \| null | Expected start time (from schedule or lecture) |
+| `scheduled_check_out_time` | time \| null | Expected end time (from schedule or lecture) |
+| `check_in_time` | datetime \| null | Actual check-in time |
+| `check_out_time` | datetime \| null | Actual check-out time |
+| `status` | string | `present`, `late`, `absent`, `pending`, `not_started` |
+| `status_display` | string | Arabic label |
+| `attendance_type` | string | `lecture` or `supervision` |
+| `attendance_type_display` | string | Arabic label |
+| `rating` | decimal \| null | Performance rating (0.00 = not yet rated) |
+
+**Notes:**
+- Future pre-created records (`not_started` status) are included.
+- Users without an instructor profile receive an empty paginated list (not an error).
+- Default season filter is the active season; use `?season_id=all` for full history.
+
+**Errors:**
+
+| Code | Cause |
+|------|-------|
+| 401 | Unauthenticated |
 
 ---
 
@@ -1102,6 +1259,7 @@ Admins can view these logs in the Django admin under **Attendance > Attendance C
 | GET/POST | `/api/attendance/schedules/` | Schedule management | Admin (create) / All roles (view) |
 | GET/PATCH/DELETE | `/api/attendance/schedules/{id}/` | Schedule detail | Admin (edit/delete) / Own (view) |
 | GET | `/api/attendance/my-schedule/` | **My weekly schedule** | Instructor |
+| GET | `/api/attendance/my-attendance/` | **My attendance records (past & future)** | Instructor |
 | POST | `/api/attendance/lecture/{id}/mark/` | Mark lecture attendance | Admin/Instructor |
 | POST | `/api/attendance/lecture/{id}/mark-bulk/` | Bulk mark attendance | Admin/Instructor |
 | GET | `/api/attendance/lecture/{id}/details/` | Lecture attendance details | Admin/Instructor |

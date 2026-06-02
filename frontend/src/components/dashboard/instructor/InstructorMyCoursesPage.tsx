@@ -10,7 +10,7 @@ export default async function InstructorMyCoursesPage() {
 
   return (
     <div className="flex h-full max-h-73/100 flex-col pt-15">
-      <h1 className="text-olive-700 font-medad mb-14 ps-16 text-6xl">
+      <h1 className="dashboard-greeting mb-14 ps-16">
         السلام عليكم يا أخ {first_name}
       </h1>
 

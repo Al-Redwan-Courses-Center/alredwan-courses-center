@@ -1,5 +1,6 @@
 "use client";
 
+import EmptyState from "@/components/ui/EmptyState";
 import { DataViewContext } from "@/components/ui/data-view/DataView";
 import { cn } from "@/lib/utils";
 import { ReactNode, useContext } from "react";
@@ -15,10 +16,11 @@ export default function DataViewBodyLegacy<T>({
 
   if (data.length <= 0)
     return (
-      <div className="flex w-full flex-col items-center justify-center gap-4 pt-80 text-4xl font-bold">
-        <span className="text-red-800">لا توجد بيانات!</span>
-        <span>حاول تغيير معايير التصفية أو حاول مجدداً في وقت لاحق</span>
-      </div>
+      <EmptyState
+        className="pt-80"
+        title="لا توجد بيانات!"
+        description="حاول تغيير معايير التصفية أو حاول مجدداً في وقت لاحق"
+      />
     );
 
   if (layout === "cards")

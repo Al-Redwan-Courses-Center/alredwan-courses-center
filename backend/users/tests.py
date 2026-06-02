@@ -441,3 +441,150 @@ class UserMeEndpointTest(TestCase):
         # Request should succeed but instructor_id should remain null
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNone(response.data['instructor_id'])
+
+
+class NullEmailUniquenessTest(TestCase):
+    """
+    Tests for email uniqueness behavior with null and empty string values.
+
+    email = models.EmailField(unique=True, null=True, blank=True)
+
+    Expected behavior:
+    - Multiple NULL emails: allowed (SQL NULL != NULL, so no unique violation)
+    - Multiple empty string emails: FAILS (unique constraint violation)
+    - The save() method does NOT convert '' to None for email (unlike identity_number)
+    """
+
+    BASE_USER = dict(password='testpass123', first_name='Test',
+                     last_name='User', dob='1990-01-01', gender='male')
+
+    def _make_user(self, phone, email):
+        return CustomUser.objects.create_user(
+            phone_number1=phone, email=email, **self.BASE_USER
+        )
+
+    # --- NULL email ---
+
+    def test_two_users_with_null_email_both_succeed(self):
+        """Multiple users with email=None should be allowed (NULL != NULL in SQL)."""
+        user1 = self._make_user('+201500000001', None)
+        user2 = self._make_user('+201500000002', None)
+        self.assertIsNone(user1.email)
+        self.assertIsNone(user2.email)
+
+    def test_three_users_with_null_email_all_succeed(self):
+        """Three users with email=None should all be saved without error."""
+        users = [self._make_user(f'+20150000000{i}', None) for i in range(3, 6)]
+        self.assertEqual(CustomUser.objects.filter(email__isnull=True).count(), 3)
+
+    def test_null_email_via_api_registration_two_users(self):
+        """Two users omitting email during API registration should both succeed."""
+        client = APIClient()
+        payload = {
+            'phone_number1': '+201500000010',
+            'password': 'StrongPass!1',
+            're_password': 'StrongPass!1',
+            'first_name': 'Ali',
+            'last_name': 'Hassan',
+            'dob': '2000-01-01',
+            'gender': 'male',
+            'role': 'student',
+        }
+        r1 = client.post('/auth/users/', {**payload})
+        payload['phone_number1'] = '+201500000011'
+        r2 = client.post('/auth/users/', {**payload})
+
+        self.assertEqual(r1.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(r2.status_code, status.HTTP_201_CREATED)
+
+    # --- Empty string email ---
+
+    def test_first_user_empty_string_email_is_saved_as_null(self):
+        """Empty string email IS converted to None (same as identity_number)."""
+        user = self._make_user('+201500000020', '')
+        user.refresh_from_db()
+        self.assertIsNone(user.email)
+
+    def test_second_user_with_empty_string_email_succeeds(self):
+        """A second user with email='' now succeeds because '' is stored as NULL."""
+        user1 = self._make_user('+201500000030', '')
+        user2 = self._make_user('+201500000031', '')
+        user1.refresh_from_db()
+        user2.refresh_from_db()
+        self.assertIsNone(user1.email)
+        self.assertIsNone(user2.email)
+
+    def test_empty_string_email_via_api_second_registration_succeeds(self):
+        """
+        Two API registrations with email='' should both succeed because
+        '' is converted to NULL before saving.
+        """
+        client = APIClient()
+        payload = {
+            'phone_number1': '+201500000040',
+            'password': 'StrongPass!1',
+            're_password': 'StrongPass!1',
+            'first_name': 'Ali',
+            'last_name': 'Hassan',
+            'dob': '2000-01-01',
+            'gender': 'male',
+            'role': 'student',
+            'email': '',
+        }
+        r1 = client.post('/auth/users/', {**payload})
+        payload['phone_number1'] = '+201500000041'
+        r2 = client.post('/auth/users/', {**payload})
+
+        self.assertEqual(r1.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(r2.status_code, status.HTTP_201_CREATED)
+
+    # --- Direct DB insertion ---
+
+    def test_direct_db_null_emails_allowed(self):
+        """Direct DB creation of users with NULL email should not raise."""
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO users_customuser
+                    (id, phone_number1, password, first_name, last_name,
+                     dob, gender, is_active, is_staff, is_superuser,
+                     is_verified, date_joined, role, email)
+                VALUES
+                    (gen_random_uuid(), '+201500000050', 'x', 'A', 'B',
+                     '2000-01-01', 'male', true, false, false, false,
+                     NOW(), 'student', NULL),
+                    (gen_random_uuid(), '+201500000051', 'x', 'C', 'D',
+                     '2000-01-01', 'male', true, false, false, false,
+                     NOW(), 'student', NULL)
+                """
+            )
+        self.assertEqual(
+            CustomUser.objects.filter(email__isnull=True).count(), 2
+        )
+
+    def test_direct_db_empty_string_email_duplicate_raises(self):
+        """
+        Direct SQL bypasses save(), so '' is NOT converted to None.
+        Two rows with email='' still violate the unique constraint at DB level.
+        Use the ORM (or normalise '' to None before inserting) to avoid this.
+        """
+        from django.db import IntegrityError, connection, transaction
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        INSERT INTO users_customuser
+                            (id, phone_number1, password, first_name, last_name,
+                             dob, gender, is_active, is_staff, is_superuser,
+                             is_verified, date_joined, role, email)
+                        VALUES
+                            (gen_random_uuid(), '+201500000060', 'x', 'E', 'F',
+                             '2000-01-01', 'male', true, false, false, false,
+                             NOW(), 'student', ''),
+                            (gen_random_uuid(), '+201500000061', 'x', 'G', 'H',
+                             '2000-01-01', 'male', true, false, false, false,
+                             NOW(), 'student', '')
+                        """
+                    )

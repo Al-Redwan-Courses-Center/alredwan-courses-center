@@ -1,74 +1,55 @@
 "use server";
 
-import { getAuthApiClient } from "@/lib/auth-api";
+import { apiRequest, getAuthApiClient } from "@/lib/api";
+import { PaginatedResponse } from "@/types/config";
 import {
   StaffAttendanceDetail,
   StaffAttendanceListItem,
 } from "@/types/entities";
-import { isAxiosError } from "axios";
-import { PaginatedResponse } from "@/types/config";
 
 export async function getTodaysAttendances() {
-  try {
-    const apiClient = await getAuthApiClient();
-    const { data } = await apiClient.get<
-      PaginatedResponse<StaffAttendanceListItem>
-    >("/api/attendance/today/");
+  return apiRequest(
+    "Failed to get today's attendance: ",
+    async () => {
+      const apiClient = await getAuthApiClient();
+      const { data } = await apiClient.get<
+        PaginatedResponse<StaffAttendanceListItem>
+      >("/api/attendance/today/");
 
-    return data.results;
-  } catch (error) {
-    const errMssg = "Failed to get today's attendance: ";
-
-    if (isAxiosError(error)) {
-      console.error(errMssg, error.response?.data ?? error.message);
-    } else {
-      console.error(errMssg, error);
-    }
-
-    return [];
-  }
+      return data.results;
+    },
+    [],
+  );
 }
 
 export async function manualCheckIn(id: number) {
-  try {
-    const apiClient = await getAuthApiClient();
+  return apiRequest(
+    "Failed to manually check in attendance: ",
+    async () => {
+      const apiClient = await getAuthApiClient();
 
-    const { data } = await apiClient.post<StaffAttendanceDetail>(
-      `/api/attendance/${id}/manual-check-in/`,
-    );
+      const { data } = await apiClient.post<StaffAttendanceDetail>(
+        `/api/attendance/${id}/manual-check-in/`,
+      );
 
-    return data;
-  } catch (error) {
-    const errMssg = "Failed to manually check in attendance: ";
-
-    if (isAxiosError(error)) {
-      console.error(errMssg, error.response?.data ?? error.message);
-    } else {
-      console.error(errMssg, error);
-    }
-
-    return null;
-  }
+      return data;
+    },
+    null,
+  );
 }
 
 export async function manualCheckOut(id: number) {
-  try {
-    const apiClient = await getAuthApiClient();
+  return apiRequest(
+    "Failed to manually check out attendance: ",
+    async () => {
+      const apiClient = await getAuthApiClient();
 
-    const { data } = await apiClient.post<StaffAttendanceDetail>(
-      `/api/attendance/${id}/manual-check-out/`,
-    );
+      const { data } = await apiClient.post<StaffAttendanceDetail>(
+        `/api/attendance/${id}/manual-check-out/`,
+      );
 
-    return data;
-  } catch (error) {
-    const errMssg = "Failed to manually check in attendance: ";
-
-    if (isAxiosError(error)) {
-      console.error(errMssg, error.response?.data ?? error.message);
-    } else {
-      console.error(errMssg, error);
-    }
-
-    return null;
-  }
+      return data;
+    },
+    null,
+  );
 }

@@ -1,9 +1,12 @@
 import EnrollmentRequestCard from "@/components/dashboard/enrollments/EnrollmentRequestCard";
 import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
 import Refresh from "@/components/ui/Refresh";
 import InfoTooltip from "@/components/ui/InfoTooltip";
+
+const emptyActionClassName =
+  "!shadow-[0_4px_14px_rgba(47,61,56,0.2)] hover:!shadow-[0_6px_18px_rgba(47,61,56,0.24)]";
 
 export default function EnrollmentRequestsList({
   enrollments,
@@ -14,6 +17,8 @@ export default function EnrollmentRequestsList({
   listStyles?: string;
   wrapperStyles?: string;
 }) {
+  const hasEnrollments = enrollments.length > 0;
+
   return (
     <div className={cn("flex flex-col ps-0! pb-10 *:ps-29", wrapperStyles)}>
       <div className="mb-6 flex items-center justify-between">
@@ -28,11 +33,13 @@ export default function EnrollmentRequestsList({
 
       <div
         className={cn(
-          "flex flex-col gap-10 overflow-y-auto pe-16 pt-6 pb-10",
-          listStyles,
+          "flex flex-col gap-10 pe-16",
+          hasEnrollments
+            ? cn("overflow-y-auto pt-6 pb-10", listStyles)
+            : "min-h-80 justify-center py-12",
         )}
       >
-        {enrollments.length > 0 ? (
+        {hasEnrollments ? (
           enrollments.map((e) => (
             <EnrollmentRequestCard 
               key={e.id} 
@@ -41,13 +48,19 @@ export default function EnrollmentRequestsList({
             />
           ))
         ) : (
-          <div className="my-auto flex w-full flex-col items-center justify-center gap-4 text-4xl font-bold">
-            <span className="text-red-800">لا توجد دورات مسجلة!</span>
-            <span className="mb-10">اشترك في دورتك الأولى الآن!</span>
-            <Link href="/dashboard/courses">
-              <Button size="small">جميع الدورات</Button>
-            </Link>
-          </div>
+          <EmptyState
+            title="لا توجد طلبات تسجيل!"
+            description="اشترك في دورتك الأولى الآن!"
+            action={
+              <Button
+                href="/dashboard/courses"
+                size="small"
+                className={emptyActionClassName}
+              >
+                جميع الدورات
+              </Button>
+            }
+          />
         )}
       </div>
     </div>
