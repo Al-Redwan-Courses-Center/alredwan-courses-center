@@ -16,6 +16,7 @@ interface BaseProps {
   size?: VariantProps<typeof buttonStyles>["size"];
   disabled?: boolean;
   icon?: ReactNode;
+  loaderThickness?: string;
 }
 
 export interface LinkProps extends BaseProps, ComponentProps<"a"> {
@@ -96,6 +97,7 @@ export default function Button({
   className,
   icon = null,
   type = "button",
+  loaderThickness,
   children,
   ...props
 }: LinkProps | ButtonProps) {
@@ -113,7 +115,7 @@ export default function Button({
   const buttonContent = (
     <>
       {icon}
-      {loading ? <Loader /> : children}
+      {loading ? <Loader thickness={loaderThickness} /> : children}
     </>
   );
 

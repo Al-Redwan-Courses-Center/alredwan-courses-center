@@ -2,6 +2,8 @@ import EnrollmentRequestCard from "@/components/dashboard/enrollments/Enrollment
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import { cn } from "@/lib/utils";
+import Refresh from "@/components/ui/Refresh";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 const emptyActionClassName =
   "!shadow-[0_4px_14px_rgba(47,61,56,0.2)] hover:!shadow-[0_6px_18px_rgba(47,61,56,0.24)]";
@@ -17,23 +19,17 @@ export default function EnrollmentRequestsList({
 }) {
   const hasEnrollments = enrollments.length > 0;
 
-  const childNames = [
-    ...new Set(
-      enrollments
-        .map((e) => {
-          if (e.child?.name) return e.child.name.split(" ")[0];
-          if (e.participant_name) return e.participant_name.split(" ")[0];
-          return null;
-        })
-        .filter(Boolean),
-    ),
-  ];
-
   return (
     <div className={cn("flex flex-col ps-0! pb-10 *:ps-29", wrapperStyles)}>
-      <h2 className="dashboard-section-title mb-6">
-        آخر الطلبات {childNames.length === 1 && `ل${childNames[0]}`}
-      </h2>
+      <div className="mb-6 flex items-center justify-between">
+        <h4 className="text-olive-700 text-5xl font-bold">
+          طلبات الاشتراك
+        </h4>
+        <div className="flex items-center gap-4 text-white">
+          <Refresh />
+          <InfoTooltip content="طلبات الاشتراك قيد الانتظار يتم معالجتها حالياً من قبل إدارة المسجد. للاستفسار، يرجى التواصل مع إدارة المسجد مباشرة." />
+        </div>
+      </div>
 
       <div
         className={cn(
@@ -45,7 +41,11 @@ export default function EnrollmentRequestsList({
       >
         {hasEnrollments ? (
           enrollments.map((e) => (
-            <EnrollmentRequestCard key={e.id} enrollmentRequest={e} />
+            <EnrollmentRequestCard 
+              key={e.id} 
+              enrollmentRequest={e} 
+              childName={e.child?.name}
+            />
           ))
         ) : (
           <EmptyState

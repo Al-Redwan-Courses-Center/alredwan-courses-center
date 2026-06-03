@@ -1,21 +1,39 @@
-import { getParentChildren } from "@/actions/user";
-import ChildRow from "@/components/dashboard/parent/ChildRow";
-import { Fragment } from "react/jsx-runtime";
+import { getParentChildren, getChildEnrollments, getChildEnrollmentRequests } from "@/actions/user";
+import MyChildrenList from "@/components/dashboard/parent/MyChildrenList";
+import { EnrollmentRequestListItem } from "@/types/entities";
 
 export default async function Page() {
   const myChildren = await getParentChildren();
 
-  return (
-    <div className="max-h-[calc(100dvh-10%)] overflow-auto px-6 pt-8 pb-9">
-      {myChildren.map((c, i) => (
-        <Fragment key={c.id}>
-          <ChildRow child={c} index={i} />
+  // Fetch enrollments and enrollment requests for all children in parallel
+  const childrenData = await Promise.all(
+    myChildren.map(async (child) => {
+      const [enrollments, enrollmentRequests] = await Promise.all([
+        getChildEnrollments(child.id),
+        getChildEnrollmentRequests(child.id),
+      ]);
+      return {
+        child,
+        enrollments,
+        enrollmentRequests,
+      };
+    })
+  );
 
-          {i + 1 < myChildren.length && (
-            <div className="bg-olive-100 mx-auto my-10 h-px w-2/3" />
-          )}
-        </Fragment>
-      ))}
+  // Extract enrollment requests mapping for the feed
+  const initialRequests: { [childId: string]: EnrollmentRequestListItem[] } = {};
+  childrenData.forEach((item) => {
+    initialRequests[item.child.id] = item.enrollmentRequests;
+  });
+
+  return (
+    <div className="h-full flex flex-col pt-15">
+      <MyChildrenList
+        initialChildren={myChildren}
+        childrenData={childrenData}
+        initialRequests={initialRequests}
+      />
     </div>
   );
 }
+

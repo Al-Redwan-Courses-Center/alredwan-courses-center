@@ -7,13 +7,10 @@ import Button from "@/components/ui/Button";
 import CopyToClipboardButton from "@/components/ui/CopyToClipboardButton";
 import ItemCard from "@/components/ui/ItemCard";
 import ProgressBarWithLabel from "@/components/ui/ProgressBarWithLabel";
-import {
-  getChildAttendanceRate,
-  getChildOngoingEnrollments,
-  getChildPendingEnrollments,
-} from "@/dev-data/db";
 import { cn, getArabicPlural, toHindiDigits } from "@/lib/utils";
 import { FunctionComponent, SVGProps } from "react";
+import DeleteChildButton from "@/components/dashboard/parent/DeleteChildButton";
+import EditChildButton from "@/components/dashboard/parent/EditChildButton";
 
 function StatCard({
   icon: Icon,
@@ -38,17 +35,18 @@ function StatCard({
 export default function ChildCard({
   index,
   child,
+  activeCoursesCount,
+  pendingEnrollmentsCount,
+  attendanceRate,
+  showActions = true,
 }: {
   index: number;
   child: ParentChildDetail;
+  activeCoursesCount: number;
+  pendingEnrollmentsCount: number;
+  attendanceRate: number;
+  showActions?: boolean;
 }) {
-  // TODO(api): Child-level enrollments/attendance are not available yet.
-  const activeCourses = getChildOngoingEnrollments(child.id);
-  const pendingEnrollments = getChildPendingEnrollments(child.id);
-  const attendanceRate = getChildAttendanceRate(child.id);
-
-  // console.log(activeCourses);
-  // console.log(pendingEnrollments);
 
   return (
     <ItemCard
@@ -70,8 +68,13 @@ export default function ChildCard({
             />
           </div>
 
-          <div className="flex flex-col pe-30">
-            <span className="text-[1.6rem] font-bold">{child.first_name}</span>
+          <div className="flex flex-col pe-30 overflow-hidden text-right">
+            <span
+              className="text-[1.6rem] font-bold truncate block"
+              title={`${child.first_name} ${child.last_name}`}
+            >
+              {`(${toHindiDigits(index + 1)}) ${child.first_name} ${child.last_name}`}
+            </span>
             <span>
               {child.age}{" "}
               {getArabicPlural(child.age, {
@@ -88,10 +91,16 @@ export default function ChildCard({
         </div>
       }
       cardFooter={
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-between gap-4 w-full">
+          {showActions && (
+            <div className="flex items-center gap-2">
+              <EditChildButton child={child} />
+              <DeleteChildButton childId={child.id} childName={child.first_name} />
+            </div>
+          )}
           <Button
             size="small"
-            className="bg-olive-300"
+            className="bg-olive-300 ms-auto"
             href={`/dashboard/my-children/${child.id}`}
           >
             عرض لوحة التحكم
@@ -103,12 +112,12 @@ export default function ChildCard({
         <StatCard
           icon={ActiveCourseIcon}
           label="الدورات النشطة"
-          value={toHindiDigits(activeCourses.length)}
+          value={toHindiDigits(activeCoursesCount)}
         />
         <StatCard
           icon={PendingTransactionIcon}
           label="الطلبات المعلقة"
-          value={toHindiDigits(pendingEnrollments.length)}
+          value={toHindiDigits(pendingEnrollmentsCount)}
         />
         <ProgressBarWithLabel
           icon={CheckBadgeIcon}

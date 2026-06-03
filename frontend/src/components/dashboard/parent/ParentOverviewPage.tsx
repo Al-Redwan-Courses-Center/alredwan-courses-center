@@ -54,7 +54,20 @@ export default async function ParentOverviewPage() {
 
       <div className="[&>div]:separators-[7.25rem] [&>div]:border-olive-200 grid grid-cols-2 pe-0!">
         <div className="flex flex-col gap-6">
-          <h2 className="dashboard-section-title mb-6">أطفالي</h2>
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="dashboard-section-title font-bold">
+              أطفالي المسجلين
+            </h2>
+            {myChildren.length > 2 && (
+              <Button
+                href="/dashboard/my-children"
+                variant="light"
+                size="small"
+              >
+                عرض الكل
+              </Button>
+            )}
+          </div>
 
           <div
             className={
@@ -64,9 +77,34 @@ export default async function ParentOverviewPage() {
             }
           >
             {myChildren.length > 0 ? (
-              myChildren.map((c, i) => (
-                <ChildCard key={c.id} index={i} child={c} />
-              ))
+              myChildren.slice(0, 2).map((c, i) => {
+                const childEnrollments = myEnrollments.filter((e) => e.child_id === c.id);
+                const childRequests = myEnrollmentRequests.filter((req) => req.child_id === c.id);
+
+                const activeCoursesCount = childEnrollments.filter((e) => e.status === "active").length;
+                const pendingEnrollmentsCount = childRequests.filter(
+                  (req) => ["pending", "processing"].includes(req.status)
+                ).length;
+                const attendanceRate = childEnrollments.length
+                  ? Math.round(
+                      childEnrollments.reduce(
+                        (acc, enrollment) => acc + (enrollment.completion_percentage || 0),
+                        0,
+                      ) / childEnrollments.length,
+                    )
+                  : 0;
+
+                return (
+                  <ChildCard
+                    key={c.id}
+                    index={i}
+                    child={c}
+                    activeCoursesCount={activeCoursesCount}
+                    pendingEnrollmentsCount={pendingEnrollmentsCount}
+                    attendanceRate={attendanceRate}
+                  />
+                );
+              })
             ) : (
               <EmptyState
                 className="col-span-2"

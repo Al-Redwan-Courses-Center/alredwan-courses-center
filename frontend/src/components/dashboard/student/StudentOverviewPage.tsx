@@ -1,19 +1,11 @@
-import { getUser } from "@/actions/auth";
-import { getStudentCourses } from "@/actions/courses";
-import { getMyEnrollmentRequests } from "@/actions/enrollments";
-import EnrollmentRequestCard from "@/components/dashboard/enrollments/EnrollmentRequestCard";
+import EnrollmentRequestsList from "@/components/dashboard/enrollments/EnrollmentRequestsList";
 import StudentOverviewCoursesAccordion from "@/components/dashboard/student/StudentOverviewCoursesAccordion";
 import StudentOverviewEnrollmentRequestsAccordion from "@/components/dashboard/student/StudentOverviewEnrollmentRequestsAccordion";
 import StudentCourseCard from "@/components/dashboard/student/StudentCourseCard";
 import StudentOverviewHeader from "@/components/dashboard/student/StudentOverviewHeader";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
-import {
-  getChildEnrollmentRequests,
-  getChildOngoingEnrollments,
-  getMyChildById,
-} from "@/dev-data/db";
-import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
+
 const emptyActionClassName =
   "!shadow-[0_4px_14px_rgba(47,61,56,0.2)] hover:!shadow-[0_6px_18px_rgba(47,61,56,0.24)]";
 
@@ -29,49 +21,22 @@ function BrowseCoursesButton() {
   );
 }
 
-export default async function StudentOverviewPage({
-  childId = "",
+export default function StudentOverviewPage({
+  name,
+  activeCourses = [],
+  enrollmentRequests = [],
+  activeCoursesCount = 0,
+  pendingRequestsCount = 0,
+  attendanceRate = 0,
 }: {
-  childId?: string;
+  name: string;
+  activeCourses: any[];
+  enrollmentRequests: any[];
+  activeCoursesCount: number;
+  pendingRequestsCount: number;
+  attendanceRate: number;
 }) {
-  const { first_name, role } = await getUser();
-  let myActiveCourses: any[], myEnrollmentRequests: any[], name: string;
-
-  if (role === "parent") {
-    // TODO(api): Child-specific enrollment data is not available yet.
-    myActiveCourses = getChildOngoingEnrollments(childId).map((e) => e.course);
-
-    myEnrollmentRequests = getChildEnrollmentRequests(childId).sort(
-      (a, b) =>
-        ENROLLMENT_REQUEST_STATUS_WEIGHTS[
-          a.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
-        ] -
-        ENROLLMENT_REQUEST_STATUS_WEIGHTS[
-          b.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
-        ],
-    );
-
-    // TODO(api): Replace mock child details when the API provides child info.
-    name = getMyChildById(childId).name;
-  } else {
-    // TODO(api): Replace mock active courses once course detail endpoints are wired.
-    myActiveCourses = await getStudentCourses();
-
-    const requests = await getMyEnrollmentRequests();
-
-    myEnrollmentRequests = requests.sort(
-      (a, b) =>
-        ENROLLMENT_REQUEST_STATUS_WEIGHTS[
-          a.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
-        ] -
-        ENROLLMENT_REQUEST_STATUS_WEIGHTS[
-          b.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
-        ],
-    );
-
-    name = first_name;
-  }
-  const overviewCourses = myActiveCourses.slice(0, 2);
+  const overviewCourses = activeCourses.slice(0, 2);
 
   return (
     <div className="ps-16 pt-15 *:pe-16 max-[1000px]:px-0 max-[1000px]:*:pe-0">
@@ -79,7 +44,11 @@ export default async function StudentOverviewPage({
         السلام عليكم يا {name}
       </h1>
 
-      <StudentOverviewHeader childId={childId} />
+      <StudentOverviewHeader
+        activeCoursesCount={activeCoursesCount}
+        pendingRequestsCount={pendingRequestsCount}
+        attendanceRate={attendanceRate}
+      />
 
       <div className="[&>div]:separators-[7.25rem] [&>div]:border-olive-200 grid grid-cols-2 pe-0! max-[1000px]:grid-cols-1 max-[1000px]:gap-8 max-[1000px]:px-8 [&>div]:max-[1000px]:border-0">
         <div className="flex flex-col gap-6">
@@ -113,33 +82,19 @@ export default async function StudentOverviewPage({
           </div>
         </div>
 
-        <div className="flex flex-col ps-0! *:ps-29 max-[1000px]:*:ps-0">
-          <h2 className="dashboard-section-title">آخر الطلبات</h2>
-
-          <div
-            className={
-              myEnrollmentRequests.length > 0
-                ? "hidden min-[1000px]:flex min-[1000px]:max-h-[calc(100dvh-44rem)] min-[1000px]:flex-col min-[1000px]:gap-10 min-[1000px]:overflow-y-auto min-[1000px]:pe-16 min-[1000px]:pt-6 min-[1000px]:pb-10"
-                : "hidden min-[1000px]:flex min-[1000px]:min-h-80 min-[1000px]:flex-col min-[1000px]:justify-center min-[1000px]:py-12 min-[1000px]:pe-16"
-            }
-          >
-            {myEnrollmentRequests.length > 0 ? (
-              myEnrollmentRequests.map((e) => (
-                <EnrollmentRequestCard key={e.id} enrollmentRequest={e} />
-              ))
-            ) : (
-              <EmptyState
-                title="لا توجد طلبات تسجيل!"
-                description="اشترك في دورتك الأولى الآن!"
-                action={<BrowseCoursesButton />}
-              />
-            )}
+        <div>
+          <div className="hidden min-[1000px]:block">
+            <EnrollmentRequestsList
+              enrollments={enrollmentRequests}
+              listStyles="max-h-[calc(100dvh-44rem)]"
+            />
           </div>
 
-          <div className="min-[1000px]:hidden">
-            {myEnrollmentRequests.length > 0 ? (
+          <div className="min-[1000px]:hidden flex flex-col ps-0! *:ps-29 max-[1000px]:*:ps-0">
+            <h4 className="text-olive-700 text-5xl font-bold mb-6">آخر الطلبات</h4>
+            {enrollmentRequests.length > 0 ? (
               <StudentOverviewEnrollmentRequestsAccordion
-                enrollmentRequests={myEnrollmentRequests}
+                enrollmentRequests={enrollmentRequests}
               />
             ) : (
               <EmptyState
