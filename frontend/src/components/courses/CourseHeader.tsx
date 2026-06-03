@@ -47,7 +47,7 @@ export default function CourseHeader({
           <div className={dataPointWrapperStyles}>
             <InstructorIcon className={dataPointIconStyles} />
             <span className={labelStyles}>المعلمين</span>
-            <span className={valueStyles}>{course?.instructor.name}</span>
+            <span className={valueStyles}>{course?.instructor?.name || "لا يوجد معلم"}</span>
           </div>
 
           <div className={dataPointWrapperStyles}>
