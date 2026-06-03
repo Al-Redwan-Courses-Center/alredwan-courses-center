@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from djoser.serializers import UserCreatePasswordRetypeSerializer, UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 from .models import CustomUser, Instructor, LandingPageInstructor
+from .models.student_instructor_rating import StudentInstructorRating, ParentInstructorRating, StudentCourseRating, ParentCourseRating
 
 
 class CustomUserCreateSerializer(UserCreatePasswordRetypeSerializer):
@@ -66,15 +67,22 @@ class CustomUserCreateSerializer(UserCreatePasswordRetypeSerializer):
         return value
 
 
-class CustomUserSerializer(UserSerializer):
+class CustomUserSerializer(serializers.ModelSerializer):
     """
     Serializer for retrieving and updating user profile.
 
     Security: Prevents users from modifying sensitive fields.
     """
     instructor_id = serializers.SerializerMethodField()
+    profile_image = serializers.SerializerMethodField()
+    image = serializers.ImageField(write_only=True, required=False, allow_null=True)
 
-    class Meta(UserSerializer.Meta):
+    def get_profile_image(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
+
+    class Meta:
         model = CustomUser
         fields = (
             'id',
@@ -92,13 +100,15 @@ class CustomUserSerializer(UserSerializer):
             'role',
             'is_verified',
             'date_joined',
+            'profile_image',
+            'image',
             'instructor_id',
         )
         read_only_fields = (
             'id',
-            'phone_number1',  # Cannot change primary phone after registration
-            'role',           # Only admins can change role
-            'is_verified',    # Only admins can verify users
+            'phone_number1',
+            'role',
+            'is_verified',
             'date_joined',
             'instructor_id',
         )
@@ -163,7 +173,7 @@ class InstructorListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Instructor
         fields = ['id', 'name', 'bio', 'type', 'type_display',
-                  'image_url', 'joined_date', 'tags']
+                  'image_url', 'joined_date', 'tags', 'average_rating', 'rating_count']
 
     def get_image_url(self, obj):
         """Get the full URL for the instructor's image"""
@@ -193,7 +203,7 @@ class InstructorDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Instructor
         fields = ['id', 'name', 'email', 'phone', 'bio', 'type',
-                  'type_display', 'image_url', 'joined_date', 'tags']
+                  'type_display', 'image_url', 'joined_date', 'tags', 'average_rating', 'rating_count']
 
     def get_image_url(self, obj):
         """Get the full URL for the instructor's image"""
@@ -247,3 +257,61 @@ class InstructorRatingDetailSerializer(serializers.Serializer):
     instructor_name = serializers.CharField(read_only=True)
     statistics = serializers.DictField(read_only=True)
     ratings = serializers.DictField(read_only=True)
+
+
+class StudentInstructorRateSerializer(serializers.ModelSerializer):
+    """Serializer for students to rate instructors"""
+    class Meta:
+        model = StudentInstructorRating
+        fields = ['course', 'rating', 'feedback']
+
+    def validate(self, data):
+        user = self.context['request'].user
+        if user.role != 'student':
+            raise serializers.ValidationError("هذا الحساب ليس حساب طالب.")
+            
+        student = getattr(user, 'student_profile', None)
+        if not student:
+            raise serializers.ValidationError("لم يتم العثور على ملف تعريف طالب.")
+            
+        instructor = self.context['instructor']
+        course = data['course']
+        
+        # Check if student is enrolled in the course taught by this instructor
+        from enrollments_payments.models import Enrollment
+        if not Enrollment.objects.filter(student=student, course=course, course__instructor=instructor).exists():
+            raise serializers.ValidationError("يجب أن تكون مشتركاً في دورة يقدمها هذا المعلم لتتمكن من تقييمه.")
+            
+        return data
+
+class ParentInstructorRateSerializer(serializers.ModelSerializer):
+    """Serializer for parents to rate instructors"""
+    class Meta:
+        model = ParentInstructorRating
+        fields = ['course', 'rating', 'feedback']
+
+    def validate(self, data):
+        user = self.context['request'].user
+        if user.role != 'parent':
+            raise serializers.ValidationError("هذا الحساب ليس حساب ولي أمر.")
+            
+        parent = getattr(user, 'parent_profile', None)
+        if not parent:
+            raise serializers.ValidationError("لم يتم العثور على ملف تعريف ولي أمر.")
+            
+        instructor = self.context['instructor']
+        course = data['course']
+        
+        # Check if parent has a child enrolled in the course taught by this instructor
+        from enrollments_payments.models import Enrollment
+        from parents.models import Child
+        
+        # Get parent's children
+        child_ids = list(Child.objects.filter(primary_parent=parent).values_list('id', flat=True))
+        extra_child_ids = list(parent.extra_children.values_list('child_id', flat=True))
+        all_child_ids = set(child_ids + extra_child_ids)
+        
+        if not Enrollment.objects.filter(child_id__in=all_child_ids, course=course, course__instructor=instructor).exists():
+            raise serializers.ValidationError("يجب أن يكون أحد أبنائك مشتركاً في دورة يقدمها هذا المعلم لتتمكن من تقييمه.")
+            
+        return data

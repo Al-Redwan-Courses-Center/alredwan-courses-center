@@ -14,6 +14,7 @@ from .views import (
     CourseRatingsView,
     CourseScheduleListView,
     CourseScheduleDetailView,
+    CourseRateView,
 )
 
 app_name = 'courses'
@@ -23,6 +24,7 @@ urlpatterns = [
     path('landingpagecourses/', LandingPageCourseListView.as_view(),
          name='landing-course-list'),
     path('<str:pk>/ratings/', CourseRatingsView.as_view(), name='course-ratings'),
+    path('<str:pk>/rate/', CourseRateView.as_view(), name='course-rate'),
     path('<str:pk>/', CourseDetailView.as_view(), name='course-detail'),
     path('<int:pk>/edit/', CourseUpdateView.as_view(), name='course-edit'),
     path('lectures/<int:pk>/edit/',

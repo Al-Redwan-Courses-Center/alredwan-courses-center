@@ -6,6 +6,7 @@ import { isAxiosError } from "axios";
 import { EnrollmentListItem, EnrollmentRequestListItem } from "@/types/entities";
 import { getCourseById } from "@/actions/courses";
 import { getEnrollmentProgressById } from "@/actions/enrollments";
+import { revalidatePath } from "next/cache";
 
 export interface ParentChildDetail {
   id: string;
@@ -48,6 +49,7 @@ export async function addChild(data: {
   try {
     const apiClient = await getAuthApiClient();
     const response = await apiClient.post("/api/parents/children/create/", data);
+    revalidatePath("/dashboard/my-children");
     return { data: response.data, error: null };
   } catch (error) {
     if (isAxiosError(error)) {
@@ -69,6 +71,7 @@ export async function updateChild(id: string, data: {
   try {
     const apiClient = await getAuthApiClient();
     const response = await apiClient.patch(`/api/parents/children/${id}/update/`, data);
+    revalidatePath("/dashboard/my-children");
     return { data: response.data, error: null };
   } catch (error) {
     if (isAxiosError(error)) {
@@ -185,3 +188,13 @@ export async function getChildCourses(childId: string) {
 //     return null;
 //   }
 // }
+export async function getInstructorById(id: string | number) {
+  try {
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.get(`/api/users/instructors/${id}/`);
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch instructor details:", error);
+    return null;
+  }
+}

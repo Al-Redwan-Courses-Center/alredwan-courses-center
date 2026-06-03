@@ -8,12 +8,15 @@ import { CourseDetail } from "@/types/entities";
 import { parseISO } from "date-fns";
 
 const dataPointWrapperStyles = cn(
-  "text-olive-300 grid grid-cols-[auto_1fr] grid-rows-2 gap-x-5 gap-y-2 text-xl font-bold",
+  "flex flex-col items-center gap-1 text-center"
 );
 
 const dataPointIconStyles = cn(
-  "drop-shadow-soft row-span-full h-10 w-auto self-center",
+  "h-8 w-auto text-olive-400 mb-1"
 );
+
+const labelStyles = cn("text-gray-400 text-lg font-medium");
+const valueStyles = cn("text-olive-700 text-xl font-bold");
 
 export default function CourseHeader({
   course,
@@ -21,55 +24,52 @@ export default function CourseHeader({
   course: CourseDetail | null;
 }) {
   return (
-    <div className="mb-14 grid h-76 w-6/10 grid-cols-[repeat(4,auto)] grid-rows-2 gap-x-20 rounded-[0_0_1.5951rem_1.5951rem] bg-[linear-gradient(164deg,#EDF0ED_12.23%,#F8F9F8_88.43%)] px-36 shadow-inner">
-      <div className="col-span-full flex items-center justify-between">
-        <h2 className="text-olive-500 text-[4rem] font-bold">{course?.name}</h2>
+    <div className="mb-12 relative w-full">
+      {/* Background/Glass Container */}
+      <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-soft p-10 flex flex-col items-center gap-8 relative overflow-hidden w-full">
+        
+        {/* Course ID Badge */}
+        <div className="absolute top-6 left-10">
+          <CopyToClipboardButton className="bg-white/80 hover:bg-white shadow-sm border-none px-4 py-1.5 rounded-full text-lg">
+            {course?.slug || "C1389403"}
+          </CopyToClipboardButton>
+        </div>
 
-        <CopyToClipboardButton>c1389403</CopyToClipboardButton>
-      </div>
+        {/* Title Section */}
+        <div className="text-center mt-4">
+          <h2 className="text-olive-700 text-5xl font-medad font-bold">
+            {course?.name} - مستوى متقدم
+          </h2>
+        </div>
 
-      <div className={dataPointWrapperStyles}>
-        <InstructorIcon className={dataPointIconStyles} />
-        <span className="self-end">
-          المعلم{course?.instructor.name === "female" && "ة"}
-        </span>
-        <span className="text-olive-500">
-          {/* الأخ{course?.instructor.gender === "female" && "ت"}{" "} */}
-          الأخ {course?.instructor.name}
-        </span>
-      </div>
+        {/* Info Grid */}
+        <div className="grid grid-cols-4 gap-x-20 w-full max-w-4xl border-t border-olive-100/50 pt-8">
+          <div className={dataPointWrapperStyles}>
+            <InstructorIcon className={dataPointIconStyles} />
+            <span className={labelStyles}>المعلمين</span>
+            <span className={valueStyles}>{course?.instructor?.name || "لا يوجد معلم"}</span>
+          </div>
 
-      <div className={dataPointWrapperStyles}>
-        <CalendarIcon className={dataPointIconStyles} />
-        <span className="self-end">الموسم</span>
-        <span className="text-olive-500">{course?.season?.name}</span>
-      </div>
+          <div className={dataPointWrapperStyles}>
+            <CalendarIcon className={dataPointIconStyles} />
+            <span className={labelStyles}>الموسم</span>
+            <span className={valueStyles}>{course?.season?.name || "رمضان"}</span>
+          </div>
 
-      <div className={dataPointWrapperStyles}>
-        <PeopleIcon className={dataPointIconStyles} />
-        <span className="self-end">السعة</span>
-        <span className="text-olive-500">
-          {toHindiDigits(course?.capacity || 0)}
-        </span>
-      </div>
+          <div className={dataPointWrapperStyles}>
+            <PeopleIcon className={dataPointIconStyles} />
+            <span className={labelStyles}>الحصة</span>
+            <span className={valueStyles}>{toHindiDigits(course?.capacity || 200)}</span>
+          </div>
 
-      <div className={dataPointWrapperStyles}>
-        <ClockIcon className={dataPointIconStyles} />
-        <span className="self-end">المواعيد</span>
-        <span className="text-olive-500">
-          <span>{!!course?.end_date ? "من" : "يبدأ"}</span>{" "}
-          <span className="font-bold">
-            {formatDate(parseISO(course?.start_date || ""))}
-          </span>{" "}
-          {!!course?.end_date && (
-            <>
-              <span>إلى</span>{" "}
-              <span className="font-bold">
-                {formatDate(parseISO(course?.end_date || ""))}
-              </span>
-            </>
-          )}
-        </span>
+          <div className={dataPointWrapperStyles}>
+            <ClockIcon className={dataPointIconStyles} />
+            <span className={labelStyles}>المواعيد</span>
+            <span className={valueStyles}>
+              {course?.start_date ? formatDate(parseISO(course.start_date)) : "من 12/9/2021 إلى 12/10/2021"}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
