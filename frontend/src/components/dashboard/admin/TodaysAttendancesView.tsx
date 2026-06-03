@@ -15,12 +15,13 @@ import { StaffAttendanceListItem } from "@/types/entities/staff-attendance";
 import StatusBadge from "@/components/ui/StatusBadge";
 import ClientLocalTime from "@/components/ui/ClientLocalTime";
 import { cva, VariantProps } from "class-variance-authority";
-import { parseISO } from "date-fns";
+import { parseISO, format } from "date-fns";
 import Button from "@/components/ui/Button";
 import { manualCheckIn, manualCheckOut } from "@/actions/admin-attendances";
 import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
 import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
 import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
+import { exportToExcel } from "@/lib/export";
 
 function calcPositionalStatus(
   checkInTime: string | null,
@@ -355,6 +356,26 @@ export default function TodaysAttendancesView({
     handleWebSocketServerEvent(lastJsonMessage);
   }, [lastJsonMessage]);
 
+  function handleExport() {
+    const exportData = attendances.map((item, index) => {
+      const statusObj = calcPositionalStatus(item.check_in_time, item.check_out_time);
+      
+      return {
+        "م": index + 1,
+        "الاسم": item.instructor_name,
+        "الهدف": item.lecture_info?.course_title || "",
+        "الحضور": formatTime(item.scheduled_check_in_time) || "",
+        "الانصراف": formatTime(item.scheduled_check_out_time) || "",
+        "الحضور الفعلي": item.check_in_time ? format(parseISO(item.check_in_time), 'hh:mm a') : "",
+        "الانصراف الفعلي": item.check_out_time ? format(parseISO(item.check_out_time), 'hh:mm a') : "",
+        "الحالة": statusObj.label,
+      };
+    });
+    
+    const today = format(new Date(), 'yyyy-MM-dd');
+    exportToExcel(exportData, `حضور_المهام_${today}`);
+  }
+
   return (
     <DataView
       gridLayout="grid-cols-[minmax(0,0.5fr)_minmax(0,1.5fr)_minmax(0,1.5fr)_minmax(0,0.5fr)_minmax(0,0.5fr)_minmax(0,0.25fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,1fr)]"
@@ -364,7 +385,7 @@ export default function TodaysAttendancesView({
     >
       <DataViewControls 
         showExport 
-        onExport={() => alert("جاري تصدير بيانات الحضور...")} 
+        onExport={handleExport} 
       />
 
 
