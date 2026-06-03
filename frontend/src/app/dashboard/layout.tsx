@@ -11,7 +11,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
     <div className="grid min-h-screen grid-cols-1 grid-rows-[auto_1fr] min-[1000px]:grid-cols-[auto_1fr]">
       <DashboardHeader firstName={first_name} image={image} role={role} />
       <DashboardNavSidebar firstName={first_name} image={image} role={role} />
-      <div className="relative min-h-0 overflow-y-auto bg-[linear-gradient(179deg,#FFF_0.75%,#93A494_480.3%)] max-[1000px]:pb-34">
+      <div className="relative min-h-0 overflow-y-auto overflow-x-hidden bg-[linear-gradient(179deg,#FFF_0.75%,#93A494_480.3%)] max-[1000px]:pb-34">
         {children}
       </div>
       <DashboardBottomNav role={role} />
