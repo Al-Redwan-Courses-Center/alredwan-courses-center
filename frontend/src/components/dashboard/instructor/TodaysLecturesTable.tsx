@@ -20,6 +20,9 @@ import DataViewSortLegacy from "@/components/ui/data-view/DataViewSort";
 import DataViewFilterLegacy from "@/components/ui/data-view/DataViewFilter";
 import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
 import DataViewLegacy from "@/components/ui/data-view/DataView";
+import DataViewExportLegacy from "@/components/ui/data-view/DataViewExportLegacy";
+import { exportToExcel } from "@/lib/export";
+import { format } from "date-fns";
 
 const { sortConfig, filterConfig, statusMap } = lecturesViewConfig;
 
@@ -28,6 +31,23 @@ export default function TodaysLecturesTable({
 }: {
   todaysLectures?: TodaysLectureListItem[];
 }) {
+  function handleExport() {
+    const exportData = todaysLectures.map((lecture, i) => {
+      const { label } = statusMap[lecture.status];
+      return {
+        "م": i + 1,
+        "المحاضرة": lecture.title,
+        "الدورة": lecture.course.name,
+        "البداية": formatTime(lecture.start_time),
+        "النهاية": formatTime(lecture.end_time),
+        "الحالة": label
+      };
+    });
+    
+    const today = format(new Date(), 'yyyy-MM-dd');
+    exportToExcel(exportData, `محاضرات_اليوم_${today}`);
+  }
+
   return (
     <DataViewLegacy
       data={todaysLectures}
@@ -38,6 +58,7 @@ export default function TodaysLecturesTable({
       )}
     >
       <div className="relative z-100 mb-14 flex items-center gap-32">
+        <DataViewExportLegacy onExport={handleExport} />
         <DataViewSearchLegacy />
         <DataViewSortLegacy />
         <DataViewFilterLegacy />

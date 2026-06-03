@@ -13,12 +13,8 @@ import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import { cn } from "@/lib/utils";
 import { useContext } from "react";
 
-const baseStyles = cn(
-  "shadow-soft w-105 rounded-[2rem_0] bg-gray-50 text-[1.8rem]",
-);
-
 const dropdownItemStyles = cn(
-  "[direction:rtl;] flex cursor-pointer justify-between px-10 text-[1.8rem] transition-all hover:bg-gray-400",
+  "[direction:rtl;] flex cursor-pointer justify-between px-10 py-6 text-[1.4rem] transition-all hover:bg-gray-100",
 );
 
 export default function DataViewSortLegacy() {
@@ -34,33 +30,29 @@ export default function DataViewSortLegacy() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        className={cn(
-          baseStyles,
-          "px-10 py-4 transition-colors hover:bg-gray-100",
-        )}
-      >
-        <div className="flex items-center justify-between">
-          {fieldName ? (
-            <div className="flex items-center gap-4">
-              <SortArrow className={cn(direction === "desc" && "rotate-180")} />
-              <span>
-                {
-                  sortOptions.find((option) => fieldName === option.fieldName)
-                    ?.label
-                }
-              </span>
-            </div>
-          ) : (
-            <span className="font-semibold text-gray-600">ترتيب حسب</span>
-          )}
-
-          <ArrowDownHead className="text-gray-600" />
-        </div>
+      <DropdownMenuTrigger asChild>
+        <button className="shadow-[0_2px_8px_rgba(0,0,0,0.06)] h-[50px] min-w-[120px] px-16 rounded-full bg-white border border-stone-100 flex items-center justify-between gap-10 transition-all hover:bg-stone-50 active:scale-95">
+          <ArrowDownHead className="w-10 h-10 text-stone-400" />
+          <div className="flex items-center gap-4">
+            {fieldName ? (
+              <div className="flex items-center gap-4">
+                <SortArrow className={cn(direction === "desc" && "rotate-180", "w-10 h-10")} />
+                <span className="text-[1.2rem] font-medium text-stone-600">
+                  {
+                    sortOptions.find((option) => fieldName === option.fieldName)
+                      ?.label
+                  }
+                </span>
+              </div>
+            ) : (
+              <span className="text-[1.2rem] font-medium text-stone-600">ترتيب حسب</span>
+            )}
+          </div>
+        </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className={cn(baseStyles, "relative z-150 rounded-none border-none")}
+        className="bg-white rounded-12 shadow-xl border border-stone-100 py-4 min-w-[160px] z-150"
       >
         {sortOptions.map((option, i) => {
           const isActive =
@@ -79,10 +71,12 @@ export default function DataViewSortLegacy() {
                   },
                 ])
               }
-              className={cn(dropdownItemStyles, isActive && "bg-olive-100")}
+              className={cn(dropdownItemStyles, isActive && "bg-olive-50 text-olive-700")}
             >
-              {option.label}
-              <SortArrow className={cn(isActive && !isAsc && "rotate-180")} />
+              <div className="flex items-center justify-between w-full gap-8">
+                <span>{option.label}</span>
+                <SortArrow className={cn(isActive && !isAsc && "rotate-180", "w-10 h-10")} />
+              </div>
             </DropdownMenuItem>
           );
         })}

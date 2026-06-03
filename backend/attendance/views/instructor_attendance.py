@@ -744,7 +744,10 @@ class InstructorAttendanceHistoryView(generics.ListAPIView):
         return InstructorAttendance.objects.filter(
             instructor_id=instructor_id
         ).select_related(
-            'instructor__user'
+            'instructor__user',
+            'lecture',
+            'lecture__course',
+            'schedule'
         ).order_by('-date')
 
 
@@ -1318,3 +1321,4 @@ class GenerateAttendanceView(views.APIView):
             "end_date": str(end_date),
             "season": season.name if season else "Active season"
         }, status=status.HTTP_201_CREATED)
+
