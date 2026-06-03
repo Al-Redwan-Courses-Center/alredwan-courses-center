@@ -109,30 +109,36 @@ class CourseRateView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         lookup_value = self.kwargs.get('pk')
         try:
-            course = Course.objects.get(pk=lookup_value)
-        except (Course.DoesNotExist, ValueError):
-            course = get_object_or_404(Course, slug=lookup_value)
+            try:
+                course = Course.objects.get(pk=lookup_value)
+            except (Course.DoesNotExist, ValueError):
+                course = get_object_or_404(Course, slug=lookup_value)
 
-        serializer = self.get_serializer(
-            data=request.data, 
-            context={'request': request, 'course': course}
-        )
-        serializer.is_valid(raise_exception=True)
-        
-        if request.user.role == 'parent':
-            rating, created = ParentCourseRating.objects.update_or_create(
-                parent=request.user.parent_profile,
-                course=course,
-                defaults={'rating': serializer.validated_data['rating'], 'feedback': serializer.validated_data.get('feedback', '')}
+            serializer = self.get_serializer(
+                data=request.data, 
+                context={'request': request, 'course': course}
             )
-        else:
-            rating, created = StudentCourseRating.objects.update_or_create(
-                student=request.user.student_profile,
-                course=course,
-                defaults={'rating': serializer.validated_data['rating'], 'feedback': serializer.validated_data.get('feedback', '')}
-            )
+            serializer.is_valid(raise_exception=True)
+            
+            if request.user.role == 'parent':
+                rating, created = ParentCourseRating.objects.update_or_create(
+                    parent=request.user.parent_profile,
+                    course=course,
+                    defaults={'rating': serializer.validated_data['rating'], 'feedback': serializer.validated_data.get('feedback', '')}
+                )
+            else:
+                rating, created = StudentCourseRating.objects.update_or_create(
+                    student=request.user.student_profile,
+                    course=course,
+                    defaults={'rating': serializer.validated_data['rating'], 'feedback': serializer.validated_data.get('feedback', '')}
+                )
 
-        return Response(
-            {"detail": "تم حفظ التقييم بنجاح.", "created": created},
-            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
-        )
+            return Response(
+                {"detail": "تم حفظ التقييم بنجاح.", "created": created},
+                status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"detail": f"Internal Error: {str(e)}", "type": str(type(e))},
+                status=status.HTTP_400_BAD_REQUEST
+            )
