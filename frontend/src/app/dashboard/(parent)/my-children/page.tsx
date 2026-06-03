@@ -2,7 +2,7 @@ import { getParentChildren, getChildEnrollments, getChildEnrollmentRequests } fr
 import MyChildrenList from "@/components/dashboard/parent/MyChildrenList";
 import { EnrollmentRequestListItem } from "@/types/entities";
 import { Plus } from "lucide-react";
-import Button from "@/components/ui/Button";
+import { AddChildButton } from "@/components/dashboard/parent/AddChildButtons";
 
 export default async function Page() {
   const myChildren = await getParentChildren();
@@ -17,9 +17,7 @@ export default async function Page() {
           <h3 className="text-olive-700 font-medad text-5xl">لا يوجد أطفال مضافون بعد</h3>
           <p className="text-gray-600 text-2xl">ابدأ بإضافة أطفالك لتتمكن من إلحاقهم بالدورات التدريبية</p>
         </div>
-        <Button href="/dashboard/my-children/new" className="bg-olive-500 hover:bg-olive-600 text-white px-12 py-5 rounded-[0.5rem_2rem] font-bold text-3xl flex items-center gap-4 shadow-lg transition-transform hover:scale-105">
-          إضافة أول طفل الآن
-        </Button>
+        <AddChildButton className="bg-olive-500 hover:bg-olive-600 text-white px-12 py-5 rounded-[0.5rem_2rem] font-bold text-3xl flex items-center gap-4 shadow-lg transition-transform hover:scale-105" />
       </div>
     );
   }
