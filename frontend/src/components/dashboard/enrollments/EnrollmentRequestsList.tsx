@@ -2,7 +2,7 @@ import EnrollmentRequestCard from "@/components/dashboard/enrollments/Enrollment
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+
 import Refresh from "@/components/ui/Refresh";
 import InfoTooltip from "@/components/ui/InfoTooltip";
 
@@ -19,7 +19,6 @@ export default function EnrollmentRequestsList({
   wrapperStyles?: string;
 }) {
   const hasEnrollments = enrollments.length > 0;
-
   const childNames = [
     ...new Set(
       enrollments
