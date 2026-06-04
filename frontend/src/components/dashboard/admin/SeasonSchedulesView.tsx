@@ -5,6 +5,8 @@ import Image from "next/image";
 import { WeeklySchedule } from "@/actions/admin-schedules";
 import { cn, formatTime, toHindiDigits } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { createCourseSchedule, createSupervisionSchedule, deleteCourseSchedule, deleteSupervisionSchedule } from "@/actions/admin-schedules";
 import DataViewLegacy from "@/components/ui/data-view/DataView";
 import { DataViewHeaderLegacy, DataViewRowLegacy } from "@/components/ui/data-view/DataViewRow";
 import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
@@ -37,9 +39,14 @@ const DAYS = [
 
 export default function SeasonSchedulesView({
   initialSchedules,
+  courses = [],
+  instructors = [],
 }: {
   initialSchedules: WeeklySchedule[];
+  courses?: any[];
+  instructors?: any[];
 }) {
+  const router = useRouter();
   const [schedules, setSchedules] = useState<WeeklySchedule[]>(initialSchedules);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -77,20 +84,65 @@ export default function SeasonSchedulesView({
     return result;
   }, [schedules, searchQuery, selectedDay, filterType, sortBy]);
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (scheduleToDelete !== null) {
-      setSchedules(prev => prev.filter(s => s.id !== scheduleToDelete));
-      toast.success("تم الحذف بنجاح");
+      const schedule = schedules.find(s => s.id === scheduleToDelete);
+      if (!schedule) return;
+
+      let res;
+      if (schedule.type === "lecture") {
+        // Find the course ID for this schedule
+        const course = courses.find(c => c.name === schedule.course_name);
+        if (course) {
+          res = await deleteCourseSchedule(course.id, schedule.id);
+        } else {
+          toast.error("لا يمكن العثور على الدورة المرتبطة بهذا الموعد");
+          return;
+        }
+      } else {
+        res = await deleteSupervisionSchedule(schedule.id);
+      }
+
+      if (res?.success) {
+        setSchedules(prev => prev.filter(s => s.id !== scheduleToDelete));
+        toast.success("تم الحذف بنجاح");
+        router.refresh();
+      } else {
+        toast.error(res?.error || "حدث خطأ أثناء الحذف");
+      }
       setScheduleToDelete(null);
     }
   };
 
-  const handleAdd = (newSchedule: Partial<WeeklySchedule>) => {
-    const schedule = {
-      ...newSchedule,
-      id: Math.max(...schedules.map(s => s.id)) + 1,
-    } as WeeklySchedule;
-    setSchedules(prev => [schedule, ...prev]);
+  const handleAdd = async (newSchedule: Partial<WeeklySchedule>, courseId?: number, instructorId?: number) => {
+    let res;
+    if (newSchedule.type === "lecture" && courseId) {
+      res = await createCourseSchedule(courseId, {
+        weekday: newSchedule.weekday!,
+        start_time: newSchedule.start_time!,
+        end_time: newSchedule.end_time!
+      });
+    } else if (newSchedule.type === "supervision" && instructorId) {
+      res = await createSupervisionSchedule({
+        instructor: instructorId,
+        day_of_week: newSchedule.weekday!,
+        start_time: newSchedule.start_time!,
+        end_time: newSchedule.end_time!
+      });
+    }
+
+    if (res?.success) {
+      toast.success("تمت الإضافة بنجاح");
+      router.refresh(); // Refresh the page data from server
+      // We can also optimistically update local state while server refreshes
+      const schedule = {
+        ...newSchedule,
+        id: res.data?.id || Math.max(...schedules.map(s => s.id)) + 1,
+      } as WeeklySchedule;
+      setSchedules(prev => [schedule, ...prev]);
+    } else {
+      toast.error(res?.error || "حدث خطأ أثناء الحفظ");
+    }
   };
 
   const handleExportExcel = () => {
@@ -174,19 +226,13 @@ export default function SeasonSchedulesView({
 
         <div className="flex items-center gap-4 ml-auto">
           <button 
-            onClick={() => toast.error("خاصية الحذف الجماعي قيد التطوير")}
-            className="bg-red-400/20 text-red-700 px-8 py-3 rounded-xl text-xl font-bold hover:bg-red-400/30 transition-colors shadow-soft"
-          >
-            حذف الفترة
-          </button>
-          <button 
             onClick={() => {
-              setModalDefaultType("supervision");
+              setModalDefaultType("lecture");
               setIsAddModalOpen(true);
             }}
             className="bg-olive-300/20 text-olive-700 px-8 py-3 rounded-xl text-xl font-bold hover:bg-olive-300/30 transition-colors shadow-soft"
           >
-            اضافة فترة
+            إضافة موعد جديد
           </button>
         </div>
       </div>
@@ -263,19 +309,7 @@ export default function SeasonSchedulesView({
                 <DataViewCellLegacy className="font-['Medad_Platinum'] font-[400] text-[20px] text-[#535862] leading-[18px]">الايام</DataViewCellLegacy>
                 <DataViewCellLegacy className="text-center font-['Medad_Platinum'] font-[400] text-[20px] text-[#535862] leading-[18px]">عدد الطلاب</DataViewCellLegacy>
                 <DataViewCellLegacy className="flex items-center justify-end">
-                  <button 
-                    onClick={() => {
-                      setModalDefaultType("lecture");
-                      setIsAddModalOpen(true);
-                    }}
-                    style={{
-                      backgroundColor: '#EFEFEF',
-                      boxShadow: '4.45px 3.81px 9.28px 0px #00000040, 0px 2.54px 2.54px 0px #00000040'
-                    }}
-                    className="border-none rounded-[2.5rem_0] px-10 py-3 flex items-center gap-4 hover:opacity-90 transition-all active:scale-95"
-                  >
-                    <span className="text-center font-['El_Messiri'] font-[700] text-[11.44px] text-[#6B6B6B] leading-[100%]">اضافة دورة</span>
-                  </button>
+                  {/* Redundant add button removed from here */}
                 </DataViewCellLegacy>
               </DataViewHeaderLegacy>
 
@@ -312,12 +346,6 @@ export default function SeasonSchedulesView({
                       </DataViewCellLegacy>
                       <DataViewCellLegacy className="flex items-center justify-end gap-6">
                         <button 
-                          onClick={() => toast(`جاري تصدير بيانات ${item.course_name}`, { icon: "📊" })}
-                          className="p-2 hover:scale-110 transition-transform"
-                        >
-                          <Image src={ExportIcon} alt="Export" className="size-8" />
-                        </button>
-                        <button 
                           onClick={() => {
                             setScheduleToDelete(item.id);
                             setIsDeleteModalOpen(true);
@@ -346,6 +374,8 @@ export default function SeasonSchedulesView({
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAdd}
         defaultType={modalDefaultType}
+        courses={courses}
+        instructors={instructors}
       />
 
       {/* Delete Confirmation Modal */}

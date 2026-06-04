@@ -20,8 +20,10 @@ const DAYS = [
 interface AddScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (schedule: Partial<WeeklySchedule>) => void;
+  onAdd: (schedule: Partial<WeeklySchedule>, courseId?: number, instructorId?: number) => Promise<void>;
   defaultType?: "lecture" | "supervision";
+  courses?: any[];
+  instructors?: any[];
 }
 
 export default function AddScheduleModal({
@@ -29,39 +31,80 @@ export default function AddScheduleModal({
   onClose,
   onAdd,
   defaultType = "lecture",
+  courses = [],
+  instructors = [],
 }: AddScheduleModalProps) {
   const [type, setType] = useState<"lecture" | "supervision">(defaultType);
-  const [courseName, setCourseName] = useState("");
-  const [instructorName, setInstructorName] = useState("");
+  const [courseId, setCourseId] = useState<number | "">("");
+  const [instructorId, setInstructorId] = useState<number | "">("");
   const [selectedDay, setSelectedDay] = useState<number>(0);
   const [startTime, setStartTime] = useState("06:00 pm");
   const [endTime, setEndTime] = useState("07:00 pm");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Helper to convert "06:00 pm" to "18:00:00"
+  const convertTo24HourFormat = (timeStr: string) => {
+    if (!timeStr) return "00:00:00";
+    try {
+      const [time, modifier] = timeStr.toLowerCase().split(' ');
+      let [hours, minutes] = time.split(':');
+      
+      if (hours === '12') {
+        hours = '00';
+      }
+      
+      if (modifier === 'pm' || modifier === 'م') {
+        hours = (parseInt(hours, 10) + 12).toString();
+      }
+      
+      hours = hours.padStart(2, '0');
+      minutes = minutes.padStart(2, '0');
+      
+      return `${hours}:${minutes}:00`;
+    } catch (e) {
+      return timeStr;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!courseName || !instructorName) {
-      toast.error("يرجى إكمال جميع البيانات");
+    if (type === "lecture" && !courseId) {
+      toast.error("يرجى اختيار الدورة");
+      return;
+    }
+    
+    if (type === "supervision" && !instructorId) {
+      toast.error("يرجى اختيار المحاضر/المشرف");
       return;
     }
 
-    onAdd({
+    setIsSubmitting(true);
+    
+    const selectedCourse = courses.find(c => c.id === courseId);
+    const selectedInstructor = instructors.find(i => i.id === instructorId);
+
+    await onAdd({
       type,
-      course_name: courseName,
-      instructor_name: instructorName,
+      course_name: selectedCourse?.name || "إشراف",
+      instructor_name: type === "lecture" 
+        ? selectedCourse?.instructor?.user?.first_name 
+          ? `${selectedCourse.instructor.user.first_name} ${selectedCourse.instructor.user.last_name}` 
+          : "غير محدد"
+        : selectedInstructor?.name || "غير محدد",
       weekday: selectedDay,
       weekday_display: DAYS.find(d => d.value === selectedDay)?.label || "",
-      start_time: startTime,
-      end_time: endTime,
-      season_name: "رمضان 2026",
-      student_count: 0
-    });
+      start_time: convertTo24HourFormat(startTime),
+      end_time: convertTo24HourFormat(endTime),
+      season_name: selectedCourse?.season?.name || "-",
+      student_count: selectedCourse?.enrolled_count || 0
+    }, Number(courseId), Number(instructorId));
 
-    toast.success("تمت الإضافة بنجاح");
+    setIsSubmitting(false);
     onClose();
     // Reset form
-    setCourseName("");
-    setInstructorName("");
+    setCourseId("");
+    setInstructorId("");
   };
 
   return (
@@ -99,27 +142,41 @@ export default function AddScheduleModal({
           </div>
 
           {/* Inputs */}
-          <div className="flex flex-col gap-4">
-            <label className="text-2xl font-bold text-gray-600 mr-2 text-right">
-              {type === "lecture" ? "اسم الدورة" : "مسمى فترة الإشراف"}
-            </label>
-            <input
-              value={courseName}
-              onChange={(e) => setCourseName(e.target.value)}
-              placeholder={type === "lecture" ? "مثال: تحفيظ القرآن الكريم" : "مثال: إشراف القاعة الكبرى"}
-              className="bg-[#F3F3F5] p-6 rounded-2xl text-2xl focus:outline-none focus:ring-2 focus:ring-olive-300 transition-all text-right"
-            />
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <label className="text-2xl font-bold text-gray-600 mr-2 text-right">المحاضر / المشرف</label>
-            <input
-              value={instructorName}
-              onChange={(e) => setInstructorName(e.target.value)}
-              placeholder="اسم الشخص المسؤول"
-              className="bg-[#F3F3F5] p-6 rounded-2xl text-2xl focus:outline-none focus:ring-2 focus:ring-olive-300 transition-all text-right"
-            />
-          </div>
+          {type === "lecture" ? (
+            <div className="flex flex-col gap-4">
+              <label className="text-2xl font-bold text-gray-600 mr-2 text-right">
+                اختر الدورة
+              </label>
+              <select
+                value={courseId}
+                onChange={(e) => setCourseId(Number(e.target.value))}
+                className="bg-[#F3F3F5] p-6 rounded-2xl text-2xl focus:outline-none focus:ring-2 focus:ring-olive-300 transition-all text-right appearance-none"
+              >
+                <option value="" disabled>-- الرجاء اختيار دورة --</option>
+                {courses.map(course => (
+                  <option key={`course-${course.id}`} value={course.id}>
+                    {course.name} - {course.season?.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              <label className="text-2xl font-bold text-gray-600 mr-2 text-right">المحاضر / المشرف</label>
+              <select
+                value={instructorId}
+                onChange={(e) => setInstructorId(Number(e.target.value))}
+                className="bg-[#F3F3F5] p-6 rounded-2xl text-2xl focus:outline-none focus:ring-2 focus:ring-olive-300 transition-all text-right appearance-none"
+              >
+                <option value="" disabled>-- الرجاء اختيار المحاضر --</option>
+                {instructors.map(instructor => (
+                  <option key={`inst-${instructor.id}`} value={instructor.id}>
+                    {instructor.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Day & Time Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -161,9 +218,10 @@ export default function AddScheduleModal({
           <div className="flex gap-6 mt-6">
             <button
               type="submit"
-              className="flex-1 bg-olive-300 text-white py-6 rounded-2xl text-2xl font-bold hover:bg-olive-400 transition-all shadow-lg active:scale-95"
+              disabled={isSubmitting}
+              className="flex-1 bg-olive-300 text-white py-6 rounded-2xl text-2xl font-bold hover:bg-olive-400 transition-all shadow-lg active:scale-95 disabled:opacity-50"
             >
-              حفظ البيانات
+              {isSubmitting ? "جاري الحفظ..." : "حفظ البيانات"}
             </button>
             <button
               type="button"

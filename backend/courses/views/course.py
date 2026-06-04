@@ -170,9 +170,9 @@ def _require_schedule_admin(user):
     if not (
         user.is_staff
         or user.is_superuser
-        or (hasattr(user, 'role') and user.role in ['admin'])
+        or (hasattr(user, 'role') and user.role in ['admin', 'supervisor'])
     ):
-        raise PermissionDenied("Only admins can modify course schedules.")
+        raise PermissionDenied("Only admins and supervisors can modify course schedules.")
 
 
 class CourseScheduleListView(generics.ListCreateAPIView):

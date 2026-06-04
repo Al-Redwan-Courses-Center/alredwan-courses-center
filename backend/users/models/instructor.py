@@ -99,7 +99,7 @@ class Instructor(models.Model):
         verbose_name_plural = _("المعلمون")
 
 
-'''
+    '''
     @classmethod
     def generate_for_season(cls, season):
         """
@@ -138,6 +138,8 @@ class Instructor(models.Model):
                     season=season,
                     defaults={"course": course, "status": cls.Status.PENDING},
                 )
+    '''
+
     @property
     def average_rating(self):
         """Calculate and return the average rating for the instructor.
