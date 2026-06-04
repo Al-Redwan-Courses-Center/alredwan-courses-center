@@ -1,4 +1,6 @@
 import { getClientAccessToken } from "./temp";
+import { getAuthApiClient } from "@/lib/auth-api";
+import { unwrapPaginated } from "@/lib/api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -82,20 +84,9 @@ export async function getInstructorAttendanceHistory(instructorId: string | numb
  */
 export async function getInstructors() {
   try {
-    const token = await getClientAccessToken();
-    const response = await fetch(`${API_BASE_URL}/api/users/instructors/`, {
-      headers: {
-        Authorization: `JWT ${token}`,
-      },
-      next: { revalidate: 60 },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch instructors");
-    }
-
-    const data = await response.json();
-    return data.results || data;
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.get("/api/users/instructors/?page_size=100");
+    return unwrapPaginated(data);
   } catch (error) {
     console.error("Error fetching instructors:", error);
     return [];

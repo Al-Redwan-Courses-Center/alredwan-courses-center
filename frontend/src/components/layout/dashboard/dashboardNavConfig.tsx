@@ -38,6 +38,24 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
     },
   ],
 
+  supervisor: [
+    {
+      label: "حضور اليوم",
+      href: "/dashboard/todays-staff-attendances",
+      icon: <ClipboardIcon />,
+    },
+    {
+      label: "جميع الحضور",
+      href: "/dashboard/all-attendances",
+      icon: <OverviewIcon />,
+    },
+    {
+      label: "المعلمون",
+      href: "/dashboard/instructors",
+      icon: <PeopleIcon />,
+    },
+  ],
+
   instructor: [
     {
       label: "محاضرات اليوم",

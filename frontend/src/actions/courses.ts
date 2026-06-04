@@ -36,7 +36,7 @@ export async function getAllCourses(): Promise<CourseListItem[]> {
 
       const courses = unwrapPaginated(data);
 
-      if (user.role === "parent") {
+      if (user.role !== "student") {
         return courses;
       }
 

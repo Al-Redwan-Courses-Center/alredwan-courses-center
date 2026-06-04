@@ -2,6 +2,7 @@ import EnrollmentRequestCard from "@/components/dashboard/enrollments/Enrollment
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import { cn } from "@/lib/utils";
+
 import Refresh from "@/components/ui/Refresh";
 import InfoTooltip from "@/components/ui/InfoTooltip";
 
@@ -18,13 +19,24 @@ export default function EnrollmentRequestsList({
   wrapperStyles?: string;
 }) {
   const hasEnrollments = enrollments.length > 0;
+  const childNames = [
+    ...new Set(
+      enrollments
+        .map((e) => {
+          if (e.child?.name) return e.child.name.split(" ")[0];
+          if (e.participant_name) return e.participant_name.split(" ")[0];
+          return null;
+        })
+        .filter(Boolean),
+    ),
+  ];
 
   return (
     <div className={cn("flex flex-col ps-0! pb-10 *:ps-29", wrapperStyles)}>
       <div className="mb-6 flex items-center justify-between">
-        <h4 className="text-olive-700 text-5xl font-bold">
-          طلبات الاشتراك
-        </h4>
+        <h2 className="dashboard-section-title -mb-1">
+          آخر الطلبات {childNames.length === 1 && `ل${childNames[0]}`}
+        </h2>
         <div className="flex items-center gap-4 text-white">
           <Refresh />
           <InfoTooltip content="طلبات الاشتراك قيد الانتظار يتم معالجتها حالياً من قبل إدارة المسجد. للاستفسار، يرجى التواصل مع إدارة المسجد مباشرة." />

@@ -4,6 +4,7 @@ import StudentOverviewEnrollmentRequestsAccordion from "@/components/dashboard/s
 import StudentCourseCard from "@/components/dashboard/student/StudentCourseCard";
 import StudentOverviewHeader from "@/components/dashboard/student/StudentOverviewHeader";
 import Button from "@/components/ui/Button";
+import Link from "next/link";
 import EmptyState from "@/components/ui/EmptyState";
 
 const emptyActionClassName =
