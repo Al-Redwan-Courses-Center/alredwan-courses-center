@@ -139,7 +139,6 @@ class Instructor(models.Model):
                     defaults={"course": course, "status": cls.Status.PENDING},
                 )
     '''
-
     @property
     def average_rating(self):
         """Calculate and return the average rating for the instructor.
