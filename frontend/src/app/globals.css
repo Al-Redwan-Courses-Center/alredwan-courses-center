@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@plugin "../../src/tailwind-plugins/separate.ts";
+@plugin "../tailwind-plugins/separate.ts";
 
 :root {
     font-size: 62.5%;

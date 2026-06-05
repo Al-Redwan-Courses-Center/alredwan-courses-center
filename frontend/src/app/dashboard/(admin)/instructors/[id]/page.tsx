@@ -41,12 +41,7 @@ export default async function Page({ params }: PageProps) {
               سجل الحضور الكامل
             </Button>
           </Link>
-          <Link href="/dashboard/admin/todays-staff-attendances">
-            <Button className="bg-olive-600 hover:bg-olive-700 text-white flex gap-8 items-center">
-              <ChevronLeft size={18} />
-              العودة للقائمة
-            </Button>
-          </Link>
+
         </div>
       </div>
 

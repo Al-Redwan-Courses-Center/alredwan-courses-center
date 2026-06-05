@@ -14,7 +14,7 @@ export interface UserEntity {
   identity_type: string;
   address: string | null;
   location: string | null;
-  role: "admin" | "parent" | "instructor" | "student";
+  role: "admin" | "parent" | "instructor" | "student" | "supervisor";
   is_verified: boolean;
   date_joined: string;
   jwt_access_token: string;
