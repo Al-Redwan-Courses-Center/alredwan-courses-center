@@ -13,8 +13,7 @@ export default withAuth(
 
     if (pathname === "/dashboard") {
       switch (userRole) {
-        case "admin":
-        case "supervisor": {
+        case "admin": {
           return NextResponse.redirect(
             new URL("/dashboard/todays-staff-attendances", req.url),
           );

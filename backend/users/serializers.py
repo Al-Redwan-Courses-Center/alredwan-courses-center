@@ -23,6 +23,8 @@ class CustomUserCreateSerializer(UserCreatePasswordRetypeSerializer):
     gender = serializers.ChoiceField(
         choices=[("male", "ذكر"), ("female", "أنثى")])
     role = serializers.CharField(max_length=20)
+    email = serializers.EmailField(required=False, allow_null=True, allow_blank=True)
+    address = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta(UserCreateSerializer.Meta):
         model = CustomUser

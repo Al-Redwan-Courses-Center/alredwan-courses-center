@@ -1,6 +1,7 @@
 import Image from "next/image";
 import WhyUsBG from "@/assets/why-us-bg.svg";
 import FeaturesGrid from "@/components/landing-page/FeaturesGrid";
+import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export default function WhyUsSection() {
   return (
@@ -12,17 +13,21 @@ export default function WhyUsSection() {
         draggable="false"
       />
 
-      <div className="title-block">
-        <h2>
-          لماذا <span>واحة</span> الرضوان؟
-        </h2>
-        <p className="mb-37!">
-          واحة الرضوان منارة تعليمية تجمع بين نور الدين وقوة العلم، لتنشئة جيل
-          متدين وواعٍ ، قادر على خدمة دينه ووطنه
-        </p>
-      </div>
+      <ScrollReveal direction="up" className="w-full flex flex-col items-center">
+        <div className="title-block">
+          <h2>
+            لماذا <span>واحة</span> الرضوان؟
+          </h2>
+          <p className="mb-37!">
+            واحة الرضوان منارة تعليمية تجمع بين نور الدين وقوة العلم، لتنشئة جيل
+            متدين وواعٍ ، قادر على خدمة دينه ووطنه
+          </p>
+        </div>
+      </ScrollReveal>
 
-      <FeaturesGrid />
+      <ScrollReveal direction="up" delay={0.2} className="w-full flex flex-col items-center">
+        <FeaturesGrid />
+      </ScrollReveal>
     </section>
   );
 }

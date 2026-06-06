@@ -30,19 +30,28 @@ export default function Avatar({
   return (
     <div
       className={cn(
-        "relative aspect-square rounded-full",
+        "relative aspect-square rounded-full overflow-hidden shrink-0",
         className,
         !hasSrc && fallbackClassName,
       )}
     >
-      <Image
-        src={hasSrc ? src.trim() : fallbackSrc}
-        alt={hasSrc ? alt : fallbackAlt}
-        fill
-        className={cn("object-cover", imageClassName)}
-        draggable={draggable}
-        priority={priority}
-      />
+      {hasSrc && src.startsWith("http") ? (
+        <img
+          src={src.trim()}
+          alt={alt}
+          className={cn("h-full w-full object-cover", imageClassName)}
+          draggable={draggable}
+        />
+      ) : (
+        <Image
+          src={hasSrc ? src.trim() : fallbackSrc}
+          alt={hasSrc ? alt : fallbackAlt}
+          fill
+          className={cn("object-cover", imageClassName)}
+          draggable={draggable}
+          priority={priority}
+        />
+      )}
     </div>
   );
 }

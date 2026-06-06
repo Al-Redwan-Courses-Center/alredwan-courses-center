@@ -31,6 +31,18 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/7.x/avataaars/**",
       },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "8000",
+        pathname: "/media/**",
+      },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
 
