@@ -10,12 +10,12 @@ export default async function Page() {
   const courses = await getAllCourses();
 
   return (
-    <div className="flex h-full max-h-73/100 flex-col pt-15">
+    <div className="flex flex-col pt-15">
       <h1 className="dashboard-greeting mb-14 ps-16">
         السلام عليكم يا {first_name}
       </h1>
 
-      <div className="max-h-full w-full">
+      <div className="w-full">
         <Suspense fallback={null}>
           <DashboardAllCoursesView courses={courses} />
         </Suspense>

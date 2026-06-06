@@ -538,8 +538,9 @@ class StudentCourseRateSerializer(serializers.ModelSerializer):
         if user.role != 'student':
             raise serializers.ValidationError("هذا الحساب ليس حساب طالب.")
             
-        student = getattr(user, 'student_profile', None)
-        if not student:
+        try:
+            student = user.student_profile
+        except Exception:
             raise serializers.ValidationError("لم يتم العثور على ملف تعريف طالب.")
             
         course = self.context['course']
@@ -562,8 +563,9 @@ class ParentCourseRateSerializer(serializers.ModelSerializer):
         if user.role != 'parent':
             raise serializers.ValidationError("هذا الحساب ليس حساب ولي أمر.")
             
-        parent = getattr(user, 'parent_profile', None)
-        if not parent:
+        try:
+            parent = user.parent_profile
+        except Exception:
             raise serializers.ValidationError("لم يتم العثور على ملف تعريف ولي أمر.")
             
         course = self.context['course']

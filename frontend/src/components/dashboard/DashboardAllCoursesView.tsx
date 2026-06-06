@@ -38,7 +38,7 @@ export default function DashboardAllCoursesView({
       sortConfig={sortConfig}
       viewLayout="cards"
     >
-      <div className="mb-14 flex items-center gap-32 ps-16">
+      <div className="mb-14 flex items-center gap-32 ps-16 tablet:flex-col tablet:items-start tablet:gap-16 tablet:ps-0">
         <DataViewSearchLegacy />
         <DataViewSortLegacy />
         <DataViewFilterLegacy />
