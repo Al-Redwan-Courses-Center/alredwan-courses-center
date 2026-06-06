@@ -294,9 +294,9 @@ function FilterBar({
   }, [dateParam]);
 
   return (
-    <div className="mb-14 flex items-center gap-6 flex-wrap">
+    <div className="mb-14 flex items-center gap-6 flex-wrap max-[1000px]:flex-col max-[1000px]:items-stretch">
       {/* Search */}
-      <div className="flex-1 min-w-[220px] shadow-soft bg-[#F3F3F5] rounded-[2rem_0] flex items-center gap-8 px-8 py-3">
+      <div className="flex-1 min-w-[220px] shadow-soft bg-[#F3F3F5] rounded-[2rem_0] flex items-center gap-8 px-8 py-3 max-[1000px]:rounded-lg max-[1000px]:w-full">
         <Image src={SearchIcon} alt="Search" className="size-8 shrink-0" />
         <input
           placeholder="ابحث هنا..."
@@ -315,7 +315,7 @@ function FilterBar({
               try { input.showPicker(); } catch (err) {}
             }
           }}
-          className="shadow-soft bg-[#F3F3F5] rounded-[0_2rem] flex items-center gap-4 px-8 py-3 hover:bg-gray-100 transition-colors cursor-pointer"
+          className="shadow-soft bg-[#F3F3F5] rounded-[0_2rem] flex items-center gap-4 px-8 py-3 hover:bg-gray-100 transition-colors cursor-pointer max-[1000px]:rounded-lg max-[1000px]:justify-between"
         >
           <span className="text-[1.6rem] text-gray-500 pointer-events-none">التاريخ:</span>
           <input
@@ -346,14 +346,14 @@ function FilterBar({
       {/* Status Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="shadow-soft bg-[#F3F3F5] rounded-[0_2rem] flex items-center gap-8 px-8 py-3 hover:bg-gray-100 transition-colors">
+          <button className="shadow-soft bg-[#F3F3F5] rounded-[0_2rem] flex items-center justify-between gap-8 px-8 py-3 hover:bg-gray-100 transition-colors max-[1000px]:rounded-lg">
             <span className="text-[1.6rem]">
               {status === "present" ? "حاضر" : status === "absent" ? "غائب" : status === "late" ? "متأخر" : status === "not_started" ? "لم يبدأ" : "الحالة"}
             </span>
             <ChevronDown className="size-6 text-gray-400" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-50 min-w-[150px] w-auto")}>
+        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-[9999] min-w-[150px] w-auto")}>
           <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "status", val: "" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">الكل</DropdownMenuItem>
           <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "status", val: "present" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">حاضر</DropdownMenuItem>
           <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "status", val: "absent" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">غائب</DropdownMenuItem>
@@ -365,14 +365,14 @@ function FilterBar({
       {/* Type Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="shadow-soft bg-[#F3F3F5] rounded-[0_2rem] flex items-center gap-8 px-8 py-3 hover:bg-gray-100 transition-colors">
+          <button className="shadow-soft bg-[#F3F3F5] rounded-[0_2rem] flex items-center justify-between gap-8 px-8 py-3 hover:bg-gray-100 transition-colors max-[1000px]:rounded-lg">
             <span className="text-[1.6rem]">
               {attendanceType === "lecture" ? "محاضرة" : attendanceType === "supervision" ? "إشراف" : "نوع الحضور"}
             </span>
             <ChevronDown className="size-6 text-gray-400" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-50 min-w-[150px] w-auto")}>
+        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-[9999] min-w-[150px] w-auto")}>
           <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "attendance_type", val: "" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">الكل</DropdownMenuItem>
           <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "attendance_type", val: "lecture" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">محاضرة</DropdownMenuItem>
           <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "attendance_type", val: "supervision" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">إشراف</DropdownMenuItem>
@@ -382,14 +382,14 @@ function FilterBar({
       {/* Season Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="shadow-soft bg-[#F3F3F5] rounded-[0_2rem] flex items-center gap-8 px-8 py-3 hover:bg-gray-100 transition-colors">
+          <button className="shadow-soft bg-[#F3F3F5] rounded-[0_2rem] flex items-center justify-between gap-8 px-8 py-3 hover:bg-gray-100 transition-colors max-[1000px]:rounded-lg">
             <span className="text-[1.6rem]">
               {season ? `الموسم ${toHindiDigits(Number(season))}` : "الموسم"}
             </span>
             <ChevronDown className="size-6 text-gray-400" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-50 min-w-[150px] w-auto max-h-60 overflow-y-auto")}>
+        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-[9999] min-w-[150px] w-auto max-h-60 overflow-y-auto")}>
           <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "season", val: "" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">الكل</DropdownMenuItem>
           {[1, 2, 3, 4, 5, 6].map(s => (
             <DropdownMenuItem key={s} onClick={() => mutateSearchParams([{ key: "season", val: s.toString() }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">
@@ -399,22 +399,24 @@ function FilterBar({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Generate Records Button */}
-      <button 
-        onClick={onGenerate}
-        className="shadow-soft bg-olive-700 text-white rounded-lg flex items-center gap-4 px-6 py-3 hover:bg-olive-800 transition-colors mr-auto"
-      >
-        <PlusCircle className="size-6" />
-        <span className="text-[1.6rem] font-bold">توليد سجلات</span>
-      </button>
+      <div className="flex items-center gap-6 mr-auto max-[1000px]:mr-0 max-[1000px]:w-full">
+        {/* Generate Records Button */}
+        <button 
+          onClick={onGenerate}
+          className="shadow-soft bg-olive-700 text-white rounded-lg flex items-center justify-center gap-4 px-6 py-3 hover:bg-olive-800 transition-colors flex-1"
+        >
+          <PlusCircle className="size-6" />
+          <span className="text-[1.6rem] font-bold">توليد سجلات</span>
+        </button>
 
-      {/* Excel export */}
-      <button 
-        onClick={onExport}
-        className="shadow-soft bg-[#F3F3F5] rounded-lg flex items-center gap-8  hover:bg-gray-100 transition-colors"
-      >
-        <Image src={MicrosoftExcelLogo} alt="Excel" className="h-20 w-auto" />
-      </button>
+        {/* Excel export */}
+        <button 
+          onClick={onExport}
+          className="shadow-soft bg-[#F3F3F5] rounded-lg flex items-center justify-center px-6 hover:bg-gray-100 transition-colors py-2 shrink-0"
+        >
+          <Image src={MicrosoftExcelLogo} alt="Excel" className="h-16 w-auto" />
+        </button>
+      </div>
     </div>
   );
 }
