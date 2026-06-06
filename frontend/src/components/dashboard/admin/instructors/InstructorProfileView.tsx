@@ -15,7 +15,7 @@ export default function InstructorProfileView({ instructor }: InstructorProfileV
     : "غير متوفر";
 
   return (
-    <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-3xl p-24 shadow-sm flex flex-col md:flex-row gap-24">
+    <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-3xl p-24 max-[1000px]:p-12 shadow-sm flex flex-col md:flex-row gap-24 max-[1000px]:flex-col max-[1000px]:gap-16">
       {/* Profile Image & Essential Info */}
       <div className="flex flex-col items-center gap-16 shrink-0">
         <Avatar 
@@ -31,7 +31,7 @@ export default function InstructorProfileView({ instructor }: InstructorProfileV
 
       {/* Detailed Info */}
       <div className="flex-1 flex flex-col gap-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 max-[1000px]:grid-cols-1 gap-16 max-[1000px]:gap-12">
           <InfoItem label="رقم الهاتف" value={toHindiDigits(instructor.phone || "")} />
           <InfoItem label="البريد الإلكتروني" value={instructor.email || "غير متوفر"} />
           <InfoItem label="تاريخ الانضمام" value={toHindiDigits(formattedJoinDate)} />
@@ -59,7 +59,7 @@ export default function InstructorProfileView({ instructor }: InstructorProfileV
           
           <Link 
             href={`/dashboard/todays-staff-attendances?instructor=${instructor.id}`}
-            className="inline-flex items-center gap-8 bg-olive-600 text-white px-20 py-10 rounded-xl hover:bg-olive-700 transition-colors font-bold shadow-sm"
+            className="inline-flex items-center justify-center w-full md:w-auto max-[1000px]:w-full gap-8 bg-olive-600 text-white px-20 py-10 rounded-xl hover:bg-olive-700 transition-colors font-bold shadow-sm"
           >
             عرض سجل الحضور الكامل
           </Link>

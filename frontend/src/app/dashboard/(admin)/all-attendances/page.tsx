@@ -17,12 +17,12 @@ export default async function Page(props: {
   });
 
   return (
-    <div className="px-16 py-26 flex flex-col">
-      <div className="font-medad text-olive-300 mb-15 flex flex-col gap-10 text-6xl">
+    <div className="px-16 py-26 flex flex-col max-[1000px]:px-6 max-[1000px]:py-10">
+      <div className="font-medad text-olive-300 mb-15 flex flex-col gap-10 text-6xl max-[1000px]:text-4xl max-[1000px]:mb-8 max-[1000px]:gap-6">
         <span className="text-olive-700">السلام عليكم يا شيخ بنداري</span>
-        <div className="flex justify-between items-end">
+        <div className="flex justify-between items-end max-[1000px]:flex-col max-[1000px]:items-start max-[1000px]:gap-2">
           <span>سجل الحضور والغياب</span>
-          <span className="text-2xl text-gray-400">التاريخ: {date}</span>
+          <span className="text-2xl text-gray-400 max-[1000px]:text-lg">التاريخ: {date}</span>
         </div>
       </div>
 

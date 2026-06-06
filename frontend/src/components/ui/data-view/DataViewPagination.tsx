@@ -17,7 +17,7 @@ export function DataViewPaginationLegacy() {
   if (numPages <= 0) return null;
 
   return (
-    <div className="relative flex items-center justify-center gap-10 mt-auto pb-10 pt-4 w-full">
+    <div className="relative flex items-center justify-center gap-10 max-[1000px]:gap-4 mt-auto pb-10 max-[1000px]:pb-4 pt-4 w-full flex-wrap">
       <button
         disabled={page - 1 < 1}
         onClick={prevPage}
@@ -32,7 +32,7 @@ export function DataViewPaginationLegacy() {
             key={pageNum}
             onClick={() => setPage(pageNum)}
             className={cn(
-              "hover:bg-olive-100 aspect-square h-auto w-10 content-center rounded-[0.8rem] text-2xl font-bold text-gray-600 transition-colors",
+              "hover:bg-olive-100 aspect-square h-auto w-10 max-[1000px]:w-8 content-center rounded-[0.8rem] text-2xl max-[1000px]:text-xl font-bold text-gray-600 transition-colors",
               page === pageNum &&
                 "bg-olive-100 pointer-events-none text-gray-900",
             )}

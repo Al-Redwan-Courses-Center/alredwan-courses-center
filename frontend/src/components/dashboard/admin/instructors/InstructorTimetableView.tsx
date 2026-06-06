@@ -21,8 +21,8 @@ export default function InstructorTimetableView({
         <h3 className="text-2xl font-medad text-olive-800 mb-16 border-r-4 border-olive-500 pr-12">
           جدول المحاضرات والجلسات
         </h3>
-        <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-3xl overflow-hidden shadow-sm">
-          <table className="w-full text-right border-collapse">
+        <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-3xl overflow-hidden shadow-sm overflow-x-auto">
+          <table className="w-full text-right border-collapse min-w-[800px]">
             <thead>
               <tr className="bg-olive-100/50 text-olive-900">
                 <th className="p-16 font-bold">المحاضرة / الدورة</th>
@@ -71,8 +71,8 @@ export default function InstructorTimetableView({
           <h3 className="text-2xl font-medad text-olive-800 mb-16 border-r-4 border-olive-500 pr-12">
             جدول الإشراف الأسبوعي
           </h3>
-          <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-3xl overflow-hidden shadow-sm">
-            <table className="w-full text-right border-collapse">
+          <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-3xl overflow-hidden shadow-sm overflow-x-auto">
+            <table className="w-full text-right border-collapse min-w-[600px]">
               <thead>
                 <tr className="bg-olive-100/50 text-olive-900">
                   <th className="p-16 font-bold">اليوم</th>
