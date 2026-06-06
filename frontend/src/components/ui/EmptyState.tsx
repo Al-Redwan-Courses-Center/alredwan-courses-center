@@ -30,14 +30,14 @@ export default function EmptyState({
       )}
     >
       <Heading
-        className={cn("text-4xl font-bold text-gray-600", titleClassName)}
+        className={cn("text-4xl max-[1000px]:text-3xl font-bold text-gray-600", titleClassName)}
       >
         {title}
       </Heading>
       {description && (
         <p
           className={cn(
-            "max-w-md text-2xl leading-relaxed font-normal text-gray-900",
+            "max-w-md text-2xl max-[1000px]:text-xl leading-relaxed font-normal text-gray-900",
             descriptionClassName,
           )}
         >
