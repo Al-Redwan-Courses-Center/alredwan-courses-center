@@ -66,6 +66,7 @@ export default function ProfileImageUploader({ initialImage, firstName }: { init
         )}
       </div>
       
+      {/* 
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -82,6 +83,7 @@ export default function ProfileImageUploader({ initialImage, firstName }: { init
       >
         <Camera size={20} />
       </button>
+      */}
     </div>
   );
 }

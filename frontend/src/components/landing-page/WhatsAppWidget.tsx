@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 
 export default function WhatsAppWidget() {
-  const phoneNumber = "201233313590"; // WhatsApp number with country code
+  const phoneNumber = "201233313590";
 
   return (
     <motion.div

@@ -66,10 +66,10 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
 
             <RatingsBreakdown statistics={data.statistics} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-                <div className="lg:col-span-2 space-y-8">
+            <div className="grid grid-cols-3 tablet:grid-cols-1 gap-12 items-start w-full">
+                <div className="col-span-2 tablet:col-span-1 w-full space-y-8">
                     {allReviews.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="flex flex-col gap-6">
                             {allReviews.map((review: any) => (
                                 <ReviewCard
                                     key={`${review.type}-${review.id}`}
@@ -83,14 +83,14 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
                             ))}
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 text-gray-400">
+                        <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 text-gray-400 w-full">
                             <MessageSquare className="w-16 h-16 mb-4 opacity-20" />
                             <p className="text-lg font-medium">لا توجد مراجعات نصية بعد</p>
                         </div>
                     )}
                 </div>
 
-                <div className="space-y-8">
+                <div className="col-span-1 space-y-8">
                     {showForm && (
                         <RatingForm 
                             type={type} 

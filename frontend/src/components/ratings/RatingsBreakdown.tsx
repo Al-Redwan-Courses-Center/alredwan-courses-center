@@ -32,9 +32,9 @@ const RatingsBreakdown: React.FC<RatingsBreakdownProps> = ({ statistics }) => {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+        <div className="grid grid-cols-3 tablet:grid-cols-1 gap-8 bg-white rounded-3xl p-8 border border-gray-100 shadow-sm divide-x divide-x-reverse tablet:divide-x-0 tablet:divide-y divide-gray-100">
             {/* Overall Score */}
-            <div className="flex flex-col items-center justify-center border-l border-gray-100 last:border-l-0">
+            <div className="flex flex-col items-center justify-center tablet:pt-0 tablet:pb-6">
                 <span className="text-sm font-bold text-gray-500 mb-2">التقييم العام</span>
                 <div className="text-6xl font-black text-primary mb-2">
                     {average_rating ? average_rating.toFixed(1) : '0.0'}
@@ -44,7 +44,7 @@ const RatingsBreakdown: React.FC<RatingsBreakdownProps> = ({ statistics }) => {
             </div>
 
             {/* Student Score */}
-            <div className="flex flex-col items-center justify-center border-l border-gray-100 last:border-l-0">
+            <div className="flex flex-col items-center justify-center tablet:pt-6">
                 <span className="text-sm font-bold text-blue-600 mb-2">تقييم الطلاب</span>
                 <div className="text-4xl font-bold text-gray-900 mb-2">
                     {student_average ? student_average.toFixed(1) : '0.0'}
@@ -59,7 +59,7 @@ const RatingsBreakdown: React.FC<RatingsBreakdownProps> = ({ statistics }) => {
             </div>
 
             {/* Parent Score */}
-            <div className="flex flex-col items-center justify-center">
+            <div className="flex flex-col items-center justify-center tablet:pt-6">
                 <span className="text-sm font-bold text-purple-600 mb-2">تقييم أولياء الأمور</span>
                 <div className="text-4xl font-bold text-gray-900 mb-2">
                     {parent_average ? parent_average.toFixed(1) : '0.0'}
