@@ -2,7 +2,7 @@
 
 import WhatsappIcon from "@/components/icons/WhatsappIcon";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 export default function WhatsAppWidget() {
   const phoneNumber = "201233313590";

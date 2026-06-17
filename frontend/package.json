@@ -9,13 +9,6 @@
     "start": "next start",
     "lint": "eslint"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "msw",
-      "sharp",
-      "unrs-resolver"
-    ]
-  },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
@@ -46,7 +39,8 @@
     "react-use-websocket": "^4.13.0",
     "swiper": "12.1.2",
     "tailwind-merge": "^3.4.0",
-    "usehooks-ts": "^3.1.1"
+    "usehooks-ts": "^3.1.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
