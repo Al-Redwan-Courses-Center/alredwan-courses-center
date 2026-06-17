@@ -46,6 +46,9 @@ export const buttonStyles = cva(
 
         light:
           "shadow-soft rounded-[2rem_0] bg-gray-50 font-semibold text-gray-600 transition-colors hover:bg-gray-100",
+
+        outline:
+          "border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50",
       },
 
       size: {

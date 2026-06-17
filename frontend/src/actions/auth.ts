@@ -41,7 +41,7 @@ export async function getUser() {
 }
 
 export async function protect(
-  allowedRoles: ("admin" | "parent" | "instructor" | "student")[],
+  allowedRoles: UserEntity["role"][],
 ) {
   const { role } = await getUser();
 
@@ -101,7 +101,7 @@ export async function changePassword(data: any) {
 
 export async function resetPassword(data: { phone_number1: string }) {
   try {
-    await apiClient.post("/auth/users/reset_password/", data);
+    await publicApiClient.post("/auth/users/reset_password/", data);
     return { error: null };
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -115,7 +115,7 @@ export async function resetPassword(data: { phone_number1: string }) {
 
 export async function resetPasswordConfirm(data: any) {
   try {
-    await apiClient.post("/auth/users/reset_password_confirm/", data);
+    await publicApiClient.post("/auth/users/reset_password_confirm/", data);
     return { error: null };
   } catch (error) {
     if (axios.isAxiosError(error)) {

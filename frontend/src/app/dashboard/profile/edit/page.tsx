@@ -13,15 +13,7 @@ export default async function EditProfilePage() {
       <h3 className="text-olive-700 font-medad text-6xl text-right w-full">تعديل الملف الشخصي</h3>
       
       <div className="w-full lg:w-3/4">
-        <EditProfileForm user={{
-          first_name: user.first_name,
-          last_name: user.last_name,
-          email: user.email,
-          dob: user.dob,
-          address: user.address,
-          role: user.role,
-          image: user.image
-        }} />
+        <EditProfileForm user={user} />
       </div>
     </div>
   );

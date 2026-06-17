@@ -125,10 +125,20 @@ class CustomUserSerializer(serializers.ModelSerializer):
 class InstructorSerializer(serializers.ModelSerializer):
     """Serializer for Instructor model"""
     name = serializers.CharField(source='user.get_full_name', read_only=True)
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Instructor
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'image_url']
+
+    def get_image_url(self, obj):
+        """Get the full URL for the instructor's image"""
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
 
 class LandingPageInstructorDetailSerializer(serializers.ModelSerializer):

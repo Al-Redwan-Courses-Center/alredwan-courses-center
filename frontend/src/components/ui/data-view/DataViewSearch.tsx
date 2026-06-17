@@ -28,8 +28,7 @@ export default function DataViewSearchLegacy() {
       iconAlignment="end"
       placeholder="ابحث عن دورة أو محاضرة..."
       inputStyles={cn("w-full h-[50px] rounded-full bg-white border border-stone-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] text-[1.2rem] px-20 flex-1")}
-      wrapperStyles="flex-1 max-w-[400px]"
-      containerStyles="w-full"
+      wrapperStyles="flex-1 max-w-[400px] w-full"
       onChange={(e) => {
         setSearchQuery(e.target.value);
         debouncedSearch(e.target.value);

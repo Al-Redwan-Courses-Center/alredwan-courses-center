@@ -15,6 +15,7 @@ export interface CourseSeasonLite {
 export interface CourseInstructorLite {
   id: number;
   name: string;
+  image_url?: string | null;
 }
 
 export interface CourseListItem {

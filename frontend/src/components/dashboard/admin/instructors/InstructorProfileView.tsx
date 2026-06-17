@@ -1,6 +1,6 @@
 import Avatar from "@/components/ui/Avatar";
 import { toHindiDigits } from "@/lib/utils";
-import { InstructorDetail } from "@/types/entities/instructor";
+import { InstructorDetail } from "@/types/entities/instructors";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import Link from "next/link";

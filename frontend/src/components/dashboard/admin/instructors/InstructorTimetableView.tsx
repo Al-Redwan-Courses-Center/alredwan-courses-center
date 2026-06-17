@@ -46,8 +46,8 @@ export default function InstructorTimetableView({
                       </div>
                     </td>
                     <td className="p-16 text-gray-700">{toHindiDigits(attendance.date)}</td>
-                    <td className="p-16 text-gray-700">{toHindiDigits(formatTime(attendance.scheduled_check_in_time))}</td>
-                    <td className="p-16 text-gray-700">{toHindiDigits(formatTime(attendance.scheduled_check_out_time))}</td>
+                    <td className="p-16 text-gray-700">{toHindiDigits(formatTime(attendance.scheduled_check_in_time) || "")}</td>
+                    <td className="p-16 text-gray-700">{toHindiDigits(formatTime(attendance.scheduled_check_out_time) || "")}</td>
                     <td className="p-16">
                       <StatusBadge>{attendance.status_display}</StatusBadge>
                     </td>
@@ -89,8 +89,8 @@ export default function InstructorTimetableView({
                       className="border-t border-olive-100/30 hover:bg-olive-50/50 transition-colors"
                     >
                       <td className="p-16 font-bold text-gray-800">{schedule.day_display}</td>
-                      <td className="p-16 text-gray-700">{toHindiDigits(formatTime(schedule.start_time))}</td>
-                      <td className="p-16 text-gray-700">{toHindiDigits(formatTime(schedule.end_time))}</td>
+                      <td className="p-16 text-gray-700">{toHindiDigits(formatTime(schedule.start_time) || "")}</td>
+                      <td className="p-16 text-gray-700">{toHindiDigits(formatTime(schedule.end_time) || "")}</td>
                       <td className="p-16 text-gray-700">
                         {toHindiDigits(schedule.grace_period_minutes.toString())} دقيقة
                       </td>

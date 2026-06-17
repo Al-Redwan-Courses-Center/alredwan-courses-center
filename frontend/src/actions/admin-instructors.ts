@@ -1,6 +1,7 @@
 import { getClientAccessToken } from "./temp";
 import { getAuthApiClient } from "@/lib/auth-api";
 import { unwrapPaginated } from "@/lib/api";
+import { Instructor } from "@/types/entities/instructors";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -82,11 +83,11 @@ export async function getInstructorAttendanceHistory(instructorId: string | numb
 /**
  * Fetch list of all instructors.
  */
-export async function getInstructors() {
+export async function getInstructors(): Promise<Instructor[]> {
   try {
     const apiClient = await getAuthApiClient();
     const { data } = await apiClient.get("/api/users/instructors/?page_size=100");
-    return unwrapPaginated(data);
+    return unwrapPaginated(data) as Instructor[];
   } catch (error) {
     console.error("Error fetching instructors:", error);
     return [];

@@ -6,15 +6,15 @@ import {
   getMyEnrollments,
 } from "@/actions/enrollments";
 import { getUser } from "@/actions/auth";
-import { apiRequest, getAuthApiClient, unwrapPaginated } from "@/lib/api";
+import { apiRequest, getAuthApiClient, publicApiClient, unwrapPaginated } from "@/lib/api";
 import { PaginatedResponse } from "@/types/config";
 import { CourseDetail, CourseListItem } from "@/types/entities";
 
 export async function getPublicCourses(): Promise<CourseListItem[]> {
   try {
-    const { data } = await axios.get<
+    const { data } = await publicApiClient.get<
       PaginatedResponse<CourseListItem> | CourseListItem[]
-    >(`${process.env.REST_API_URL}/api/courses/?page_size=100`);
+    >("/api/courses/?page_size=100");
 
     return Array.isArray(data) ? data : data.results;
   } catch (error) {

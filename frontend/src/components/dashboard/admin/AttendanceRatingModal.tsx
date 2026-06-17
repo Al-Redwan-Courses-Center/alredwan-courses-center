@@ -79,7 +79,7 @@ export default function AttendanceRatingModal({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="أضف أي ملاحظات هنا..."
-            className="w-full"
+            fieldsetStyles="w-full"
           />
 
           <div className="flex gap-10 justify-end mt-10">
