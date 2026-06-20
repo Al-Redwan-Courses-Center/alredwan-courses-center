@@ -38,7 +38,7 @@ class CourseListView(generics.ListAPIView):
     Ordering: start_date, end_date, price, created_at, name, capacity, num_lectures
     """
     serializer_class = CourseListSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     pagination_class = CustomPageNumberPagination
     filter_backends = [DjangoFilterBackend,
                        filters.SearchFilter, filters.OrderingFilter]
@@ -172,7 +172,8 @@ def _require_schedule_admin(user):
         or user.is_superuser
         or (hasattr(user, 'role') and user.role in ['admin', 'supervisor'])
     ):
-        raise PermissionDenied("Only admins and supervisors can modify course schedules.")
+        raise PermissionDenied(
+            "Only admins and supervisors can modify course schedules.")
 
 
 class CourseScheduleListView(generics.ListCreateAPIView):
