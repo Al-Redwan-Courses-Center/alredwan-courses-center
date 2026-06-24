@@ -1,7 +1,12 @@
+import { getLandingPageInstructors } from "@/actions/landing";
 import InstructorsRow from "@/components/landing-page/InstructorsRow";
 import MiniSectionDivider from "@/components/landing-page/MiniSectionDivider";
 
-export default function InstructorsSection() {
+export default async function InstructorsSection() {
+  const instructors = await getLandingPageInstructors();
+
+  if (instructors.length <= 0) return null;
+
   return (
     <section className="container-wide bg-[linear-gradient(180deg,#f8f9f8_0%,#FFF_100%)]">
       <div className="title-block">
@@ -13,7 +18,7 @@ export default function InstructorsSection() {
         </p>
       </div>
 
-      <InstructorsRow />
+      <InstructorsRow instructors={instructors} />
 
       <MiniSectionDivider />
     </section>

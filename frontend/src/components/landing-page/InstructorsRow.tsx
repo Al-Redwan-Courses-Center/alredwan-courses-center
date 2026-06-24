@@ -1,15 +1,17 @@
-import { getLandingPageInstructors } from "@/actions/landing";
 import InstructorProfile from "@/assets/instructor-profile.png";
 import { cn, getArabicPlural, toHindiDigits } from "@/lib/utils";
 import Image from "next/image";
 import { differenceInCalendarYears } from "date-fns";
+import { LandingPageInstructor } from "@/types/entities";
 
 const straight = cn("rounded-[0_19rem]");
 const reversed = cn("rounded-[19rem_0]");
 
-export default async function InstructorsRow() {
-  const instructors = await getLandingPageInstructors();
+interface InstructorsRowProps {
+  instructors: LandingPageInstructor[];
+}
 
+export default function InstructorsRow({ instructors }: InstructorsRowProps) {
   if (instructors.length <= 0) return null;
 
   return (
