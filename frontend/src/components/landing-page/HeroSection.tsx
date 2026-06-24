@@ -16,41 +16,56 @@ export default async function HeroSection() {
         src={HeroBG}
         alt="Hero Background"
         priority
-        className="absolute right-0 bottom-0 max-w-full tablet:max-w-4/5 object-cover opacity-60 tablet:opacity-100"
+        className="absolute left-0 bottom-0 max-w-1/2 opacity-60 object-cover tablet:right-0 tablet:left-auto tablet:max-w-4/5 tablet:opacity-100 scale-x-[-1] tablet:scale-x-100"
         draggable="false"
       />
 
-      <div className="relative z-10 w-full flex flex-col items-center tablet:items-start tablet:mr-auto text-center tablet:text-right px-6">
-        <ScrollReveal direction="up" delay={0.1} className="w-full flex flex-col items-center tablet:items-start">
-          <h1 className="font-medad text-shadow-primary text-[4rem] md:text-[6rem] lg:text-[7.2rem] leading-tight text-gray-100 mb-4">
+      <div className="relative z-10 w-full max-w-260 mr-12 lg:mr-32 xl:mr-64 ml-auto flex flex-col items-start text-right px-6 tablet:mx-auto tablet:items-center tablet:text-center">
+        <ScrollReveal direction="up" delay={0.1} className="w-full flex flex-col items-start tablet:items-center">
+          <h1 className="font-medad text-shadow-primary text-[8rem] md:text-[4.8rem] font-black text-gray-100 mb-4 leading-tight">
             واحة الرضوان التعليمية
           </h1>
         </ScrollReveal>
-        <ScrollReveal direction="up" delay={0.2} className="w-full flex flex-col items-center tablet:items-start">
-          <p className="text-olive-900 text-shadow-soft text-[1.8rem] md:text-[2.4rem] lg:text-[3.2rem] mb-12 tablet:mb-16">
+        <ScrollReveal direction="up" delay={0.2} className="w-full flex flex-col items-start tablet:items-center">
+          <p className="text-olive-900 text-shadow-soft text-[3rem] md:text-[2.2rem] lg:text-[2.6rem] font-medium mb-12 tablet:mb-16">
             علمٌ يُزهر، وإيمانٌ يُثمر
           </p>
         </ScrollReveal>
 
-        <ScrollReveal direction="up" delay={0.3} className="w-full flex flex-col items-center tablet:items-start">
-          <div className="grid w-fit grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-          <Button variant="primary" size="medium" className="w-full sm:w-auto">
-            تصفح الدورات
-          </Button>
-
-          {!!session?.user ? (
-            <Button variant="secondary" size="medium" href="/dashboard" revert className="w-full sm:w-auto">
-              لوحة التحكم
+        <ScrollReveal direction="up" delay={0.3} className="w-full flex flex-col items-start tablet:items-center">
+          <div className="flex gap-4 md:gap-6">
+            <Button
+              variant="primary"
+              size="medium"
+              className="w-full sm:w-auto text-[1.6rem] md:text-[1.8rem] font-semibold py-4 px-10 md:py-5 md:px-12 flex items-center justify-center text-nowrap"
+            >
+              تصفح الدورات
             </Button>
-          ) : (
-            <SignupModal
-              trigger={
-                <Button variant="secondary" size="medium" revert className="w-full sm:w-auto">
-                  سجل الآن
-                </Button>
-              }
-            />
-          )}
+
+            {!!session?.user ? (
+              <Button
+                variant="secondary"
+                size="medium"
+                href="/dashboard"
+                revert
+                className="w-full sm:w-auto text-[1.6rem] md:text-[1.8rem] font-semibold py-4 px-10 md:py-5 md:px-12 flex items-center justify-center text-nowrap"
+              >
+                لوحة التحكم
+              </Button>
+            ) : (
+              <SignupModal
+                trigger={
+                  <Button
+                    variant="secondary"
+                    size="medium"
+                    revert
+                    className="w-full sm:w-auto text-[1.6rem] md:text-[1.8rem] font-semibold py-4 px-10 md:py-5 md:px-12 flex items-center justify-center text-nowrap"
+                  >
+                    سجل الآن
+                  </Button>
+                }
+              />
+            )}
           </div>
         </ScrollReveal>
       </div>
