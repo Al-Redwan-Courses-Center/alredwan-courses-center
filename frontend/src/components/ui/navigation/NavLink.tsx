@@ -76,9 +76,30 @@ export default function NavLink({
 }) {
   const pathname = usePathname();
 
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (href === "/" || href === "/#") {
+      if (pathname === "/") {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.history.pushState(null, "", "/");
+      }
+    } else if (href.startsWith("/#") || href.startsWith("#")) {
+      const id = href.replace("/#", "").replace("#", "");
+      if (pathname === "/") {
+        e.preventDefault();
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+          window.history.pushState(null, "", href);
+        }
+      }
+    }
+  };
+
   return (
     <Link
       href={href}
+      onClick={handleClick}
       className={cn(
         navLinkStyles({
           intent: variant,

@@ -5,7 +5,7 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export default function WhyUsSection() {
   return (
-    <section className="container-wide">
+    <section id="about" className="container-wide">
       <Image
         src={WhyUsBG}
         alt="Mosque Illustration"

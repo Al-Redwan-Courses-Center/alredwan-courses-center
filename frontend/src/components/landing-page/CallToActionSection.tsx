@@ -10,7 +10,7 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export default function CallToActionSection() {
   return (
-    <section className="tablet:h-[60dvh] tablet:items-start relative flex h-[calc(100dvh-6.5rem)] items-center bg-[linear-gradient(0deg,#D2DBC8_-3.15%,#557767_204.81%)]">
+    <section id="contact-us" className="tablet:h-[60dvh] tablet:items-start relative flex h-[calc(100dvh-6.5rem)] items-center bg-[linear-gradient(0deg,#D2DBC8_-3.15%,#557767_204.81%)]">
       <Image
         src={HeroBG}
         alt="Hero Background"

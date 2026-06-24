@@ -9,7 +9,7 @@ export default async function CoursesSection() {
   );
 
   return (
-    <section className="flex flex-col items-center bg-[linear-gradient(180deg,#FFF_0%,#F3F6F4_100%)]">
+    <section id="courses" className="flex flex-col items-center bg-[linear-gradient(180deg,#FFF_0%,#F3F6F4_100%)]">
       <ScrollReveal direction="up" className="w-full flex flex-col items-center">
         <div className="title-block">
           <h2>

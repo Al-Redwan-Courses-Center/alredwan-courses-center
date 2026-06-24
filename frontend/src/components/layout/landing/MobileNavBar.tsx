@@ -1,74 +1,68 @@
-import Button from "@/components/ui/Button";
+import { authConfig } from "@/app/api/auth/[...nextauth]/route";
 import NavLink from "@/components/ui/navigation/NavLink";
-import Image from "next/image";
-import Logo from "@/assets/logo.svg";
-import { cn } from "@/lib/utils";
+import { getServerSession } from "next-auth";
 import AuthModal from "@/components/auth/AuthModal";
+import { Home, GraduationCap, Compass, Sparkles, User, LogIn } from "lucide-react";
 
-const navlinksMap = {
-  landing: [
-    {
-      href: "/",
-      label: "الرئيسية",
-    },
-    // {
-    //   href: "/courses",
-    //   label: "الدورات",
-    // },
-    // {
-    //   href: "/about",
-    //   label: "عن الواحة",
-    // },
-    // {
-    //   href: "/activities",
-    //   label: "الأنشطة",
-    // },
-    // {
-    //   href: "/contact-us",
-    //   label: "تواصل معنا",
-    // },
-    // {
-    //   href: "/login",
-    //   label: "تسجيل الدخول",
-    // },
-  ],
-};
-
-function MobileNavLink({ href, label }: { href: string; label: string }) {
+function MobileNavLink({
+  href,
+  label,
+  icon: Icon,
+}: {
+  href: string;
+  label: string;
+  icon: any;
+}) {
   return (
-    <NavLink variant="landing" href={href} wrapperStyles={cn("h-full")}>
-      <div className="relative flex h-full flex-col items-center text-center">
-        <Image src={Logo} alt="Logo" className="h-auto w-10" />
-        <span className="whitespace-nowrap">{label}</span>
-      </div>
+    <NavLink
+      variant="landing"
+      href={href}
+      boldWidth={false}
+      wrapperStyles="flex-col gap-1.5 items-center justify-center h-full w-full"
+    >
+      <Icon className="h-9 w-9 stroke-[1.5]" />
+      <span className="text-[1.3rem] md:text-[1.4rem] whitespace-nowrap leading-none">
+        {label}
+      </span>
     </NavLink>
   );
 }
 
-export default function MobileNavBar() {
-  const navLinks = navlinksMap.landing;
+export default async function MobileNavBar() {
+  const session = await getServerSession(authConfig);
 
   return (
-    <nav className="shadow-soft tablet:flex sticky bottom-0 z-100 hidden w-full items-center justify-between bg-gray-100/80 px-10 py-2 backdrop-blur-md">
-      <div className="tablet:hidden grid grid-cols-2 items-center gap-4">
-        <Button variant="primary" size="small" href="/login">
-          تسجيل دخول
-        </Button>
-
-        <Button variant="secondary" size="small" href="/signup">
-          إنشاء حساب
-        </Button>
-      </div>
-
-      <ul className="text-primary flex w-full gap-8 text-[14px]">
-        {navLinks.map((n) => (
-          <MobileNavLink href={n.href} label={n.label} key={n.label} />
-        ))}
+    <nav className="shadow-soft tablet:flex sticky bottom-0 z-1000 hidden h-28 w-full items-center justify-between bg-gray-100/95 px-6 backdrop-blur-md border-t border-gray-200">
+      <ul className="text-primary flex h-full w-full justify-around items-center gap-1">
+        <li className="flex-1 h-full flex justify-center items-center">
+          <MobileNavLink href="/" label="الرئيسية" icon={Home} />
+        </li>
+        <li className="flex-1 h-full flex justify-center items-center">
+          <MobileNavLink href="/#courses" label="الدورات" icon={GraduationCap} />
+        </li>
+        <li className="flex-1 h-full flex justify-center items-center">
+          <MobileNavLink href="/#about" label="عن الواحة" icon={Compass} />
+        </li>
+        <li className="flex-1 h-full flex justify-center items-center">
+          <MobileNavLink href="/#activities" label="الأنشطة" icon={Sparkles} />
+        </li>
+        <li className="flex-1 h-full flex justify-center items-center">
+          {session?.user ? (
+            <MobileNavLink href="/dashboard" label="لوحة التحكم" icon={User} />
+          ) : (
+            <AuthModal
+              trigger={
+                <button className="text-olive-500 relative flex h-full flex-col items-center justify-center text-center gap-1.5 w-full cursor-pointer hover:font-semibold">
+                  <LogIn className="h-9 w-9 stroke-[1.5]" />
+                  <span className="text-[1.3rem] md:text-[1.4rem] whitespace-nowrap leading-none">
+                    تسجيل الدخول
+                  </span>
+                </button>
+              }
+            />
+          )}
+        </li>
       </ul>
-
-      <AuthModal />
     </nav>
   );
 }
-
-// text-olive-500 grid place-items-center text-[1.4rem] leading-normal font-normal transition-all hover:font-semibold after:invisible after:block after:h-0 after:overflow-hidden after:font-bold after:content-[attr(data-text)] after:select-none

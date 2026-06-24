@@ -3,7 +3,7 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export default function ActivitiesSection() {
   return (
-    <section className="mobile-lg:px-15! flex flex-col items-center px-28!">
+    <section id="activities" className="mobile-lg:px-15! flex flex-col items-center px-28!">
       <ScrollReveal direction="up" className="w-full flex flex-col items-center">
         <div className="title-block">
           <h2>

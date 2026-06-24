@@ -25,16 +25,16 @@ export default async function NavBar() {
         <NavLink variant="landing" href="/">
           الرئيسية
         </NavLink>
-        <NavLink variant="landing" href="/courses">
+        <NavLink variant="landing" href="/#courses">
           الدورات
         </NavLink>
-        <NavLink variant="landing" href="/about">
+        <NavLink variant="landing" href="/#about">
           عن الواحة
         </NavLink>
-        <NavLink variant="landing" href="/activities">
+        <NavLink variant="landing" href="/#activities">
           الأنشطة
         </NavLink>
-        <NavLink variant="landing" href="/contact-us">
+        <NavLink variant="landing" href="/#contact-us">
           تواصل معنا
         </NavLink>
       </ul>
