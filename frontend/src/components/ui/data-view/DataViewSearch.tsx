@@ -24,7 +24,7 @@ export default function DataViewSearchLegacy() {
     <Input
       id="searchbar"
       unstyled
-      icon={<SearchIcon className="text-stone-400 w-18 h-18" />}
+      icon={<SearchIcon className="text-stone-400 w-[24px] h-[24px]" />}
       iconAlignment="end"
       placeholder="ابحث عن دورة أو محاضرة..."
       inputStyles={cn("w-full h-[50px] rounded-full bg-white border border-stone-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] text-[1.2rem] px-20 flex-1")}

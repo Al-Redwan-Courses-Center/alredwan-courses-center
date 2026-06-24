@@ -28,7 +28,7 @@ export default async function CoursesSection() {
       </ScrollReveal>
 
       <ScrollReveal direction="up" delay={0.4} className="w-full flex flex-col items-center">
-        <Button variant="primary" className="mobile-lg:mt-10 self-start">
+        <Button variant="primary" href="/courses" className="mobile-lg:mt-10 self-center">
           تصفح الدورات
         </Button>
       </ScrollReveal>

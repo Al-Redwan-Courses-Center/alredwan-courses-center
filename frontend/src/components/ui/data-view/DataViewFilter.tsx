@@ -22,7 +22,7 @@ export default function DataViewFilterLegacy() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="shadow-[0_2px_8px_rgba(0,0,0,0.06)] h-[50px] min-w-[120px] px-16 rounded-full bg-white border border-stone-100 flex items-center justify-between gap-10 transition-all hover:bg-stone-50 active:scale-95">
+        <button className="shadow-[0_2px_8px_rgba(0,0,0,0.06)] h-[50px] min-w-[120px] w-full px-16 rounded-full bg-white border border-stone-100 flex items-center justify-between gap-10 transition-all hover:bg-stone-50 active:scale-95">
           <ArrowDownHead className="w-10 h-10 text-stone-400" />
           <span className="text-[1.2rem] font-medium text-stone-600">اختيار حسب</span>
         </button>

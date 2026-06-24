@@ -37,6 +37,7 @@ export default async function HeroSection() {
             <Button
               variant="primary"
               size="medium"
+              href="/#courses"
               className="w-full sm:w-auto text-[1.6rem] md:text-[1.8rem] font-semibold py-4 px-10 md:py-5 md:px-12 flex items-center justify-center text-nowrap"
             >
               تصفح الدورات

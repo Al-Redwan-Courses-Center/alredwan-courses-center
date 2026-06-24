@@ -127,7 +127,7 @@ export default function PictureGrid() {
             key={index}
             className={cn(
               "overflow-hidden bg-white shadow-md border-4 border-white aspect-square relative",
-              index === 8 && "mobile-lg:col-span-2 mobile-lg:aspect-2/1",
+              index === 8 && "mobile-lg:col-span-2 mobile-lg:aspect-[2/1]",
               index % 2 === 0
                 ? "rounded-tr-[4rem] rounded-bl-[4rem]"
                 : "rounded-tl-[4rem] rounded-br-[4rem]"
@@ -137,6 +137,7 @@ export default function PictureGrid() {
               src={img.src}
               alt={img.alt}
               fill
+              unoptimized
               sizes="(max-width: 900px) 33vw, 50vw"
               className="object-cover"
               draggable="false"
