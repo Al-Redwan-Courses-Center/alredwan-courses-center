@@ -101,7 +101,7 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
                         />
                     )}
                     
-                    <div className="bg-gradient-to-br from-olive-500 to-olive-700 rounded-3xl p-8 text-white shadow-xl">
+                    <div className="bg-linear-to-br from-olive-500 to-olive-700 rounded-3xl p-8 text-white shadow-xl">
                         <h4 className="text-xl font-bold mb-4">لماذا تقييمك مهم؟</h4>
                         <ul className="space-y-3 text-sm opacity-90">
                             <li className="flex items-start gap-2">

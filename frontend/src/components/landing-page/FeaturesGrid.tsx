@@ -1,3 +1,5 @@
+import BookIcon from "@/components/icons/BookIcon";
+import CalendarIcon from "@/components/icons/CalendarIcon";
 import CheckBadgeIcon from "@/components/icons/CheckBadgeIcon";
 import GraduationHatIcon from "@/components/icons/GraduationHatIcon";
 import HandshakeIcon from "@/components/icons/HandshakeIcon";
@@ -21,12 +23,6 @@ const featureCardsConfig = [
     icon: MosqueIcon,
   },
   {
-    title: "منهج معتمد ومتطور",
-    content:
-      "مناهج حديثة ومعتمدة تواكب أحدث طرق التعليم العالمية مع الحفاظ على القيم الإسلامية",
-    icon: CheckBadgeIcon,
-  },
-  {
     title: "مدرسين مؤهلين",
     content:
       "نخبة من المعلمين المؤهلين و المتخصصين في مجالاتهم مع خبرة عملية واسعة",
@@ -45,15 +41,21 @@ const featureCardsConfig = [
     icon: PeopleIcon,
   },
   {
-    title: "تقنيات حديثة",
-    content:
-      "استخدام أحدث التقنيات التعليمية و الوسائل التفاعلية لضمان تجربة تعليمية ممتعة",
-    icon: TechnologyIcon,
-  },
-  {
     title: "متابعة مستمرة",
     content: "نوفر متابعة مستمرة لتقدم الطلاب مع تقارير دورية لأولياء الأمور",
     icon: HandshakeIcon,
+  },
+  {
+    title: "دورات متنوعة",
+    content:
+      "نقدم باقة واسعة من البرامج التعليمية في العلوم الإسلامية، والقرآن، واللغات، والمهارات الحياتية",
+    icon: BookIcon,
+  },
+  {
+    title: "مرونة وتكامل",
+    content:
+      "جداول دراسية مرنة تتناسب مع أوقات أطفالكم مع تقارير شاملة لأولياء الأمور",
+    icon: CalendarIcon,
   },
 ];
 
@@ -71,18 +73,21 @@ function FeatureCard({
   return (
     <div
       className={cn(
-        "bg-olive-300 flex flex-col items-center justify-center px-15 tablet:px-8 py-12 tablet:py-8 text-gray-100 shadow-inner",
+        "bg-olive-300 flex items-start text-gray-100 shadow-inner w-full text-right",
         reversed
-          ? "rounded-tl-[10rem] tablet:rounded-tl-[5rem] rounded-br-[10rem] tablet:rounded-br-[5rem] [&_p]:pr-10 tablet:[&_p]:pr-4"
-          : "rounded-tr-[10rem] tablet:rounded-tr-[5rem] rounded-bl-[10rem] tablet:rounded-bl-[5rem]",
+          ? "rounded-tl-[10rem] tablet:rounded-tl-[5rem] rounded-br-[10rem] tablet:rounded-br-[5rem] pr-12 pt-12 pb-12 pl-18 tablet:p-8"
+          : "rounded-tr-[10rem] tablet:rounded-tr-[5rem] rounded-bl-[10rem] tablet:rounded-bl-[5rem] pr-18 pt-16 pb-12 pl-12 tablet:p-8",
       )}
     >
-      <div className="mb-5 flex w-full items-center gap-10">
-        <Icon className="drop-shadow-primary mb-5 h-14 w-14" />
-        <h3 className="text-3xl font-semibold">{title}</h3>
+      <div className="flex gap-6 items-start w-full">
+        <Icon className="drop-shadow-primary h-12 w-12 shrink-0 mt-1" />
+        <div className="flex flex-col gap-3">
+          <h3 className="text-2xl md:text-3xl font-semibold leading-tight">{title}</h3>
+          <p className="text-[1.5rem] md:text-[1.6rem] leading-relaxed opacity-90">
+            {content}
+          </p>
+        </div>
       </div>
-
-      <p className="text-[1.6rem]">{content}</p>
     </div>
   );
 }
@@ -96,7 +101,7 @@ export default function FeaturesGrid() {
           title={feature.title}
           content={feature.content}
           icon={feature.icon}
-          reversed={i > 3 ? i % 2 === 0 : i % 2 !== 0}
+          reversed={i % 2 !== 0}
         />
       ))}
     </div>
