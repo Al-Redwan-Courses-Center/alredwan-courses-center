@@ -15,12 +15,12 @@ export default function CallToActionSection() {
         src={HeroBG}
         alt="Hero Background"
         priority
-        className="absolute right-0 bottom-0 max-w-1/2 tablet:max-w-full opacity-60 tablet:opacity-20 object-cover"
+        className="absolute right-0 bottom-0 max-w-full opacity-35 tablet:opacity-20 object-cover"
         draggable="false"
       />
 
-      <ScrollReveal direction="up" className="w-full flex flex-col items-start tablet:items-center">
-        <div className="relative z-10 mr-auto tablet:mx-auto tablet:text-center flex flex-col items-start tablet:items-center text-gray-100 px-6 lg:pl-32">
+      <ScrollReveal direction="up" className="w-full flex flex-col items-center">
+        <div className="relative z-10 mx-auto text-center flex flex-col items-center text-gray-100 px-6 max-w-4xl">
           <h2 className="text-shadow-primary mb-9 max-w-170 text-8xl mobile-lg:text-6xl font-bold">
             <span className="text-beige-500">ابدأ</span> رحلة التعلم مع أطفالك
             اليوم
@@ -31,7 +31,7 @@ export default function CallToActionSection() {
             الكريم والعلوم الإسلامية
           </p>
 
-          <div className="mb-12 grid w-fit grid-cols-2 mobile-lg:grid-cols-1 gap-6">
+          <div className="mb-12">
             <SignupModal
               trigger={
                 <Button variant="primary" size="medium">
@@ -39,30 +39,39 @@ export default function CallToActionSection() {
                 </Button>
               }
             />
-
-            <SignupModal
-              trigger={
-                <Button variant="secondary" size="medium" revert>
-                  جرب درس تجريبي
-                </Button>
-              }
-            />
           </div>
 
           <ul className="text-olive-500 flex items-center tablet:flex-col tablet:items-center gap-11 mobile-lg:gap-4 [&_span]:text-[1.4rem] [&>li]:flex [&>li]:items-center [&>li]:gap-3">
             <li>
-              <PhoneIcon />
-              <span>٢٠١٢٣٤٥٦٧٨٩٠+</span>
+              <a
+                href="tel:+201234567890"
+                className="flex items-center gap-3 hover:text-white transition-colors duration-200"
+              >
+                <PhoneIcon />
+                <span>٢٠١٢٣٤٥٦٧٨٩٠+</span>
+              </a>
             </li>
 
             <li>
-              <WhatsappIcon />
-              <span>واتساب مباشر</span>
+              <a
+                href="https://wa.me/201234567890"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 hover:text-white transition-colors duration-200"
+              >
+                <WhatsappIcon />
+                <span>واتساب مباشر</span>
+              </a>
             </li>
 
             <li>
-              <EmailIcon />
-              <span>info@alredwan.edu</span>
+              <a
+                href="mailto:info@alredwan.edu"
+                className="flex items-center gap-3 hover:text-white transition-colors duration-200"
+              >
+                <EmailIcon />
+                <span>info@alredwan.edu</span>
+              </a>
             </li>
           </ul>
         </div>
