@@ -20,7 +20,7 @@ export default function LoginForm({
   onSwitchToSignup?: () => void;
   onLoadingChange?: (loading: boolean) => void;
 }) {
-  const [countryCode, setCountryCode] = useState("20");
+  const [countryCode, setCountryCode] = useState("2");
   const [showCountryCodeList, setShowCountryCodeList] = useState(false);
   const {
     register,
@@ -38,6 +38,16 @@ export default function LoginForm({
   useEffect(() => {
     onLoadingChange?.(isSubmitting);
   }, [isSubmitting, onLoadingChange]);
+
+  const formatPhone = (code: string, num: string) => {
+    if (!num) return "";
+    const cleaned = num.replace(/\s+/g, "");
+    if (code === "2") {
+      const hasLeadingZero = cleaned.startsWith("0");
+      return `+2${hasLeadingZero ? cleaned : "0" + cleaned}`;
+    }
+    return `+${code + cleaned.replace(/^0+/, "")}`;
+  };
 
   const onSubmit: SubmitHandler<LoginInputs> = async (credentials) => {
     const res = await signIn("credentials", {
@@ -76,7 +86,7 @@ export default function LoginForm({
       onSubmit={handleSubmit((credentials) =>
         onSubmit({
           ...credentials,
-          phone_number1: `+${countryCode + credentials.phone_number1.replace(/^0+/, "")}`,
+          phone_number1: formatPhone(countryCode, credentials.phone_number1),
         }),
       )}
       className="flex flex-col gap-20 text-3xl [&>input]:bg-gray-300"
@@ -84,7 +94,7 @@ export default function LoginForm({
       <div className="flex flex-col gap-10">
         <FieldSetInput
           label="رقم الهاتف"
-          placeholder={countryCode === "20" ? "1012345678" : "1234567890"}
+          placeholder={countryCode === "2" ? "01012345678" : "1234567890"}
           button={
             <DropdownMenu
               open={showCountryCodeList}
@@ -106,12 +116,12 @@ export default function LoginForm({
                     <button
                       type="button"
                       onClick={() => {
-                        setCountryCode("20");
+                        setCountryCode("2");
                         setShowCountryCodeList(false);
                       }}
                       className="rounded-lg p-2 transition-colors hover:bg-gray-300"
                     >
-                      +20
+                      +2
                     </button>
                   </li>
                   <li>
@@ -145,7 +155,7 @@ export default function LoginForm({
           registerReturn={register("phone_number1", {
             onChange: (e) => {
               const val = e.target.value;
-              if (val.startsWith("0")) {
+              if (countryCode !== "2" && val.startsWith("0")) {
                 setValue("phone_number1", val.replace(/^0+/, ""));
               }
             }

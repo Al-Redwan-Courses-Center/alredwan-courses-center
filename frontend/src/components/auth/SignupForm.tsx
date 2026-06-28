@@ -54,7 +54,7 @@ const fieldMap: Record<keyof SignupInputs, string> = {
 };
 
 export default function SignupForm() {
-  const [countryCode, setCountryCode] = useState("20");
+  const [countryCode, setCountryCode] = useState("2");
   const [showCountryCodeList, setShowCountryCodeList] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
@@ -90,12 +90,22 @@ export default function SignupForm() {
   //   clearErrors("identity_number");
   // }, [identityTypeValue, setValue, clearErrors]);
 
+  const formatPhone = (code: string, num: string) => {
+    if (!num) return "";
+    const cleaned = num.replace(/\s+/g, "");
+    if (code === "2") {
+      const hasLeadingZero = cleaned.startsWith("0");
+      return `+2${hasLeadingZero ? cleaned : "0" + cleaned}`;
+    }
+    return `+${code + cleaned.replace(/^0+/, "")}`;
+  };
+
   const onSubmit: SubmitHandler<SignupInputs> = async (data) => {
     const formattedData = {
       ...data,
-      phone_number1: `+${countryCode + data.phone_number1.replace(/^0+/, "")}`,
+      phone_number1: formatPhone(countryCode, data.phone_number1),
       phone_number2: data.phone_number2
-        ? `+${countryCode + data.phone_number2.replace(/^0+/, "")}`
+        ? formatPhone(countryCode, data.phone_number2)
         : undefined,
     };
 
@@ -193,7 +203,7 @@ export default function SignupForm() {
         <div className={cn(inputWrapperStyles)}>
           <FieldSetInput
             label="رقم الهاتف"
-            placeholder={countryCode === "20" ? "1012345678" : "1234567890"}
+            placeholder={countryCode === "2" ? "01012345678" : "1234567890"}
             button={
               <DropdownMenu
                 open={showCountryCodeList}
@@ -215,12 +225,12 @@ export default function SignupForm() {
                       <button
                         type="button"
                         onClick={() => {
-                          setCountryCode("20");
+                          setCountryCode("2");
                           setShowCountryCodeList(false);
                         }}
                         className="rounded-lg p-2 transition-colors hover:bg-gray-300"
                       >
-                        +20
+                        +2
                       </button>
                     </li>
                     <li>
@@ -261,19 +271,19 @@ export default function SignupForm() {
                 message: "رقم الهاتف غير صحيح",
               },
               validate: (value) => {
-                if (countryCode === "20") {
-                  if (value.length !== 10) {
-                    return "رقم الهاتف المصري يجب أن يتكون من 10 أرقام (بدون الصفر الأول)";
+                if (countryCode === "2") {
+                  if (value.length !== 11) {
+                    return "رقم الهاتف المصري يجب أن يتكون من 11 رقم (مثال: 01012345678)";
                   }
-                  if (!value.startsWith("1")) {
-                    return "رقم الهاتف المصري يجب أن يبدأ برقم 1";
+                  if (!value.startsWith("01")) {
+                    return "رقم الهاتف المصري يجب أن يبدأ بـ 01";
                   }
                 }
                 return true;
               },
               onChange: (e) => {
                 const val = e.target.value;
-                if (val.startsWith("0")) {
+                if (countryCode !== "2" && val.startsWith("0")) {
                   setValue("phone_number1", val.replace(/^0+/, ""));
                 }
               },
@@ -288,7 +298,7 @@ export default function SignupForm() {
         <div className={cn(inputWrapperStyles)}>
           <FieldSetInput
             label="رقم الهاتف الثاني (اختياري)"
-            placeholder={countryCode === "20" ? "1012345678" : "1234567890"}
+            placeholder={countryCode === "2" ? "01012345678" : "1234567890"}
             registerReturn={register("phone_number2", {
               pattern: {
                 value: /^[0-9]{10,14}$/,
@@ -296,19 +306,19 @@ export default function SignupForm() {
               },
               validate: (value) => {
                 if (!value) return true;
-                if (countryCode === "20") {
-                  if (value.length !== 10) {
-                    return "رقم الهاتف المصري يجب أن يتكون من 10 أرقام (بدون الصفر الأول)";
+                if (countryCode === "2") {
+                  if (value.length !== 11) {
+                    return "رقم الهاتف المصري يجب أن يتكون من 11 رقم (مثال: 01012345678)";
                   }
-                  if (!value.startsWith("1")) {
-                    return "رقم الهاتف المصري يجب أن يبدأ برقم 1";
+                  if (!value.startsWith("01")) {
+                    return "رقم الهاتف المصري يجب أن يبدأ بـ 01";
                   }
                 }
                 return true;
               },
               onChange: (e) => {
                 const val = e.target.value;
-                if (val.startsWith("0")) {
+                if (countryCode !== "2" && val.startsWith("0")) {
                   setValue("phone_number2", val.replace(/^0+/, ""));
                 }
               },
