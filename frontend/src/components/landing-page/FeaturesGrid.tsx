@@ -101,7 +101,7 @@ export default function FeaturesGrid() {
           title={feature.title}
           content={feature.content}
           icon={feature.icon}
-          reversed={i % 2 !== 0}
+          reversed={i % 4 === 1 || i % 4 === 2}
         />
       ))}
     </div>
