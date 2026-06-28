@@ -19,6 +19,7 @@ import {
   useForm,
 } from "react-hook-form";
 import toast from "react-hot-toast";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 function renderError<T extends FieldValues>(
   errors: FieldErrors<T>,
@@ -55,6 +56,8 @@ const fieldMap: Record<keyof SignupInputs, string> = {
 export default function SignupForm() {
   const [countryCode, setCountryCode] = useState("20");
   const [showCountryCodeList, setShowCountryCodeList] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRePassword, setShowRePassword] = useState(false);
 
   const {
     register,
@@ -190,7 +193,7 @@ export default function SignupForm() {
         <div className={cn(inputWrapperStyles)}>
           <FieldSetInput
             label="رقم الهاتف"
-            placeholder="01234567890"
+            placeholder={countryCode === "20" ? "1012345678" : "1234567890"}
             button={
               <DropdownMenu
                 open={showCountryCodeList}
@@ -257,6 +260,23 @@ export default function SignupForm() {
                 value: /^[0-9]{10,14}$/,
                 message: "رقم الهاتف غير صحيح",
               },
+              validate: (value) => {
+                if (countryCode === "20") {
+                  if (value.length !== 10) {
+                    return "رقم الهاتف المصري يجب أن يتكون من 10 أرقام (بدون الصفر الأول)";
+                  }
+                  if (!value.startsWith("1")) {
+                    return "رقم الهاتف المصري يجب أن يبدأ برقم 1";
+                  }
+                }
+                return true;
+              },
+              onChange: (e) => {
+                const val = e.target.value;
+                if (val.startsWith("0")) {
+                  setValue("phone_number1", val.replace(/^0+/, ""));
+                }
+              },
             })}
           />
           {renderError<SignupInputs>(errors, "phone_number1")}
@@ -268,11 +288,29 @@ export default function SignupForm() {
         <div className={cn(inputWrapperStyles)}>
           <FieldSetInput
             label="رقم الهاتف الثاني (اختياري)"
-            placeholder="01234567890"
+            placeholder={countryCode === "20" ? "1012345678" : "1234567890"}
             registerReturn={register("phone_number2", {
               pattern: {
                 value: /^[0-9]{10,14}$/,
                 message: "رقم الهاتف غير صحيح",
+              },
+              validate: (value) => {
+                if (!value) return true;
+                if (countryCode === "20") {
+                  if (value.length !== 10) {
+                    return "رقم الهاتف المصري يجب أن يتكون من 10 أرقام (بدون الصفر الأول)";
+                  }
+                  if (!value.startsWith("1")) {
+                    return "رقم الهاتف المصري يجب أن يبدأ برقم 1";
+                  }
+                }
+                return true;
+              },
+              onChange: (e) => {
+                const val = e.target.value;
+                if (val.startsWith("0")) {
+                  setValue("phone_number2", val.replace(/^0+/, ""));
+                }
               },
             })}
             inputStyles={cn("[direction:ltr]")}
@@ -485,8 +523,17 @@ export default function SignupForm() {
         */}
         <div className={cn(inputWrapperStyles)}>
           <FieldSetInput
-            type="password"
+            type={showPassword ? "text" : "password"}
             label="كلمة المرور"
+            button={
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                className="text-olive-500"
+              >
+                {showPassword ? <EyeIcon /> : <EyeOffIcon />}
+              </button>
+            }
             registerReturn={register("password", {
               required: {
                 value: true,
@@ -507,8 +554,17 @@ export default function SignupForm() {
         */}
         <div className={cn(inputWrapperStyles)}>
           <FieldSetInput
-            type="password"
+            type={showRePassword ? "text" : "password"}
             label="تأكيد كلمة المرور"
+            button={
+              <button
+                type="button"
+                onClick={() => setShowRePassword((s) => !s)}
+                className="text-olive-500"
+              >
+                {showRePassword ? <EyeIcon /> : <EyeOffIcon />}
+              </button>
+            }
             registerReturn={register("re_password", {
               required: {
                 value: true,

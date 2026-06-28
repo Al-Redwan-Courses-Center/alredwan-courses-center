@@ -25,10 +25,11 @@ export default function LoginForm({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { isSubmitting },
   } = useForm<LoginInputs>({
     defaultValues: {
-      phone_number1: "01000000000",
+      phone_number1: "",
       password: "password123",
     },
   });
@@ -75,7 +76,7 @@ export default function LoginForm({
       onSubmit={handleSubmit((credentials) =>
         onSubmit({
           ...credentials,
-          phone_number1: `+${countryCode + credentials.phone_number1.slice(1)}`,
+          phone_number1: `+${countryCode + credentials.phone_number1.replace(/^0+/, "")}`,
         }),
       )}
       className="flex flex-col gap-20 text-3xl [&>input]:bg-gray-300"
@@ -83,7 +84,7 @@ export default function LoginForm({
       <div className="flex flex-col gap-10">
         <FieldSetInput
           label="رقم الهاتف"
-          placeholder="01234567890"
+          placeholder={countryCode === "20" ? "1012345678" : "1234567890"}
           button={
             <DropdownMenu
               open={showCountryCodeList}
@@ -91,6 +92,7 @@ export default function LoginForm({
             >
               <DropdownMenuTrigger asChild>
                 <button
+                  type="button"
                   className="relative -top-2 rounded-lg p-2 transition-colors hover:bg-gray-300"
                   dir="ltr"
                 >
@@ -102,6 +104,7 @@ export default function LoginForm({
                 <ul className="w-fit text-center text-3xl [direction:ltr] [&>li]:w-full [&>li]:py-5 [&>li]:not-last:border-b">
                   <li>
                     <button
+                      type="button"
                       onClick={() => {
                         setCountryCode("20");
                         setShowCountryCodeList(false);
@@ -113,6 +116,7 @@ export default function LoginForm({
                   </li>
                   <li>
                     <button
+                      type="button"
                       onClick={() => {
                         setCountryCode("1");
                         setShowCountryCodeList(false);
@@ -124,6 +128,7 @@ export default function LoginForm({
                   </li>
                   <li>
                     <button
+                      type="button"
                       onClick={() => {
                         setCountryCode("44");
                         setShowCountryCodeList(false);
@@ -137,7 +142,14 @@ export default function LoginForm({
               </DropdownMenuContent>
             </DropdownMenu>
           }
-          registerReturn={register("phone_number1")}
+          registerReturn={register("phone_number1", {
+            onChange: (e) => {
+              const val = e.target.value;
+              if (val.startsWith("0")) {
+                setValue("phone_number1", val.replace(/^0+/, ""));
+              }
+            }
+          })}
         />
 
         <FieldSetInput

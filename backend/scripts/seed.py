@@ -32,6 +32,7 @@ from django.utils import timezone
 from users.models.user import CustomUser
 from users.models.student import StudentUser
 from users.models.instructor import Instructor
+from users.models.landingPageInstructor import LandingPageInstructor
 from parents.models.parent import Parent, Child
 from courses.models.course import (
     Season,
@@ -41,6 +42,7 @@ from courses.models.course import (
     CourseSchedule,
     Weekday,
 )
+from courses.models.landing_page_course import LandingPageCourse
 from courses.models.lecture import Lecture, LectureStatus
 from enrollments_payments.models.enrollment import Enrollment, EnrollmentStatus
 from enrollments_payments.models.enrollment_request import (
