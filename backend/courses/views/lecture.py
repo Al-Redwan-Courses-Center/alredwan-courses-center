@@ -12,6 +12,7 @@ from django.utils import timezone
 from courses.models import Course, Lecture
 from courses.serializers import LectureListSerializer, InstructorLectureCreateSerializer, LectureUpdateSerializer, LectureDetailSerializer
 from courses.permissions import IsAdminOrCourseInstructor, IsAdminOrInstructorOrSupervisor
+from rest_framework.permissions import AllowAny
 from core.utils.pagination import CustomPageNumberPagination
 
 
@@ -74,10 +75,14 @@ class LectureListCreateView(generics.ListCreateAPIView):
     - Supervisors: Full access to all courses
     - Instructors: Only access to courses they are assigned to teach
     """
-    permission_classes = [IsAdminOrCourseInstructor]
     pagination_class = CustomPageNumberPagination
     filterset_class = LectureFilter
     filter_backends = [filters.DjangoFilterBackend]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAdminOrCourseInstructor()]
 
     def get_serializer_class(self):
         """Return appropriate serializer based on request method"""
