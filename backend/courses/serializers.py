@@ -31,10 +31,13 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
         fields = ['id', 'weekday', 'weekday_display', 'start_time', 'end_time']
 
     def validate(self, data):
-        start_time = data.get('start_time', getattr(self.instance, 'start_time', None))
-        end_time = data.get('end_time', getattr(self.instance, 'end_time', None))
+        start_time = data.get('start_time', getattr(
+            self.instance, 'start_time', None))
+        end_time = data.get('end_time', getattr(
+            self.instance, 'end_time', None))
         if start_time and end_time and end_time <= start_time:
-            raise serializers.ValidationError({'end_time': 'End time must be after start time.'})
+            raise serializers.ValidationError(
+                {'end_time': 'End time must be after start time.'})
         return data
 
 
@@ -49,6 +52,7 @@ class CourseListSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     instructor = InstructorSerializer(read_only=True)
     season = SeasonSerializer(read_only=True)
+    image = serializers.SerializerMethodField()
     enrolled_count = serializers.SerializerMethodField()
     available_spots = serializers.SerializerMethodField()
     is_full = serializers.SerializerMethodField()
@@ -64,6 +68,11 @@ class CourseListSerializer(serializers.ModelSerializer):
             'min_age', 'max_age', 'enrolled_count', 'available_spots',
             'is_full', 'created_at', 'updated_at', 'average_rating', 'rating_count'
         ]
+
+    def get_image(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
 
     def get_enrolled_count(self, obj):
         """Use annotated count if available, otherwise fall back to property."""
@@ -112,6 +121,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
     instructor = InstructorSerializer(read_only=True)
     season = SeasonSerializer(read_only=True)
     schedules = CourseScheduleSerializer(many=True, read_only=True)
+    image = serializers.SerializerMethodField()
     enrolled_count = serializers.SerializerMethodField()
     available_spots = serializers.SerializerMethodField()
     is_full = serializers.SerializerMethodField()
@@ -125,6 +135,11 @@ class CourseDetailSerializer(serializers.ModelSerializer):
             'min_age', 'max_age', 'enrolled_count', 'available_spots',
             'is_full', 'created_at', 'updated_at'
         ]
+
+    def get_image(self, obj):
+        if obj.image:
+            return obj.image.url
+        return None
 
     def get_enrolled_count(self, obj):
         """Use annotated count if available, otherwise fall back to property."""
@@ -354,26 +369,26 @@ class LectureUpdateSerializer(serializers.ModelSerializer):
     def validate_day(self, value):
         """
         Validate lecture date on update.
-        
+
         Non-admin users cannot move lectures to the past.
         Admin users can change lectures to any date for flexibility.
         """
         from django.utils import timezone
-        
+
         request = self.context.get('request')
         user = request.user if request else None
-        
+
         # Allow admins to update to past dates
         if user and user.is_staff:
             return value
-        
+
         # Non-admin users cannot move lectures to the past
         today = timezone.localdate()
         if value < today:
             raise serializers.ValidationError(
                 "لا يمكن نقل المحاضرة إلى تاريخ في الماضي."
             )
-        
+
         return value
 
     def validate(self, data):
@@ -418,27 +433,27 @@ class InstructorLectureCreateSerializer(serializers.ModelSerializer):
     def validate_day(self, value):
         """
         Validate lecture date.
-        
+
         Non-admin users cannot create lectures in the past.
         Admin users can create lectures on any date for flexibility
         (backfilling records, importing historical data, etc.)
         """
         from django.utils import timezone
-        
+
         request = self.context.get('request')
         user = request.user if request else None
-        
+
         # Allow admins to create past lectures
         if user and user.is_staff:
             return value
-        
+
         # Non-admin users cannot create lectures in the past
         today = timezone.localdate()
         if value < today:
             raise serializers.ValidationError(
                 "لا يمكن إنشاء محاضرة في الماضي. يرجى اختيار تاريخ اليوم أو تاريخ مستقبلي."
             )
-        
+
         return value
 
     def validate(self, data):
@@ -537,20 +552,23 @@ class StudentCourseRateSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if user.role != 'student':
             raise serializers.ValidationError("هذا الحساب ليس حساب طالب.")
-            
+
         try:
             student = user.student_profile
         except Exception:
-            raise serializers.ValidationError("لم يتم العثور على ملف تعريف طالب.")
-            
+            raise serializers.ValidationError(
+                "لم يتم العثور على ملف تعريف طالب.")
+
         course = self.context['course']
-        
+
         # Check if student is enrolled in the course
         from enrollments_payments.models import Enrollment
         if not Enrollment.objects.filter(student=student, course=course).exists():
-            raise serializers.ValidationError("يجب أن تكون مشتركاً في الدورة لتتمكن من تقييمها.")
-            
+            raise serializers.ValidationError(
+                "يجب أن تكون مشتركاً في الدورة لتتمكن من تقييمها.")
+
         return data
+
 
 class ParentCourseRateSerializer(serializers.ModelSerializer):
     """Serializer for parents to rate courses"""
@@ -562,24 +580,28 @@ class ParentCourseRateSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if user.role != 'parent':
             raise serializers.ValidationError("هذا الحساب ليس حساب ولي أمر.")
-            
+
         try:
             parent = user.parent_profile
         except Exception:
-            raise serializers.ValidationError("لم يتم العثور على ملف تعريف ولي أمر.")
-            
+            raise serializers.ValidationError(
+                "لم يتم العثور على ملف تعريف ولي أمر.")
+
         course = self.context['course']
-        
+
         # Check if parent has a child enrolled in the course
         from enrollments_payments.models import Enrollment
         from parents.models import Child
-        
+
         # Get parent's children
-        child_ids = list(Child.objects.filter(primary_parent=parent).values_list('id', flat=True))
-        extra_child_ids = list(parent.extra_children.values_list('child_id', flat=True))
+        child_ids = list(Child.objects.filter(
+            primary_parent=parent).values_list('id', flat=True))
+        extra_child_ids = list(
+            parent.extra_children.values_list('child_id', flat=True))
         all_child_ids = set(child_ids + extra_child_ids)
-        
+
         if not Enrollment.objects.filter(child_id__in=all_child_ids, course=course).exists():
-            raise serializers.ValidationError("يجب أن يكون أحد أبنائك مشتركاً في الدورة لتتمكن من تقييمها.")
-            
+            raise serializers.ValidationError(
+                "يجب أن يكون أحد أبنائك مشتركاً في الدورة لتتمكن من تقييمها.")
+
         return data
