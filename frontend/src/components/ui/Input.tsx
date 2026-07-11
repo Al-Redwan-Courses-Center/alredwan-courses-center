@@ -1,11 +1,14 @@
+"use client";
+
 import { cn, cva } from "@/lib/utils";
 import { VariantProps } from "class-variance-authority";
-import { ChangeEvent, InputHTMLAttributes, ReactNode } from "react";
+import { ChangeEvent, InputHTMLAttributes, ReactNode, useState } from "react";
 import { UseFormRegisterReturn } from "react-hook-form";
+import { Eye, EyeOff } from "lucide-react";
 
 const containerStyles = cva(
   cn(
-    "shadow-soft bg-gray-50 px-10 py-4 [&_input]:text-[1.8rem] [&_input::placeholder]:font-semibold [&_input::placeholder]:text-gray-600",
+    "shadow-soft bg-gray-50 px-10 py-4 [&_input]:text-[1.8rem] [&_input::placeholder]:font-semibold [&_input::placeholder]:text-gray-600 relative",
   ),
   {
     variants: {
@@ -58,12 +61,16 @@ export default function Input({
   registerReturn,
   unstyled = false,
 }: UncontrolledInput | ControlledInput) {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === "password";
+
   return (
     <div
       className={cn(
         "[&_svg]:text-olive-300 flex items-center gap-6",
         wrapperStyles,
         !unstyled && icon && containerStyles({ shape }),
+        isPassword && !unstyled && !icon && "relative"
       )}
     >
       {iconAlignment === "start" && icon}
@@ -75,12 +82,23 @@ export default function Input({
         placeholder={placeholder}
         className={cn(
           !unstyled && !icon && containerStyles({ shape }),
-          "focus:outline-none",
+          "focus:outline-none w-full",
+          isPassword && "pe-14",
           inputStyles,
         )}
-        type={type}
+        type={isPassword && showPassword ? "text" : type}
       />
       {iconAlignment === "end" && icon}
+      {isPassword && (
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none flex items-center justify-center"
+          aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+        >
+          {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
+        </button>
+      )}
       {button}
     </div>
   );
