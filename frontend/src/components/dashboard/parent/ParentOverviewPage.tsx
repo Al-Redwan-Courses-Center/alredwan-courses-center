@@ -43,7 +43,7 @@ export default async function ParentOverviewPage() {
   }, 0);
 
   return (
-    <div className="ps-16 pt-15 *:pe-16">
+    <div className="p-16">
       <h1 className="dashboard-greeting mb-8">السلام عليكم يا {first_name}</h1>
 
       <ParentOverviewHeader

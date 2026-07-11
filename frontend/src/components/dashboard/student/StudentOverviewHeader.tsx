@@ -15,7 +15,7 @@ function DataPoint({
   isPercentage?: boolean;
 }) {
   return (
-    <div className="text-olive-300 not-first:border-olive-200 separators-[4.25rem] grid grid-cols-[auto_1fr] grid-rows-2 gap-x-7 gap-y-4 text-4xl font-bold">
+    <div className="text-olive-300 not-first:border-olive-200 separators-[4.25rem] max-[1000px]:separators-6 grid grid-cols-[auto_1fr] grid-rows-2 gap-x-7 gap-y-4 text-4xl font-bold">
       <Icon className="drop-shadow-soft row-span-full h-20 w-auto self-center max-[1000px]:row-span-1 max-[1000px]:row-start-2 max-[1000px]:h-10" />
       <span className="self-end max-[1000px]:col-span-2">{label}</span>
       <span className="text-olive-500">{value}{isPercentage && "%"}</span>

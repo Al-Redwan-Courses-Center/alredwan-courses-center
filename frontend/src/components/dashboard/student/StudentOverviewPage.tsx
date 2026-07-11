@@ -40,8 +40,8 @@ export default function StudentOverviewPage({
   const overviewCourses = activeCourses.slice(0, 2);
 
   return (
-    <div className="ps-16 pt-15 *:pe-16 max-[1000px]:px-0 max-[1000px]:*:pe-0">
-      <h1 className="dashboard-greeting mb-8 max-[1000px]:px-8">
+    <div className="px-16 max-[1000px]:px-8 pt-15">
+      <h1 className="dashboard-greeting mb-8">
         السلام عليكم يا {name}
       </h1>
 
@@ -51,7 +51,7 @@ export default function StudentOverviewPage({
         attendanceRate={attendanceRate}
       />
 
-      <div className="[&>div]:separators-[7.25rem] [&>div]:border-olive-200 grid grid-cols-2 pe-0! max-[1000px]:grid-cols-1 max-[1000px]:gap-8 max-[1000px]:px-8 [&>div]:max-[1000px]:border-0">
+      <div className="[&>div]:separators-[7.25rem] [&>div]:border-olive-200 grid grid-cols-2 max-[1000px]:grid-cols-1 max-[1000px]:gap-8 [&>div]:max-[1000px]:border-0 [&>div]:max-[1000px]:ps-0">
         <div className="flex flex-col gap-6">
           <h2 className="dashboard-section-title">آخر الكورسات المسجلة</h2>
 
