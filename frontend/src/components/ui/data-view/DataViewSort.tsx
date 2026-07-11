@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useContext } from "react";
 
 const dropdownItemStyles = cn(
-  "[direction:rtl;] flex cursor-pointer justify-between px-10 py-6 text-[1.4rem] transition-all hover:bg-gray-100",
+  "[direction:rtl;] flex cursor-pointer justify-between px-10 py-6 text-[1.4rem] mobile-lg:text-[1.8rem] mobile:text-[2.2rem] transition-all hover:bg-gray-100",
 );
 
 export default function DataViewSortLegacy() {
@@ -37,7 +37,7 @@ export default function DataViewSortLegacy() {
             {fieldName ? (
               <div className="flex items-center gap-4">
                 <SortArrow className={cn(direction === "desc" && "rotate-180", "w-10 h-10")} />
-                <span className="text-[1.2rem] font-medium text-stone-600">
+                <span className="text-[1.2rem] mobile-lg:text-[1.6rem] mobile:text-[2rem] font-medium text-stone-600">
                   {
                     sortOptions.find((option) => fieldName === option.fieldName)
                       ?.label
@@ -45,7 +45,7 @@ export default function DataViewSortLegacy() {
                 </span>
               </div>
             ) : (
-              <span className="text-[1.2rem] font-medium text-stone-600">ترتيب حسب</span>
+              <span className="text-[1.2rem] mobile-lg:text-[1.6rem] mobile:text-[2rem] font-medium text-stone-600">ترتيب حسب</span>
             )}
           </div>
         </button>

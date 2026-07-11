@@ -24,7 +24,7 @@ export default function DataViewFilterLegacy() {
       <DropdownMenuTrigger asChild>
         <button className="shadow-[0_2px_8px_rgba(0,0,0,0.06)] h-[50px] min-w-[120px] w-full px-16 rounded-full bg-white border border-stone-100 flex items-center justify-between gap-10 transition-all hover:bg-stone-50 active:scale-95">
           <ArrowDownHead className="w-10 h-10 text-stone-400" />
-          <span className="text-[1.2rem] font-medium text-stone-600">اختيار حسب</span>
+          <span className="text-[1.2rem] mobile-lg:text-[1.6rem] mobile:text-[2rem] font-medium text-stone-600">اختيار حسب</span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -37,7 +37,7 @@ export default function DataViewFilterLegacy() {
           <DropdownMenuCheckboxItem
             key={key}
             className={cn(
-              "cursor-pointer px-10 text-3xl hover:bg-gray-400",
+              "cursor-pointer px-10 text-[1.4rem] mobile-lg:text-[1.8rem] mobile:text-[2.2rem] hover:bg-gray-400",
               filters.includes(key) && "bg-olive-100",
             )}
             checked={filters.includes(key)}
