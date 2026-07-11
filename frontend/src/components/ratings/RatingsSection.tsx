@@ -61,7 +61,7 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
                 <div className="w-10 h-10 bg-olive-500/10 rounded-xl flex items-center justify-center text-olive-500">
                     <Star className="w-6 h-6 fill-olive-500" />
                 </div>
-                <h2 className="text-3xl font-black text-gray-900">التقييمات والمراجعات</h2>
+                <h2 className="text-5xl mobile-lg:text-6xl font-black text-gray-900">التقييمات والمراجعات</h2>
             </div>
 
             <RatingsBreakdown statistics={data.statistics} />
@@ -85,7 +85,7 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
                     ) : (
                         <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 text-gray-400 w-full">
                             <MessageSquare className="w-16 h-16 mb-4 opacity-20" />
-                            <p className="text-lg font-medium">لا توجد مراجعات نصية بعد</p>
+                            <p className="text-3xl mobile-lg:text-4xl font-medium">لا توجد مراجعات نصية بعد</p>
                         </div>
                     )}
                 </div>
@@ -102,8 +102,8 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
                     )}
                     
                     <div className="bg-linear-to-br from-olive-500 to-olive-700 rounded-3xl p-8 text-white shadow-xl">
-                        <h4 className="text-xl font-bold mb-4">لماذا تقييمك مهم؟</h4>
-                        <ul className="space-y-3 text-sm opacity-90">
+                        <h4 className="text-3xl mobile-lg:text-4xl font-bold mb-4">لماذا تقييمك مهم؟</h4>
+                        <ul className="space-y-3 text-2xl mobile-lg:text-3xl opacity-90">
                             <li className="flex items-start gap-2">
                                 <span className="w-1.5 h-1.5 rounded-full bg-white mt-1.5 shrink-0" />
                                 يساعد المعلمين على تحسين أسلوب الشرح

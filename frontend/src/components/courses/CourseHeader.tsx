@@ -26,10 +26,10 @@ export default function CourseHeader({
   return (
     <div className="mb-12 relative w-full">
       {/* Background/Glass Container */}
-      <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-soft p-10 flex flex-col items-center gap-8 relative overflow-hidden w-full">
+      <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-soft p-10 max-[1000px]:p-6 flex flex-col items-center gap-8 max-[1000px]:gap-6 relative overflow-hidden w-full">
         
         {/* Course ID Badge */}
-        <div className="absolute top-6 left-10">
+        <div className="absolute top-6 left-10 max-[1000px]:static max-[1000px]:self-end">
           <CopyToClipboardButton className="bg-white/80 hover:bg-white shadow-sm border-none px-4 py-1.5 rounded-full text-lg">
             {course?.slug || "C1389403"}
           </CopyToClipboardButton>
@@ -37,13 +37,13 @@ export default function CourseHeader({
 
         {/* Title Section */}
         <div className="text-center mt-4">
-          <h2 className="text-olive-700 text-5xl font-medad font-bold">
+          <h2 className="text-olive-700 text-5xl max-[1000px]:text-4xl font-medad font-bold">
             {course?.name} - مستوى متقدم
           </h2>
         </div>
 
         {/* Info Grid */}
-        <div className="grid grid-cols-4 gap-x-20 w-full max-w-4xl border-t border-olive-100/50 pt-8">
+        <div className="grid grid-cols-4 max-[1000px]:grid-cols-2 max-[1000px]:gap-y-6 max-[1000px]:gap-x-4 gap-x-20 w-full max-w-4xl border-t border-olive-100/50 pt-8">
           <div className={dataPointWrapperStyles}>
             <InstructorIcon className={dataPointIconStyles} />
             <span className={labelStyles}>المعلمين</span>

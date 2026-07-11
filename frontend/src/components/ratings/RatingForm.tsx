@@ -60,41 +60,41 @@ const RatingForm: React.FC<RatingFormProps> = ({
     return (
         <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-3xl p-8 border border-gray-100 shadow-xl">
             <div className="text-center space-y-2">
-                <h3 className="text-2xl font-bold text-gray-900">أضف تقييمك</h3>
-                <p className="text-gray-500 text-sm">رأيك يهمنا ويساعدنا في التطوير</p>
+                <h3 className="text-4xl mobile-lg:text-5xl font-bold text-gray-900">أضف تقييمك</h3>
+                <p className="text-xl mobile-lg:text-2xl text-gray-500 mt-2">رأيك يهمنا ويساعدنا في التطوير</p>
             </div>
 
-            <div className="flex flex-col items-center gap-4 py-4 bg-primary/5 rounded-2xl">
-                <span className="text-sm font-medium text-primary">التقييم العام (من 10)</span>
+            <div className="flex flex-col items-center gap-4 py-6 bg-primary/5 rounded-2xl mt-4">
+                <span className="text-2xl font-medium text-primary">التقييم العام (من 10)</span>
                 <RatingStars 
                     rating={rating} 
                     editable 
                     size="lg" 
                     onChange={setRating} 
                 />
-                <span className="text-2xl font-black text-primary">{rating}/10</span>
+                <span className="text-4xl mobile-lg:text-5xl font-black text-primary mt-2">{rating}/10</span>
             </div>
 
-            <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 mr-1">ملاحظاتك (اختياري)</label>
+            <div className="space-y-4 mt-6">
+                <label className="text-2xl font-bold text-gray-700 mr-1">ملاحظاتك (اختياري)</label>
                 <textarea
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
                     placeholder="اكتب تجربتك هنا..."
-                    className="w-full min-h-[120px] rounded-2xl border border-gray-200 p-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none transition-all"
+                    className="text-2xl w-full min-h-[120px] rounded-2xl border border-gray-200 p-6 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none transition-all mt-2"
                 />
             </div>
 
             <Button 
                 type="submit" 
                 disabled={loading}
-                className="w-full h-14 rounded-2xl text-lg font-bold gap-2 shadow-lg shadow-primary/20"
+                className="w-full h-16 mt-6 rounded-2xl text-3xl font-bold gap-3 shadow-lg shadow-primary/20"
             >
                 {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-8 h-8 animate-spin" />
                 ) : (
                     <>
-                        <Send className="w-5 h-5" />
+                        <Send className="w-8 h-8" />
                         إرسال التقييم
                     </>
                 )}

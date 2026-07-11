@@ -18,11 +18,11 @@ export default function WhatsAppWidget() {
         href={`https://wa.me/${phoneNumber}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="group relative flex h-16 w-16 items-center justify-center rounded-full bg-[#25D366] text-white shadow-soft transition-transform duration-300 hover:scale-110 hover:shadow-lg"
+        className="group relative flex h-20 w-20 items-center justify-center rounded-full bg-[#25D366] text-white shadow-soft transition-transform duration-300 hover:scale-110 hover:shadow-lg"
         aria-label="تواصل معنا عبر واتساب"
       >
         <span className="absolute -inset-1 animate-ping rounded-full bg-[#25D366] opacity-20"></span>
-        <WhatsappIcon className="h-9 w-9" />
+        <WhatsappIcon className="h-12 w-12" />
       </Link>
     </motion.div>
   );

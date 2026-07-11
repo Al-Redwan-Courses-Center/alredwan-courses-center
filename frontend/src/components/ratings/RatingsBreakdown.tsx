@@ -26,7 +26,7 @@ const RatingsBreakdown: React.FC<RatingsBreakdownProps> = ({ statistics }) => {
     if (total_ratings === 0) {
         return (
             <div className="text-center py-12 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-                <p className="text-gray-500 font-medium">لا توجد تقييمات بعد</p>
+                <p className="text-gray-500 text-2xl font-medium">لا توجد تقييمات بعد</p>
             </div>
         );
     }
@@ -35,23 +35,23 @@ const RatingsBreakdown: React.FC<RatingsBreakdownProps> = ({ statistics }) => {
         <div className="grid grid-cols-3 tablet:grid-cols-1 gap-8 bg-white rounded-3xl p-8 border border-gray-100 shadow-sm divide-x divide-x-reverse tablet:divide-x-0 tablet:divide-y divide-gray-100">
             {/* Overall Score */}
             <div className="flex flex-col items-center justify-center tablet:pt-0 tablet:pb-6">
-                <span className="text-sm font-bold text-gray-500 mb-2">التقييم العام</span>
-                <div className="text-6xl font-black text-primary mb-2">
+                <span className="text-2xl mobile-lg:text-3xl font-bold text-gray-500 mb-2">التقييم العام</span>
+                <div className="text-[6rem] mobile-lg:text-[8rem] leading-none font-black text-primary mb-2 mt-4">
                     {average_rating ? average_rating.toFixed(1) : '0.0'}
                 </div>
                 <RatingStars rating={average_rating || 0} size="sm" />
-                <span className="text-xs text-gray-400 mt-2">من {total_ratings} تقييم</span>
+                <span className="text-xl mobile-lg:text-2xl text-gray-400 mt-2">من {total_ratings} تقييم</span>
             </div>
 
             {/* Student Score */}
             <div className="flex flex-col items-center justify-center tablet:pt-6">
-                <span className="text-sm font-bold text-blue-600 mb-2">تقييم الطلاب</span>
-                <div className="text-4xl font-bold text-gray-900 mb-2">
+                <span className="text-2xl mobile-lg:text-3xl font-bold text-blue-600 mb-2">تقييم الطلاب</span>
+                <div className="text-[4rem] mobile-lg:text-[5rem] leading-none font-bold text-gray-900 mb-2 mt-2">
                     {student_average ? student_average.toFixed(1) : '0.0'}
                 </div>
-                <div className="w-full max-w-[120px] space-y-1">
-                    <ProgressBar progress={(student_average || 0) * 10} className="h-1.5" />
-                    <div className="flex justify-between text-[10px] text-gray-400">
+                <div className="w-full max-w-[120px] space-y-2 mt-2">
+                    <ProgressBar progress={(student_average || 0) * 10} className="h-2" />
+                    <div className="flex justify-between text-xl mobile-lg:text-2xl text-gray-400">
                         <span>{student_ratings_count} تقييم</span>
                         <span>10/10</span>
                     </div>
@@ -60,13 +60,13 @@ const RatingsBreakdown: React.FC<RatingsBreakdownProps> = ({ statistics }) => {
 
             {/* Parent Score */}
             <div className="flex flex-col items-center justify-center tablet:pt-6">
-                <span className="text-sm font-bold text-purple-600 mb-2">تقييم أولياء الأمور</span>
-                <div className="text-4xl font-bold text-gray-900 mb-2">
+                <span className="text-2xl mobile-lg:text-3xl font-bold text-purple-600 mb-2">تقييم أولياء الأمور</span>
+                <div className="text-[4rem] mobile-lg:text-[5rem] leading-none font-bold text-gray-900 mb-2 mt-2">
                     {parent_average ? parent_average.toFixed(1) : '0.0'}
                 </div>
-                <div className="w-full max-w-[120px] space-y-1">
-                    <ProgressBar progress={(parent_average || 0) * 10} className="h-1.5" />
-                    <div className="flex justify-between text-[10px] text-gray-400">
+                <div className="w-full max-w-[120px] space-y-2 mt-2">
+                    <ProgressBar progress={(parent_average || 0) * 10} className="h-2" />
+                    <div className="flex justify-between text-xl mobile-lg:text-2xl text-gray-400">
                         <span>{parent_ratings_count} تقييم</span>
                         <span>10/10</span>
                     </div>

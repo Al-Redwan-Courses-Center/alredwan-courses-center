@@ -148,7 +148,7 @@ export default function CoursePurchaseModal({
     >
       <ModalTrigger asChild>
         <Button className="w-full" disabled={hasNoChildren}>
-          اشتري الآن
+          طلب الالتحاق
         </Button>
       </ModalTrigger>
 
@@ -161,8 +161,8 @@ export default function CoursePurchaseModal({
         >
           <ModalDescription className="text-center text-2xl text-gray-600">
             {role === "parent"
-              ? "اختر بيانات الطلب للطفل ثم أكد الشراء."
-              : "أكد بيانات طلب الإلتحاق ثم اضغط شراء الآن."}
+              ? "اختر بيانات الطلب للطفل ثم أكد طلب الالتحاق."
+              : "أكد بيانات طلب الإلتحاق ثم اضغط تأكيد طلب الالتحاق."}
           </ModalDescription>
 
           {renderError(errors.root?.serverError?.message)}
@@ -308,7 +308,7 @@ export default function CoursePurchaseModal({
               loading={isSubmitting}
               disabled={isSubmitting || hasNoChildren}
             >
-              تأكيد الشراء الآن
+              تأكيد طلب الالتحاق
             </Button>
           </div>
         </form>

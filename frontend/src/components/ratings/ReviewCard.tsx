@@ -29,8 +29,8 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                         <User className="w-6 h-6" />
                     </div>
                     <div>
-                        <h4 className="font-bold text-gray-900">{reviewerName}</h4>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <h4 className="font-bold text-gray-900 text-3xl mobile-lg:text-4xl">{reviewerName}</h4>
+                        <div className="flex items-center gap-2 text-xl mobile-lg:text-2xl text-gray-500 mt-2">
                             <span className={type === 'student' ? 'text-blue-600 bg-blue-50 px-2 py-0.5 rounded' : 'text-purple-600 bg-purple-50 px-2 py-0.5 rounded'}>
                                 {type === 'student' ? 'طالب' : 'ولي أمر'}
                             </span>
@@ -45,18 +45,18 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
                 </div>
                 <div className="flex flex-col items-end gap-1">
                     <RatingStars rating={rating} size="sm" />
-                    <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                        <Calendar className="w-3 h-3" />
+                    <div className="flex items-center gap-1 text-xl mobile-lg:text-2xl text-gray-400 mt-1">
+                        <Calendar className="w-4 h-4" />
                         <span>{format(new Date(date), 'dd MMMM yyyy', { locale: ar })}</span>
                     </div>
                 </div>
             </div>
             
             {feedback && (
-                <div className="bg-gray-50 rounded-xl p-4 text-gray-700 text-sm leading-relaxed relative">
-                    <span className="absolute -top-2 left-4 text-4xl text-gray-200 font-serif leading-none">"</span>
+                <div className="bg-gray-50 rounded-xl p-6 text-gray-700 text-2xl mobile-lg:text-3xl leading-relaxed relative mt-4">
+                    <span className="absolute -top-4 left-4 text-6xl mobile-lg:text-7xl text-gray-200 font-serif leading-none">"</span>
                     {feedback}
-                    <span className="absolute -bottom-6 right-4 text-4xl text-gray-200 font-serif leading-none rotate-180">"</span>
+                    <span className="absolute -bottom-8 right-4 text-6xl mobile-lg:text-7xl text-gray-200 font-serif leading-none rotate-180">"</span>
                 </div>
             )}
         </div>

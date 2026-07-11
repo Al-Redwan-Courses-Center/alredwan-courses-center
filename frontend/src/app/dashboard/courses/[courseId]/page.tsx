@@ -82,7 +82,7 @@ export default async function Page({
   }
 
   return (
-    <main className="h-full overflow-y-auto px-16 py-8">
+    <main className="h-full overflow-y-auto px-16 max-[1000px]:px-8 py-8">
       <div className="flex flex-col gap-8">
         
         {/* Header Section */}
@@ -100,7 +100,7 @@ export default async function Page({
         <CourseHeader course={course} />
 
         {/* Content Grid */}
-        <div className="grid grid-cols-[1.5fr_1fr] gap-12">
+        <div className="grid grid-cols-[1.5fr_1fr] max-[1000px]:grid-cols-1 gap-12">
             
             {/* Left Column: Image & Details */}
             <div className="flex flex-col gap-10">
@@ -115,7 +115,7 @@ export default async function Page({
                     />
                 </div>
 
-                <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-soft p-10 flex flex-col gap-6">
+                <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-soft p-10 max-[1000px]:p-6 flex flex-col gap-6">
                     <h2 className="text-olive-700 text-4xl font-bold flex items-center gap-4">
                         <Pencil size={24} className="text-olive-400" />
                         عن الدورة
@@ -136,7 +136,7 @@ export default async function Page({
 
             {/* Right Column: Pricing & Purchase */}
             <div className="flex flex-col gap-10">
-                <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-soft p-10 flex flex-col gap-8">
+                <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-soft p-10 max-[1000px]:p-6 flex flex-col gap-8">
                     <div className="flex flex-col gap-2">
                         <span className="text-gray-400 text-xl">رسوم الدورة</span>
                         <div className="flex items-baseline gap-2">
@@ -179,7 +179,7 @@ export default async function Page({
                     </div>
                 </div>
 
-                <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-soft p-10">
+                <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-soft p-10 max-[1000px]:p-6">
                     <h3 className="text-olive-700 text-3xl font-bold mb-6">لماذا تختار الرضوان؟</h3>
                     <ul className="space-y-4">
                         {[
@@ -200,7 +200,7 @@ export default async function Page({
         </div>
 
         {/* Ratings Section */}
-        <div className="mt-8 bg-white/40 backdrop-blur-md rounded-[3rem] border border-white/60 shadow-soft p-10">
+        <div className="mt-8 bg-white/40 backdrop-blur-md rounded-[3rem] border border-white/60 shadow-soft p-10 max-[1000px]:p-6">
             <h2 className="text-olive-700 text-4xl font-bold mb-10 text-center">تقييمات الدورة وآراء الطلاب</h2>
             <RatingsSection 
                 type="course" 
