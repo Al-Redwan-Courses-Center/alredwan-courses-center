@@ -33,7 +33,6 @@ export default function LoginForm({
       password: "password123",
     },
   });
-  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     onLoadingChange?.(isSubmitting);
@@ -163,17 +162,8 @@ export default function LoginForm({
         />
 
         <FieldSetInput
-          type={showPassword ? "text" : "password"}
+          type="password"
           label="كلمة المرور"
-          button={
-            <button
-              type="button"
-              onClick={() => setShowPassword((s) => !s)}
-              className="text-olive-500"
-            >
-              {showPassword ? <EyeIcon /> : <EyeOffIcon />}
-            </button>
-          }
           registerReturn={register("password")}
         />
       </div>

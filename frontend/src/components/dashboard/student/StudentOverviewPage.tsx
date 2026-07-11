@@ -51,7 +51,7 @@ export default function StudentOverviewPage({
         attendanceRate={attendanceRate}
       />
 
-      <div className="[&>div]:separators-[7.25rem] [&>div]:border-olive-200 grid grid-cols-2 max-[1000px]:grid-cols-1 max-[1000px]:gap-8 [&>div]:max-[1000px]:border-0 [&>div]:max-[1000px]:ps-0">
+      <div className="grid grid-cols-2 max-[1000px]:grid-cols-1 gap-x-29 gap-y-12">
         <div className="flex flex-col gap-6">
           <h2 className="dashboard-section-title">آخر الكورسات المسجلة</h2>
 

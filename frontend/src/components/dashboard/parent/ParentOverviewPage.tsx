@@ -52,7 +52,7 @@ export default async function ParentOverviewPage() {
         totalPaid={totalPaid}
       />
 
-      <div className="[&>div]:separators-[7.25rem] [&>div]:border-olive-200 grid grid-cols-2 pe-0!">
+      <div className="grid grid-cols-2 max-[1000px]:grid-cols-1 gap-x-29 gap-y-12">
         <div className="flex flex-col gap-6">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="dashboard-section-title">أطفالي</h2>

@@ -56,8 +56,6 @@ const fieldMap: Record<keyof SignupInputs, string> = {
 export default function SignupForm() {
   const [countryCode, setCountryCode] = useState("2");
   const [showCountryCodeList, setShowCountryCodeList] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showRePassword, setShowRePassword] = useState(false);
 
   const {
     register,
@@ -533,17 +531,8 @@ export default function SignupForm() {
         */}
         <div className={cn(inputWrapperStyles)}>
           <FieldSetInput
-            type={showPassword ? "text" : "password"}
+            type="password"
             label="كلمة المرور"
-            button={
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="text-olive-500"
-              >
-                {showPassword ? <EyeIcon /> : <EyeOffIcon />}
-              </button>
-            }
             registerReturn={register("password", {
               required: {
                 value: true,
@@ -564,17 +553,8 @@ export default function SignupForm() {
         */}
         <div className={cn(inputWrapperStyles)}>
           <FieldSetInput
-            type={showRePassword ? "text" : "password"}
+            type="password"
             label="تأكيد كلمة المرور"
-            button={
-              <button
-                type="button"
-                onClick={() => setShowRePassword((s) => !s)}
-                className="text-olive-500"
-              >
-                {showRePassword ? <EyeIcon /> : <EyeOffIcon />}
-              </button>
-            }
             registerReturn={register("re_password", {
               required: {
                 value: true,

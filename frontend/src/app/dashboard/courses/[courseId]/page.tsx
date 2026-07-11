@@ -104,7 +104,7 @@ export default async function Page({
             
             {/* Left Column: Image & Details */}
             <div className="flex flex-col gap-10">
-                <div className="relative aspect-[16/9] overflow-hidden rounded-[3rem] shadow-soft border-4 border-white/40">
+                <div className="relative aspect-video overflow-hidden rounded-[3rem] shadow-soft border-4 border-white/40">
                     <Image
                         src={course.image || CourseImage}
                         alt={course.name}
