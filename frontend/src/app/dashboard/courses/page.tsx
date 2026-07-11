@@ -10,8 +10,8 @@ export default async function Page() {
   const courses = await getAllCourses();
 
   return (
-    <div className="flex flex-col pt-15">
-      <h1 className="dashboard-greeting mb-14 ps-16">
+    <div className="flex flex-col pt-15 min-[1000px]:pt-32">
+      <h1 className="dashboard-greeting mb-14 ps-16 relative z-60">
         السلام عليكم يا {first_name}
       </h1>
 

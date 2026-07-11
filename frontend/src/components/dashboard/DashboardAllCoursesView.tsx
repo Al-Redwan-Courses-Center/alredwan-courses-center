@@ -38,7 +38,7 @@ export default function DashboardAllCoursesView({
       sortConfig={sortConfig}
       viewLayout="cards"
     >
-      <div className="mb-14 flex items-center justify-between gap-16 px-16 tablet:flex-col tablet:items-stretch tablet:gap-12">
+      <div className="relative z-60 mb-14 flex items-center justify-between gap-16 px-16 tablet:flex-col tablet:items-stretch tablet:gap-12">
         <div className="w-full max-w-[400px] tablet:max-w-full">
           <DataViewSearchLegacy />
         </div>

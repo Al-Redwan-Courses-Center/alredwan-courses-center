@@ -32,7 +32,7 @@ export function DataViewPaginationLegacy() {
             key={pageNum}
             onClick={() => setPage(pageNum)}
             className={cn(
-              "hover:bg-olive-100 aspect-square h-auto w-10 max-[1000px]:w-8 mobile-lg:w-[3.5rem] mobile:w-[4.5rem] content-center rounded-[0.8rem] text-2xl max-[1000px]:text-xl mobile-lg:text-[2rem] mobile:text-[2.6rem] font-bold text-gray-600 transition-colors",
+              "hover:bg-olive-100 aspect-square h-auto w-10 max-[1000px]:w-8 mobile-lg:w-14 mobile:w-18 content-center rounded-[0.8rem] text-2xl max-[1000px]:text-xl mobile-lg:text-[2rem] mobile:text-[2.6rem] font-bold text-gray-600 transition-colors",
               page === pageNum &&
                 "bg-olive-100 pointer-events-none text-gray-900",
             )}
