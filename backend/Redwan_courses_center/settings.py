@@ -346,3 +346,8 @@ if not DEBUG:
             default="https://localhost",
             cast=Csv()
         )
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = config(
+        "CORS_ALLOWED_ORIGINS", default="", cast=Csv())
+    CSRF_TRUSTED_ORIGINS = config(
+        "CSRF_TRUSTED_ORIGINS", default="", cast=Csv())

@@ -58,10 +58,8 @@ services:
         condition: service_healthy
     ports:
       - "3000:3000"
-    environment:
-      - REST_API_URL=http://redwan-backend:8000
-      - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=NMgLwPWT!R6VIxQd^Yr&t#pBqy4CDAn*)bsJve@SU257aZj9%zcuKEmkh3FG(8Xf
+    env_file:
+      - ./frontend/.env
     restart: unless-stopped
 
 volumes:
