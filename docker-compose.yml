@@ -43,7 +43,7 @@ services:
       - "8001:8001"   # Uvicorn (WebSocket/ASGI)  ← ADD THIS
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", 'python3 -c ''import urllib.request; import sys; sys.exit(0) if urllib.request.urlopen("http://localhost:8000/health/").getcode() == 200 else sys.exit(1)''']
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health/').getcode() == 200 else 1)\""]
       interval: 10s
       timeout: 5s
       retries: 10
