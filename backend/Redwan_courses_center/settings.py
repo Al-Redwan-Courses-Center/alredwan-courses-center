@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_filters",
     "djoser",
-    'corsheaders',
+    "corsheaders",
     "django_crontab",
     "channels",
     "cloudinary_storage",
@@ -134,8 +134,13 @@ else:
             "PASSWORD": config("DATABASE_PASSWORD", default=""),
             "HOST": config("DATABASE_HOST", default="127.0.0.1"),
             "PORT": config("DATABASE_PORT", default=5432, cast=int),
+            "CONN_MAX_AGE": 600,  # Connection pooling - keep connections for 10 min
+            "OPTIONS": {
+                "connect_timeout": 10,
+            },
         }
     }
+
 INTERNAL_IPS = [
     # ...
     "127.0.0.1",
@@ -351,3 +356,36 @@ if not DEBUG:
         "CORS_ALLOWED_ORIGINS", default="", cast=Csv())
     CSRF_TRUSTED_ORIGINS = config(
         "CSRF_TRUSTED_ORIGINS", default="", cast=Csv())
+
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "verbose": {
+                "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+                "style": "{",
+            },
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "verbose",
+            },
+        },
+        "root": {
+            "handlers": ["console"],
+            "level": config("DJANGO_LOGLEVEL", default="INFO"),
+        },
+        "loggers": {
+            "django": {
+                "handlers": ["console"],
+                "level": config("DJANGO_LOGLEVEL", default="INFO"),
+                "propagate": False,
+            },
+            "django.request": {
+                "handlers": ["console"],
+                "level": "ERROR",
+                "propagate": False,
+            },
+        },
+    }
