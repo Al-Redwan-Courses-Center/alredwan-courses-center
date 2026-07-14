@@ -14,6 +14,7 @@ jobs:
         with:
           host: ${{ secrets.DROPLET_HOST }}
           username: deploy
+          command_timeout: 30m
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
             cd /home/deploy/app
