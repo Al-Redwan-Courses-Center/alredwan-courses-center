@@ -17,9 +17,15 @@ class MemorySerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
     def get_file_url(self, obj):
-        if obj.file:
+        if not obj.file:
+            return None
+        if hasattr(obj.file, 'url'):
             return obj.file.url
-        return None
+        if isinstance(obj.file, str):
+            from cloudinary.utils import cloudinary_url
+            url, _ = cloudinary_url(obj.file, resource_type=obj.media_type)
+            return url
+        return str(obj.file)
         
     def get_thumbnail_url(self, obj):
         return obj.thumbnail_url
@@ -42,6 +48,8 @@ class MemorySerializer(serializers.ModelSerializer):
 
 
 class MemoryUploadSerializer(serializers.ModelSerializer):
+    file = serializers.CharField()
+
     class Meta:
         model = Memory
         fields = ['media_type', 'file', 'caption', 'children', 'students']

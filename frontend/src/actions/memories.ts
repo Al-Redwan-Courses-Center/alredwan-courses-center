@@ -60,17 +60,14 @@ export async function deleteMemory(id: string): Promise<{ ok: boolean; message?:
   }
 }
 
-export async function uploadMemory(formData: FormData): Promise<{ ok: boolean; message?: string }> {
+export async function getUploadToken(): Promise<{ ok: boolean; token?: string; message?: string }> {
   try {
-    const apiClient = await getAuthApiClient();
-    await apiClient.post("/api/memories/upload/", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    revalidatePath("/dashboard/memories");
-    return { ok: true, message: "تم رفع الذكرى بنجاح" };
+    const { getServerJwtToken } = await import("@/actions/auth");
+    const token = await getServerJwtToken();
+    if (!token?.jwt_access_token) throw new Error("Unauthorized");
+    
+    return { ok: true, token: token.jwt_access_token };
   } catch (error: any) {
-    return { ok: false, message: error.response?.data?.detail || "حدث خطأ أثناء الرفع" };
+    return { ok: false, message: error.message || "حدث خطأ في المصادقة" };
   }
 }

@@ -60,7 +60,7 @@ export default function Lightbox({ memories, initialIndex, onClose, onMemoryDele
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
       <div className="absolute top-4 right-4 flex gap-4">
         {isSupervisor && (
-          <Button variant="danger" onClick={() => setShowDeleteConfirm(true)}>
+          <Button variant="secondary" className="bg-red-500 hover:bg-red-600 text-white border-red-500" onClick={() => setShowDeleteConfirm(true)}>
             حذف الذكرى
           </Button>
         )}
@@ -130,7 +130,6 @@ export default function Lightbox({ memories, initialIndex, onClose, onMemoryDele
         confirmText="حذف"
         cancelText="إلغاء"
         variant="danger"
-        isLoading={isDeleting}
       />
     </div>
   );

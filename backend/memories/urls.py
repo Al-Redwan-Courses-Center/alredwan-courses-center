@@ -5,7 +5,8 @@ from .views import (
     PrivateFeedView,
     MemoryUploadView,
     MemoryDetailView,
-    ParticipantSearchView
+    ParticipantSearchView,
+    CloudinarySignatureView
 )
 
 app_name = 'memories'
@@ -16,4 +17,5 @@ urlpatterns = [
     path('upload/', MemoryUploadView.as_view(), name='memory-upload'),
     path('<uuid:id>/', MemoryDetailView.as_view(), name='memory-detail'),
     path('participants/search/', ParticipantSearchView.as_view(), name='participant-search'),
+    path('cloudinary/signature/', CloudinarySignatureView.as_view(), name='cloudinary-signature'),
 ]

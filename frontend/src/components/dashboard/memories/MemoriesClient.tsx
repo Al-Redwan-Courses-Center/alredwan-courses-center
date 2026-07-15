@@ -43,8 +43,8 @@ export default function MemoriesClient({ initialMemories, role }: Props) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex gap-4">
           <Button 
             variant={activeTab === "general" ? "primary" : "secondary"}
@@ -70,14 +70,14 @@ export default function MemoriesClient({ initialMemories, role }: Props) {
       </div>
 
       {loading ? (
-        <div className="flex justify-center p-12"><Loader thickness={4} /></div>
+        <div className="flex justify-center p-12"><Loader thickness="4px" /></div>
       ) : memories.length === 0 ? (
         <EmptyState 
           title="لا توجد ذكريات بعد" 
           description="لم يتم إضافة أي ذكريات في هذا القسم." 
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="flex flex-col gap-6">
           {memories.map((memory, index) => (
             <MemoryCard 
               key={memory.id} 

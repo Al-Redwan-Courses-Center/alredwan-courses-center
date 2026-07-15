@@ -72,7 +72,7 @@ class Memory(models.Model):
         - Admins can always edit.
         - The uploading supervisor can edit within 24 hours of creation.
         """
-        if getattr(user, 'user_type', None) == 'admin':
+        if getattr(user, 'role', None) == 'admin':
             return True
             
         if hasattr(user, 'instructor_profile') and user.instructor_profile == self.uploaded_by:
@@ -87,13 +87,17 @@ class Memory(models.Model):
         if not self.file:
             return None
             
+        public_id = getattr(self.file, 'public_id', self.file) if self.file else None
+        if not public_id:
+            return None
+            
         if self.media_type == self.MediaType.IMAGE:
             from core.utils.cloudinary import get_optimized_url
-            return get_optimized_url(self.file.public_id, width=400, height=400, crop='fill')
+            return get_optimized_url(public_id, width=400, height=400, crop='fill')
             
         elif self.media_type == self.MediaType.VIDEO:
             import cloudinary
-            return cloudinary.CloudinaryVideo(self.file.public_id).build_url(
+            return cloudinary.CloudinaryVideo(public_id).build_url(
                 width=400, 
                 height=400, 
                 crop='fill',

@@ -5,37 +5,37 @@ from datetime import timedelta
 
 class IsSupervisor(permissions.BasePermission):
     """
-    Allow supervisor instructors.
+    Allows access only to supervisors (or admins).
     """
-    message = 'يجب أن تكون مشرف للقيام بهذا الإجراء.'
-
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
-        if request.user.user_type == 'instructor':
-            return (
-                hasattr(request.user, 'instructor_profile') and
-                request.user.instructor_profile.type == 'supervisor'
-            )
-        return False
+        # Adjust this depending on how you identify supervisors/admins in your CustomUser
+        return request.user.role in ['supervisor', 'admin']
+
+class IsInstructor(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        return request.user.role == 'instructor'
 
 class IsUploaderWithin24hOrAdmin(permissions.BasePermission):
     """
-    Object-level permission:
-    - Admin can edit/delete anytime
-    - Supervisor who uploaded can edit/delete within 24 hours of creation
+    Allows an instructor to edit/delete their own memory if uploaded within the last 24h.
+    Admins can do it anytime.
     """
-    message = 'لا يمكنك تعديل هذه الذكرى بعد مرور 24 ساعة، أو لست من قام برفعها.'
-
     def has_object_permission(self, request, view, obj):
-        if request.user.user_type == 'admin':
+        if not request.user or not request.user.is_authenticated:
+            return False
+            
+        if request.user.role == 'admin':
             return True
-
-        if request.user.user_type == 'instructor':
-            if hasattr(request.user, 'instructor_profile'):
-                # Check if this instructor uploaded it
-                if obj.uploaded_by == request.user.instructor_profile:
-                    # Allow edit within 24 hours
-                    time_diff = timezone.now() - obj.created_at
-                    return time_diff <= timedelta(hours=24)
+            
+        if request.user.role in ['instructor', 'supervisor']:
+            # Check if this user uploaded it
+            if obj.uploaded_by.user == request.user:
+                # Check if within 24 hours
+                if timezone.now() - obj.created_at <= timedelta(hours=24):
+                    return True
+                    
         return False

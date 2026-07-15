@@ -34,7 +34,7 @@ class PrivateFeedView(generics.ListAPIView):
         user = self.request.user
         queryset = Memory.objects.filter(is_active=True)
         
-        if user.user_type == 'parent':
+        if user.role == 'parent':
             if hasattr(user, 'parent_profile'):
                 parent_profile = user.parent_profile
                 # Parents can see memories tagged with their primary children or extra children
@@ -56,7 +56,7 @@ class PrivateFeedView(generics.ListAPIView):
                         )
                     ).distinct().order_by('-created_at')
                     
-        elif user.user_type == 'student':
+        elif user.role == 'student':
             if hasattr(user, 'student_profile'):
                 return queryset.filter(students=user.student_profile).distinct().order_by('-created_at')
                 
@@ -73,7 +73,15 @@ class MemoryUploadView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated, IsSupervisor]
     
     def perform_create(self, serializer):
-        serializer.save(uploaded_by=self.request.user.instructor_profile)
+        from users.models import Instructor
+        instructor, created = Instructor.objects.get_or_create(
+            user=self.request.user,
+            defaults={
+                'monthly_salary': 0, 
+                'type': Instructor.InstructorType.SUPERVISOR
+            }
+        )
+        serializer.save(uploaded_by=instructor)
         
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -152,3 +160,29 @@ class ParticipantSearchView(views.APIView):
             })
             
         return Response(results)
+
+import cloudinary.utils
+import time
+
+class CloudinarySignatureView(views.APIView):
+    """
+    API endpoint to get a secure signature for direct client-side upload to Cloudinary.
+    Supervisors only.
+    """
+    permission_classes = [permissions.IsAuthenticated, IsSupervisor]
+    
+    def get(self, request):
+        timestamp = int(time.time())
+        params_to_sign = {
+            'timestamp': timestamp,
+            'folder': 'memories'
+        }
+        signature = cloudinary.utils.api_sign_request(params_to_sign, cloudinary.config().api_secret)
+        
+        return Response({
+            'signature': signature,
+            'timestamp': timestamp,
+            'cloud_name': cloudinary.config().cloud_name,
+            'api_key': cloudinary.config().api_key,
+        })
+
