@@ -114,6 +114,7 @@ function StaffAttendanceRow({
 
   useEffect(() => {
     const ts = Date.now();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNowTimestamp(ts);
     setScheduledCheckInTimestamp(new Date(ts).setHours(checkInHours, checkInMinutes, 0, 0));
     setScheduledCheckOutTimestamp(new Date(ts).setHours(checkOutHours, checkOutMinutes, 0, 0));
@@ -463,6 +464,7 @@ export default function AdminAttendancesView({
     if (!lastJsonMessage) return;
     if (lastJsonMessage.type === "attendance_update") {
       const { check_in_time, check_out_time, id, status } = lastJsonMessage.data as any;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAttendances((prev) =>
         prev.map((a) => (a.id === id ? { ...a, check_in_time, check_out_time, status } : a))
       );

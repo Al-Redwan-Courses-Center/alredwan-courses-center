@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getTodaysAttendances } from "@/actions/admin-attendances";
 import AdminAttendancesView from "@/components/dashboard/admin/AdminAttendancesView";
 

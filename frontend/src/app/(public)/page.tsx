@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import ActivitiesSection from "@/components/landing-page/ActivitiesSection";
 import CallToActionSection from "@/components/landing-page/CallToActionSection";
 import CoursesSection from "@/components/landing-page/CoursesSection";
