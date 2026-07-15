@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_filters",
     "djoser",
-    'corsheaders',
+    "corsheaders",
     "django_crontab",
     "channels",
     "cloudinary_storage",
@@ -135,8 +135,13 @@ else:
             "PASSWORD": config("DATABASE_PASSWORD", default=""),
             "HOST": config("DATABASE_HOST", default="127.0.0.1"),
             "PORT": config("DATABASE_PORT", default=5432, cast=int),
+            "CONN_MAX_AGE": 600,  # Connection pooling - keep connections for 10 min
+            "OPTIONS": {
+                "connect_timeout": 10,
+            },
         }
     }
+
 INTERNAL_IPS = [
     # ...
     "127.0.0.1",
@@ -321,7 +326,7 @@ DJOSER = {
 # Production Security Settings
 if not DEBUG:
     # HTTPS/SSL settings
-    SECURE_SSL_REDIRECT = True
+    SECURE_SSL_REDIRECT = False
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
     # HSTS settings
@@ -347,3 +352,41 @@ if not DEBUG:
             default="https://localhost",
             cast=Csv()
         )
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = config(
+        "CORS_ALLOWED_ORIGINS", default="", cast=Csv())
+    CSRF_TRUSTED_ORIGINS = config(
+        "CSRF_TRUSTED_ORIGINS", default="", cast=Csv())
+
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "verbose": {
+                "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+                "style": "{",
+            },
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "verbose",
+            },
+        },
+        "root": {
+            "handlers": ["console"],
+            "level": config("DJANGO_LOGLEVEL", default="INFO"),
+        },
+        "loggers": {
+            "django": {
+                "handlers": ["console"],
+                "level": config("DJANGO_LOGLEVEL", default="INFO"),
+                "propagate": False,
+            },
+            "django.request": {
+                "handlers": ["console"],
+                "level": "ERROR",
+                "propagate": False,
+            },
+        },
+    }
