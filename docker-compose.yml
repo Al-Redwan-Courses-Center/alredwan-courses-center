@@ -62,6 +62,8 @@ services:
       - "3000:3000"
     env_file:
       - ./frontend/.env
+    environment:
+      - REST_API_URL=http://redwan-backend:8000
     restart: unless-stopped
 
 volumes:

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getParentChildren, getChildEnrollments, getChildEnrollmentRequests } from "@/actions/user";
 import MyChildrenList from "@/components/dashboard/parent/MyChildrenList";
 import { EnrollmentRequestListItem } from "@/types/entities";

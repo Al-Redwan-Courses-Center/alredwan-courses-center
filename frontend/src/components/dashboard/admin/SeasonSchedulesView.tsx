@@ -63,7 +63,7 @@ export default function SeasonSchedulesView({
   const [scheduleToDelete, setScheduleToDelete] = useState<number | null>(null);
 
   const filteredSchedules = useMemo(() => {
-    let result = schedules.filter((s) => {
+    const result = schedules.filter((s) => {
       const matchesSearch = 
         s.course_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.instructor_name?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -156,7 +156,7 @@ export default function SeasonSchedulesView({
       s.student_count
     ]);
     
-    let csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
       + headers.join(",") + "\n"
       + rows.map(e => e.join(",")).join("\n");
 
@@ -302,12 +302,12 @@ export default function SeasonSchedulesView({
               <DataViewHeaderLegacy 
                 className="bg-[#C8D0CB] h-[70px] shadow-soft rounded-[20px_0] px-10 mb-2 border-none items-center"
               >
-                <DataViewCellLegacy className="font-['Medad_Platinum'] font-[400] text-[20px] text-[#535862] leading-[18px]">م</DataViewCellLegacy>
-                <DataViewCellLegacy className="font-['Medad_Platinum'] font-[400] text-[20px] text-[#535862] leading-[18px]">الدورة</DataViewCellLegacy>
-                <DataViewCellLegacy className="font-['Medad_Platinum'] font-[400] text-[20px] text-[#535862] leading-[18px]">المحاضر</DataViewCellLegacy>
-                <DataViewCellLegacy className="font-['Medad_Platinum'] font-[400] text-[20px] text-[#535862] leading-[18px]">الموسم</DataViewCellLegacy>
-                <DataViewCellLegacy className="font-['Medad_Platinum'] font-[400] text-[20px] text-[#535862] leading-[18px]">الايام</DataViewCellLegacy>
-                <DataViewCellLegacy className="text-center font-['Medad_Platinum'] font-[400] text-[20px] text-[#535862] leading-[18px]">عدد الطلاب</DataViewCellLegacy>
+                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">م</DataViewCellLegacy>
+                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">الدورة</DataViewCellLegacy>
+                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">المحاضر</DataViewCellLegacy>
+                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">الموسم</DataViewCellLegacy>
+                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">الايام</DataViewCellLegacy>
+                <DataViewCellLegacy className="text-center font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">عدد الطلاب</DataViewCellLegacy>
                 <DataViewCellLegacy className="flex items-center justify-end">
                   {/* Redundant add button removed from here */}
                 </DataViewCellLegacy>
@@ -321,27 +321,27 @@ export default function SeasonSchedulesView({
                       key={`${item.type}-${item.id}`}
                       className="bg-white shadow-soft rounded-2xl h-[70px] px-10 border-none mb-4 items-center transition-none"
                     >
-                      <DataViewCellLegacy className="font-['El_Messiri'] font-[500] text-[14px] text-[#181D27] leading-[20px] text-right">
+                      <DataViewCellLegacy className="font-['El_Messiri'] font-medium text-[14px] text-gray-900 leading-[20px] text-right">
                         {toHindiDigits(i + 1)}
                       </DataViewCellLegacy>
                       <DataViewCellLegacy className="flex items-center gap-4 text-right overflow-hidden">
-                        <span className="font-['El_Messiri'] font-[500] text-[14px] text-[#181D27] whitespace-nowrap overflow-hidden text-ellipsis">
+                        <span className="font-['El_Messiri'] font-medium text-[14px] text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis">
                           {item.course_name}
                         </span>
                         <span className="text-[12px] text-gray-700 font-bold whitespace-nowrap bg-gray-100 px-4 py-1 rounded-full">
                           {formatTime(item.start_time)} - {formatTime(item.end_time)}
                         </span>
                       </DataViewCellLegacy>
-                      <DataViewCellLegacy className="font-['El_Messiri'] font-[500] text-[14px] text-[#181D27] leading-[20px] text-right">
+                      <DataViewCellLegacy className="font-['El_Messiri'] font-medium text-[14px] text-gray-900 leading-[20px] text-right">
                         {item.instructor_name}
                       </DataViewCellLegacy>
-                      <DataViewCellLegacy className="font-['El_Messiri'] font-[500] text-[14px] text-[#181D27] leading-[20px] text-right">
+                      <DataViewCellLegacy className="font-['El_Messiri'] font-medium text-[14px] text-gray-900 leading-[20px] text-right">
                         {item.season_name}
                       </DataViewCellLegacy>
-                      <DataViewCellLegacy className="font-['El_Messiri'] font-[500] text-[14px] text-[#181D27] leading-[20px] text-right">
+                      <DataViewCellLegacy className="font-['El_Messiri'] font-medium text-[14px] text-gray-900 leading-[20px] text-right">
                         {item.weekday_display}
                       </DataViewCellLegacy>
-                      <DataViewCellLegacy className="text-center font-['El_Messiri'] font-[500] text-[14px] text-[#181D27] leading-[20px]">
+                      <DataViewCellLegacy className="text-center font-['El_Messiri'] font-medium text-[14px] text-gray-900 leading-[20px]">
                         {toHindiDigits(item.student_count || 0)}
                       </DataViewCellLegacy>
                       <DataViewCellLegacy className="flex items-center justify-end gap-6">

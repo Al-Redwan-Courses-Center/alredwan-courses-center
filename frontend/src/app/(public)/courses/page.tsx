@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
 import { Metadata } from "next";
 import { Suspense } from "react";
