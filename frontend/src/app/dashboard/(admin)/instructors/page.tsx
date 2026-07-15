@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getInstructors } from "@/actions/admin-instructors";
 import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
@@ -20,7 +22,7 @@ export default async function Page() {
       </div>
 
       {/* Grid Container with fixed responsive logic for Tailwind 4 / custom breakpoints */}
-      <div className="grid gap-20 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [@media(max-width:600px)]:grid-cols-1 [@media(min-width:600px)]:grid-cols-2 [@media(min-width:900px)]:grid-cols-3 [@media(min-width:1200px)]:grid-cols-4">
+      <div className="grid gap-20 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
         {instructors.map((instructor: Instructor, index: number) => (
           <ItemCard
             key={instructor.id}
