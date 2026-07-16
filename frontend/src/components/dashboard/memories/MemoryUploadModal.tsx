@@ -96,9 +96,8 @@ export default function MemoryUploadModal({ isOpen, onClose, onUploadSuccess }: 
     }
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") || "";
-      // 2. Get Cloudinary Signature from Django
-      const sigRes = await fetch(`${baseUrl}/api/memories/cloudinary/signature/`, {
+      // 2. Get Cloudinary Signature from Django via relative URL (handled by Nginx in prod)
+      const sigRes = await fetch(`/api/memories/cloudinary/signature/`, {
         headers: { "Authorization": `JWT ${tokenResult.token}` }
       });
       if (!sigRes.ok) throw new Error("فشل في الحصول على توقيع الرفع");
@@ -145,7 +144,7 @@ export default function MemoryUploadModal({ isOpen, onClose, onUploadSuccess }: 
       childrenIds.forEach(id => finalFormData.append("children", id));
       studentIds.forEach(id => finalFormData.append("students", id));
 
-      const response = await fetch(`${baseUrl}/api/memories/upload/`, {
+      const response = await fetch(`/api/memories/upload/`, {
         method: "POST",
         headers: { "Authorization": `JWT ${tokenResult.token}` },
         body: finalFormData
