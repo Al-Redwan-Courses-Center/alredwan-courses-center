@@ -4,7 +4,11 @@ import { getServerJwtToken } from "@/actions/auth";
 import axios, { type AxiosInstance } from "axios";
 
 const baseConfig = {
-  baseURL: process.env.REST_API_URL || process.env.NEXT_PUBLIC_API_URL,
+  baseURL:
+    process.env.REST_API_URL ||
+    // NEXT_PUBLIC_API_URL ends with "/api" but action paths already include "/api/…",
+    // so strip the trailing /api to avoid a double /api/api/ prefix.
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, ""),
 };
 
 export const publicApiClient: AxiosInstance = axios.create(baseConfig);
