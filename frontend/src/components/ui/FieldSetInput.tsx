@@ -31,7 +31,7 @@ interface ControlledInput extends BaseInput {
 
 const containerStyles = cva(
   cn(
-    "shadow-soft bg-gray-50 px-10 py-4 [&_input]:text-[1.8rem] [&_input::placeholder]:font-semibold [&_input::placeholder]:text-gray-600 relative",
+    "shadow-soft relative bg-gray-50 px-10 py-4 [&_input]:text-[1.8rem] [&_input::placeholder]:font-semibold [&_input::placeholder]:text-gray-600",
   ),
   {
     variants: {
@@ -74,7 +74,7 @@ export default function FieldSetInput({
         {...registerReturn}
         placeholder={placeholder}
         className={cn(
-          "w-full focus:outline-none bg-transparent",
+          "w-full bg-transparent focus:outline-none",
           inputStyles,
           (button || isPassword) && "pe-14",
         )}
@@ -84,14 +84,19 @@ export default function FieldSetInput({
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none flex items-center justify-center"
+          className="absolute top-1/2 left-6 flex -translate-y-1/2 items-center justify-center text-gray-400 hover:text-gray-600 focus:outline-none"
           aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
         >
           {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
         </button>
       )}
       {button && (
-        <div className={cn("absolute top-1/2 -translate-y-[50%]", isPassword ? "left-14" : "left-5")}>
+        <div
+          className={cn(
+            "absolute top-1/2 -translate-y-[50%]",
+            isPassword ? "left-14" : "left-5",
+          )}
+        >
           {button}
         </div>
       )}

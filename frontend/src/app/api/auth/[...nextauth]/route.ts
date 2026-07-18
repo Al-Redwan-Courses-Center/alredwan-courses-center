@@ -27,11 +27,14 @@ export const authConfig: AuthOptions = {
 
         if (!access || !refresh) return null;
 
-        const userRes = await publicApiClient.get<UserEntity>("/auth/users/me/", {
-          headers: {
-            Authorization: `JWT ${access}`,
+        const userRes = await publicApiClient.get<UserEntity>(
+          "/auth/users/me/",
+          {
+            headers: {
+              Authorization: `JWT ${access}`,
+            },
           },
-        });
+        );
 
         const user: UserEntity = userRes.data;
 

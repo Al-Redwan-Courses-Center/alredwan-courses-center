@@ -75,7 +75,7 @@ export default function PublicCoursesList({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 lg:gap-20 mb-17">
+    <div className="mb-17 grid grid-cols-1 gap-10 md:grid-cols-2 lg:gap-20 xl:grid-cols-3">
       {courses.map(({ course }, i) => (
         <PublicCourseCard key={course.id} course={course} index={i} />
       ))}

@@ -39,7 +39,7 @@ export function DataTableMobileSkeleton({
       {Array.from({ length: count }).map((_, index) => (
         <div key={index} className="flex flex-col">
           {/* Header skeleton - matches AccordionTrigger figma-mobile */}
-          <div className="flex h-12 items-center justify-between rounded-tl-[20px] rounded-br-[20px] bg-olive-100 px-6 shadow-soft">
+          <div className="bg-olive-100 shadow-soft flex h-12 items-center justify-between rounded-tl-[20px] rounded-br-[20px] px-6">
             <div className="flex items-center gap-5">
               <Skeleton className="h-5 w-32 bg-gray-300/50" />
               <Skeleton className="h-3 w-16 bg-gray-300/40" />

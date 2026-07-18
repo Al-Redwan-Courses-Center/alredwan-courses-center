@@ -38,11 +38,11 @@ export default function DashboardAllCoursesView({
       sortConfig={sortConfig}
       viewLayout="cards"
     >
-      <div className="relative z-60 mb-14 flex items-center justify-between gap-16 px-16 tablet:flex-col tablet:items-stretch tablet:gap-12">
-        <div className="w-full max-w-[400px] tablet:max-w-full">
+      <div className="tablet:flex-col tablet:items-stretch tablet:gap-12 relative z-60 mb-14 flex items-center justify-between gap-16 px-16">
+        <div className="tablet:max-w-full w-full max-w-[400px]">
           <DataViewSearchLegacy />
         </div>
-        <div className="flex items-center gap-12 tablet:w-full">
+        <div className="tablet:w-full flex items-center gap-12">
           <div className="tablet:flex-1 w-auto">
             <DataViewSortLegacy />
           </div>

@@ -22,7 +22,6 @@ export type StatusMap<T extends { status: string }> = Record<
   { label: string; color: StatusColors }
 >;
 
-
 export interface AccordionItemData {
   id: string;
   header: {

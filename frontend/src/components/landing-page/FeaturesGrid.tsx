@@ -73,17 +73,19 @@ function FeatureCard({
   return (
     <div
       className={cn(
-        "bg-olive-300 flex items-start text-gray-100 shadow-inner w-full text-right",
+        "bg-olive-300 flex w-full items-start text-right text-gray-100 shadow-inner",
         reversed
-          ? "rounded-tl-[10rem] tablet:rounded-tl-[5rem] rounded-br-[10rem] tablet:rounded-br-[5rem] pr-12 pt-12 pb-12 pl-18 tablet:p-8"
-          : "rounded-tr-[10rem] tablet:rounded-tr-[5rem] rounded-bl-[10rem] tablet:rounded-bl-[5rem] pr-18 pt-16 pb-12 pl-12 tablet:p-8",
+          ? "tablet:rounded-tl-[5rem] tablet:rounded-br-[5rem] tablet:p-8 rounded-tl-[10rem] rounded-br-[10rem] pt-12 pr-12 pb-12 pl-18"
+          : "tablet:rounded-tr-[5rem] tablet:rounded-bl-[5rem] tablet:p-8 rounded-tr-[10rem] rounded-bl-[10rem] pt-16 pr-18 pb-12 pl-12",
       )}
     >
-      <div className="flex gap-6 items-start w-full">
-        <Icon className="drop-shadow-primary h-12 w-12 shrink-0 mt-1" />
+      <div className="flex w-full items-start gap-6">
+        <Icon className="drop-shadow-primary mt-1 h-12 w-12 shrink-0" />
         <div className="flex flex-col gap-3">
-          <h3 className="text-2xl md:text-3xl font-semibold leading-tight">{title}</h3>
-          <p className="text-[1.5rem] md:text-[1.6rem] leading-relaxed opacity-90">
+          <h3 className="text-2xl leading-tight font-semibold md:text-3xl">
+            {title}
+          </h3>
+          <p className="text-[1.5rem] leading-relaxed opacity-90 md:text-[1.6rem]">
             {content}
           </p>
         </div>
@@ -94,7 +96,7 @@ function FeatureCard({
 
 export default function FeaturesGrid() {
   return (
-    <div className="grid w-full grid-cols-2 mobile-lg:grid-cols-1 gap-13 tablet:gap-8">
+    <div className="mobile-lg:grid-cols-1 tablet:gap-8 grid w-full grid-cols-2 gap-13">
       {featureCardsConfig.map((feature, i) => (
         <FeatureCard
           key={i}

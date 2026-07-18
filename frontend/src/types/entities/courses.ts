@@ -74,9 +74,6 @@ export interface CourseStats {
 }
 */
 
-
-
-
 // TODO(types): Unused entity type; reintroduce when an API uses it.
 /*
 export interface CourseImages {

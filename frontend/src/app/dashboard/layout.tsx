@@ -10,7 +10,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
   const sessionUser = await getUser();
   const dbUser = await getMe();
   const user = dbUser || sessionUser;
-  
+
   const { first_name, role } = user;
   const rawImage = user.profile_image || user.image;
   const userImage = getFullImageUrl(rawImage);
@@ -18,8 +18,12 @@ export default async function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-screen grid-cols-1 grid-rows-[auto_1fr] min-[1000px]:grid-cols-[auto_1fr]">
       <DashboardHeader firstName={first_name} image={userImage} role={role} />
-      <DashboardNavSidebar firstName={first_name} image={userImage} role={role} />
-      <div className="relative min-h-0 overflow-y-auto overflow-x-hidden bg-[linear-gradient(179deg,#FFF_0.75%,#93A494_480.3%)] max-[1000px]:pb-[120px] no-scrollbar">
+      <DashboardNavSidebar
+        firstName={first_name}
+        image={userImage}
+        role={role}
+      />
+      <div className="no-scrollbar relative min-h-0 overflow-x-hidden overflow-y-auto bg-[linear-gradient(179deg,#FFF_0.75%,#93A494_480.3%)] max-[1000px]:pb-[120px]">
         {children}
       </div>
       <DashboardBottomNav role={role} />

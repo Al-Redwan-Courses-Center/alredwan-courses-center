@@ -38,8 +38,12 @@ export default async function Page({
       ],
   );
 
-  const activeCoursesCount = enrollments.filter((e) => e.status === "active").length;
-  const pendingRequestsCount = enrollmentRequests.filter((e) => e.status === "pending").length;
+  const activeCoursesCount = enrollments.filter(
+    (e) => e.status === "active",
+  ).length;
+  const pendingRequestsCount = enrollmentRequests.filter(
+    (e) => e.status === "pending",
+  ).length;
   const attendanceRate = enrollments.length
     ? Math.round(
         enrollments.reduce(

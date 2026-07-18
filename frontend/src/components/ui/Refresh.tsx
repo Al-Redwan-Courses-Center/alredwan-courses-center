@@ -20,9 +20,11 @@ export default function Refresh({ className }: { className?: string }) {
       onClick={handleRefresh}
       disabled={isPending}
       className={cn(
-        "bg-olive-300 flex h-8 w-8 items-center justify-center rounded-full transition-all hover:scale-105 text-white active:scale-95 border-none outline-none",
-        isPending ? "animate-spin cursor-not-allowed opacity-60" : "cursor-pointer",
-        className
+        "bg-olive-300 flex h-8 w-8 items-center justify-center rounded-full border-none text-white transition-all outline-none hover:scale-105 active:scale-95",
+        isPending
+          ? "animate-spin cursor-not-allowed opacity-60"
+          : "cursor-pointer",
+        className,
       )}
       title="تحديث"
       aria-label="تحديث البيانات"

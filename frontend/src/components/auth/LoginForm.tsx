@@ -1,7 +1,11 @@
 "use client";
 
 import Button from "@/components/ui/Button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/DropdownMenu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
 import FieldSetInput from "@/components/ui/FieldSetInput";
 import { LoginInputs } from "@/types/auth";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
@@ -157,7 +161,7 @@ export default function LoginForm({
               if (countryCode !== "2" && val.startsWith("0")) {
                 setValue("phone_number1", val.replace(/^0+/, ""));
               }
-            }
+            },
           })}
         />
 

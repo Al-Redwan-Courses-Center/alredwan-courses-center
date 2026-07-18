@@ -47,7 +47,6 @@ export default function ChildCard({
   attendanceRate: number;
   showActions?: boolean;
 }) {
-
   return (
     <ItemCard
       shape="square"
@@ -68,9 +67,9 @@ export default function ChildCard({
             />
           </div>
 
-          <div className="flex flex-col pe-30 overflow-hidden text-right">
+          <div className="flex flex-col overflow-hidden pe-30 text-right">
             <span
-              className="text-[1.6rem] font-bold truncate block"
+              className="block truncate text-[1.6rem] font-bold"
               title={`${child.first_name} ${child.last_name}`}
             >
               {`(${toHindiDigits(index + 1)}) ${child.first_name} ${child.last_name}`}
@@ -91,11 +90,14 @@ export default function ChildCard({
         </div>
       }
       cardFooter={
-        <div className="flex items-center justify-between gap-4 w-full">
+        <div className="flex w-full items-center justify-between gap-4">
           {showActions && (
             <div className="flex items-center gap-2">
               <EditChildButton child={child} />
-              <DeleteChildButton childId={child.id} childName={child.first_name} />
+              <DeleteChildButton
+                childId={child.id}
+                childName={child.first_name}
+              />
             </div>
           )}
           <Button

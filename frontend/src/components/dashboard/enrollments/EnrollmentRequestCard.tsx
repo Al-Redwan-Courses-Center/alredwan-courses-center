@@ -22,7 +22,8 @@ export default function EnrollmentRequestCard({
   const courseTitle = enrollmentRequest.course_name;
   const displayPrice =
     enrollmentRequest.price ?? enrollmentRequest.course_price;
-  const tagShapeClassName = "rounded-[0.5rem_0] px-3 py-2 font-bold text-[1.3rem]";
+  const tagShapeClassName =
+    "rounded-[0.5rem_0] px-3 py-2 font-bold text-[1.3rem]";
 
   return (
     <div className="shadow-soft relative flex flex-col rounded-[2rem_0] bg-gray-50 py-6 ps-15 pe-22! text-2xl transition-colors hover:bg-gray-100">
@@ -41,10 +42,7 @@ export default function EnrollmentRequestCard({
 
         {childName && (
           <span
-            className={cn(
-              tagShapeClassName,
-              "bg-olive-500/10 text-olive-700",
-            )}
+            className={cn(tagShapeClassName, "bg-olive-500/10 text-olive-700")}
           >
             {childName}
           </span>

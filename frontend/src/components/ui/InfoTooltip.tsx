@@ -20,8 +20,8 @@ export default function InfoTooltip({
         <button
           type="button"
           className={cn(
-            "flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-red-800 hover:bg-red-700 transition-all hover:scale-105 text-white border-none outline-none active:scale-95",
-            className
+            "flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-red-800 text-white transition-all outline-none hover:scale-105 hover:bg-red-700 active:scale-95",
+            className,
           )}
           title="معلومات"
           aria-label="معلومات إضافية"
@@ -46,7 +46,7 @@ export default function InfoTooltip({
       <PopoverContent
         side="top"
         align="center"
-        className="w-80 bg-white text-olive-900 border border-olive-100/80 p-5 rounded-2xl shadow-soft text-xl font-bold leading-relaxed text-right z-[9999]"
+        className="text-olive-900 border-olive-100/80 shadow-soft z-[9999] w-80 rounded-2xl border bg-white p-5 text-right text-xl leading-relaxed font-bold"
         dir="rtl"
       >
         <div className="flex flex-col gap-2">
