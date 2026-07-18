@@ -25,14 +25,14 @@ export default function DataViewSearchLegacy() {
       id="searchbar"
       unstyled
       icon={
-        <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center justify-center">
-          <SearchIcon className="text-stone-400 w-[24px] h-[24px]" />
+        <div className="absolute top-1/2 left-6 flex -translate-y-1/2 items-center justify-center">
+          <SearchIcon className="h-[24px] w-[24px] text-stone-400" />
         </div>
       }
       iconAlignment="end"
       placeholder="ابحث عن دورة أو محاضرة..."
       inputStyles={cn(
-        "w-full h-[50px] rounded-full bg-white border border-stone-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] text-[1.2rem] mobile-lg:text-[1.6rem] mobile:text-[2rem] px-20 flex-1 pl-14",
+        "mobile-lg:text-[1.6rem] mobile:text-[2rem] h-[50px] w-full flex-1 rounded-full border border-stone-100 bg-white px-20 pl-14 text-[1.2rem] shadow-[0_2px_8px_rgba(0,0,0,0.06)]",
       )}
       wrapperStyles="flex-1 max-w-[400px] w-full relative"
       onChange={(e) => {

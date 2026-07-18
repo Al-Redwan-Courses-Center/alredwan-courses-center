@@ -29,7 +29,7 @@ export default async function StatisticsRow() {
   );
 
   return (
-    <div className="text-shadow-primary grid w-full grid-cols-4 tablet:grid-cols-2 mobile-lg:grid-cols-1 gap-13 tablet:gap-8 text-gray-100">
+    <div className="text-shadow-primary tablet:grid-cols-2 mobile-lg:grid-cols-1 tablet:gap-8 grid w-full grid-cols-4 gap-13 text-gray-100">
       <div className={cn(cardStyles, straight)}>
         <PeopleIcon />
 

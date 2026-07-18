@@ -30,7 +30,7 @@ export default function ChildEnrollmentRequestsFeed({
         ] -
         ENROLLMENT_REQUEST_STATUS_WEIGHTS[
           b.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
-        ]
+        ],
     );
   }, [initialRequests, activeTab]);
 
@@ -38,15 +38,17 @@ export default function ChildEnrollmentRequestsFeed({
     <div className="flex flex-col gap-8">
       {/* Tab Pills */}
       <div className="flex flex-wrap items-center gap-4 px-6">
-        <span className="text-2xl font-bold text-gray-500 me-4">تصفية طلبات الاشتراك:</span>
+        <span className="me-4 text-2xl font-bold text-gray-500">
+          تصفية طلبات الاشتراك:
+        </span>
         <button
           type="button"
           onClick={() => setActiveTab("all")}
           className={cn(
-            "px-8 py-3 rounded-full text-xl font-bold transition-all cursor-pointer",
+            "cursor-pointer rounded-full px-8 py-3 text-xl font-bold transition-all",
             activeTab === "all"
               ? "bg-olive-700 text-white shadow-md"
-              : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200",
           )}
         >
           الكل ({toHindiDigits(Object.values(initialRequests).flat().length)})
@@ -57,13 +59,14 @@ export default function ChildEnrollmentRequestsFeed({
             key={c.id}
             onClick={() => setActiveTab(c.id)}
             className={cn(
-              "px-8 py-3 rounded-full text-xl font-bold transition-all cursor-pointer",
+              "cursor-pointer rounded-full px-8 py-3 text-xl font-bold transition-all",
               activeTab === c.id
                 ? "bg-olive-700 text-white shadow-md"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200",
             )}
           >
-            {`(${toHindiDigits(i + 1)}) ${c.first_name}`} ({toHindiDigits((initialRequests[c.id] || []).length)})
+            {`(${toHindiDigits(i + 1)}) ${c.first_name}`} (
+            {toHindiDigits((initialRequests[c.id] || []).length)})
           </button>
         ))}
       </div>
@@ -79,4 +82,3 @@ export default function ChildEnrollmentRequestsFeed({
     </div>
   );
 }
-

@@ -5,7 +5,7 @@ import MemoriesClient from "@/components/dashboard/memories/MemoriesClient";
 export default async function MemoriesPage() {
   const [initialMemories, user] = await Promise.all([
     getGeneralMemories(),
-    getUser()
+    getUser(),
   ]);
 
   return (

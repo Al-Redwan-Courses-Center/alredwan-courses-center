@@ -43,24 +43,30 @@ export default function DeleteChildButton({
     <Modal open={isOpen} onOpenChange={setIsOpen}>
       <ModalTrigger asChild>
         <button
-          className="text-red-600 hover:text-red-800 transition-colors p-2 disabled:opacity-50 cursor-pointer"
+          className="cursor-pointer p-2 text-red-600 transition-colors hover:text-red-800 disabled:opacity-50"
           title="حذف"
         >
           <Trash2 size={24} />
         </button>
       </ModalTrigger>
 
-      <ModalContent className="max-w-md [&>div,&>form]:px-4 sm:[&>div,&>form]:px-20 [&>div,&>form]:last:p-[1.5rem_1.5rem_2rem_1.5rem] sm:[&>div,&>form]:last:p-[2rem_5rem_5rem_5rem]">
-        <ModalTitle className="text-red-800 text-center font-bold">تأكيد حذف الطفل</ModalTitle>
-        
-        <div className="flex flex-col gap-6 text-center py-6 px-2 sm:px-10">
-          <p className="text-2xl text-gray-700 leading-relaxed">
-            هل أنت متأكد من رغبتك في حذف <strong className="text-gray-900">{childName}</strong>؟
+      <ModalContent className="max-w-md [&>div,&>form]:px-4 [&>div,&>form]:last:p-[1.5rem_1.5rem_2rem_1.5rem] sm:[&>div,&>form]:px-20 sm:[&>div,&>form]:last:p-[2rem_5rem_5rem_5rem]">
+        <ModalTitle className="text-center font-bold text-red-800">
+          تأكيد حذف الطفل
+        </ModalTitle>
+
+        <div className="flex flex-col gap-6 px-2 py-6 text-center sm:px-10">
+          <p className="text-2xl leading-relaxed text-gray-700">
+            هل أنت متأكد من رغبتك في حذف{" "}
+            <strong className="text-gray-900">{childName}</strong>؟
             <br />
-            <span className="text-red-600 text-xl font-bold mt-2 block">هذا الإجراء لا يمكن التراجع عنه وسيتم مسح كافة البيانات المتعلقة بالطفل.</span>
+            <span className="mt-2 block text-xl font-bold text-red-600">
+              هذا الإجراء لا يمكن التراجع عنه وسيتم مسح كافة البيانات المتعلقة
+              بالطفل.
+            </span>
           </p>
-          
-          <div className="flex gap-4 justify-center mt-6">
+
+          <div className="mt-6 flex justify-center gap-4">
             <Button
               onClick={() => setIsOpen(false)}
               disabled={isDeleting}
@@ -74,7 +80,7 @@ export default function DeleteChildButton({
               loading={isDeleting}
               loaderThickness="2px"
               variant="primary"
-              className="flex-1 bg-red-600 hover:bg-red-500 text-white py-4 text-2xl border-none shadow-none!"
+              className="flex-1 border-none bg-red-600 py-4 text-2xl text-white shadow-none! hover:bg-red-500"
             >
               تأكيد الحذف
             </Button>

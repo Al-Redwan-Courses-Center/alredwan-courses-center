@@ -30,7 +30,7 @@ export default function Avatar({
   return (
     <div
       className={cn(
-        "relative aspect-square rounded-full overflow-hidden shrink-0",
+        "relative aspect-square shrink-0 overflow-hidden rounded-full",
         className,
         !hasSrc && fallbackClassName,
       )}

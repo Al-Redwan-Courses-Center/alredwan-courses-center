@@ -67,8 +67,14 @@ export function toHindiDigits(
   num: number | string,
   preserveLeadingZeros: boolean = false,
 ): string {
-  if (num === null || num === undefined || num === "" || isNaN(+num) && typeof num !== 'string') return "٠";
-  
+  if (
+    num === null ||
+    num === undefined ||
+    num === "" ||
+    (isNaN(+num) && typeof num !== "string")
+  )
+    return "٠";
+
   let number = num;
 
   const westernToHindiDigits: Record<string, string> = {

@@ -6,12 +6,14 @@ import { getMe } from "@/actions/profile";
 export default async function EditProfilePage() {
   await protect(["parent", "student", "instructor", "admin"]);
   const sessionUser = await getUser();
-  const user = await getMe() || sessionUser;
+  const user = (await getMe()) || sessionUser;
 
   return (
-    <div className="px-10 md:px-16 pt-64 flex flex-col gap-10 h-full overflow-auto pb-20 relative z-20 w-full">
-      <h3 className="text-olive-700 font-medad text-6xl text-right w-full">تعديل الملف الشخصي</h3>
-      
+    <div className="relative z-20 flex h-full w-full flex-col gap-10 overflow-auto px-10 pt-64 pb-20 md:px-16">
+      <h3 className="text-olive-700 font-medad w-full text-right text-6xl">
+        تعديل الملف الشخصي
+      </h3>
+
       <div className="w-full lg:w-3/4">
         <EditProfileForm user={user} />
       </div>

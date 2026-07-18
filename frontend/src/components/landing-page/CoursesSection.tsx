@@ -9,8 +9,14 @@ export default async function CoursesSection() {
   );
 
   return (
-    <section id="courses" className="flex flex-col items-center bg-[linear-gradient(180deg,#FFF_0%,#F3F6F4_100%)]">
-      <ScrollReveal direction="up" className="w-full flex flex-col items-center">
+    <section
+      id="courses"
+      className="flex flex-col items-center bg-[linear-gradient(180deg,#FFF_0%,#F3F6F4_100%)]"
+    >
+      <ScrollReveal
+        direction="up"
+        className="flex w-full flex-col items-center"
+      >
         <div className="title-block">
           <h2>
             الدورات <span>المميزة</span>
@@ -23,12 +29,25 @@ export default async function CoursesSection() {
         </div>
       </ScrollReveal>
 
-      <ScrollReveal direction="up" delay={0.2} amount={0.1} className="w-full flex flex-col items-center">
+      <ScrollReveal
+        direction="up"
+        delay={0.2}
+        amount={0.1}
+        className="flex w-full flex-col items-center"
+      >
         <PublicCoursesList courses={courses} />
       </ScrollReveal>
 
-      <ScrollReveal direction="up" delay={0.4} className="w-full flex flex-col items-center">
-        <Button variant="primary" href="/courses" className="mobile-lg:mt-10 self-center">
+      <ScrollReveal
+        direction="up"
+        delay={0.4}
+        className="flex w-full flex-col items-center"
+      >
+        <Button
+          variant="primary"
+          href="/courses"
+          className="mobile-lg:mt-10 self-center"
+        >
           تصفح الدورات
         </Button>
       </ScrollReveal>

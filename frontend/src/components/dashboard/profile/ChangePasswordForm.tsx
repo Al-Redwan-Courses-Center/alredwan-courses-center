@@ -15,19 +15,28 @@ interface ChangePasswordInputs {
 
 export default function ChangePasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<ChangePasswordInputs>();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<ChangePasswordInputs>();
 
   const newPassword = watch("new_password");
 
   const onSubmit: SubmitHandler<ChangePasswordInputs> = async (data) => {
     setIsLoading(true);
     const { error } = await changePassword(data);
-    
+
     if (error) {
       let errorMessage = "حدث خطأ أثناء تغيير كلمة المرور";
       if (typeof error === "object") {
         errorMessage = Object.entries(error)
-          .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : value}`)
+          .map(
+            ([key, value]) =>
+              `${key}: ${Array.isArray(value) ? value.join(", ") : value}`,
+          )
           .join("\n");
       }
       toast.error(errorMessage);
@@ -40,50 +49,70 @@ export default function ChangePasswordForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-y-8 bg-white/50 p-10 rounded-[2rem_0] shadow-soft border border-white/40">
-      <h4 className="text-3xl font-bold text-olive-800 mb-2">تغيير كلمة المرور</h4>
-      
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="shadow-soft grid grid-cols-1 gap-y-8 rounded-[2rem_0] border border-white/40 bg-white/50 p-10"
+    >
+      <h4 className="text-olive-800 mb-2 text-3xl font-bold">
+        تغيير كلمة المرور
+      </h4>
+
       <div className="flex flex-col gap-2">
-        <FieldSetInput 
-            type="password"
-            label="كلمة المرور الحالية" 
-            registerReturn={register("current_password", { required: "هذا الحقل مطلوب" })}
+        <FieldSetInput
+          type="password"
+          label="كلمة المرور الحالية"
+          registerReturn={register("current_password", {
+            required: "هذا الحقل مطلوب",
+          })}
         />
-        {errors.current_password && <span className="text-red-800 text-xl px-4">{errors.current_password.message}</span>}
+        {errors.current_password && (
+          <span className="px-4 text-xl text-red-800">
+            {errors.current_password.message}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
-        <FieldSetInput 
-            type="password"
-            label="كلمة المرور الجديدة" 
-            registerReturn={register("new_password", { 
-              required: "هذا الحقل مطلوب",
-              minLength: { value: 8, message: "يجب أن تكون 8 أحرف على الأقل" }
-            })}
+        <FieldSetInput
+          type="password"
+          label="كلمة المرور الجديدة"
+          registerReturn={register("new_password", {
+            required: "هذا الحقل مطلوب",
+            minLength: { value: 8, message: "يجب أن تكون 8 أحرف على الأقل" },
+          })}
         />
-        {errors.new_password && <span className="text-red-800 text-xl px-4">{errors.new_password.message}</span>}
+        {errors.new_password && (
+          <span className="px-4 text-xl text-red-800">
+            {errors.new_password.message}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
-        <FieldSetInput 
-            type="password"
-            label="تأكيد كلمة المرور الجديدة" 
-            registerReturn={register("re_new_password", { 
-              required: "هذا الحقل مطلوب",
-              validate: (value) => value === newPassword || "كلمات المرور غير متطابقة"
-            })}
+        <FieldSetInput
+          type="password"
+          label="تأكيد كلمة المرور الجديدة"
+          registerReturn={register("re_new_password", {
+            required: "هذا الحقل مطلوب",
+            validate: (value) =>
+              value === newPassword || "كلمات المرور غير متطابقة",
+          })}
         />
-        {errors.re_new_password && <span className="text-red-800 text-xl px-4">{errors.re_new_password.message}</span>}
+        {errors.re_new_password && (
+          <span className="px-4 text-xl text-red-800">
+            {errors.re_new_password.message}
+          </span>
+        )}
       </div>
-      
-      <div className="flex justify-start mt-4">
-          <Button 
-            type="submit" 
-            loading={isLoading} 
-            className="px-16 py-5 text-2xl"
-          >
-            تحديث كلمة المرور
-          </Button>
+
+      <div className="mt-4 flex justify-start">
+        <Button
+          type="submit"
+          loading={isLoading}
+          className="px-16 py-5 text-2xl"
+        >
+          تحديث كلمة المرور
+        </Button>
       </div>
     </form>
   );

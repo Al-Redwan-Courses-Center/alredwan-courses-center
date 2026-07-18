@@ -205,4 +205,3 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
 export function getDashboardNavItems(role: UserEntity["role"]) {
   return roleMap[role];
 }
-

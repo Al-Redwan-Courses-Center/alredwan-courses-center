@@ -14,7 +14,7 @@ function AccordionArrow({ isOpen, className }: AccordionArrowProps) {
         className,
       )}
     >
-      <div className="absolute left-[4.43px] top-[8.59px] h-2 w-4 bg-gray-500" />
+      <div className="absolute top-[8.59px] left-[4.43px] h-2 w-4 bg-gray-500" />
     </div>
   );
 }

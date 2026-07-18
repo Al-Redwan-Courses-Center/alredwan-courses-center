@@ -28,7 +28,7 @@ export default function PictureGrid() {
   return (
     <>
       {/* Desktop Collage View (Visible on screens > 900px) */}
-      <div className="relative tablet:hidden grid aspect-[2.58] h-auto w-full">
+      <div className="tablet:hidden relative grid aspect-[2.58] h-auto w-full">
         <Image
           src={Image1}
           alt="Activity Image"
@@ -121,16 +121,16 @@ export default function PictureGrid() {
       </div>
 
       {/* Mobile/Tablet Grid View (Visible on screens <= 900px) */}
-      <div className="hidden tablet:grid grid-cols-3 mobile-lg:grid-cols-2 gap-6 w-full">
+      <div className="tablet:grid mobile-lg:grid-cols-2 hidden w-full grid-cols-3 gap-6">
         {imagesList.map((img, index) => (
           <div
             key={index}
             className={cn(
-              "overflow-hidden bg-white shadow-md border-4 border-white aspect-square relative",
+              "relative aspect-square overflow-hidden border-4 border-white bg-white shadow-md",
               index === 8 && "mobile-lg:col-span-2 mobile-lg:aspect-2/1",
               index % 2 === 0
                 ? "rounded-tr-[4rem] rounded-bl-[4rem]"
-                : "rounded-tl-[4rem] rounded-br-[4rem]"
+                : "rounded-tl-[4rem] rounded-br-[4rem]",
             )}
           >
             <Image

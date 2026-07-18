@@ -7,7 +7,7 @@ import { cn, toHindiDigits } from "@/lib/utils";
 import { useContext } from "react";
 
 const paginationBtnStyles = cn(
-  "text-olive-400 h-auto w-5 mobile-lg:w-[2rem] mobile:w-[2.5rem] disabled:pointer-events-none disabled:text-gray-600",
+  "text-olive-400 mobile-lg:w-[2rem] mobile:w-[2.5rem] h-auto w-5 disabled:pointer-events-none disabled:text-gray-600",
 );
 
 export function DataViewPaginationLegacy() {
@@ -17,7 +17,7 @@ export function DataViewPaginationLegacy() {
   if (numPages <= 0) return null;
 
   return (
-    <div className="relative flex items-center justify-center gap-10 max-[1000px]:gap-4 mt-auto pb-10 max-[1000px]:pb-4 pt-4 w-full flex-wrap">
+    <div className="relative mt-auto flex w-full flex-wrap items-center justify-center gap-10 pt-4 pb-10 max-[1000px]:gap-4 max-[1000px]:pb-4">
       <button
         disabled={page - 1 < 1}
         onClick={prevPage}
@@ -32,7 +32,7 @@ export function DataViewPaginationLegacy() {
             key={pageNum}
             onClick={() => setPage(pageNum)}
             className={cn(
-              "hover:bg-olive-100 aspect-square h-auto w-10 max-[1000px]:w-8 mobile-lg:w-14 mobile:w-18 content-center rounded-[0.8rem] text-2xl max-[1000px]:text-xl mobile-lg:text-[2rem] mobile:text-[2.6rem] font-bold text-gray-600 transition-colors",
+              "hover:bg-olive-100 mobile-lg:w-14 mobile:w-18 mobile-lg:text-[2rem] mobile:text-[2.6rem] aspect-square h-auto w-10 content-center rounded-[0.8rem] text-2xl font-bold text-gray-600 transition-colors max-[1000px]:w-8 max-[1000px]:text-xl",
               page === pageNum &&
                 "bg-olive-100 pointer-events-none text-gray-900",
             )}

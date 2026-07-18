@@ -6,9 +6,17 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { uploadProfileImage } from "@/actions/profile";
 
-export default function ProfileImageUploader({ initialImage, firstName }: { initialImage?: string | null, firstName: string }) {
+export default function ProfileImageUploader({
+  initialImage,
+  firstName,
+}: {
+  initialImage?: string | null;
+  firstName: string;
+}) {
   const [isUploading, setIsUploading] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(initialImage || null);
+  const [previewImage, setPreviewImage] = useState<string | null>(
+    initialImage || null,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -51,21 +59,25 @@ export default function ProfileImageUploader({ initialImage, firstName }: { init
   };
 
   return (
-    <div className="relative group">
-      <div className="w-48 h-48 rounded-full bg-olive-100 flex items-center justify-center border-4 border-olive-500 overflow-hidden shadow-lg relative">
+    <div className="group relative">
+      <div className="bg-olive-100 border-olive-500 relative flex h-48 w-48 items-center justify-center overflow-hidden rounded-full border-4 shadow-lg">
         {previewImage ? (
-          <img src={previewImage} alt={firstName} className="w-full h-full object-cover" />
+          <img
+            src={previewImage}
+            alt={firstName}
+            className="h-full w-full object-cover"
+          />
         ) : (
           <User size={80} className="text-olive-500" />
         )}
-        
+
         {isUploading && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <Loader2 className="text-white animate-spin" size={40} />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+            <Loader2 className="animate-spin text-white" size={40} />
           </div>
         )}
       </div>
-      
+
       {/* 
       <input 
         type="file" 

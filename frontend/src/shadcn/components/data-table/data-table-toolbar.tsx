@@ -194,7 +194,7 @@ export function DataTableToolbar<TData>({
                   className="shadow-soft focus-visible:ring-olive-300/40 flex h-[50px] w-[calc(50%-8px)] items-center justify-between rounded-tl-[20px] rounded-br-[20px] border-none bg-gray-50 px-6 text-[1.4rem] font-medium text-gray-700 transition-colors hover:bg-gray-100 focus-visible:ring-[3px] md:w-[17.4rem]"
                 >
                   الأعمدة
-                  <ChevronDown className="ms-2 !size-5 text-olive-400" />
+                  <ChevronDown className="text-olive-400 ms-2 !size-5" />
                 </Button>
               </DropdownMenuTrigger>
 

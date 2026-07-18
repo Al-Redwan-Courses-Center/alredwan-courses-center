@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Modal, ModalContent, ModalHeader, ModalTitle } from "@/components/ui/Modal";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import FieldSetInput from "@/components/ui/FieldSetInput";
 import { rateAttendance } from "@/actions/admin-attendances";
@@ -46,7 +51,9 @@ export default function AttendanceRatingModal({
     <Modal open={isOpen} onOpenChange={onClose}>
       <ModalContent className="sm:max-w-[400px]">
         <ModalHeader>
-          <ModalTitle className="text-olive-700">تقييم الأداء: {instructorName}</ModalTitle>
+          <ModalTitle className="text-olive-700">
+            تقييم الأداء: {instructorName}
+          </ModalTitle>
         </ModalHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-20 p-20">
           <div className="flex flex-col items-center gap-10">
@@ -59,19 +66,23 @@ export default function AttendanceRatingModal({
                     key={value}
                     type="button"
                     onClick={() => setRating(value)}
-                    className="focus:outline-none transition-transform active:scale-90"
+                    className="transition-transform focus:outline-none active:scale-90"
                   >
                     <Star
                       className={cn(
                         "size-25 transition-colors",
-                        rating >= value ? "fill-olive-300 text-olive-300" : "text-gray-300"
+                        rating >= value
+                          ? "fill-olive-300 text-olive-300"
+                          : "text-gray-300",
                       )}
                     />
                   </button>
                 );
               })}
             </div>
-            <span className="text-3xl font-bold text-olive-700">{rating} / 10</span>
+            <span className="text-olive-700 text-3xl font-bold">
+              {rating} / 10
+            </span>
           </div>
 
           <FieldSetInput
@@ -82,7 +93,7 @@ export default function AttendanceRatingModal({
             fieldsetStyles="w-full"
           />
 
-          <div className="flex gap-10 justify-end mt-10">
+          <div className="mt-10 flex justify-end gap-10">
             <Button
               type="button"
               variant="outline"
@@ -95,7 +106,7 @@ export default function AttendanceRatingModal({
               type="submit"
               loading={loading}
               disabled={rating === 0}
-              className="bg-olive-300 text-white px-30"
+              className="bg-olive-300 px-30 text-white"
             >
               حفظ التقييم
             </Button>

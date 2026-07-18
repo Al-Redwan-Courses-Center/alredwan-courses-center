@@ -17,9 +17,13 @@ export default function DataViewControlsLegacy({
   onExport?: () => void;
 }) {
   return (
-    <div className="relative z-100 mb-14 flex items-center justify-between w-full gap-16">
-      <div className="flex items-center gap-16 flex-1">
-        {showSearch && <div className="flex-1 max-w-[400px]"><DataViewSearch /></div>}
+    <div className="relative z-100 mb-14 flex w-full items-center justify-between gap-16">
+      <div className="flex flex-1 items-center gap-16">
+        {showSearch && (
+          <div className="max-w-[400px] flex-1">
+            <DataViewSearch />
+          </div>
+        )}
         {showSort && <DataViewSort />}
         {showFilter && <DataViewFilter />}
       </div>

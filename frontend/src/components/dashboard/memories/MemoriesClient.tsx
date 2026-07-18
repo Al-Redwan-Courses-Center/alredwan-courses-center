@@ -19,7 +19,7 @@ export default function MemoriesClient({ initialMemories, role }: Props) {
   const [memories, setMemories] = useState<MemoryListItem[]>(initialMemories);
   const [activeTab, setActiveTab] = useState<"general" | "private">("general");
   const [loading, setLoading] = useState(false);
-  
+
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
@@ -43,17 +43,17 @@ export default function MemoriesClient({ initialMemories, role }: Props) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="mx-auto max-w-2xl space-y-6">
+      <div className="mb-8 flex items-center justify-between">
         <div className="flex gap-4">
-          <Button 
+          <Button
             variant={activeTab === "general" ? "primary" : "secondary"}
             onClick={() => fetchTabMemories("general")}
           >
             الصور العامة
           </Button>
           {hasPrivateFeed && (
-            <Button 
+            <Button
               variant={activeTab === "private" ? "primary" : "secondary"}
               onClick={() => fetchTabMemories("private")}
             >
@@ -61,47 +61,47 @@ export default function MemoriesClient({ initialMemories, role }: Props) {
             </Button>
           )}
         </div>
-        
+
         {isSupervisor && (
-          <Button onClick={() => setIsUploadModalOpen(true)}>
-            إضافة ذكرى
-          </Button>
+          <Button onClick={() => setIsUploadModalOpen(true)}>إضافة ذكرى</Button>
         )}
       </div>
 
       {loading ? (
-        <div className="flex justify-center p-12"><Loader thickness="4px" /></div>
+        <div className="flex justify-center p-12">
+          <Loader thickness="4px" />
+        </div>
       ) : memories.length === 0 ? (
-        <EmptyState 
-          title="لا توجد ذكريات بعد" 
-          description="لم يتم إضافة أي ذكريات في هذا القسم." 
+        <EmptyState
+          title="لا توجد ذكريات بعد"
+          description="لم يتم إضافة أي ذكريات في هذا القسم."
         />
       ) : (
         <div className="flex flex-col gap-6">
           {memories.map((memory, index) => (
-            <MemoryCard 
-              key={memory.id} 
-              memory={memory} 
-              onClick={() => setLightboxIndex(index)} 
+            <MemoryCard
+              key={memory.id}
+              memory={memory}
+              onClick={() => setLightboxIndex(index)}
             />
           ))}
         </div>
       )}
 
       {lightboxIndex !== null && (
-        <Lightbox 
-          memories={memories} 
-          initialIndex={lightboxIndex} 
+        <Lightbox
+          memories={memories}
+          initialIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
           onMemoryDeleted={(id) => {
-            setMemories(prev => prev.filter(m => m.id !== id));
+            setMemories((prev) => prev.filter((m) => m.id !== id));
             setLightboxIndex(null);
           }}
           isSupervisor={isSupervisor}
         />
       )}
 
-      <MemoryUploadModal 
+      <MemoryUploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         onUploadSuccess={() => {
