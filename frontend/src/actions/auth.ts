@@ -40,9 +40,7 @@ export async function getUser() {
   return session.user;
 }
 
-export async function protect(
-  allowedRoles: UserEntity["role"][],
-) {
+export async function protect(allowedRoles: UserEntity["role"][]) {
   const { role } = await getUser();
 
   if (allowedRoles.includes(role)) return;
@@ -78,8 +76,21 @@ export async function getServerJwtToken() {
         jwt_refresh_token: string;
       };
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     console.error("Token Decryption Failed:", error);
+    return null;
+  }
+}
+
+export async function getWebSocketTicket() {
+  try {
+    const { getAuthApiClient } = await import("@/lib/auth-api");
+    const apiClient = await getAuthApiClient();
+    const res = await apiClient.post<{ ticket: string }>(
+      "/api/attendance/ws-ticket/",
+    );
+    return res.data.ticket;
+  } catch {
     return null;
   }
 }
@@ -91,7 +102,7 @@ export async function changePassword(data: any) {
     await apiClient.post("/auth/users/set_password/", data);
     return { error: null };
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     if (axios.isAxiosError(error)) {
       return {
         error: error.response?.data ?? "حدث خطأ أثناء تغيير كلمة المرور",
@@ -106,10 +117,11 @@ export async function resetPassword(data: { phone_number1: string }) {
     await publicApiClient.post("/auth/users/reset_password/", data);
     return { error: null };
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     if (axios.isAxiosError(error)) {
       return {
-        error: error.response?.data ?? "حدث خطأ أثناء طلب إعادة تعيين كلمة المرور",
+        error:
+          error.response?.data ?? "حدث خطأ أثناء طلب إعادة تعيين كلمة المرور",
       };
     }
     return { error: "حدث خطأ غير متوقع" };
@@ -121,10 +133,11 @@ export async function resetPasswordConfirm(data: any) {
     await publicApiClient.post("/auth/users/reset_password_confirm/", data);
     return { error: null };
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     if (axios.isAxiosError(error)) {
       return {
-        error: error.response?.data ?? "حدث خطأ أثناء تعيين كلمة المرور الجديدة",
+        error:
+          error.response?.data ?? "حدث خطأ أثناء تعيين كلمة المرور الجديدة",
       };
     }
     return { error: "حدث خطأ غير متوقع" };
