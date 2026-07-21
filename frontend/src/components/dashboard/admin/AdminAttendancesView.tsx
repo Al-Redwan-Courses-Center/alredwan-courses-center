@@ -444,7 +444,7 @@ function FilterBar({
         <DropdownMenuContent
           className={cn(
             dropdownMenuContentStyles,
-            "z-[9999] w-auto min-w-[150px]",
+            "z-9999 w-auto min-w-[150px]",
           )}
         >
           <DropdownMenuItem
@@ -503,7 +503,7 @@ function FilterBar({
         <DropdownMenuContent
           className={cn(
             dropdownMenuContentStyles,
-            "z-[9999] w-auto min-w-[150px]",
+            "z-9999 w-auto min-w-[150px]",
           )}
         >
           <DropdownMenuItem
@@ -548,7 +548,7 @@ function FilterBar({
         <DropdownMenuContent
           className={cn(
             dropdownMenuContentStyles,
-            "z-[9999] max-h-60 w-auto min-w-[150px] overflow-y-auto",
+            "z-9999 max-h-60 w-auto min-w-[150px] overflow-y-auto",
           )}
         >
           <DropdownMenuItem
