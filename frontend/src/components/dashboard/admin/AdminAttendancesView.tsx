@@ -354,7 +354,7 @@ function FilterBar({
             <ChevronDown className="size-6 text-gray-400" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-[9999] min-w-[150px] w-auto")}>
+        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-9999 min-w-[150px] w-auto")}>
           <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "status", val: "" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">الكل</DropdownMenuItem>
           <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "status", val: "present" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">حاضر</DropdownMenuItem>
           <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "status", val: "absent" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">غائب</DropdownMenuItem>
@@ -373,7 +373,7 @@ function FilterBar({
             <ChevronDown className="size-6 text-gray-400" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-[9999] min-w-[150px] w-auto")}>
+        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-9999 min-w-[150px] w-auto")}>
           <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "attendance_type", val: "" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">الكل</DropdownMenuItem>
           <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "attendance_type", val: "lecture" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">محاضرة</DropdownMenuItem>
           <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "attendance_type", val: "supervision" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">إشراف</DropdownMenuItem>
@@ -390,7 +390,7 @@ function FilterBar({
             <ChevronDown className="size-6 text-gray-400" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-[9999] min-w-[150px] w-auto max-h-60 overflow-y-auto")}>
+        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-9999 min-w-[150px] w-auto max-h-60 overflow-y-auto")}>
           <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "season", val: "" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">الكل</DropdownMenuItem>
           {[1, 2, 3, 4, 5, 6].map(s => (
             <DropdownMenuItem key={s} onClick={() => mutateSearchParams([{ key: "season", val: s.toString() }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">
