@@ -103,16 +103,15 @@ export default function Lightbox({ memories, initialIndex, onClose, onMemoryDele
         ) : (
           <video src={url} controls className="max-h-[70vh] max-w-[80vw]" autoPlay />
         )}
-        
-        <div className="mt-6 text-center text-white max-w-2xl">
-          {memory.caption && <p className="text-lg mb-2">{memory.caption}</p>}
-          <div className="text-sm text-gray-400">
-            تم الرفع بواسطة {memory.uploader_name}
+        <div className="mt-8 text-center text-white max-w-3xl px-4">
+          {memory.caption && <p className="text-xl md:text-2xl font-medium mb-3 leading-relaxed">{memory.caption}</p>}
+          <div className="text-base text-gray-300 opacity-90">
+            تم الرفع بواسطة <span className="font-semibold text-white">{memory.uploader_name}</span>
           </div>
           {memory.tagged_participants.length > 0 && (
-            <div className="mt-3 flex flex-wrap justify-center gap-2">
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
               {memory.tagged_participants.map(p => (
-                <span key={p.id} className="bg-white/10 px-3 py-1 rounded-full text-xs">
+                <span key={p.id} className="bg-white/15 hover:bg-white/25 transition-colors px-4 py-1.5 rounded-full text-sm font-medium">
                   {p.name}
                 </span>
               ))}
