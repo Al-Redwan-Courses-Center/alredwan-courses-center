@@ -400,3 +400,119 @@ class InstructorTodayLecturesView(APIView):
             'user_role': user_role,
             'lectures': serializer.data
         }, status=status.HTTP_200_OK)
+
+
+class StudentCourseLecturesView(generics.ListAPIView):
+    """
+    API endpoint for a student to view lectures for a course, 
+    including their personal attendance records.
+    GET /api/courses/<course_id>/student/lectures/
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get_serializer_class(self):
+        from courses.serializers import StudentLectureListSerializer
+        return StudentLectureListSerializer
+        
+    def get_queryset(self):
+        course_id = self.kwargs.get('course_id')
+        user = self.request.user
+        
+        # Verify the user is a student and enrolled
+        if not hasattr(user, 'student_profile'):
+            return Lecture.objects.none()
+            
+        student = user.student_profile
+        
+        from enrollments_payments.models import Enrollment, EnrollmentStatus
+        from attendance.models import LectureAttendance
+        from django.db.models import Prefetch
+        
+        is_enrolled = Enrollment.objects.filter(
+            student=student, course_id=course_id, status=EnrollmentStatus.ACTIVE
+        ).exists()
+        
+        if not is_enrolled:
+            return Lecture.objects.none()
+            
+        # Prefetch the student's personal attendance
+        attendance_prefetch = Prefetch(
+            'lecture_attendances',
+            queryset=LectureAttendance.objects.filter(student=student),
+            to_attr='_personal_attendance_list'
+        )
+        
+        return Lecture.objects.filter(course_id=course_id, is_accepted=True)\
+            .order_by('lecture_number')\
+            .prefetch_related(attendance_prefetch)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        # Set personal_attendance on each object before serialization
+        for obj in queryset:
+            att_list = getattr(obj, '_personal_attendance_list', [])
+            obj.personal_attendance = att_list[0] if att_list else None
+            
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class ParentCourseLecturesView(generics.ListAPIView):
+    """
+    API endpoint for a parent to view lectures for a course for a specific child,
+    including the child's attendance records.
+    GET /api/courses/<course_id>/parent/<child_id>/lectures/
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get_serializer_class(self):
+        from courses.serializers import StudentLectureListSerializer
+        return StudentLectureListSerializer
+        
+    def get_queryset(self):
+        course_id = self.kwargs.get('course_id')
+        child_id = self.kwargs.get('child_id')
+        user = self.request.user
+        
+        if not hasattr(user, 'parent_profile'):
+            return Lecture.objects.none()
+            
+        parent = user.parent_profile
+        
+        # Verify child belongs to parent
+        from parents.models import Child
+        try:
+            child = Child.objects.get(id=child_id, primary_parent=parent)
+        except Child.DoesNotExist:
+            return Lecture.objects.none()
+            
+        from enrollments_payments.models import Enrollment, EnrollmentStatus
+        from attendance.models import LectureAttendance
+        from django.db.models import Prefetch
+        
+        is_enrolled = Enrollment.objects.filter(
+            child=child, course_id=course_id, status=EnrollmentStatus.ACTIVE
+        ).exists()
+        
+        if not is_enrolled:
+            return Lecture.objects.none()
+            
+        # Prefetch the child's personal attendance
+        attendance_prefetch = Prefetch(
+            'lecture_attendances',
+            queryset=LectureAttendance.objects.filter(child=child),
+            to_attr='_personal_attendance_list'
+        )
+        
+        return Lecture.objects.filter(course_id=course_id, is_accepted=True)\
+            .order_by('lecture_number')\
+            .prefetch_related(attendance_prefetch)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        for obj in queryset:
+            att_list = getattr(obj, '_personal_attendance_list', [])
+            obj.personal_attendance = att_list[0] if att_list else None
+            
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

@@ -15,6 +15,8 @@ from .views import (
     CourseScheduleListView,
     CourseScheduleDetailView,
     CourseRateView,
+    StudentCourseLecturesView,
+    ParentCourseLecturesView,
 )
 
 app_name = 'courses'
@@ -44,4 +46,10 @@ urlpatterns = [
          CourseScheduleListView.as_view(), name='course-schedule-list'),
     path('<int:course_id>/schedules/<int:pk>/',
          CourseScheduleDetailView.as_view(), name='course-schedule-detail'),
+         
+    # Student and Parent endpoints
+    path('<str:course_id>/student/lectures/',
+         StudentCourseLecturesView.as_view(), name='student-course-lectures'),
+    path('<str:course_id>/parent/<str:child_id>/lectures/',
+         ParentCourseLecturesView.as_view(), name='parent-course-lectures'),
 ]

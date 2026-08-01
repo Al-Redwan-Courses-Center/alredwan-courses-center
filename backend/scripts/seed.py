@@ -682,45 +682,48 @@ def seed():
             ],
         },
     ]
+    
+    from unittest.mock import patch
 
     courses = []
-    for d in course_data:
-        course, created = Course.objects.get_or_create(
-            name=d["name"],
-            defaults={
-                "description": d["description"],
-                "start_date": d["start_date"],
-                "end_date": d.get("end_date"),
-                "num_lectures": d.get("num_lectures"),
-                "capacity": d["capacity"],
-                "price": d["price"],
-                "season": d["season"],
-                "instructor": d["instructor"],
-                "for_adults": d["for_adults"],
-                "min_age": d.get("min_age"),
-                "max_age": d.get("max_age"),
-                "is_active": d.get("is_active", True),
-            },
-        )
-        if created:
-            course.tags.set([tags[t] for t in d["tags"]])
-            # Schedules are created here; the signal will auto-generate lectures
-            for sched in d["schedules"]:
-                CourseSchedule.objects.get_or_create(
-                    course=course,
-                    weekday=sched["weekday"],
-                    defaults={
-                        "start_time": sched["start"],
-                        "end_time": sched["end"],
-                    },
-                )
-        courses.append(course)
+    with patch('courses.signals.timezone.localdate', return_value=date(2025, 1, 1)):
+        for d in course_data:
+            course, created = Course.objects.get_or_create(
+                name=d["name"],
+                defaults={
+                    "description": d["description"],
+                    "start_date": d["start_date"],
+                    "end_date": d.get("end_date"),
+                    "num_lectures": d.get("num_lectures"),
+                    "capacity": d["capacity"],
+                    "price": d["price"],
+                    "season": d["season"],
+                    "instructor": d["instructor"],
+                    "for_adults": d["for_adults"],
+                    "min_age": d.get("min_age"),
+                    "max_age": d.get("max_age"),
+                    "is_active": d.get("is_active", True),
+                },
+            )
+            if created:
+                course.tags.set([tags[t] for t in d["tags"]])
+                # Schedules are created here; the signal will auto-generate lectures
+                for sched in d["schedules"]:
+                    CourseSchedule.objects.get_or_create(
+                        course=course,
+                        weekday=sched["weekday"],
+                        defaults={
+                            "start_time": sched["start"],
+                            "end_time": sched["end"],
+                        },
+                    )
+            courses.append(course)
 
-    print(f"   ✅ {len(courses)} courses")
-    for c in courses:
-        lec_count = c.lectures.count()
-        sched_count = c.schedules.count()
-        print(f"      • {c.name}: {lec_count} lectures, {sched_count} schedules")
+        print(f"   ✅ {len(courses)} courses")
+        for c in courses:
+            lec_count = c.lectures.count()
+            sched_count = c.schedules.count()
+            print(f"      • {c.name}: {lec_count} lectures, {sched_count} schedules")
 
     # ----------------------------------------------------------------
     # 7.1 EXTRA COURSES (stress data)
@@ -736,43 +739,44 @@ def seed():
         Weekday.WEDNESDAY,
         Weekday.THURSDAY,
     ]
-    for i in range(extra_courses_needed):
-        season = random.choice(list(seasons.values()))
-        instructor = random.choice(instructors)
-        is_adult = random.random() < 0.5
-        name = f"دورة إضافية {i + 1}"
-        course, created = Course.objects.get_or_create(
-            name=name,
-            defaults={
-                "description": "دورة تجريبية للاختبار والضغط على الواجهة",
-                "start_date": season.start_date,
-                "end_date": season.end_date,
-                "num_lectures": random.randint(6, 20),
-                "capacity": random.randint(15, 40),
-                "price": Decimal(random.choice([150, 200, 250, 300, 400, 500])),
-                "season": season,
-                "instructor": instructor,
-                "for_adults": is_adult,
-                "min_age": None if is_adult else random.randint(6, 10),
-                "max_age": None if is_adult else random.randint(12, 16),
-                "is_active": True,
-            },
-        )
-        if created:
-            course.tags.set([tags[random.choice(tag_names)]])
-            for day in random.sample(weekdays, k=random.choice([1, 2])):
-                start_hour = random.choice([9, 10, 12, 14, 16])
-                duration = random.choice([1, 2, 3])
-                end_hour = min(start_hour + duration, 20)
-                CourseSchedule.objects.get_or_create(
-                    course=course,
-                    weekday=day,
-                    defaults={
-                        "start_time": time(start_hour, 0),
-                        "end_time": time(end_hour, 0),
-                    },
-                )
-        courses.append(course)
+    with patch('courses.signals.timezone.localdate', return_value=date(2025, 1, 1)):
+        for i in range(extra_courses_needed):
+            season = random.choice(list(seasons.values()))
+            instructor = random.choice(instructors)
+            is_adult = random.random() < 0.5
+            name = f"دورة إضافية {i + 1}"
+            course, created = Course.objects.get_or_create(
+                name=name,
+                defaults={
+                    "description": "دورة تجريبية للاختبار والضغط على الواجهة",
+                    "start_date": season.start_date,
+                    "end_date": season.end_date,
+                    "num_lectures": random.randint(6, 20),
+                    "capacity": random.randint(15, 40),
+                    "price": Decimal(random.choice([150, 200, 250, 300, 400, 500])),
+                    "season": season,
+                    "instructor": instructor,
+                    "for_adults": is_adult,
+                    "min_age": None if is_adult else random.randint(6, 10),
+                    "max_age": None if is_adult else random.randint(12, 16),
+                    "is_active": True,
+                },
+            )
+            if created:
+                course.tags.set([tags[random.choice(tag_names)]])
+                for day in random.sample(weekdays, k=random.choice([1, 2])):
+                    start_hour = random.choice([9, 10, 12, 14, 16])
+                    duration = random.choice([1, 2, 3])
+                    end_hour = min(start_hour + duration, 20)
+                    CourseSchedule.objects.get_or_create(
+                        course=course,
+                        weekday=day,
+                        defaults={
+                            "start_time": time(start_hour, 0),
+                            "end_time": time(end_hour, 0),
+                        },
+                    )
+            courses.append(course)
 
     # ----------------------------------------------------------------
     # 8. ENROLLMENT REQUESTS + APPROVALS (realistic flow)
@@ -915,32 +919,47 @@ def seed():
     print(f"   ✅ {enrollment_count} direct enrollments created")
 
     # ----------------------------------------------------------------
-    # 11. MARK SOME LECTURES AS COMPLETED (for past dates)
-    # ----------------------------------------------------------------
-    print("\n📖  Marking past lectures as completed …")
-    past_lectures = Lecture.objects.filter(day__lt=today)
-    updated = past_lectures.update(status=LectureStatus.COMPLETED)
-    print(f"   ✅ {updated} past lectures marked as completed")
-
-    # ----------------------------------------------------------------
     # 12. MARK SOME LECTURE ATTENDANCE (for completed lectures)
     # ----------------------------------------------------------------
     print("\n✅  Marking attendance for completed lectures …")
     att_count = 0
-    completed_lectures = Lecture.objects.filter(status=LectureStatus.COMPLETED)[:6]
-
-    for lecture in completed_lectures:
-        attendances = LectureAttendance.objects.filter(lecture=lecture)
-        for att in attendances:
+    past_lectures = list(Lecture.objects.all().order_by('day')[:6])
+    for lecture in past_lectures:
+        lecture.status = LectureStatus.COMPLETED
+        lecture.save(update_fields=['status'])
+        
+        enrollments = Enrollment.objects.filter(course=lecture.course, status=EnrollmentStatus.ACTIVE)
+        for enrollment in enrollments:
             present = random.choice([True, True, True, False])  # 75% attendance
             rating = random.randint(5, 10) if present else random.randint(1, 4)
-            att.present = present
-            att.rating = rating
-            att.marked_by = admin_user
-            att.marked_at = timezone.now()
-            att.save()
+            notes = random.choice(["طالب متميز", "يحتاج إلى مزيد من التركيز", "مشارك فعال", "تأخر قليلا", ""]) if present else "غياب بدون عذر"
+            
+            att, created = LectureAttendance.objects.get_or_create(
+                lecture=lecture,
+                student=enrollment.student,
+                child=enrollment.child,
+                defaults={
+                    "present": present,
+                    "rating": rating,
+                    "notes": notes,
+                    "marked_by": admin_user,
+                    "marked_at": timezone.now(),
+                    "marked_via": "manual"
+                }
+            )
+            
+            if not created:
+                att.present = present
+                att.rating = rating
+                att.notes = notes
+                att.marked_by = admin_user
+                att.marked_at = timezone.now()
+                att.marked_via = "manual"
+                att.save()
+                
             att_count += 1
 
+    print(f"   ✅ {len(past_lectures)} lectures marked as completed")
     print(f"   ✅ {att_count} attendance records marked")
 
     # ----------------------------------------------------------------
