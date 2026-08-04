@@ -1,11 +1,10 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 
-import useWebSocket from "react-use-websocket";
+import useAuthedWebSocket from "@/hooks/useAuthedWebSocket";
 import Image from "next/image";
 import { StaffAttendanceServerEvent } from "@/types/entities/staff-attendance-events";
 import { ReactNode, useEffect, useState } from "react";
-import { getClientAccessToken } from "@/actions/temp";
 import DataViewLegacy from "@/components/ui/data-view/DataView";
 import {
   DataViewHeaderLegacy,
@@ -30,7 +29,11 @@ import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
 import AttendanceRatingModal from "./AttendanceRatingModal";
 import AttendanceGenerationModal from "./AttendanceGenerationModal";
 import { Star, ChevronDown, PlusCircle } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/Popover";
 import { Calendar } from "@/components/ui/Calendar";
 import {
   DropdownMenu,
@@ -46,6 +49,7 @@ import SearchIcon from "@/components/icons/searchIcon.svg";
 import DetailsIcon from "@/components/icons/detailsIcon.svg";
 import DeleteIcon from "@/components/icons/deleteIcon.svg";
 import EditIcon from "@/components/icons/editeIcon.svg";
+import { filterAttendances } from "@/lib/attendance";
 
 // ─── Time Badge ──────────────────────────────────────────────────────────────
 
@@ -95,35 +99,66 @@ function StaffAttendanceRow({
   onUpdate: (updated: Partial<StaffAttendanceListItem>) => void;
 }) {
   const [nowTimestamp, setNowTimestamp] = useState<number | null>(null);
-  const [scheduledCheckInTimestamp, setScheduledCheckInTimestamp] = useState<number | null>(null);
-  const [scheduledCheckOutTimestamp, setScheduledCheckOutTimestamp] = useState<number | null>(null);
+  const [scheduledCheckInTimestamp, setScheduledCheckInTimestamp] = useState<
+    number | null
+  >(null);
+  const [scheduledCheckOutTimestamp, setScheduledCheckOutTimestamp] = useState<
+    number | null
+  >(null);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isMarkingAbsent, setIsMarkingAbsent] = useState(false);
+  const [checkInHours, checkInMinutes] = attendance.scheduled_check_in_time
+    .split(":")
+    .map(Number);
+  const [checkOutHours, checkOutMinutes] = attendance.scheduled_check_out_time
+    .split(":")
+    .map(Number);
 
-  const [checkInHours, checkInMinutes] = attendance.scheduled_check_in_time.split(":").map(Number);
-  const [checkOutHours, checkOutMinutes] = attendance.scheduled_check_out_time.split(":").map(Number);
+  const checkInTimestamp = attendance.check_in_time
+    ? parseISO(attendance.check_in_time).getTime()
+    : null;
+  const checkOutTimestamp = attendance.check_out_time
+    ? parseISO(attendance.check_out_time).getTime()
+    : null;
 
-  const checkInTimestamp = attendance.check_in_time ? parseISO(attendance.check_in_time).getTime() : null;
-  const checkOutTimestamp = attendance.check_out_time ? parseISO(attendance.check_out_time).getTime() : null;
-
-  const isCheckInEarly = !!checkInTimestamp && !!scheduledCheckInTimestamp && scheduledCheckInTimestamp > checkInTimestamp;
-  const isCheckInLate = !!checkInTimestamp && !!scheduledCheckInTimestamp && scheduledCheckInTimestamp < checkInTimestamp;
-  const isCheckOutEarly = !!checkOutTimestamp && !!scheduledCheckOutTimestamp && scheduledCheckOutTimestamp > checkOutTimestamp;
-  const isCheckOutLate = !!checkOutTimestamp && !!scheduledCheckOutTimestamp && scheduledCheckOutTimestamp < checkOutTimestamp;
+  const isCheckInEarly =
+    !!checkInTimestamp &&
+    !!scheduledCheckInTimestamp &&
+    scheduledCheckInTimestamp > checkInTimestamp;
+  const isCheckInLate =
+    !!checkInTimestamp &&
+    !!scheduledCheckInTimestamp &&
+    scheduledCheckInTimestamp < checkInTimestamp;
+  const isCheckOutEarly =
+    !!checkOutTimestamp &&
+    !!scheduledCheckOutTimestamp &&
+    scheduledCheckOutTimestamp > checkOutTimestamp;
+  const isCheckOutLate =
+    !!checkOutTimestamp &&
+    !!scheduledCheckOutTimestamp &&
+    scheduledCheckOutTimestamp < checkOutTimestamp;
 
   useEffect(() => {
     const ts = Date.now();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setNowTimestamp(ts);
-    setScheduledCheckInTimestamp(new Date(ts).setHours(checkInHours, checkInMinutes, 0, 0));
-    setScheduledCheckOutTimestamp(new Date(ts).setHours(checkOutHours, checkOutMinutes, 0, 0));
+    setScheduledCheckInTimestamp(
+      new Date(ts).setHours(checkInHours, checkInMinutes, 0, 0),
+    );
+    setScheduledCheckOutTimestamp(
+      new Date(ts).setHours(checkOutHours, checkOutMinutes, 0, 0),
+    );
   }, [checkInHours, checkInMinutes, checkOutHours, checkOutMinutes]);
 
   // positional status
   const hasCheckedIn = !!attendance.check_in_time;
   const hasCheckedOut = !!attendance.check_out_time;
-  const isLateNow = !hasCheckedIn && !!nowTimestamp && !!scheduledCheckInTimestamp && nowTimestamp > scheduledCheckInTimestamp;
+  const isLateNow =
+    !hasCheckedIn &&
+    !!nowTimestamp &&
+    !!scheduledCheckInTimestamp &&
+    nowTimestamp > scheduledCheckInTimestamp;
 
   return (
     <DataViewRowLegacy index={index} key={attendance.id}>
@@ -132,28 +167,38 @@ function StaffAttendanceRow({
 
       {/* Name */}
       <DataViewCellLegacy
-        className="overflow-clip text-ellipsis whitespace-nowrap font-bold text-olive-700"
-        {...(attendance.instructor_name.length > 15 ? { title: attendance.instructor_name } : {})}
+        className="text-olive-700 overflow-clip font-bold text-ellipsis whitespace-nowrap"
+        {...(attendance.instructor_name.length > 15
+          ? { title: attendance.instructor_name }
+          : {})}
       >
         {attendance.instructor_name}
       </DataViewCellLegacy>
 
       {/* Target */}
-      <DataViewCellLegacy title={attendance.lecture_info?.lecture_title || undefined}>
+      <DataViewCellLegacy
+        title={attendance.lecture_info?.lecture_title || undefined}
+      >
         <div className="flex flex-col gap-1 whitespace-nowrap">
-          <span className="text-xs text-gray-400">{attendance.attendance_type_display}</span>
+          <span className="text-xs text-gray-400">
+            {attendance.attendance_type_display}
+          </span>
           <span>{attendance.lecture_info?.course_title || "—"}</span>
         </div>
       </DataViewCellLegacy>
 
       {/* Scheduled check-in */}
       <DataViewCellLegacy className="whitespace-nowrap">
-        <span>{formatTime(attendance.scheduled_check_in_time)}</span>
+        <span suppressHydrationWarning>
+          {formatTime(attendance.scheduled_check_in_time)}
+        </span>
       </DataViewCellLegacy>
 
       {/* Scheduled checkout */}
       <DataViewCellLegacy className="whitespace-nowrap">
-        <span>{formatTime(attendance.scheduled_check_out_time)}</span>
+        <span suppressHydrationWarning>
+          {formatTime(attendance.scheduled_check_out_time)}
+        </span>
       </DataViewCellLegacy>
 
       {/* Divider */}
@@ -162,7 +207,9 @@ function StaffAttendanceRow({
       {/* Actual check-in */}
       <DataViewCellLegacy className="py-0">
         <TimeBadge
-          status={isCheckInEarly ? "bonus" : isCheckInLate ? "penalty" : "neutral"}
+          status={
+            isCheckInEarly ? "bonus" : isCheckInLate ? "penalty" : "neutral"
+          }
           revert
         >
           <ClientLocalTime iso={attendance.check_in_time} />
@@ -172,7 +219,9 @@ function StaffAttendanceRow({
       {/* Actual checkout */}
       <DataViewCellLegacy className="py-0">
         <TimeBadge
-          status={isCheckOutEarly ? "penalty" : isCheckOutLate ? "bonus" : "neutral"}
+          status={
+            isCheckOutEarly ? "penalty" : isCheckOutLate ? "bonus" : "neutral"
+          }
         >
           <ClientLocalTime iso={attendance.check_out_time} />
         </TimeBadge>
@@ -182,7 +231,7 @@ function StaffAttendanceRow({
       <DataViewCellLegacy className="whitespace-nowrap">
         <StatusBadge
           className={cn(
-            "transition-colors text-xl py-2",
+            "py-2 text-xl transition-colors",
             hasCheckedIn && !hasCheckedOut && "bg-[#dae9e0] text-[#027243]",
             hasCheckedIn && hasCheckedOut && "bg-[#c5c8fd] text-[#1227b4]",
             !hasCheckedIn && !isLateNow && "bg-gray-200 text-gray-700",
@@ -193,78 +242,97 @@ function StaffAttendanceRow({
           {attendance.status === "absent"
             ? "غائب"
             : hasCheckedIn && hasCheckedOut
-            ? "رحل"
-            : hasCheckedIn
-            ? "في المسجد"
-            : isLateNow
-            ? "متأخر"
-            : "لم يأتِ بعد"}
+              ? "رحل"
+              : hasCheckedIn
+                ? "في المسجد"
+                : isLateNow
+                  ? "متأخر"
+                  : "لم يأتِ بعد"}
         </StatusBadge>
       </DataViewCellLegacy>
 
       {/* Actions on left */}
-      <DataViewCellLegacy className="py-0 flex items-center gap-5 justify-center">
+      <DataViewCellLegacy className="flex items-center justify-center gap-5 py-0">
         {/* Mark absent */}
         <button
           title="تسجيل غياب"
           disabled={attendance.status === "absent" || isMarkingAbsent}
-          className="rounded-full text-red-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="rounded-full text-red-400 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
           onClick={async () => {
             setIsMarkingAbsent(true);
             const result = await markAbsent(attendance.id);
             setIsMarkingAbsent(false);
-            if (result) onUpdate({ 
-              status: result.status as any, 
-              check_in_time: result.check_in_time, 
-              check_out_time: result.check_out_time 
-            });
+            if (result)
+              onUpdate({
+                status: result.status as any,
+                check_in_time: result.check_in_time,
+                check_out_time: result.check_out_time,
+              });
           }}
         >
-          <Image src={DeleteIcon} alt="Delete" className="w-6 h-6 object-contain" />
+          <Image
+            src={DeleteIcon}
+            alt="Delete"
+            className="h-6 w-6 object-contain"
+          />
         </button>
 
         {/* Check-in / check-out / rate */}
         {!hasCheckedIn && (
           <button
             title="تسجيل حضور"
-            className="rounded-full text-olive-300 transition-colors"
+            className="text-olive-300 rounded-full transition-colors"
             onClick={async () => {
               setIsCheckingIn(true);
               const result = await manualCheckIn(attendance.id);
               setIsCheckingIn(false);
-              if (result) onUpdate({ 
-                status: result.status as any, 
-                check_in_time: result.check_in_time, 
-                check_out_time: result.check_out_time 
-              });
+              if (result)
+                onUpdate({
+                  status: result.status as any,
+                  check_in_time: result.check_in_time,
+                  check_out_time: result.check_out_time,
+                });
             }}
           >
-            <Image src={EditIcon} alt="Edit" className="w-6 h-6 object-contain" />
+            <Image
+              src={EditIcon}
+              alt="Edit"
+              className="h-6 w-6 object-contain"
+            />
           </button>
         )}
         {hasCheckedIn && !hasCheckedOut && (
           <button
             title="تسجيل انصراف"
-            className="rounded-full text-olive-300 transition-colors"
+            className="text-olive-300 rounded-full transition-colors"
             onClick={async () => {
               setIsCheckingOut(true);
               const result = await manualCheckOut(attendance.id);
               setIsCheckingOut(false);
-              if (result) onUpdate({ 
-                status: result.status as any, 
-                check_in_time: result.check_in_time, 
-                check_out_time: result.check_out_time 
-              });
+              if (result)
+                onUpdate({
+                  status: result.status as any,
+                  check_in_time: result.check_in_time,
+                  check_out_time: result.check_out_time,
+                });
             }}
           >
-            <Image src={EditIcon} alt="Edit" className="w-6 h-6 object-contain" />
+            <Image
+              src={EditIcon}
+              alt="Edit"
+              className="h-6 w-6 object-contain"
+            />
           </button>
         )}
         <button
           title="تفاصيل"
           className="rounded-full text-gray-400 transition-colors"
         >
-          <Image src={DetailsIcon} alt="Details" className="w-6 h-6 object-contain" />
+          <Image
+            src={DetailsIcon}
+            alt="Details"
+            className="h-6 w-6 object-contain"
+          />
         </button>
       </DataViewCellLegacy>
     </DataViewRowLegacy>
@@ -273,19 +341,20 @@ function StaffAttendanceRow({
 
 // ─── Filter Bar ───────────────────────────────────────────────────────────────
 
-function FilterBar({ 
-  onExport, 
-  hideDate, 
-  onGenerate 
-}: { 
-  onExport: () => void; 
+function FilterBar({
+  onExport,
+  hideDate,
+  onGenerate,
+}: {
+  onExport: () => void;
   hideDate?: boolean;
   onGenerate: () => void;
 }) {
   const { mutateSearchParams, searchParams } = useMutateSearchParams();
-  const dateParam = searchParams.get("date") || format(new Date(), "yyyy-MM-dd");
+  const dateParam =
+    searchParams.get("date") || format(new Date(), "yyyy-MM-dd");
   const [localDate, setLocalDate] = useState(dateParam);
-  
+
   const status = searchParams.get("status") || "";
   const attendanceType = searchParams.get("attendance_type") || "";
   const season = searchParams.get("season") || "";
@@ -295,30 +364,40 @@ function FilterBar({
   }, [dateParam]);
 
   return (
-    <div className="mb-14 flex items-center gap-6 flex-wrap max-[1000px]:flex-col max-[1000px]:items-stretch">
+    <div className="mb-14 flex flex-wrap items-center gap-6 max-[1000px]:flex-col max-[1000px]:items-stretch">
       {/* Search */}
-      <div className="flex-1 min-w-[220px] shadow-soft bg-[#F3F3F5] rounded-[2rem_0] flex items-center gap-8 px-8 py-3 max-[1000px]:rounded-lg max-[1000px]:w-full">
+      <div className="shadow-soft flex min-w-[220px] flex-1 items-center gap-8 rounded-[2rem_0] bg-[#F3F3F5] px-8 py-3 max-[1000px]:w-full max-[1000px]:rounded-lg">
         <Image src={SearchIcon} alt="Search" className="size-8 shrink-0" />
         <input
           placeholder="ابحث هنا..."
-           defaultValue={searchParams.get("search") || ""}
-          onChange={(e) => mutateSearchParams([{ key: "search", val: e.target.value }])}
-          className="flex-1 bg-transparent focus:outline-none text-[1.8rem] placeholder:font-semibold placeholder:text-gray-500"
+          defaultValue={searchParams.get("search") || ""}
+          onChange={(e) =>
+            mutateSearchParams([{ key: "search", val: e.target.value }])
+          }
+          className="flex-1 bg-transparent text-[1.8rem] placeholder:font-semibold placeholder:text-gray-500 focus:outline-none"
         />
       </div>
 
       {/* Date Filter */}
       {!hideDate && (
-        <div 
+        <div
           onClick={(e) => {
-            const input = e.currentTarget.querySelector('input');
-            if (e.target !== input && input && 'showPicker' in HTMLInputElement.prototype) {
-              try { input.showPicker(); } catch (err) {}
+            const input = e.currentTarget.querySelector("input");
+            if (
+              e.target !== input &&
+              input &&
+              "showPicker" in HTMLInputElement.prototype
+            ) {
+              try {
+                input.showPicker();
+              } catch (err) {}
             }
           }}
-          className="shadow-soft bg-[#F3F3F5] rounded-[0_2rem] flex items-center gap-4 px-8 py-3 hover:bg-gray-100 transition-colors cursor-pointer max-[1000px]:rounded-lg max-[1000px]:justify-between"
+          className="shadow-soft flex cursor-pointer items-center gap-4 rounded-[0_2rem] bg-[#F3F3F5] px-8 py-3 transition-colors hover:bg-gray-100 max-[1000px]:justify-between max-[1000px]:rounded-lg"
         >
-          <span className="text-[1.6rem] text-gray-500 pointer-events-none">التاريخ:</span>
+          <span className="pointer-events-none text-[1.6rem] text-gray-500">
+            التاريخ:
+          </span>
           <input
             type="date"
             value={localDate}
@@ -339,7 +418,7 @@ function FilterBar({
                 mutateSearchParams([{ key: "date", val: localDate }]);
               }
             }}
-            className="bg-transparent focus:outline-none text-[1.6rem] font-bold text-gray-700 cursor-pointer"
+            className="cursor-pointer bg-transparent text-[1.6rem] font-bold text-gray-700 focus:outline-none"
           />
         </div>
       )}
@@ -347,73 +426,165 @@ function FilterBar({
       {/* Status Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="shadow-soft bg-[#F3F3F5] rounded-[0_2rem] flex items-center justify-between gap-8 px-8 py-3 hover:bg-gray-100 transition-colors max-[1000px]:rounded-lg">
+          <button className="shadow-soft flex items-center justify-between gap-8 rounded-[0_2rem] bg-[#F3F3F5] px-8 py-3 transition-colors hover:bg-gray-100 max-[1000px]:rounded-lg">
             <span className="text-[1.6rem]">
-              {status === "present" ? "حاضر" : status === "absent" ? "غائب" : status === "late" ? "متأخر" : status === "not_started" ? "لم يبدأ" : "الحالة"}
+              {status === "present"
+                ? "حاضر"
+                : status === "absent"
+                  ? "غائب"
+                  : status === "late"
+                    ? "متأخر"
+                    : status === "not_started"
+                      ? "لم يبدأ"
+                      : "الحالة"}
             </span>
             <ChevronDown className="size-6 text-gray-400" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-9999 min-w-[150px] w-auto")}>
-          <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "status", val: "" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">الكل</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "status", val: "present" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">حاضر</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "status", val: "absent" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">غائب</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "status", val: "late" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">متأخر</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "status", val: "not_started" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">لم يبدأ</DropdownMenuItem>
+        <DropdownMenuContent
+          className={cn(
+            dropdownMenuContentStyles,
+            "z-9999 w-auto min-w-[150px]",
+          )}
+        >
+          <DropdownMenuItem
+            onClick={() => mutateSearchParams([{ key: "status", val: "" }])}
+            className="cursor-pointer px-6 text-2xl hover:bg-gray-100"
+          >
+            الكل
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() =>
+              mutateSearchParams([{ key: "status", val: "present" }])
+            }
+            className="cursor-pointer px-6 text-2xl hover:bg-gray-100"
+          >
+            حاضر
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() =>
+              mutateSearchParams([{ key: "status", val: "absent" }])
+            }
+            className="cursor-pointer px-6 text-2xl hover:bg-gray-100"
+          >
+            غائب
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => mutateSearchParams([{ key: "status", val: "late" }])}
+            className="cursor-pointer px-6 text-2xl hover:bg-gray-100"
+          >
+            متأخر
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() =>
+              mutateSearchParams([{ key: "status", val: "not_started" }])
+            }
+            className="cursor-pointer px-6 text-2xl hover:bg-gray-100"
+          >
+            لم يبدأ
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       {/* Type Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="shadow-soft bg-[#F3F3F5] rounded-[0_2rem] flex items-center justify-between gap-8 px-8 py-3 hover:bg-gray-100 transition-colors max-[1000px]:rounded-lg">
+          <button className="shadow-soft flex items-center justify-between gap-8 rounded-[0_2rem] bg-[#F3F3F5] px-8 py-3 transition-colors hover:bg-gray-100 max-[1000px]:rounded-lg">
             <span className="text-[1.6rem]">
-              {attendanceType === "lecture" ? "محاضرة" : attendanceType === "supervision" ? "إشراف" : "نوع الحضور"}
+              {attendanceType === "lecture"
+                ? "محاضرة"
+                : attendanceType === "supervision"
+                  ? "إشراف"
+                  : "نوع الحضور"}
             </span>
             <ChevronDown className="size-6 text-gray-400" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-9999 min-w-[150px] w-auto")}>
-          <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "attendance_type", val: "" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">الكل</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "attendance_type", val: "lecture" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">محاضرة</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "attendance_type", val: "supervision" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">إشراف</DropdownMenuItem>
+        <DropdownMenuContent
+          className={cn(
+            dropdownMenuContentStyles,
+            "z-9999 w-auto min-w-[150px]",
+          )}
+        >
+          <DropdownMenuItem
+            onClick={() =>
+              mutateSearchParams([{ key: "attendance_type", val: "" }])
+            }
+            className="cursor-pointer px-6 text-2xl hover:bg-gray-100"
+          >
+            الكل
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() =>
+              mutateSearchParams([{ key: "attendance_type", val: "lecture" }])
+            }
+            className="cursor-pointer px-6 text-2xl hover:bg-gray-100"
+          >
+            محاضرة
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() =>
+              mutateSearchParams([
+                { key: "attendance_type", val: "supervision" },
+              ])
+            }
+            className="cursor-pointer px-6 text-2xl hover:bg-gray-100"
+          >
+            إشراف
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       {/* Season Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="shadow-soft bg-[#F3F3F5] rounded-[0_2rem] flex items-center justify-between gap-8 px-8 py-3 hover:bg-gray-100 transition-colors max-[1000px]:rounded-lg">
+          <button className="shadow-soft flex items-center justify-between gap-8 rounded-[0_2rem] bg-[#F3F3F5] px-8 py-3 transition-colors hover:bg-gray-100 max-[1000px]:rounded-lg">
             <span className="text-[1.6rem]">
               {season ? `الموسم ${toHindiDigits(Number(season))}` : "الموسم"}
             </span>
             <ChevronDown className="size-6 text-gray-400" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className={cn(dropdownMenuContentStyles, "z-9999 min-w-[150px] w-auto max-h-60 overflow-y-auto")}>
-          <DropdownMenuItem onClick={() => mutateSearchParams([{ key: "season", val: "" }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">الكل</DropdownMenuItem>
-          {[1, 2, 3, 4, 5, 6].map(s => (
-            <DropdownMenuItem key={s} onClick={() => mutateSearchParams([{ key: "season", val: s.toString() }])} className="cursor-pointer px-6 text-2xl hover:bg-gray-100">
+        <DropdownMenuContent
+          className={cn(
+            dropdownMenuContentStyles,
+            "z-9999 max-h-60 w-auto min-w-[150px] overflow-y-auto",
+          )}
+        >
+          <DropdownMenuItem
+            onClick={() => mutateSearchParams([{ key: "season", val: "" }])}
+            className="cursor-pointer px-6 text-2xl hover:bg-gray-100"
+          >
+            الكل
+          </DropdownMenuItem>
+          {[1, 2, 3, 4, 5, 6].map((s) => (
+            <DropdownMenuItem
+              key={s}
+              onClick={() =>
+                mutateSearchParams([{ key: "season", val: s.toString() }])
+              }
+              className="cursor-pointer px-6 text-2xl hover:bg-gray-100"
+            >
               الموسم {toHindiDigits(s)}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <div className="flex items-center gap-6 mr-auto max-[1000px]:mr-0 max-[1000px]:w-full">
+      <div className="mr-auto flex items-center gap-6 max-[1000px]:mr-0 max-[1000px]:w-full">
         {/* Generate Records Button */}
-        <button 
+        <button
           onClick={onGenerate}
-          className="shadow-soft bg-olive-700 text-white rounded-lg flex items-center justify-center gap-4 px-6 py-3 hover:bg-olive-800 transition-colors flex-1"
+          className="shadow-soft bg-olive-700 hover:bg-olive-800 flex flex-1 items-center justify-center gap-4 rounded-lg px-6 py-3 text-white transition-colors"
         >
           <PlusCircle className="size-6" />
           <span className="text-[1.6rem] font-bold">توليد سجلات</span>
         </button>
 
         {/* Excel export */}
-        <button 
+        <button
           onClick={onExport}
-          className="shadow-soft bg-[#F3F3F5] rounded-lg flex items-center justify-center px-6 hover:bg-gray-100 transition-colors py-2 shrink-0"
+          className="shadow-soft flex shrink-0 items-center justify-center rounded-lg bg-[#F3F3F5] px-6 py-2 transition-colors hover:bg-gray-100"
         >
           <Image src={MicrosoftExcelLogo} alt="Excel" className="h-16 w-auto" />
         </button>
@@ -424,6 +595,7 @@ function FilterBar({
 
 // ─── Main View ────────────────────────────────────────────────────────────────
 
+const WS_URL = `ws://${typeof window !== "undefined" ? window.location.hostname : "localhost"}:8001/ws/attendance/`;
 export default function AdminAttendancesView({
   initialAttendances,
   hideDateFilter = false,
@@ -431,10 +603,9 @@ export default function AdminAttendancesView({
   initialAttendances: StaffAttendanceListItem[];
   hideDateFilter?: boolean;
 }) {
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [attendances, setAttendances] = useState<StaffAttendanceListItem[]>(initialAttendances);
+  const [attendances, setAttendances] =
+    useState<StaffAttendanceListItem[]>(initialAttendances);
   const searchParamsHook = useSearchParams();
-  const searchQuery = searchParamsHook.get("search")?.toLowerCase() || "";
   const [ratingModal, setRatingModal] = useState<{
     isOpen: boolean;
     attendance?: StaffAttendanceListItem;
@@ -442,86 +613,94 @@ export default function AdminAttendancesView({
 
   const [generationModalOpen, setGenerationModalOpen] = useState(false);
 
-  const wsUrl = accessToken
-    ? `ws://${typeof window !== "undefined" ? window.location.hostname : "localhost"}:8001/ws/attendance/?token=${accessToken}`
-    : null;
-
-  const { lastJsonMessage } = useWebSocket<StaffAttendanceServerEvent>(wsUrl, {
-    shouldReconnect: () => true,
-    reconnectAttempts: 10,
-    reconnectInterval: 10000,
-  });
-
-  useEffect(() => {
-    const getToken = async () => {
-      const token = await getClientAccessToken();
-      setAccessToken(token ?? null);
-    };
-    getToken();
-  }, []);
+  const { lastJsonMessage } =
+    useAuthedWebSocket<StaffAttendanceServerEvent>(WS_URL);
 
   useEffect(() => {
     if (!lastJsonMessage) return;
-    if (lastJsonMessage.type === "attendance_update") {
-      const { check_in_time, check_out_time, id, status } = lastJsonMessage.data as any;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setAttendances((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, check_in_time, check_out_time, status } : a))
-      );
-    } else if (lastJsonMessage.type === "attendance_rated") {
-      const { id, rating } = lastJsonMessage.data as any;
-      setAttendances((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, rating: Number(rating) } : a))
-      );
+    switch (lastJsonMessage.type) {
+      case "attendance_update": {
+        const { check_in_time, check_out_time, id, status } =
+          lastJsonMessage.data;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setAttendances((prev) =>
+          prev.map((a) =>
+            a.id === id ? { ...a, check_in_time, check_out_time, status } : a,
+          ),
+        );
+        break;
+      }
+      case "attendance_rated": {
+        const { id, rating } = lastJsonMessage.data;
+        setAttendances((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, rating: Number(rating) } : a)),
+        );
+        break;
+      }
     }
   }, [lastJsonMessage]);
 
-  const updateAttendance = (id: number, updated: Partial<StaffAttendanceListItem>) => {
-    setAttendances((prev) => prev.map((a) => (a.id === id ? { ...a, ...updated } : a)));
+  const updateAttendance = (
+    id: number,
+    updated: Partial<StaffAttendanceListItem>,
+  ) => {
+    setAttendances((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, ...updated } : a)),
+    );
   };
 
-  const filteredAttendances = attendances.filter((a) => {
-    if (!searchQuery) return true;
-    return (
-      a.instructor_name.toLowerCase().includes(searchQuery) ||
-      a.lecture_info?.course_title?.toLowerCase().includes(searchQuery) ||
-      a.attendance_type_display.toLowerCase().includes(searchQuery)
-    );
-  });
+  const filteredAttendances = filterAttendances(attendances, searchParamsHook);
 
   const handleExport = () => {
     if (filteredAttendances.length === 0) return;
-    const headers = ["الرقم", "الاسم", "نوع الحضور", "الدورة", "ميعاد الحضور", "ميعاد الانصراف", "حضور فعلي", "انصراف فعلي", "الحالة"];
+    const headers = [
+      "الرقم",
+      "الاسم",
+      "نوع الحضور",
+      "الدورة",
+      "ميعاد الحضور",
+      "ميعاد الانصراف",
+      "حضور فعلي",
+      "انصراف فعلي",
+      "الحالة",
+    ];
     const csvContent = [
       headers.join(","),
-      ...filteredAttendances.map((a, i) => [
-        i + 1,
-        `"${a.instructor_name}"`,
-        `"${a.attendance_type_display}"`,
-        `"${a.lecture_info?.course_title || ""}"`,
-        `"${a.scheduled_check_in_time}"`,
-        `"${a.scheduled_check_out_time}"`,
-        `"${a.check_in_time ? formatTime(a.check_in_time) : ""}"`,
-        `"${a.check_out_time ? formatTime(a.check_out_time) : ""}"`,
-        `"${a.status === 'present' ? 'حاضر' : a.status === 'absent' ? 'غائب' : a.status === 'late' ? 'متأخر' : 'لم يبدأ'}"`
-      ].join(","))
+      ...filteredAttendances.map((a, i) =>
+        [
+          i + 1,
+          `"${a.instructor_name}"`,
+          `"${a.attendance_type_display}"`,
+          `"${a.lecture_info?.course_title || ""}"`,
+          `"${a.scheduled_check_in_time}"`,
+          `"${a.scheduled_check_out_time}"`,
+          `"${a.check_in_time ? formatTime(a.check_in_time) : ""}"`,
+          `"${a.check_out_time ? formatTime(a.check_out_time) : ""}"`,
+          `"${a.status === "present" ? "حاضر" : a.status === "absent" ? "غائب" : a.status === "late" ? "متأخر" : "لم يبدأ"}"`,
+        ].join(","),
+      ),
     ].join("\n");
     const bom = "\uFEFF";
-    const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([bom + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `attendances_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    link.setAttribute(
+      "download",
+      `attendances_${format(new Date(), "yyyy-MM-dd")}.csv`,
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   return (
-    <div className="flex flex-col h-full flex-1">
-      <FilterBar 
-        onExport={handleExport} 
-        hideDate={hideDateFilter} 
+    <div className="flex h-full flex-1 flex-col">
+      <FilterBar
+        onExport={handleExport}
+        hideDate={hideDateFilter}
         onGenerate={() => setGenerationModalOpen(true)}
       />
 
@@ -531,9 +710,9 @@ export default function AdminAttendancesView({
         filterConfig={{}}
         sortConfig={{}}
       >
-        <div className="flex flex-col flex-1 w-full">
+        <div className="flex w-full flex-1 flex-col">
           <div className="w-full overflow-x-auto pb-4">
-            <div className="min-w-[1200px] flex flex-col">
+            <div className="flex min-w-[1200px] flex-col">
               <DataViewHeaderLegacy>
                 <DataViewCellLegacy>م</DataViewCellLegacy>
                 <DataViewCellLegacy>الاسم</DataViewCellLegacy>
@@ -554,7 +733,9 @@ export default function AdminAttendancesView({
                       key={item.id}
                       attendance={item}
                       index={i}
-                      onRate={() => setRatingModal({ isOpen: true, attendance: item })}
+                      onRate={() =>
+                        setRatingModal({ isOpen: true, attendance: item })
+                      }
                       onUpdate={(updated) => updateAttendance(item.id, updated)}
                     />
                   ),
@@ -564,7 +745,7 @@ export default function AdminAttendancesView({
             </div>
           </div>
 
-          <div className="mt-auto pt-10 w-full">
+          <div className="mt-auto w-full pt-10">
             <DataViewPaginationLegacy />
           </div>
         </div>
