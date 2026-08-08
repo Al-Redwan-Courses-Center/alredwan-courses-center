@@ -29,7 +29,7 @@ export async function getSeasons() {
     const { data } = await apiClient.get<Season[]>("/api/courses/seasons/");
     return data;
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     if (isAxiosError(error) && error.response?.status === 404) {
       // Endpoint might not exist yet, return empty array gracefully
       return [];
@@ -46,7 +46,7 @@ export async function getAllSchedules(params?: {
 }) {
   try {
     const apiClient = await getAuthApiClient();
-    
+
     // We fetch courses and supervisor schedules
     const [coursesRes, supervisorRes] = await Promise.all([
       apiClient.get("/api/courses/?page_size=100", { params }),
@@ -64,7 +64,7 @@ export async function getAllSchedules(params?: {
         const res = await apiClient.get(`/api/courses/${course.id}/schedules/`);
         return { course, schedules: unwrapPaginated(res.data) };
       } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+        if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
         return { course, schedules: [] };
       }
     });
@@ -95,7 +95,15 @@ export async function getAllSchedules(params?: {
       schedules.push({
         id: s.id,
         weekday: s.day_of_week,
-        weekday_display: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"][s.day_of_week],
+        weekday_display: [
+          "الأحد",
+          "الاثنين",
+          "الثلاثاء",
+          "الأربعاء",
+          "الخميس",
+          "الجمعة",
+          "السبت",
+        ][s.day_of_week],
         start_time: s.start_time,
         end_time: s.end_time,
         instructor_name: s.instructor_name,
@@ -108,19 +116,25 @@ export async function getAllSchedules(params?: {
 
     return schedules;
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     console.error("Failed to fetch schedules", error);
     return [];
   }
 }
 
-export async function createCourseSchedule(courseId: number, data: { weekday: number, start_time: string, end_time: string }) {
+export async function createCourseSchedule(
+  courseId: number,
+  data: { weekday: number; start_time: string; end_time: string },
+) {
   try {
     const apiClient = await getAuthApiClient();
-    const response = await apiClient.post(`/api/courses/${courseId}/schedules/`, data);
+    const response = await apiClient.post(
+      `/api/courses/${courseId}/schedules/`,
+      data,
+    );
     return { success: true, data: response.data };
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     console.error("Failed to create course schedule", error);
     let message = "فشل في إنشاء موعد الدورة";
     if (isAxiosError(error) && error.response?.data) {
@@ -130,13 +144,18 @@ export async function createCourseSchedule(courseId: number, data: { weekday: nu
   }
 }
 
-export async function createSupervisionSchedule(data: { instructor: number, day_of_week: number, start_time: string, end_time: string }) {
+export async function createSupervisionSchedule(data: {
+  instructor: number;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+}) {
   try {
     const apiClient = await getAuthApiClient();
     const response = await apiClient.post(`/api/attendance/schedules/`, data);
     return { success: true, data: response.data };
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     console.error("Failed to create supervision schedule", error);
     let message = "فشل في إنشاء فترة الإشراف";
     if (isAxiosError(error) && error.response?.data) {
@@ -146,13 +165,16 @@ export async function createSupervisionSchedule(data: { instructor: number, day_
   }
 }
 
-export async function deleteCourseSchedule(courseId: number, scheduleId: number) {
+export async function deleteCourseSchedule(
+  courseId: number,
+  scheduleId: number,
+) {
   try {
     const apiClient = await getAuthApiClient();
     await apiClient.delete(`/api/courses/${courseId}/schedules/${scheduleId}/`);
     return { success: true };
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     console.error("Failed to delete course schedule", error);
     return { success: false, error: "فشل في حذف موعد الدورة" };
   }
@@ -164,7 +186,7 @@ export async function deleteSupervisionSchedule(scheduleId: number) {
     await apiClient.delete(`/api/attendance/schedules/${scheduleId}/`);
     return { success: true };
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     console.error("Failed to delete supervision schedule", error);
     return { success: false, error: "فشل في حذف فترة الإشراف" };
   }

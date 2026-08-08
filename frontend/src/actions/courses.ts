@@ -6,7 +6,12 @@ import {
   getMyEnrollments,
 } from "@/actions/enrollments";
 import { getUser } from "@/actions/auth";
-import { apiRequest, getAuthApiClient, publicApiClient, unwrapPaginated } from "@/lib/api";
+import {
+  apiRequest,
+  getAuthApiClient,
+  publicApiClient,
+  unwrapPaginated,
+} from "@/lib/api";
 import { PaginatedResponse } from "@/types/config";
 import { CourseDetail, CourseListItem } from "@/types/entities";
 
@@ -18,7 +23,7 @@ export async function getPublicCourses(): Promise<CourseListItem[]> {
 
     return Array.isArray(data) ? data : data.results;
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     console.error("Failed to load public courses:", error);
     return [];
   }

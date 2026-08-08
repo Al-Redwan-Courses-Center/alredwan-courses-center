@@ -56,7 +56,7 @@ export default function PublicCourseCard({
                 ? `/dashboard/courses/${course.id}`
                 : `/courses/${course.id}`
             }
-            className="px-0 text-[1.125rem] mobile-lg:text-[1.8rem] mobile:text-[2.2rem]"
+            className="mobile-lg:text-[1.8rem] mobile:text-[2.2rem] px-0 text-[1.125rem]"
           >
             عرض الدورة
           </Button>
@@ -66,7 +66,7 @@ export default function PublicCourseCard({
             size="small"
             revert
             href="#"
-            className="px-0 text-[1.125rem] mobile-lg:text-[1.8rem] mobile:text-[2.2rem]"
+            className="mobile-lg:text-[1.8rem] mobile:text-[2.2rem] px-0 text-[1.125rem]"
           >
             سجل الآن
           </Button>
@@ -74,14 +74,16 @@ export default function PublicCourseCard({
       }
       index={index}
     >
-      <h3 className="mb-3 text-[1.28rem] mobile-lg:text-[2.4rem] mobile:text-[3rem] font-bold">{course.name}</h3>
+      <h3 className="mobile-lg:text-[2.4rem] mobile:text-[3rem] mb-3 text-[1.28rem] font-bold">
+        {course.name}
+      </h3>
       <p className="mb-5">{course.description}</p>
 
       <div className="mb-5 grid grid-cols-[repeat(auto-fill,minmax(5rem,auto))] items-center gap-2">
         {course.tags.map((tag, i) => (
           <span
             className={cn(
-              "inline-block bg-gray-100 px-4 py-2 text-center text-xl mobile-lg:text-[1.8rem] mobile:text-[2.2rem]",
+              "mobile-lg:text-[1.8rem] mobile:text-[2.2rem] inline-block bg-gray-100 px-4 py-2 text-center text-xl",
               i % 2 === 0 ? "rounded-[1rem_0]" : "rounded-[0_1rem]",
             )}
             key={i}

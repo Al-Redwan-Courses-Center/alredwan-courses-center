@@ -53,9 +53,9 @@ export default function EnrollmentRequestsList({
       >
         {hasEnrollments ? (
           enrollments.map((e) => (
-            <EnrollmentRequestCard 
-              key={e.id} 
-              enrollmentRequest={e} 
+            <EnrollmentRequestCard
+              key={e.id}
+              enrollmentRequest={e}
               childName={e.child?.name}
             />
           ))

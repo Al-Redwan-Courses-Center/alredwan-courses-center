@@ -9,9 +9,7 @@ import CourseImage from "@/assets/course-img.jpg";
 import CoursePurchaseModal from "@/components/courses/CoursePurchaseModal";
 import CourseHeader from "@/components/courses/CourseHeader";
 import Button from "@/components/ui/Button";
-import {
-  toHindiDigits,
-} from "@/lib/utils";
+import { toHindiDigits } from "@/lib/utils";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import RatingsSection from "@/components/ratings/RatingsSection";
@@ -82,16 +80,15 @@ export default async function Page({
   }
 
   return (
-    <main className="h-full overflow-y-auto px-16 max-[1000px]:px-8 py-8">
+    <main className="h-full overflow-y-auto px-16 py-8 max-[1000px]:px-8">
       <div className="flex flex-col gap-8">
-        
         {/* Header Section */}
         <div className="flex items-center justify-between">
           <Button
             href="/dashboard/courses"
             variant="secondary"
             size="small"
-            className="w-fit px-10 bg-white/60 backdrop-blur-sm border-none shadow-soft"
+            className="shadow-soft w-fit border-none bg-white/60 px-10 backdrop-blur-sm"
           >
             العودة إلى كل الدورات
           </Button>
@@ -100,115 +97,124 @@ export default async function Page({
         <CourseHeader course={course} />
 
         {/* Content Grid */}
-        <div className="grid grid-cols-[1.5fr_1fr] max-[1000px]:grid-cols-1 gap-12">
-            
-            {/* Left Column: Image & Details */}
-            <div className="flex flex-col gap-10">
-                <div className="relative aspect-video overflow-hidden rounded-[3rem] shadow-soft border-4 border-white/40">
-                    <Image
-                        src={course.image || CourseImage}
-                        alt={course.name}
-                        fill
-                        className="object-cover"
-                        draggable="false"
-                        priority
-                    />
-                </div>
-
-                <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-soft p-10 max-[1000px]:p-6 flex flex-col gap-6">
-                    <h2 className="text-olive-700 text-4xl font-bold flex items-center gap-4">
-                        <Pencil size={24} className="text-olive-400" />
-                        عن الدورة
-                    </h2>
-                    <p className="text-gray-600 text-2xl leading-relaxed whitespace-pre-wrap">
-                        {course.description}
-                    </p>
-                    
-                    <div className="mt-6 flex flex-wrap gap-4">
-                        {course.tags.map((tag) => (
-                            <span key={tag.id} className="bg-olive-50 text-olive-600 px-6 py-2 rounded-full text-xl font-bold border border-olive-100">
-                                {tag.name}
-                            </span>
-                        ))}
-                    </div>
-                </div>
+        <div className="grid grid-cols-[1.5fr_1fr] gap-12 max-[1000px]:grid-cols-1">
+          {/* Left Column: Image & Details */}
+          <div className="flex flex-col gap-10">
+            <div className="shadow-soft relative aspect-video overflow-hidden rounded-[3rem] border-4 border-white/40">
+              <Image
+                src={course.image || CourseImage}
+                alt={course.name}
+                fill
+                className="object-cover"
+                draggable="false"
+                priority
+              />
             </div>
 
-            {/* Right Column: Pricing & Purchase */}
-            <div className="flex flex-col gap-10">
-                <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-soft p-10 max-[1000px]:p-6 flex flex-col gap-8">
-                    <div className="flex flex-col gap-2">
-                        <span className="text-gray-400 text-xl">رسوم الدورة</span>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-olive-700 text-6xl font-bold">
-                                {toHindiDigits(course.price)}
-                            </span>
-                            <span className="text-olive-500 text-2xl font-bold">جنيه مصري</span>
-                        </div>
-                    </div>
+            <div className="shadow-soft flex flex-col gap-6 rounded-[2.5rem] border border-white/60 bg-white/40 p-10 backdrop-blur-md max-[1000px]:p-6">
+              <h2 className="text-olive-700 flex items-center gap-4 text-4xl font-bold">
+                <Pencil size={24} className="text-olive-400" />
+                عن الدورة
+              </h2>
+              <p className="text-2xl leading-relaxed whitespace-pre-wrap text-gray-600">
+                {course.description}
+              </p>
 
-                    <p className="text-gray-500 text-xl italic">
-                        احجز مكانك الآن واستفد من خصم الفترة المحدودة لطلاب الأكاديمية.
-                    </p>
+              <div className="mt-6 flex flex-wrap gap-4">
+                {course.tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="bg-olive-50 text-olive-600 border-olive-100 rounded-full border px-6 py-2 text-xl font-bold"
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
 
-                    <div className="flex flex-col gap-4">
-                        {hasActiveEnrollment ? (
-                             <Button className="w-full py-6 text-3xl" disabled>
-                                أنت مشترك بالفعل
-                             </Button>
-                        ) : activeEnrollmentRequest ? (
-                            <Button className="w-full py-6 text-3xl" disabled>
-                                طلبك قيد المراجعة
-                            </Button>
-                        ) : (
-                            <CoursePurchaseModal
-                                role={enrollmentRole}
-                                courseId={courseId}
-                                coursePrice={course.price}
-                                childrenOptions={childrenOptions}
-                            />
-                        )}
-
-                        <Button
-                            href="/contact-us"
-                            variant="secondary"
-                            className="w-full py-6 text-3xl bg-white/80 hover:bg-white"
-                        >
-                            تواصل للاستفسار
-                        </Button>
-                    </div>
+          {/* Right Column: Pricing & Purchase */}
+          <div className="flex flex-col gap-10">
+            <div className="shadow-soft flex flex-col gap-8 rounded-[2.5rem] border border-white/60 bg-white/40 p-10 backdrop-blur-md max-[1000px]:p-6">
+              <div className="flex flex-col gap-2">
+                <span className="text-xl text-gray-400">رسوم الدورة</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-olive-700 text-6xl font-bold">
+                    {toHindiDigits(course.price)}
+                  </span>
+                  <span className="text-olive-500 text-2xl font-bold">
+                    جنيه مصري
+                  </span>
                 </div>
+              </div>
 
-                <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-soft p-10 max-[1000px]:p-6">
-                    <h3 className="text-olive-700 text-3xl font-bold mb-6">لماذا تختار الرضوان؟</h3>
-                    <ul className="space-y-4">
-                        {[
-                            "مناهج معتمدة ومبسطة",
-                            "معلمين ذوي خبرة عالية",
-                            "متابعة دورية وتقارير أداء",
-                            "بيئة تعليمية تفاعلية وآمنة"
-                        ].map((item, i) => (
-                            <li key={i} className="flex items-center gap-3 text-xl text-gray-600">
-                                <div className="w-2 h-2 rounded-full bg-olive-400" />
-                                {item}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+              <p className="text-xl text-gray-500 italic">
+                احجز مكانك الآن واستفد من خصم الفترة المحدودة لطلاب الأكاديمية.
+              </p>
+
+              <div className="flex flex-col gap-4">
+                {hasActiveEnrollment ? (
+                  <Button className="w-full py-6 text-3xl" disabled>
+                    أنت مشترك بالفعل
+                  </Button>
+                ) : activeEnrollmentRequest ? (
+                  <Button className="w-full py-6 text-3xl" disabled>
+                    طلبك قيد المراجعة
+                  </Button>
+                ) : (
+                  <CoursePurchaseModal
+                    role={enrollmentRole}
+                    courseId={courseId}
+                    coursePrice={course.price}
+                    childrenOptions={childrenOptions}
+                  />
+                )}
+
+                <Button
+                  href="/contact-us"
+                  variant="secondary"
+                  className="w-full bg-white/80 py-6 text-3xl hover:bg-white"
+                >
+                  تواصل للاستفسار
+                </Button>
+              </div>
             </div>
 
+            <div className="shadow-soft rounded-[2.5rem] border border-white/60 bg-white/40 p-10 backdrop-blur-md max-[1000px]:p-6">
+              <h3 className="text-olive-700 mb-6 text-3xl font-bold">
+                لماذا تختار الرضوان؟
+              </h3>
+              <ul className="space-y-4">
+                {[
+                  "مناهج معتمدة ومبسطة",
+                  "معلمين ذوي خبرة عالية",
+                  "متابعة دورية وتقارير أداء",
+                  "بيئة تعليمية تفاعلية وآمنة",
+                ].map((item, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center gap-3 text-xl text-gray-600"
+                  >
+                    <div className="bg-olive-400 h-2 w-2 rounded-full" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
 
         {/* Ratings Section */}
-        <div className="mt-8 bg-white/40 backdrop-blur-md rounded-[3rem] border border-white/60 shadow-soft p-10 max-[1000px]:p-6">
-            <h2 className="text-olive-700 text-4xl font-bold mb-10 text-center">تقييمات الدورة وآراء الطلاب</h2>
-            <RatingsSection 
-                type="course" 
-                id={courseId} 
-                showForm={hasActiveEnrollment} 
-            />
+        <div className="shadow-soft mt-8 rounded-[3rem] border border-white/60 bg-white/40 p-10 backdrop-blur-md max-[1000px]:p-6">
+          <h2 className="text-olive-700 mb-10 text-center text-4xl font-bold">
+            تقييمات الدورة وآراء الطلاب
+          </h2>
+          <RatingsSection
+            type="course"
+            id={courseId}
+            showForm={hasActiveEnrollment}
+          />
         </div>
-
       </div>
     </main>
   );

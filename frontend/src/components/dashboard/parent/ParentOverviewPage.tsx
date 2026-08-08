@@ -52,7 +52,7 @@ export default async function ParentOverviewPage() {
         totalPaid={totalPaid}
       />
 
-      <div className="grid grid-cols-2 max-[1000px]:grid-cols-1 gap-x-29 gap-y-12">
+      <div className="grid grid-cols-2 gap-x-29 gap-y-12 max-[1000px]:grid-cols-1">
         <div className="flex flex-col gap-6">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="dashboard-section-title">أطفالي</h2>
@@ -76,17 +76,24 @@ export default async function ParentOverviewPage() {
           >
             {myChildren.length > 0 ? (
               myChildren.slice(0, 2).map((c, i) => {
-                const childEnrollments = myEnrollments.filter((e) => e.child_id === c.id);
-                const childRequests = myEnrollmentRequests.filter((req) => req.child_id === c.id);
+                const childEnrollments = myEnrollments.filter(
+                  (e) => e.child_id === c.id,
+                );
+                const childRequests = myEnrollmentRequests.filter(
+                  (req) => req.child_id === c.id,
+                );
 
-                const activeCoursesCount = childEnrollments.filter((e) => e.status === "active").length;
-                const pendingEnrollmentsCount = childRequests.filter(
-                  (req) => ["pending", "processing"].includes(req.status)
+                const activeCoursesCount = childEnrollments.filter(
+                  (e) => e.status === "active",
+                ).length;
+                const pendingEnrollmentsCount = childRequests.filter((req) =>
+                  ["pending", "processing"].includes(req.status),
                 ).length;
                 const attendanceRate = childEnrollments.length
                   ? Math.round(
                       childEnrollments.reduce(
-                        (acc, enrollment) => acc + (enrollment.completion_percentage || 0),
+                        (acc, enrollment) =>
+                          acc + (enrollment.completion_percentage || 0),
                         0,
                       ) / childEnrollments.length,
                     )

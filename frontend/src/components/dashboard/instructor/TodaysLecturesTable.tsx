@@ -35,16 +35,16 @@ export default function TodaysLecturesTable({
     const exportData = todaysLectures.map((lecture, i) => {
       const { label } = statusMap[lecture.status];
       return {
-        "م": i + 1,
-        "المحاضرة": lecture.title,
-        "الدورة": lecture.course.name,
-        "البداية": formatTime(lecture.start_time),
-        "النهاية": formatTime(lecture.end_time),
-        "الحالة": label
+        م: i + 1,
+        المحاضرة: lecture.title,
+        الدورة: lecture.course.name,
+        البداية: formatTime(lecture.start_time),
+        النهاية: formatTime(lecture.end_time),
+        الحالة: label,
       };
     });
-    
-    const today = format(new Date(), 'yyyy-MM-dd');
+
+    const today = format(new Date(), "yyyy-MM-dd");
     exportToExcel(exportData, `محاضرات_اليوم_${today}`);
   }
 

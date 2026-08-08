@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const courses = await getPublicCourses();
-  
+
   return (
-    <div className="mx-auto max-h-full w-full max-w-[1280px] px-6 md:px-16 pt-10 pb-50">
+    <div className="mx-auto max-h-full w-full max-w-[1280px] px-6 pt-10 pb-50 md:px-16">
       <Suspense fallback={null}>
         <DashboardAllCoursesView courses={courses} />
       </Suspense>

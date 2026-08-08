@@ -22,7 +22,9 @@ function PopoverContent({
   sideOffset = 4,
   usePortal = true,
   ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Content> & { usePortal?: boolean }) {
+}: React.ComponentProps<typeof PopoverPrimitive.Content> & {
+  usePortal?: boolean;
+}) {
   const content = (
     <PopoverPrimitive.Content
       data-slot="popover-content"

@@ -9,7 +9,6 @@ interface AccordionHeaderProps {
   className?: string;
 }
 
-
 export default function AccordionHeader({
   isOpen,
   children,

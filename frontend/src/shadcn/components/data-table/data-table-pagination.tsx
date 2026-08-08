@@ -64,7 +64,7 @@ export function DataTablePagination<TData>({
         variant="ghost"
         onClick={goToPrevious}
         disabled={isLoading || !table.getCanPreviousPage()}
-        className="h-auto w-auto p-2 text-olive-400 hover:bg-transparent hover:text-olive-700 disabled:opacity-40"
+        className="text-olive-400 hover:text-olive-700 h-auto w-auto p-2 hover:bg-transparent disabled:opacity-40"
         aria-label="الصفحة السابقة"
       >
         <ArrowRight className="!h-8 !w-8 stroke-[1.5]" />{" "}
@@ -95,7 +95,7 @@ export function DataTablePagination<TData>({
         variant="ghost"
         onClick={goToNext}
         disabled={isLoading || !table.getCanNextPage()}
-        className="h-auto w-auto p-2 text-olive-400 hover:bg-transparent hover:text-olive-700 disabled:opacity-40"
+        className="text-olive-400 hover:text-olive-700 h-auto w-auto p-2 hover:bg-transparent disabled:opacity-40"
         aria-label="الصفحة التالية"
       >
         <ArrowLeft className="!h-8 !w-8 stroke-[1.5]" />{" "}

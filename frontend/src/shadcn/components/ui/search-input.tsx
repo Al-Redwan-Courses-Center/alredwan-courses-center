@@ -21,7 +21,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           containerClassName,
         )}
       >
-        <Search className="h-5 w-5 shrink-0 text-olive-300" />
+        <Search className="text-olive-300 h-5 w-5 shrink-0" />
 
         <Input
           id={id}

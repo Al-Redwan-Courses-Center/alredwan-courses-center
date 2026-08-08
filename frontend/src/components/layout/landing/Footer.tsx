@@ -16,14 +16,20 @@ export default function Footer() {
           <h3>معلومات التواصل</h3>
           <ul className="flex flex-col gap-3 [&_svg]:w-[1.6rem] [&>li]:flex [&>li]:items-center [&>li]:gap-4">
             <li>
-              <a href="mailto:info@alredwan.edu" className="flex items-center gap-4 hover:underline">
+              <a
+                href="mailto:info@alredwan.edu"
+                className="flex items-center gap-4 hover:underline"
+              >
                 <EmailIcon />
                 <span>info@alredwan.edu</span>
               </a>
             </li>
 
             <li>
-              <a href="tel:+201234567890" className="flex items-center gap-4 hover:underline">
+              <a
+                href="tel:+201234567890"
+                className="flex items-center gap-4 hover:underline"
+              >
                 <PhoneIcon />
                 <span>٢٠١٢٣٤٥٦٧٨٩٠+</span>
               </a>

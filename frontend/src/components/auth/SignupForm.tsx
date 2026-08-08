@@ -128,9 +128,10 @@ export default function SignupForm() {
         });
 
         if (res?.ok) {
-          const redirectPath = formattedData.role === "parent" 
-            ? "/dashboard/my-children/new" 
-            : "/dashboard";
+          const redirectPath =
+            formattedData.role === "parent"
+              ? "/dashboard/my-children/new"
+              : "/dashboard";
           return window.location.replace(redirectPath);
         }
         toast.error(res?.error || "حدث خطأ أثناء تسجيل الدخول! حاول مرة أخرى!");

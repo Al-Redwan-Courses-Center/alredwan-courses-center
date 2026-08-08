@@ -61,7 +61,8 @@ export default function StudentOverviewCoursesAccordion({
             <li className="flex items-center gap-2">
               <CalendarIcon className="text-olive-500" />
               <span>
-                يبدأ: {formatDate(parseISO(course.start_date)).replaceAll("-", "/")}
+                يبدأ:{" "}
+                {formatDate(parseISO(course.start_date)).replaceAll("-", "/")}
               </span>
             </li>
             <li className="flex items-center gap-2">
@@ -77,7 +78,9 @@ export default function StudentOverviewCoursesAccordion({
             </li>
             <li className="flex items-center gap-2">
               <CalendarIcon className="text-olive-500" />
-              <span>{course.schedules.map((s) => s.weekday_display).join(" \\\\ ")}</span>
+              <span>
+                {course.schedules.map((s) => s.weekday_display).join(" \\\\ ")}
+              </span>
             </li>
             <li className="flex items-center gap-2">
               <ClockIcon className="text-olive-500" />
@@ -87,7 +90,7 @@ export default function StudentOverviewCoursesAccordion({
 
           <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
             <ProgressBar className="h-3" progress={course.course_progress} />
-            <span className="text-lg font-bold text-olive-700">
+            <span className="text-olive-700 text-lg font-bold">
               {course.course_progress}% تقدم
             </span>
           </div>

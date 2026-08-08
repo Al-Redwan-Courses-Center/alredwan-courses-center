@@ -40,10 +40,8 @@ export default function StudentOverviewPage({
   const overviewCourses = activeCourses.slice(0, 2);
 
   return (
-    <div className="px-16 max-[1000px]:px-8 pt-15">
-      <h1 className="dashboard-greeting mb-8">
-        السلام عليكم يا {name}
-      </h1>
+    <div className="px-16 pt-15 max-[1000px]:px-8">
+      <h1 className="dashboard-greeting mb-8">السلام عليكم يا {name}</h1>
 
       <StudentOverviewHeader
         activeCoursesCount={activeCoursesCount}
@@ -51,7 +49,7 @@ export default function StudentOverviewPage({
         attendanceRate={attendanceRate}
       />
 
-      <div className="grid grid-cols-2 max-[1000px]:grid-cols-1 gap-x-29 gap-y-12">
+      <div className="grid grid-cols-2 gap-x-29 gap-y-12 max-[1000px]:grid-cols-1">
         <div className="flex flex-col gap-6">
           <h2 className="dashboard-section-title">آخر الكورسات المسجلة</h2>
 
@@ -91,8 +89,10 @@ export default function StudentOverviewPage({
             />
           </div>
 
-          <div className="min-[1000px]:hidden flex flex-col ps-0! *:ps-29 max-[1000px]:*:ps-0">
-            <h4 className="text-olive-700 text-5xl font-bold mb-6">آخر الطلبات</h4>
+          <div className="flex flex-col ps-0! *:ps-29 max-[1000px]:*:ps-0 min-[1000px]:hidden">
+            <h4 className="text-olive-700 mb-6 text-5xl font-bold">
+              آخر الطلبات
+            </h4>
             {enrollmentRequests.length > 0 ? (
               <StudentOverviewEnrollmentRequestsAccordion
                 enrollmentRequests={enrollmentRequests}

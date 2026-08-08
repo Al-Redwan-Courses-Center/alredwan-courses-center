@@ -41,11 +41,16 @@ export default function AttendanceGenerationModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-[500px] rounded-[3rem_0] bg-white p-12 shadow-2xl animate-in zoom-in-95 duration-200">
+    <div className="animate-in fade-in fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm duration-200">
+      <div className="animate-in zoom-in-95 w-[500px] rounded-[3rem_0] bg-white p-12 shadow-2xl duration-200">
         <div className="mb-8 flex items-center justify-between">
-          <h3 className="text-4xl font-bold text-olive-700 font-medad">توليد سجلات الحضور</h3>
-          <button onClick={onClose} className="rounded-full p-2 hover:bg-gray-100 transition-colors">
+          <h3 className="text-olive-700 font-medad text-4xl font-bold">
+            توليد سجلات الحضور
+          </h3>
+          <button
+            onClick={onClose}
+            className="rounded-full p-2 transition-colors hover:bg-gray-100"
+          >
             <X className="size-8 text-gray-400" />
           </button>
         </div>
@@ -53,28 +58,32 @@ export default function AttendanceGenerationModal({
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-2xl font-semibold text-gray-600 block">تاريخ البداية</label>
-              <div className="relative shadow-soft bg-[#F3F3F5] rounded-[0_1.5rem] flex items-center gap-4 px-6 py-4">
+              <label className="block text-2xl font-semibold text-gray-600">
+                تاريخ البداية
+              </label>
+              <div className="shadow-soft relative flex items-center gap-4 rounded-[0_1.5rem] bg-[#F3F3F5] px-6 py-4">
                 <CalendarIcon className="size-6 text-gray-400" />
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-transparent focus:outline-none text-[1.8rem] font-bold text-gray-700 cursor-pointer w-full"
+                  className="w-full cursor-pointer bg-transparent text-[1.8rem] font-bold text-gray-700 focus:outline-none"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-2xl font-semibold text-gray-600 block">تاريخ النهاية</label>
-              <div className="relative shadow-soft bg-[#F3F3F5] rounded-[0_1.5rem] flex items-center gap-4 px-6 py-4">
+              <label className="block text-2xl font-semibold text-gray-600">
+                تاريخ النهاية
+              </label>
+              <div className="shadow-soft relative flex items-center gap-4 rounded-[0_1.5rem] bg-[#F3F3F5] px-6 py-4">
                 <CalendarIcon className="size-6 text-gray-400" />
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-transparent focus:outline-none text-[1.8rem] font-bold text-gray-700 cursor-pointer w-full"
+                  className="w-full cursor-pointer bg-transparent text-[1.8rem] font-bold text-gray-700 focus:outline-none"
                   required
                 />
               </div>
@@ -82,7 +91,7 @@ export default function AttendanceGenerationModal({
           </div>
 
           {error && (
-            <div className="bg-red-50 text-red-600 p-4 rounded-xl text-xl font-semibold text-center border border-red-100">
+            <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-center text-xl font-semibold text-red-600">
               {error}
             </div>
           )}
@@ -91,11 +100,11 @@ export default function AttendanceGenerationModal({
             <Button
               type="submit"
               disabled={isLoading}
-              className="flex-1 bg-olive-700 hover:bg-olive-800 text-white h-20 text-2xl"
+              className="bg-olive-700 hover:bg-olive-800 h-20 flex-1 text-2xl text-white"
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
-                  <Loader2 className="animate-spin size-6" />
+                  <Loader2 className="size-6 animate-spin" />
                   <span>جاري التوليد...</span>
                 </div>
               ) : (
@@ -107,7 +116,7 @@ export default function AttendanceGenerationModal({
               onClick={onClose}
               disabled={isLoading}
               variant="outline"
-              className="px-8 h-20 text-2xl border-gray-200 text-gray-600 hover:bg-gray-50"
+              className="h-20 border-gray-200 px-8 text-2xl text-gray-600 hover:bg-gray-50"
             >
               إلغاء
             </Button>

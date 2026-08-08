@@ -32,7 +32,8 @@ export async function getMyEnrollmentRequests(): Promise<
       const apiClient = await getAuthApiClient();
 
       const { data } = await apiClient.get<
-        PaginatedResponse<EnrollmentRequestListItem> | EnrollmentRequestListItem[]
+        | PaginatedResponse<EnrollmentRequestListItem>
+        | EnrollmentRequestListItem[]
       >("/api/enrollment-requests/my-requests/?page_size=100");
 
       return unwrapPaginated(data);
