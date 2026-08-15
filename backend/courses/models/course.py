@@ -212,8 +212,8 @@ class Course(models.Model):
             age = participant.get_age_on_date(self.start_date)
             if age is None:
                 return False
-            # Children are typically not adults
-            if self.for_adults:
+            # Check for_adults constraint
+            if self.for_adults and age < 18:
                 return False
             # Check age bounds if specified
             if self.min_age and age < self.min_age:
@@ -229,9 +229,7 @@ class Course(models.Model):
             if age is None:
                 return False
             # Check for_adults constraint
-            if self.for_adults and age < 15:
-                return False
-            if not self.for_adults and age > 15:
+            if self.for_adults and age < 18:
                 return False
             # Check age bounds if specified
             if self.min_age and age < self.min_age:

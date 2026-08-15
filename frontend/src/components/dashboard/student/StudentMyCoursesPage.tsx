@@ -1,7 +1,8 @@
 import { getUser } from "@/actions/auth";
 import { getStudentCourses } from "@/actions/courses";
+import { getChildCourses, getChildById } from "@/actions/user";
 import StudentMyCoursesView from "@/components/dashboard/student/StudentMyCoursesView";
-import { getChildOngoingEnrollments, getMyChildById } from "@/dev-data/db";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 export default async function StudentMyCoursesPage({
@@ -13,9 +14,11 @@ export default async function StudentMyCoursesPage({
   let myActiveCourses, name: string;
 
   if (role === "parent") {
-    // TODO(api): Replace mock child details when the API provides child info.
-    myActiveCourses = getChildOngoingEnrollments(childId).map((e) => e.course);
-    name = getMyChildById(childId).name;
+    const child = await getChildById(childId);
+    if (!child) return notFound();
+
+    myActiveCourses = await getChildCourses(childId);
+    name = child.first_name;
   } else {
     myActiveCourses = await getStudentCourses();
     name = first_name;

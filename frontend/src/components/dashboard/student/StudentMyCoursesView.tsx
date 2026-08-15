@@ -61,9 +61,7 @@ export default function StudentMyCoursesView({
           table: () => null,
 
           cards: (
-            item: CourseDetail & {
-              course_progress: number;
-            },
+            item: any,
             index,
           ) => <StudentCourseCard course={item} index={index} key={item.id} />,
         }}

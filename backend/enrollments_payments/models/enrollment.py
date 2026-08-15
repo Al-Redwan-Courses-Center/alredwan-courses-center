@@ -66,7 +66,12 @@ class Enrollment(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     course = models.ForeignKey(
-        'courses.Course', verbose_name="الدورة", on_delete=models.CASCADE, related_name='enrollments')
+        'courses.Course', verbose_name="الدورة", null=True, blank=True,
+        on_delete=models.CASCADE, related_name='enrollments')
+    online_course = models.ForeignKey(
+        'courses_online.OnlineCourse', verbose_name="الدورة الإلكترونية",
+        null=True, blank=True, on_delete=models.CASCADE,
+        related_name='online_enrollments')
     student = models.ForeignKey(
         'users.StudentUser', null=True, blank=True, on_delete=models.CASCADE, related_name='enrollments')
     child = models.ForeignKey('parents.Child', null=True, blank=True,
@@ -93,15 +98,33 @@ class Enrollment(models.Model):
         verbose_name_plural = 'الإلتحاقات'
         constraints = [
             models.CheckConstraint(
+                condition=(
+                    (Q(course__isnull=False) & Q(online_course__isnull=True)) |
+                    (Q(course__isnull=True) & Q(online_course__isnull=False))
+                ),
+                name='exact_one_course_type_per_enrollment'
+            ),
+            models.CheckConstraint(
                 check=Q(child__isnull=False, student__isnull=True) | Q(
                     child__isnull=True, student__isnull=False),
                 name='child_or_student_enrollment'
             ),
-
             models.UniqueConstraint(
-                fields=['course', 'child'], name='unique_course_child_enrollment'),
+                fields=['course', 'child'],
+                condition=Q(course__isnull=False, child__isnull=False),
+                name='unique_course_child_enrollment'),
             models.UniqueConstraint(
-                fields=['course', 'student'], name='unique_course_student_enrollment'),
+                fields=['course', 'student'],
+                condition=Q(course__isnull=False, student__isnull=False),
+                name='unique_course_student_enrollment'),
+            models.UniqueConstraint(
+                fields=['online_course', 'child'],
+                condition=Q(online_course__isnull=False, child__isnull=False),
+                name='unique_online_course_child_enrollment'),
+            models.UniqueConstraint(
+                fields=['online_course', 'student'],
+                condition=Q(online_course__isnull=False, student__isnull=False),
+                name='unique_online_course_student_enrollment'),
         ]
 
         indexes = [
@@ -118,8 +141,13 @@ class Enrollment(models.Model):
             raise ValidationError(
                 "Must specify exactly one of child or student.")
 
+        # Ensure exactly one course type is set
+        if (self.course is None and self.online_course is None) or (self.course is not None and self.online_course is not None):
+            raise ValidationError(
+                "Must specify exactly one of course or online_course.")
+
         """ if (self.get_participant() is not None and
-                self.course.is_participant_eligible(self.get_participant()) is False):
+                self.course_instance.is_participant_eligible(self.get_participant()) is False):
             raise ValidationError("هذا المستخدم ليس طالبًا") """
 
     def get_payments(self):
@@ -133,9 +161,26 @@ class Enrollment(models.Model):
         total = qs.aggregate(total=models.Sum("amount"))["total"] or 0
         return total
 
+    @property
+    def course_instance(self):
+        """Proxy property returning whichever course this enrollment belongs to."""
+        return self.course if self.course is not None else self.online_course
+
+    def get_course_instance(self):
+        """Method wrapper for proxy property."""
+        return self.course_instance
+
+    @property
+    def is_online(self):
+        """Whether this is an online course enrollment."""
+        return self.online_course is not None
+
     def remaining_amount(self):
         """Calculate remaining amount to be paid for this enrollment."""
-        return float(self.course.price) - float(self.amount_paid())
+        target = self.get_course_instance()
+        if not target:
+            return 0
+        return float(target.price) - float(self.amount_paid())
 
     def mark_refunded(self, refunded_by):
         """
@@ -187,20 +232,27 @@ class Enrollment(models.Model):
         today = timezone.localdate()
 
         # Check 1: Course end_date has passed
-        if self.course.end_date and self.course.end_date < today:
+        target = self.get_course_instance()
+        if not target:
+            return False
+        # Online courses don't auto-complete by date
+        if self.is_online:
+            return False
+
+        if hasattr(target, 'end_date') and target.end_date and target.end_date < today:
             return True
 
         # Check 2: All lectures are completed
-        if self.course.num_lectures:
+        if hasattr(target, 'num_lectures') and target.num_lectures:
             from courses.models.lecture import LectureStatus
 
-            total_lectures = self.course.lectures.count()
-            completed_lectures = self.course.lectures.filter(
+            total_lectures = target.lectures.count()
+            completed_lectures = target.lectures.filter(
                 status=LectureStatus.COMPLETED
             ).count()
 
             # If we have the expected number of lectures and all are completed
-            if total_lectures >= self.course.num_lectures and completed_lectures >= self.course.num_lectures:
+            if total_lectures >= target.num_lectures and completed_lectures >= target.num_lectures:
                 return True
 
         return False
@@ -219,17 +271,32 @@ class Enrollment(models.Model):
         from courses.models.lecture import LectureStatus
 
         today = timezone.localdate()
-        total_lectures = self.course.lectures.count()
-        completed_lectures = self.course.lectures.filter(
+        target = self.get_course_instance()
+        if not target:
+            return {}
+
+        if self.is_online:
+            return {
+                'total_lectures': target.video_lectures.count(),
+                'expected_lectures': target.video_lectures.count(),
+                'completed_lectures': 0, # Should be calculated based on watch progress, stub for now
+                'percentage': 0,
+                'end_date_passed': False,
+                'course_end_date': None,
+                'is_completable': False,
+            }
+
+        total_lectures = target.lectures.count()
+        completed_lectures = target.lectures.filter(
             status=LectureStatus.COMPLETED
         ).count()
 
-        expected_lectures = self.course.num_lectures or total_lectures
+        expected_lectures = target.num_lectures or total_lectures
         percentage = (completed_lectures / expected_lectures *
                       100) if expected_lectures > 0 else 0
 
         end_date_passed = bool(
-            self.course.end_date and self.course.end_date < today)
+            hasattr(target, 'end_date') and target.end_date and target.end_date < today)
 
         return {
             'total_lectures': total_lectures,
@@ -237,7 +304,7 @@ class Enrollment(models.Model):
             'completed_lectures': completed_lectures,
             'percentage': round(percentage, 1),
             'end_date_passed': end_date_passed,
-            'course_end_date': self.course.end_date,
+            'course_end_date': getattr(target, 'end_date', None),
             'is_completable': self.should_be_completed(),
         }
 
@@ -249,4 +316,5 @@ class Enrollment(models.Model):
     def __str__(self):
         """String representation of the Enrollment."""
         participant = self.get_participant() or 'Unknown'
-        return f"إلتحاق {participant} في {self.course}"
+        target = self.get_course_instance()
+        return f"إلتحاق {participant} في {target}"

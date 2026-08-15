@@ -5,14 +5,16 @@ import RatingStars from '@/components/shared/RatingStars';
 import Button from '@/components/ui/Button';
 import { toast } from 'react-hot-toast';
 import { Loader2, Send } from 'lucide-react';
-import { rateCourse, rateInstructor } from '@/actions/ratings';
+import { rateCourse, rateInstructor, rateOnlineCourse } from '@/actions/ratings';
+import { cn } from '@/lib/utils';
 
 interface RatingFormProps {
-    type: 'course' | 'instructor';
+    type: 'course' | 'instructor' | 'online_course';
     id: string | number;
     instructorId?: number; // Only for instructor rating
     courseId?: number; // Only for instructor rating
     onSuccess?: () => void;
+    compact?: boolean;
 }
 
 const RatingForm: React.FC<RatingFormProps> = ({
@@ -20,7 +22,8 @@ const RatingForm: React.FC<RatingFormProps> = ({
     id,
     instructorId,
     courseId,
-    onSuccess
+    onSuccess,
+    compact = false
 }) => {
     const [rating, setRating] = useState<number>(10);
     const [feedback, setFeedback] = useState('');
@@ -34,6 +37,8 @@ const RatingForm: React.FC<RatingFormProps> = ({
             let result;
             if (type === 'course') {
                 result = await rateCourse(id, rating, feedback);
+            } else if (type === 'online_course') {
+                result = await rateOnlineCourse(id as string, rating, feedback);
             } else {
                 if (!instructorId || !courseId) {
                     toast.error('بيانات المدرس أو الدورة ناقصة');
@@ -58,43 +63,46 @@ const RatingForm: React.FC<RatingFormProps> = ({
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-3xl p-8 border border-gray-100 shadow-xl">
+        <form onSubmit={handleSubmit} className={cn("bg-white border border-gray-100 shadow-xl", compact ? "rounded-2xl p-4 space-y-4" : "rounded-3xl p-8 space-y-6")}>
             <div className="text-center space-y-2">
-                <h3 className="text-4xl mobile-lg:text-5xl font-bold text-gray-900">أضف تقييمك</h3>
-                <p className="text-xl mobile-lg:text-2xl text-gray-500 mt-2">رأيك يهمنا ويساعدنا في التطوير</p>
+                <h3 className={cn("font-bold text-gray-900", compact ? "text-2xl" : "text-4xl mobile-lg:text-5xl")}>أضف تقييمك</h3>
+                {!compact && <p className="text-xl mobile-lg:text-2xl text-gray-500 mt-2">رأيك يهمنا ويساعدنا في التطوير</p>}
             </div>
 
-            <div className="flex flex-col items-center gap-4 py-6 bg-primary/5 rounded-2xl mt-4">
-                <span className="text-2xl font-medium text-primary">التقييم العام (من 10)</span>
+            <div className={cn("flex flex-col items-center bg-primary/5 rounded-2xl", compact ? "gap-2 py-3 mt-2" : "gap-4 py-6 mt-4")}>
+                <span className={cn("font-medium text-primary", compact ? "text-lg" : "text-2xl")}>التقييم العام (من 10)</span>
                 <RatingStars 
                     rating={rating} 
                     editable 
-                    size="lg" 
+                    size={compact ? "sm" : "lg"} 
                     onChange={setRating} 
                 />
-                <span className="text-4xl mobile-lg:text-5xl font-black text-primary mt-2">{rating}/10</span>
+                <span className={cn("font-black text-primary", compact ? "text-3xl mt-1" : "text-4xl mobile-lg:text-5xl mt-2")}>{rating}/10</span>
             </div>
 
-            <div className="space-y-4 mt-6">
-                <label className="text-2xl font-bold text-gray-700 mr-1">ملاحظاتك (اختياري)</label>
+            <div className={cn("space-y-2", compact ? "mt-4" : "mt-6 space-y-4")}>
+                <label className={cn("font-bold text-gray-700 mr-1", compact ? "text-lg" : "text-2xl")}>ملاحظاتك (اختياري)</label>
                 <textarea
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
                     placeholder="اكتب تجربتك هنا..."
-                    className="text-2xl w-full min-h-[120px] rounded-2xl border border-gray-200 p-6 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none transition-all mt-2"
+                    className={cn(
+                        "w-full rounded-2xl border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none transition-all mt-2",
+                        compact ? "text-lg min-h-[80px] p-4" : "text-2xl min-h-[120px] p-6"
+                    )}
                 />
             </div>
 
             <Button 
                 type="submit" 
                 disabled={loading}
-                className="w-full h-16 mt-6 rounded-2xl text-3xl font-bold gap-3 shadow-lg shadow-primary/20"
+                className={cn("w-full rounded-2xl font-bold gap-3 shadow-lg shadow-primary/20", compact ? "h-12 mt-4 text-xl" : "h-16 mt-6 text-3xl")}
             >
                 {loading ? (
-                    <Loader2 className="w-8 h-8 animate-spin" />
+                    <Loader2 className={cn("animate-spin", compact ? "w-5 h-5" : "w-8 h-8")} />
                 ) : (
                     <>
-                        <Send className="w-8 h-8" />
+                        <Send className={compact ? "w-5 h-5" : "w-8 h-8"} />
                         إرسال التقييم
                     </>
                 )}

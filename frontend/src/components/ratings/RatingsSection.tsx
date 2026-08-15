@@ -4,21 +4,24 @@ import React, { useEffect, useState } from 'react';
 import RatingsBreakdown from './RatingsBreakdown';
 import ReviewCard from './ReviewCard';
 import RatingForm from './RatingForm';
-import { getCourseRatings, getInstructorRatings } from '@/actions/ratings';
+import { getCourseRatings, getInstructorRatings, getOnlineCourseRatings } from '@/actions/ratings';
 import { Loader2, MessageSquare, Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface RatingsSectionProps {
-    type: 'course' | 'instructor';
+    type: 'course' | 'instructor' | 'online_course';
     id: string | number;
     showForm?: boolean;
     courseId?: number; // Needed for instructor rating
+    compact?: boolean;
 }
 
 const RatingsSection: React.FC<RatingsSectionProps> = ({
     type,
     id,
     showForm = false,
-    courseId
+    courseId,
+    compact = false
 }) => {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -27,9 +30,14 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            const result = type === 'course' 
-                ? await getCourseRatings(id)
-                : await getInstructorRatings(id as number);
+            let result;
+            if (type === 'course') {
+                result = await getCourseRatings(id);
+            } else if (type === 'instructor') {
+                result = await getInstructorRatings(id as number);
+            } else {
+                result = await getOnlineCourseRatings(id as string);
+            }
             
             if (result.success) {
                 setData(result.data);
@@ -56,15 +64,15 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
     ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     return (
-        <section id="ratings" className="space-y-12 py-12">
+        <section id="ratings" className={compact ? "space-y-6 py-4" : "space-y-12 py-12"}>
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-olive-500/10 rounded-xl flex items-center justify-center text-olive-500">
-                    <Star className="w-6 h-6 fill-olive-500" />
+                <div className={cn("bg-olive-500/10 rounded-xl flex items-center justify-center text-olive-500", compact ? "w-8 h-8" : "w-10 h-10")}>
+                    <Star className={cn("fill-olive-500", compact ? "w-4 h-4" : "w-6 h-6")} />
                 </div>
-                <h2 className="text-5xl mobile-lg:text-6xl font-black text-gray-900">التقييمات والمراجعات</h2>
+                <h2 className={cn("font-black text-gray-900", compact ? "text-3xl" : "text-5xl mobile-lg:text-6xl")}>التقييمات والمراجعات</h2>
             </div>
 
-            <RatingsBreakdown statistics={data.statistics} />
+            <RatingsBreakdown statistics={data.statistics} compact={compact} />
 
             <div className="grid grid-cols-3 tablet:grid-cols-1 gap-12 items-start w-full">
                 <div className="col-span-2 tablet:col-span-1 w-full space-y-8">
@@ -98,11 +106,13 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
                             instructorId={type === 'instructor' ? id as number : undefined}
                             courseId={courseId}
                             onSuccess={() => setRefreshTrigger(prev => prev + 1)}
+                            compact={compact}
                         />
                     )}
                     
-                    <div className="bg-linear-to-br from-olive-500 to-olive-700 rounded-3xl p-8 text-white shadow-xl">
-                        <h4 className="text-3xl mobile-lg:text-4xl font-bold mb-4">لماذا تقييمك مهم؟</h4>
+                    {!compact && (
+                        <div className="bg-linear-to-br from-olive-500 to-olive-700 rounded-3xl p-8 text-white shadow-xl">
+                            <h4 className="text-3xl mobile-lg:text-4xl font-bold mb-4">لماذا تقييمك مهم؟</h4>
                         <ul className="space-y-3 text-2xl mobile-lg:text-3xl opacity-90">
                             <li className="flex items-start gap-2">
                                 <span className="w-1.5 h-1.5 rounded-full bg-white mt-1.5 shrink-0" />
@@ -118,6 +128,7 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
                             </li>
                         </ul>
                     </div>
+                    )}
                 </div>
             </div>
         </section>

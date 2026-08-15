@@ -3,7 +3,7 @@ import RatingsSection from "@/components/ratings/RatingsSection";
 import Image from "next/image";
 import CourseImage from "@/assets/course-img.jpg";
 import { Badge } from "lucide-react"; // Actually I'll use custom div
-import { Calendar, Book, Users, Clock, Tag as TagIcon, ArrowRight } from "lucide-react";
+import { Calendar, Book, Users, Clock, Tag as TagIcon, ArrowRight, Phone, Mail } from "lucide-react";
 import { formatDate, toHindiDigits, getArabicPlural } from "@/lib/utils";
 import { parseISO } from "date-fns";
 import Button from "@/components/ui/Button";
@@ -137,6 +137,34 @@ export default async function Page({
                 <p className="text-center text-sm text-gray-400">
                     الدفع متاح عبر فوري، المحافظ الإلكترونية، أو في المركز
                 </p>
+              </div>
+            </div>
+
+            {/* الاستفسارات */}
+            <div className="bg-white border-2 border-gray-100 rounded-3xl p-8 sticky top-[480px] shadow-xl shadow-gray-100/50">
+              <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                <div className="w-2 h-6 bg-olive-500 rounded-full" />
+                الاستفسارات
+              </h3>
+              <div className="space-y-4">
+                <a href="https://wa.me/201234567890" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 rounded-2xl hover:bg-olive-500/5 transition-colors border border-transparent hover:border-olive-500/10">
+                  <div className="w-12 h-12 bg-olive-500/10 rounded-xl flex items-center justify-center text-olive-500 shrink-0">
+                    <Phone className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">واتساب</p>
+                    <p className="font-bold text-gray-900" dir="ltr">+20 123 456 7890</p>
+                  </div>
+                </a>
+                <a href="mailto:info@alredwan.com" className="flex items-center gap-4 p-4 rounded-2xl hover:bg-olive-500/5 transition-colors border border-transparent hover:border-olive-500/10">
+                  <div className="w-12 h-12 bg-olive-500/10 rounded-xl flex items-center justify-center text-olive-500 shrink-0">
+                    <Mail className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">البريد الإلكتروني</p>
+                    <p className="font-bold text-gray-900">info@alredwan.com</p>
+                  </div>
+                </a>
               </div>
             </div>
           </div>

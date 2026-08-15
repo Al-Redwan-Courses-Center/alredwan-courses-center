@@ -541,7 +541,8 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
     def get_payment_status(self, obj):
         """Display payment status with visual indicator."""
         paid = float(obj.amount_paid())
-        course_price = float(obj.course.price) if obj.course.price else 0
+        course_obj = obj.course or obj.online_course
+        course_price = float(course_obj.price) if course_obj and course_obj.price else 0
         remaining = float(obj.remaining_amount())
 
         if course_price == 0:
@@ -569,7 +570,8 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
     def get_payment_progress(self, obj):
         """Display payment progress with amounts."""
         paid = obj.amount_paid()
-        course_price = obj.course.price if obj.course.price else 0
+        course_obj = obj.course or obj.online_course
+        course_price = course_obj.price if course_obj and course_obj.price else 0
         remaining = obj.remaining_amount()
 
         if course_price == 0:

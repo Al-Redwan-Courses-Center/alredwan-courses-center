@@ -1,6 +1,7 @@
 export interface EnrollmentRequestListItem {
   id: string;
-  course: number;
+  course: number | null;
+  online_course: string | null;
   course_name: string;
   course_price: string;
   child_id: string | null;
@@ -16,7 +17,8 @@ export interface EnrollmentRequestListItem {
 
 export interface EnrollmentListItem {
   id: string;
-  course: number;
+  course: number | null;
+  online_course: string | null;
   course_name: string;
   course_price: string;
   course_start_date: string;
@@ -85,7 +87,8 @@ export interface EnrollmentProgress {
 }
 
 export interface EnrollmentRequestCreateBody {
-  course: string | number;
+  course?: string | number;
+  online_course?: string;
   child?: string;
   price?: number;
   payment_method?:

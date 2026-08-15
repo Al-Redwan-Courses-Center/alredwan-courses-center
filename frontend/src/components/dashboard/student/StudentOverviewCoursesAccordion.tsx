@@ -13,7 +13,7 @@ import { CourseDetail } from "@/types/entities";
 import { parseISO } from "date-fns";
 
 interface StudentOverviewCoursesAccordionProps {
-  courses: Array<CourseDetail & { course_progress: number }>;
+  courses: any[];
 }
 
 export default function StudentOverviewCoursesAccordion({
@@ -43,46 +43,66 @@ export default function StudentOverviewCoursesAccordion({
             {course.description}
           </p>
 
-          <div className="flex flex-wrap gap-2">
-            {course.tags.map((tag, index) => (
-              <span
-                className={cn(
-                  "bg-gray-50 px-3 py-1 text-lg",
-                  index % 2 === 0 ? "rounded-[0.8rem_0]" : "rounded-[0_0.8rem]",
-                )}
-                key={tag.id}
-              >
-                {tag.name}
-              </span>
-            ))}
-          </div>
+          {course.tags && course.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {course.tags.map((tag: any, index: number) => (
+                <span
+                  className={cn(
+                    "bg-gray-50 px-3 py-1 text-lg",
+                    index % 2 === 0 ? "rounded-[0.8rem_0]" : "rounded-[0_0.8rem]",
+                  )}
+                  key={tag.id}
+                >
+                  {tag.name}
+                </span>
+              ))}
+            </div>
+          )}
 
           <ul className="space-y-2 text-xl text-gray-700 [&_svg]:h-6 [&_svg]:w-6">
-            <li className="flex items-center gap-2">
-              <CalendarIcon className="text-olive-500" />
-              <span>
-                يبدأ: {formatDate(parseISO(course.start_date)).replaceAll("-", "/")}
-              </span>
-            </li>
-            <li className="flex items-center gap-2">
-              <BookIcon className="text-olive-500" />
-              <span>
-                {toHindiDigits(course.num_lectures)}{" "}
-                {getArabicPlural(course.num_lectures, {
-                  singular: "محاضرة",
-                  twofer: "محاضرتان",
-                  plural: "محاضرات",
-                })}
-              </span>
-            </li>
-            <li className="flex items-center gap-2">
-              <CalendarIcon className="text-olive-500" />
-              <span>{course.schedules.map((s) => s.weekday_display).join(" \\\\ ")}</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <ClockIcon className="text-olive-500" />
-              <span>من الساعة 8 مـ حتى 10 مـ</span>
-            </li>
+            {course.start_date && (
+              <li className="flex items-center gap-2">
+                <CalendarIcon className="text-olive-500" />
+                <span>
+                  يبدأ: {formatDate(parseISO(course.start_date)).replaceAll("-", "/")}
+                </span>
+              </li>
+            )}
+            
+            {course.num_lectures !== undefined && (
+              <li className="flex items-center gap-2">
+                <BookIcon className="text-olive-500" />
+                <span>
+                  {toHindiDigits(course.num_lectures)}{" "}
+                  {getArabicPlural(course.num_lectures, {
+                    singular: "محاضرة",
+                    twofer: "محاضرتان",
+                    plural: "محاضرات",
+                  })}
+                </span>
+              </li>
+            )}
+
+            {course.video_count !== undefined && (
+              <li className="flex items-center gap-2">
+                <BookIcon className="text-olive-500" />
+                <span>
+                  {toHindiDigits(course.video_count)}{" "}
+                  {getArabicPlural(course.video_count, {
+                    singular: "فيديو",
+                    twofer: "فيديوهان",
+                    plural: "فيديوهات",
+                  })}
+                </span>
+              </li>
+            )}
+
+            {course.schedules && course.schedules.length > 0 && (
+              <li className="flex items-center gap-2">
+                <CalendarIcon className="text-olive-500" />
+                <span>{course.schedules.map((s: any) => s.weekday_display).join(" \\\\ ")}</span>
+              </li>
+            )}
           </ul>
 
           <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
@@ -93,9 +113,22 @@ export default function StudentOverviewCoursesAccordion({
           </div>
 
           <div className="pt-1">
-            <Button size="small" href={`/dashboard/my-courses/${course.id}/`}>
-              عرض الدورة
-            </Button>
+            {course.enrollment_status === "pending" || course.enrollment_status === "processing" ? (
+              <span className="text-orange-500 font-bold px-4 py-2 bg-orange-50 rounded-lg">
+                {course.enrollment_status_display || "قيد المراجعة"}
+              </span>
+            ) : (
+              <Button 
+                size="small" 
+                href={
+                  course.type === "online" 
+                    ? `/dashboard/online-courses/${course.id}/learn`
+                    : `/dashboard/my-courses/${course.id}`
+                }
+              >
+                {course.type === "online" ? "مشاهدة الدورة" : "عرض الدورة"}
+              </Button>
+            )}
           </div>
         </AccordionItem>
       ))}

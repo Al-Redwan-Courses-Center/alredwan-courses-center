@@ -117,6 +117,17 @@ export function formatTime(dateStr: string | Date | undefined) {
     .replaceAll("ص", "صـ");
 }
 
+export function formatCurrency(amount: number | string) {
+  const num = typeof amount === "string" ? parseFloat(amount) : amount;
+  if (isNaN(num)) return amount.toString();
+  return new Intl.NumberFormat("ar-EG", {
+    style: "currency",
+    currency: "EGP",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(num);
+}
+
 const WEEKDAYS = [
   "الأحد",
   "الإثنين",

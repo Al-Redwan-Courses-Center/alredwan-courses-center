@@ -270,7 +270,7 @@ class AdminBulkApproveView(APIView):
                 continue
 
             # Skip if course is full
-            if er.course.enrolled_count >= er.course.capacity:
+            if er.course and er.course.enrolled_count >= er.course.capacity:
                 results['skipped'].append({
                     'id': str(er.id),
                     'reason': "الدورة ممتلئة"

@@ -58,8 +58,10 @@ export default function CourseHeader({
 
           <div className={dataPointWrapperStyles}>
             <PeopleIcon className={dataPointIconStyles} />
-            <span className={labelStyles}>الحصة</span>
-            <span className={valueStyles}>{toHindiDigits(course?.capacity || 200)}</span>
+            <span className={labelStyles}>العمر</span>
+            <span className={valueStyles}>
+              {course?.for_adults ? "للبالغين (+18)" : (course?.min_age && course?.max_age ? `من ${toHindiDigits(course.min_age)} إلى ${toHindiDigits(course.max_age)}` : course?.min_age ? `+${toHindiDigits(course.min_age)}` : course?.max_age ? `حتى ${toHindiDigits(course.max_age)}` : "الكل")}
+            </span>
           </div>
 
           <div className={dataPointWrapperStyles}>

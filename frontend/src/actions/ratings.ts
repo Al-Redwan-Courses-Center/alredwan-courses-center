@@ -87,3 +87,45 @@ export async function getInstructorRatings(instructorId: number) {
         return { success: false, message: 'فشل تحميل التقييمات' };
     }
 }
+
+/**
+ * Submit a rating for an online course
+ */
+export async function rateOnlineCourse(courseId: string, rating: number, feedback: string) {
+    try {
+        const client = await getAuthApiClient();
+        const response = await client.post(`/api/online-courses/courses/${courseId}/rate/`, {
+            rating,
+            feedback
+        });
+
+        if (response.status === 200 || response.status === 201) {
+            revalidatePath(`/online-courses/${courseId}`);
+            return { success: true, message: response.data.detail || 'تم حفظ التقييم بنجاح' };
+        }
+
+        return { success: false, message: 'حدث خطأ أثناء حفظ التقييم' };
+    } catch (error: any) {
+        console.error('Error rating online course:', error);
+        return {
+            success: false,
+            message: error.response?.data?.non_field_errors?.[0] || 
+                     error.response?.data?.detail || 
+                     'فشل الاتصال بالخادم'
+        };
+    }
+}
+
+/**
+ * Fetch online course ratings
+ */
+export async function getOnlineCourseRatings(courseId: string) {
+    try {
+        const client = await getAuthApiClient();
+        const response = await client.get(`/api/online-courses/courses/${courseId}/ratings/`);
+        return { success: true, data: response.data };
+    } catch (error: any) {
+        console.error('Error fetching online course ratings:', error);
+        return { success: false, message: 'فشل تحميل التقييمات' };
+    }
+}

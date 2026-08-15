@@ -21,8 +21,10 @@ import DataViewFilterLegacy from "@/components/ui/data-view/DataViewFilter";
 
 export default function DashboardAllCoursesView({
   courses: inputCourses = [],
+  linkTo = "dashboard",
 }: {
   courses?: CourseListItem[];
+  linkTo?: "dashboard" | "landing";
 }) {
   const courses = buildAllCoursesView(inputCourses);
   const filterConfig = getAllCoursesFilterConfig(courses);
@@ -68,7 +70,7 @@ export default function DashboardAllCoursesView({
 
           cards: (item: CourseListItem, index) => (
             <PublicCourseCard
-              linkTo="dashboard"
+              linkTo={linkTo}
               course={item}
               index={index}
               key={item.id}

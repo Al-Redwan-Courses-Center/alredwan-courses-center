@@ -9,6 +9,8 @@ from .student_instructor_rating import (
     StudentInstructorRating,
     ParentInstructorRating,
     StudentCourseRating,
-    ParentCourseRating
+    ParentCourseRating,
+    StudentOnlineCourseRating,
+    ParentOnlineCourseRating
 )
 from .landingPageInstructor import LandingPageInstructor

@@ -41,20 +41,7 @@ export async function getAllCourses(): Promise<CourseListItem[]> {
         return courses;
       }
 
-      const enrollmentsCoursesIds = (await getMyEnrollments()).map(
-        (e) => e.course,
-      );
-      const pendingOrProcessingRequestCourseIds = (
-        await getMyEnrollmentRequests()
-      )
-        .filter((request) => ["pending", "processing"].includes(request.status))
-        .map((request) => request.course);
-
-      return courses.filter(
-        (c) =>
-          !enrollmentsCoursesIds.includes(c.id) &&
-          !pendingOrProcessingRequestCourseIds.includes(c.id),
-      );
+      return courses;
     },
     [],
   );
@@ -103,18 +90,82 @@ export async function getStudentCourses() {
     "Failed to load student courses:",
     async () => {
       const myEnrollments = await getMyEnrollments();
+      const myRequests = await getMyEnrollmentRequests();
 
-      const myCoursesInitial = await Promise.all(
-        myEnrollments.map((e) => getCourseById(e.course)),
-      );
-      const myEnrollmentsProgresses = await Promise.all(
-        myEnrollments.map((e) => getEnrollmentProgressById(e.id)),
+      const pendingRequests = myRequests.filter(
+        (r) => r.status === "pending" || r.status === "processing"
       );
 
-      return myCoursesInitial.map((c, i) => ({
-        ...c,
-        course_progress: myEnrollmentsProgresses[i]?.percentage,
-      }));
+      const physicalEnrollments = myEnrollments.filter((e) => e.course !== null);
+      const onlineEnrollments = myEnrollments.filter((e) => e.online_course !== null);
+
+      const physicalRequests = pendingRequests.filter((r) => r.course !== null);
+      const onlineRequests = pendingRequests.filter((r) => r.online_course !== null);
+
+      const getUniqueIds = (arr: any[], key: string) =>
+        Array.from(new Set(arr.map((item) => item[key]!)));
+
+      const physicalCourseIds = getUniqueIds(
+        [...physicalEnrollments, ...physicalRequests],
+        "course"
+      );
+      const onlineCourseIds = getUniqueIds(
+        [...onlineEnrollments, ...onlineRequests],
+        "online_course"
+      );
+
+      const [myCoursesInitial, myEnrollmentsProgresses] = await Promise.all([
+        Promise.all(physicalCourseIds.map((id) => getCourseById(id))),
+        Promise.all(physicalEnrollments.map((e) => getEnrollmentProgressById(e.id))),
+      ]);
+
+      const physical = myCoursesInitial
+        .filter((c) => c !== null)
+        .map((c, i) => {
+          const isPending = !physicalEnrollments.find((e) => e.course === c?.id);
+          const req = physicalRequests.find((r) => r.course === c?.id);
+          const activeIndex = physicalEnrollments.findIndex((e) => e.course === c?.id);
+
+          return {
+            ...c,
+            course_progress: isPending ? 0 : myEnrollmentsProgresses[activeIndex]?.percentage || 0,
+            type: "physical" as const,
+            enrollment_status: isPending ? req?.status : "active",
+            enrollment_status_display: isPending ? req?.status_display : "نشط",
+          };
+        });
+
+      const apiClient = await getAuthApiClient();
+      const onlineCoursesInitial = await Promise.all(
+        onlineCourseIds.map((id) =>
+          apiClient
+            .get(`/api/online-courses/courses/${id}/`)
+            .then((res) => res.data)
+            .catch(() => null)
+        )
+      );
+
+      const online = onlineCoursesInitial
+        .filter((c) => c !== null)
+        .map((c: any) => {
+          const isPending = !onlineEnrollments.find((e) => e.online_course === c?.id);
+          const req = onlineRequests.find((r) => r.online_course === c?.id);
+
+          const completedLecturesCount = c.video_lectures?.filter((l: any) => l.watch_progress?.is_completed).length || 0;
+          const progressPercentage = c.video_lectures?.length > 0 
+            ? Math.round((completedLecturesCount / c.video_lectures.length) * 100) 
+            : 0;
+
+          return {
+            ...c,
+            course_progress: progressPercentage,
+            type: "online" as const,
+            enrollment_status: isPending ? req?.status : "active",
+            enrollment_status_display: isPending ? req?.status_display : "نشط",
+          };
+        });
+
+      return [...physical, ...online];
     },
     [],
   );

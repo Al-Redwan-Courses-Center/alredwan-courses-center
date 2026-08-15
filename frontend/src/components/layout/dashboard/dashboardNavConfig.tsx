@@ -6,6 +6,7 @@ import PanelsIcon from "@/components/icons/PanelsIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import PersonIcon from "@/components/icons/PersonIcon";
 import MosqueIcon from "@/components/icons/MosqueIcon";
+import MonitorPlayIcon from "@/components/icons/MonitorPlayIcon";
 import { UserEntity } from "@/types/auth";
 import { ReactNode } from "react";
 
@@ -47,6 +48,7 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       href: "/dashboard/courses",
       icon: <AllCoursesIcon />,
     },
+
     {
       label: "ذكريات المسجد",
       href: "/dashboard/memories",
@@ -70,6 +72,7 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       href: "/dashboard/instructors",
       icon: <PeopleIcon />,
     },
+
     {
       label: "ذكريات المسجد",
       href: "/dashboard/memories",
@@ -145,6 +148,7 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       href: "/dashboard/courses",
       icon: <AllCoursesIcon />,
     },
+
     {
       label: "ذكريات المسجد",
       href: "/dashboard/memories",
@@ -170,16 +174,8 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       icon: <MyCoursesIcon />,
       nestedNavLinks: [
         {
-          href: "lectures",
-          label: "المحاضرات",
-        },
-        {
           href: "",
           label: "تفاصيل الدورة",
-        },
-        {
-          href: "enrollments",
-          label: "الحجوزات",
         },
       ],
     },
@@ -188,6 +184,7 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       href: "/dashboard/courses",
       icon: <AllCoursesIcon />,
     },
+
     {
       label: "ذكريات المسجد",
       href: "/dashboard/memories",

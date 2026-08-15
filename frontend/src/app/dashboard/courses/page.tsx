@@ -1,24 +1,27 @@
-import { getUser, protect } from "@/actions/auth";
+import { getUser } from "@/actions/auth";
 import { getAllCourses } from "@/actions/courses";
-import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
-import { Suspense } from "react";
+import { getAllOnlineCourses } from "@/actions/online-courses";
+import PublicCourseCatalog from "@/components/courses/PublicCourseCatalog";
 
 export default async function Page() {
-  await protect(["student", "parent"]);
-
-  const { first_name } = await getUser();
-  const courses = await getAllCourses();
+  const [user, physicalCourses, onlineCourses] = await Promise.all([
+    getUser(),
+    getAllCourses(),
+    getAllOnlineCourses(),
+  ]);
 
   return (
     <div className="flex flex-col pt-15 min-[1000px]:pt-32">
       <h1 className="dashboard-greeting mb-14 ps-16 relative z-60">
-        السلام عليكم يا {first_name}
+        السلام عليكم يا {user.first_name}
       </h1>
 
       <div className="w-full">
-        <Suspense fallback={null}>
-          <DashboardAllCoursesView courses={courses} />
-        </Suspense>
+        <PublicCourseCatalog
+          physical={physicalCourses}
+          online={onlineCourses}
+          linkTo="dashboard"
+        />
       </div>
     </div>
   );
