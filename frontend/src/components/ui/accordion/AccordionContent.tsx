@@ -1,7 +1,7 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import LabelValue from "../LabelValue";
 import ActionButtons from "../ActionButtons";
+import LabelValue from "../LabelValue";
 
 interface LabelValueConfig {
   label: string;

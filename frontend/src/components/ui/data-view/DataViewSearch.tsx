@@ -1,10 +1,10 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import SearchIcon from "@/components/icons/SearchIcon";
 import Input from "@/components/ui/Input";
 import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import { cn, debounceFn } from "@/lib/utils";
-import { useMemo, useState } from "react";
 
 export default function DataViewSearchLegacy() {
   const { searchParams, mutateSearchParams } = useMutateSearchParams();

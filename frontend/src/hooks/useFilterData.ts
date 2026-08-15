@@ -1,8 +1,8 @@
 "use client";
 
-import { DataViewFilterConfig } from "@/types/components";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
+import type { DataViewFilterConfig } from "@/types/components";
 
 export function useFilterData<T>(
   data: T[],

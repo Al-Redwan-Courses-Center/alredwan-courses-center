@@ -1,6 +1,6 @@
+import { NextResponse, type ProxyConfig } from "next/server";
 import { withAuth } from "next-auth/middleware";
-import { NextResponse, ProxyConfig } from "next/server";
-import { JwtToken } from "@/types/auth";
+import type { JwtToken } from "@/types/auth";
 
 export default withAuth(
   function middleware(req) {

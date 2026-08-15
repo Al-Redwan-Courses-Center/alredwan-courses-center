@@ -3,7 +3,7 @@
 import {
   BrowserCodeReader,
   BrowserMultiFormatReader,
-  IScannerControls,
+  type IScannerControls,
 } from "@zxing/browser";
 import { LucidePause, PlayIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";

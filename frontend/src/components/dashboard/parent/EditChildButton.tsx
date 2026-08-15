@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { Pencil } from "lucide-react";
-import { ParentChildDetail } from "@/actions/user";
-import { Modal, ModalContent, ModalTitle } from "@/components/ui/Modal";
+import { useState } from "react";
+import type { ParentChildDetail } from "@/actions/user";
 import AddChildForm from "@/components/dashboard/parent/AddChildForm";
+import { Modal, ModalContent, ModalTitle } from "@/components/ui/Modal";
 
-export default function EditChildButton({ child }: { child: ParentChildDetail }) {
+export default function EditChildButton({
+  child,
+}: {
+  child: ParentChildDetail;
+}) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -21,10 +25,10 @@ export default function EditChildButton({ child }: { child: ParentChildDetail })
       </button>
 
       <Modal open={isOpen} onOpenChange={setIsOpen}>
-        <ModalContent
-          className="max-w-4xl [&>div,&>form]:px-8 [&>div,&>form]:last:p-[2rem_2rem_3rem_2rem] tablet-sm:max-w-full tablet-sm:[&>div,&>form]:px-4 tablet-sm:[&>div,&>form]:last:p-[1.5rem_1.5rem_2rem_1.5rem]"
-        >
-          <ModalTitle className="text-olive-700 text-center font-bold">تعديل بيانات الطفل</ModalTitle>
+        <ModalContent className="max-w-4xl [&>div,&>form]:px-8 [&>div,&>form]:last:p-[2rem_2rem_3rem_2rem] tablet-sm:max-w-full tablet-sm:[&>div,&>form]:px-4 tablet-sm:[&>div,&>form]:last:p-[1.5rem_1.5rem_2rem_1.5rem]">
+          <ModalTitle className="text-olive-700 text-center font-bold">
+            تعديل بيانات الطفل
+          </ModalTitle>
           <div className="p-0">
             <AddChildForm
               initialData={child}

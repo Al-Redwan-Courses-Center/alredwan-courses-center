@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import toast from "react-hot-toast";
 import NotepadIcon from "@/components/icons/NotepadIcon";
 import Button from "@/components/ui/Button";
 import {
@@ -10,8 +12,6 @@ import {
   ModalTrigger,
 } from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
-import toast from "react-hot-toast";
 
 export default function AddNoteModal({
   name,

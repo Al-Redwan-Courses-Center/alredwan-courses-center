@@ -1,12 +1,18 @@
 "use client";
 
+import { parseISO } from "date-fns";
+import Link from "next/link";
 import courseLecturesViewConfig from "@/components/courses/course-lectures-view.config";
 import EditIcon from "@/components/icons/EditIcon";
 import InfoIcon from "@/components/icons/InfoIcon";
 import TrashIcon from "@/components/icons/TrashIcon";
-import StatusBadge from "@/components/ui/StatusBadge";
 import DataView from "@/components/ui/data-view/DataView";
-
+import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
+import DataViewFilterLegacy from "@/components/ui/data-view/DataViewFilter";
+import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
+import DataViewSortLegacy from "@/components/ui/data-view/DataViewSort";
+import StatusBadge from "@/components/ui/StatusBadge";
 import {
   cn,
   formatDate,
@@ -14,19 +20,12 @@ import {
   getWeekDay,
   toHindiDigits,
 } from "@/lib/utils";
-import { CourseDetail, LectureListItem } from "@/types/entities";
-import { parseISO } from "date-fns";
-import Link from "next/link";
+import type { CourseDetail, LectureListItem } from "@/types/entities";
 import { DataViewPaginationLegacy } from "../ui/data-view/DataViewPagination";
 import {
   DataViewHeaderLegacy,
   DataViewRowLegacy,
 } from "../ui/data-view/DataViewRow";
-import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
-import DataViewSortLegacy from "@/components/ui/data-view/DataViewSort";
-import DataViewFilterLegacy from "@/components/ui/data-view/DataViewFilter";
-import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
-import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
 
 const { sortConfig, filterConfig, statusMap } = courseLecturesViewConfig;
 

@@ -1,7 +1,7 @@
 "use server";
 
-import { getServerJwtToken } from "@/actions/auth";
 import axios, { type AxiosInstance } from "axios";
+import { getServerJwtToken } from "@/actions/auth";
 
 const baseConfig = {
   baseURL: process.env.REST_API_URL || process.env.NEXT_PUBLIC_API_URL,

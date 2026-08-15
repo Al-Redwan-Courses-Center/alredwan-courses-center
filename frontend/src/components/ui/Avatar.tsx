@@ -1,6 +1,6 @@
+import Image, { type StaticImageData } from "next/image";
 import DefaultUser from "@/assets/images/default-user.svg";
 import { cn } from "@/lib/utils";
-import Image, { StaticImageData } from "next/image";
 
 interface AvatarProps {
   src?: string | null;

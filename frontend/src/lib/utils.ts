@@ -1,7 +1,7 @@
 import { cva } from "class-variance-authority";
 import clsx from "clsx";
 import { parse } from "date-fns";
-import { ClassNameValue, twMerge } from "tailwind-merge";
+import { type ClassNameValue, twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassNameValue[]) {
   return twMerge(clsx(inputs));
@@ -67,8 +67,14 @@ export function toHindiDigits(
   num: number | string,
   preserveLeadingZeros: boolean = false,
 ): string {
-  if (num === null || num === undefined || num === "" || isNaN(+num) && typeof num !== 'string') return "٠";
-  
+  if (
+    num === null ||
+    num === undefined ||
+    num === "" ||
+    (isNaN(+num) && typeof num !== "string")
+  )
+    return "٠";
+
   let number = num;
 
   const westernToHindiDigits: Record<string, string> = {
@@ -168,7 +174,7 @@ export function persistInLocalStorage<T>(
   fn: (value: T | ((prev: T) => T)) => void,
   key: string,
 ) {
-  return function (arg: T | ((prev: T) => T)) {
+  return (arg: T | ((prev: T) => T)) => {
     // console.log(arg);
     if (typeof arg === "function") {
       fn((prev: T) => {

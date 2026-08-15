@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { format } from "date-fns";
-import { X, Loader2, Calendar as CalendarIcon } from "lucide-react";
-import Button from "@/components/ui/Button";
+import { Calendar as CalendarIcon, Loader2, X } from "lucide-react";
+import { useState } from "react";
 import { generateAttendances } from "@/actions/admin-attendances";
+import Button from "@/components/ui/Button";
 
 interface AttendanceGenerationModalProps {
   isOpen: boolean;
@@ -44,8 +44,13 @@ export default function AttendanceGenerationModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="w-[500px] rounded-[3rem_0] bg-white p-12 shadow-2xl animate-in zoom-in-95 duration-200">
         <div className="mb-8 flex items-center justify-between">
-          <h3 className="text-4xl font-bold text-olive-700 font-medad">توليد سجلات الحضور</h3>
-          <button onClick={onClose} className="rounded-full p-2 hover:bg-gray-100 transition-colors">
+          <h3 className="text-4xl font-bold text-olive-700 font-medad">
+            توليد سجلات الحضور
+          </h3>
+          <button
+            onClick={onClose}
+            className="rounded-full p-2 hover:bg-gray-100 transition-colors"
+          >
             <X className="size-8 text-gray-400" />
           </button>
         </div>
@@ -53,7 +58,9 @@ export default function AttendanceGenerationModal({
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-2xl font-semibold text-gray-600 block">تاريخ البداية</label>
+              <label className="text-2xl font-semibold text-gray-600 block">
+                تاريخ البداية
+              </label>
               <div className="relative shadow-soft bg-[#F3F3F5] rounded-[0_1.5rem] flex items-center gap-4 px-6 py-4">
                 <CalendarIcon className="size-6 text-gray-400" />
                 <input
@@ -67,7 +74,9 @@ export default function AttendanceGenerationModal({
             </div>
 
             <div className="space-y-2">
-              <label className="text-2xl font-semibold text-gray-600 block">تاريخ النهاية</label>
+              <label className="text-2xl font-semibold text-gray-600 block">
+                تاريخ النهاية
+              </label>
               <div className="relative shadow-soft bg-[#F3F3F5] rounded-[0_1.5rem] flex items-center gap-4 px-6 py-4">
                 <CalendarIcon className="size-6 text-gray-400" />
                 <input

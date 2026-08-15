@@ -1,5 +1,6 @@
 "use server";
 
+import { isAxiosError } from "axios";
 import {
   apiRequest,
   getApiErrorDetail,
@@ -7,9 +8,8 @@ import {
   parseApiFieldErrors,
   unwrapPaginated,
 } from "@/lib/api";
-import { isAxiosError } from "axios";
-import { PaginatedResponse } from "@/types/config";
-import {
+import type { PaginatedResponse } from "@/types/config";
+import type {
   EnrollmentListItem,
   EnrollmentProgress,
   EnrollmentRequestCreateBody,
@@ -26,35 +26,27 @@ export interface CreateEnrollmentRequestResult {
 export async function getMyEnrollmentRequests(): Promise<
   EnrollmentRequestListItem[]
 > {
-  return apiRequest(
-    "Failed to load enrollment requests:",
-    async () => {
-      const apiClient = await getAuthApiClient();
+  return apiRequest("Failed to load enrollment requests:", async () => {
+    const apiClient = await getAuthApiClient();
 
-      const { data } = await apiClient.get<
-        PaginatedResponse<EnrollmentRequestListItem> | EnrollmentRequestListItem[]
-      >("/api/enrollment-requests/my-requests/?page_size=100");
+    const { data } = await apiClient.get<
+      PaginatedResponse<EnrollmentRequestListItem> | EnrollmentRequestListItem[]
+    >("/api/enrollment-requests/my-requests/?page_size=100");
 
-      return unwrapPaginated(data);
-    },
-    [],
-  );
+    return unwrapPaginated(data);
+  }, []);
 }
 
 export async function getMyEnrollments(): Promise<EnrollmentListItem[]> {
-  return apiRequest(
-    "Failed to load enrollments:",
-    async () => {
-      const apiClient = await getAuthApiClient();
+  return apiRequest("Failed to load enrollments:", async () => {
+    const apiClient = await getAuthApiClient();
 
-      const { data } = await apiClient.get<
-        PaginatedResponse<EnrollmentListItem> | EnrollmentListItem[]
-      >("/api/enrollments/my-enrollments/?page_size=100");
+    const { data } = await apiClient.get<
+      PaginatedResponse<EnrollmentListItem> | EnrollmentListItem[]
+    >("/api/enrollments/my-enrollments/?page_size=100");
 
-      return unwrapPaginated(data);
-    },
-    [],
-  );
+    return unwrapPaginated(data);
+  }, []);
 }
 
 export async function getEnrollmentProgressById(
@@ -76,18 +68,14 @@ export async function getEnrollmentProgressById(
 }
 
 export async function getInstructorEnrollmentsByCourseId(courseId: string) {
-  return apiRequest(
-    "Failed to get course enrollments: ",
-    async () => {
-      const apiClient = await getAuthApiClient();
-      const { data } = await apiClient.get<
-        PaginatedResponse<InstructorEnrollmentListItem>
-      >(`/api/instructor/courses/${courseId}/enrollments?page_size=100`);
+  return apiRequest("Failed to get course enrollments: ", async () => {
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.get<
+      PaginatedResponse<InstructorEnrollmentListItem>
+    >(`/api/instructor/courses/${courseId}/enrollments?page_size=100`);
 
-      return data.results;
-    },
-    [],
-  );
+    return data.results;
+  }, []);
 }
 
 export async function createEnrollmentRequest(

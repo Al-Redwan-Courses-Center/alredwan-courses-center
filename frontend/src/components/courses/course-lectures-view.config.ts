@@ -1,10 +1,10 @@
-import {
-  StatusMap,
+import { parse } from "date-fns";
+import type {
   DataViewFilterConfig,
   DataViewSortConfig,
+  StatusMap,
 } from "@/types/components";
-import { LectureListItem } from "@/types/entities";
-import { parse } from "date-fns";
+import type { LectureListItem } from "@/types/entities";
 
 const headers = [
   "م",

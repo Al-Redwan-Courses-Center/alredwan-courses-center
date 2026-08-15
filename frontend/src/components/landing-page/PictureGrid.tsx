@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Image1 from "@/assets/image-grid/image-1.jpg";
 import Image2 from "@/assets/image-grid/image-2.jpg";
 import Image3 from "@/assets/image-grid/image-3.jpg";
@@ -8,7 +9,6 @@ import Image7 from "@/assets/image-grid/image-7.jpg";
 import Image8 from "@/assets/image-grid/image-8.jpg";
 import Image9 from "@/assets/image-grid/image-9.jpg";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 
 const baseStyles = cn("tablet:border-6 border-[2rem] border-white");
 
@@ -130,7 +130,7 @@ export default function PictureGrid() {
               index === 8 && "mobile-lg:col-span-2 mobile-lg:aspect-2/1",
               index % 2 === 0
                 ? "rounded-tr-[4rem] rounded-bl-[4rem]"
-                : "rounded-tl-[4rem] rounded-br-[4rem]"
+                : "rounded-tl-[4rem] rounded-br-[4rem]",
             )}
           >
             <Image

@@ -1,7 +1,7 @@
+import { Suspense } from "react";
 import { getUser, protect } from "@/actions/auth";
 import { getAllCourses } from "@/actions/courses";
 import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
-import { Suspense } from "react";
 
 export default async function Page() {
   await protect(["student", "parent"]);

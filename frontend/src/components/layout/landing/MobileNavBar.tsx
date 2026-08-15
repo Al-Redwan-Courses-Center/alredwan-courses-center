@@ -1,8 +1,15 @@
-import { authConfig } from "@/app/api/auth/[...nextauth]/route";
-import NavLink from "@/components/ui/navigation/NavLink";
+import {
+  Compass,
+  GraduationCap,
+  Home,
+  LogIn,
+  Sparkles,
+  User,
+} from "lucide-react";
 import { getServerSession } from "next-auth";
+import { authConfig } from "@/app/api/auth/[...nextauth]/route";
 import AuthModal from "@/components/auth/AuthModal";
-import { Home, GraduationCap, Compass, Sparkles, User, LogIn } from "lucide-react";
+import NavLink from "@/components/ui/navigation/NavLink";
 
 function MobileNavLink({
   href,
@@ -38,7 +45,11 @@ export default async function MobileNavBar() {
           <MobileNavLink href="/" label="الرئيسية" icon={Home} />
         </li>
         <li className="flex-1 h-full flex justify-center items-center">
-          <MobileNavLink href="/#courses" label="الدورات" icon={GraduationCap} />
+          <MobileNavLink
+            href="/#courses"
+            label="الدورات"
+            icon={GraduationCap}
+          />
         </li>
         <li className="flex-1 h-full flex justify-center items-center">
           <MobileNavLink href="/#about" label="عن الواحة" icon={Compass} />

@@ -1,31 +1,38 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Image from "next/image";
-import { WeeklySchedule } from "@/actions/admin-schedules";
-import { cn, formatTime, toHindiDigits } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { createCourseSchedule, createSupervisionSchedule, deleteCourseSchedule, deleteSupervisionSchedule } from "@/actions/admin-schedules";
-import DataViewLegacy from "@/components/ui/data-view/DataView";
-import { DataViewHeaderLegacy, DataViewRowLegacy } from "@/components/ui/data-view/DataViewRow";
-import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
-import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
-import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/DropdownMenu";
+import { useMemo, useState } from "react";
+import toast from "react-hot-toast";
+import {
+  createCourseSchedule,
+  createSupervisionSchedule,
+  deleteCourseSchedule,
+  deleteSupervisionSchedule,
+  type WeeklySchedule,
+} from "@/actions/admin-schedules";
+import DeleteIcon from "@/components/icons/deleteIcon.svg";
 import MicrosoftExcelLogo from "@/components/icons/microsoftExcelLogo.svg";
 import SearchIcon from "@/components/icons/searchIcon.svg";
-import ExportIcon from "@/components/icons/exportIcon.svg";
-import DeleteIcon from "@/components/icons/deleteIcon.svg";
-import TimePickerPopover from "@/components/ui/TimePickerPopover";
-import AddScheduleModal from "./AddScheduleModal";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
-import toast from "react-hot-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
+import DataViewLegacy from "@/components/ui/data-view/DataView";
+import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
+import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
+import {
+  DataViewHeaderLegacy,
+  DataViewRowLegacy,
+} from "@/components/ui/data-view/DataViewRow";
+import TimePickerPopover from "@/components/ui/TimePickerPopover";
+import { cn, formatTime, toHindiDigits } from "@/lib/utils";
+import AddScheduleModal from "./AddScheduleModal";
 
 const DAYS = [
   { label: "S", value: 6, full: "السبت" },
@@ -47,30 +54,35 @@ export default function SeasonSchedulesView({
   instructors?: any[];
 }) {
   const router = useRouter();
-  const [schedules, setSchedules] = useState<WeeklySchedule[]>(initialSchedules);
+  const [schedules, setSchedules] =
+    useState<WeeklySchedule[]>(initialSchedules);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [startTime, setStartTime] = useState("06:00 pm");
   const [endTime, setEndTime] = useState("11:00 pm");
   const [sortBy, setSortBy] = useState<"name" | "time">("time");
-  const [filterType, setFilterType] = useState<"all" | "lecture" | "supervision">("all");
-  
+  const [filterType, setFilterType] = useState<
+    "all" | "lecture" | "supervision"
+  >("all");
+
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [modalDefaultType, setModalDefaultType] = useState<"lecture" | "supervision">("lecture");
-  
+  const [modalDefaultType, setModalDefaultType] = useState<
+    "lecture" | "supervision"
+  >("lecture");
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [scheduleToDelete, setScheduleToDelete] = useState<number | null>(null);
 
   const filteredSchedules = useMemo(() => {
     const result = schedules.filter((s) => {
-      const matchesSearch = 
+      const matchesSearch =
         s.course_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.instructor_name?.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
       const matchesDay = selectedDay === null || s.weekday === selectedDay;
       const matchesType = filterType === "all" || s.type === filterType;
-      
+
       return matchesSearch && matchesDay && matchesType;
     });
 
@@ -86,13 +98,13 @@ export default function SeasonSchedulesView({
 
   const confirmDelete = async () => {
     if (scheduleToDelete !== null) {
-      const schedule = schedules.find(s => s.id === scheduleToDelete);
+      const schedule = schedules.find((s) => s.id === scheduleToDelete);
       if (!schedule) return;
 
       let res;
       if (schedule.type === "lecture") {
         // Find the course ID for this schedule
-        const course = courses.find(c => c.name === schedule.course_name);
+        const course = courses.find((c) => c.name === schedule.course_name);
         if (course) {
           res = await deleteCourseSchedule(course.id, schedule.id);
         } else {
@@ -104,7 +116,7 @@ export default function SeasonSchedulesView({
       }
 
       if (res?.success) {
-        setSchedules(prev => prev.filter(s => s.id !== scheduleToDelete));
+        setSchedules((prev) => prev.filter((s) => s.id !== scheduleToDelete));
         toast.success("تم الحذف بنجاح");
         router.refresh();
       } else {
@@ -114,20 +126,24 @@ export default function SeasonSchedulesView({
     }
   };
 
-  const handleAdd = async (newSchedule: Partial<WeeklySchedule>, courseId?: number, instructorId?: number) => {
+  const handleAdd = async (
+    newSchedule: Partial<WeeklySchedule>,
+    courseId?: number,
+    instructorId?: number,
+  ) => {
     let res;
     if (newSchedule.type === "lecture" && courseId) {
       res = await createCourseSchedule(courseId, {
         weekday: newSchedule.weekday!,
         start_time: newSchedule.start_time!,
-        end_time: newSchedule.end_time!
+        end_time: newSchedule.end_time!,
       });
     } else if (newSchedule.type === "supervision" && instructorId) {
       res = await createSupervisionSchedule({
         instructor: instructorId,
         day_of_week: newSchedule.weekday!,
         start_time: newSchedule.start_time!,
-        end_time: newSchedule.end_time!
+        end_time: newSchedule.end_time!,
       });
     }
 
@@ -137,9 +153,9 @@ export default function SeasonSchedulesView({
       // We can also optimistically update local state while server refreshes
       const schedule = {
         ...newSchedule,
-        id: res.data?.id || Math.max(...schedules.map(s => s.id)) + 1,
+        id: res.data?.id || Math.max(...schedules.map((s) => s.id)) + 1,
       } as WeeklySchedule;
-      setSchedules(prev => [schedule, ...prev]);
+      setSchedules((prev) => [schedule, ...prev]);
     } else {
       toast.error(res?.error || "حدث خطأ أثناء الحفظ");
     }
@@ -147,23 +163,28 @@ export default function SeasonSchedulesView({
 
   const handleExportExcel = () => {
     const headers = ["الدورة", "المحاضر", "الموسم", "اليوم", "الوقت", "الطلاب"];
-    const rows = filteredSchedules.map(s => [
+    const rows = filteredSchedules.map((s) => [
       s.course_name,
       s.instructor_name,
       s.season_name,
       s.weekday_display,
       `${s.start_time} - ${s.end_time}`,
-      s.student_count
+      s.student_count,
     ]);
-    
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
-      + headers.join(",") + "\n"
-      + rows.map(e => e.join(",")).join("\n");
+
+    const csvContent =
+      "data:text/csv;charset=utf-8,\uFEFF" +
+      headers.join(",") +
+      "\n" +
+      rows.map((e) => e.join(",")).join("\n");
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `جدول_المواعيد_${new Date().toLocaleDateString()}.csv`);
+    link.setAttribute(
+      "download",
+      `جدول_المواعيد_${new Date().toLocaleDateString()}.csv`,
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -176,7 +197,9 @@ export default function SeasonSchedulesView({
       <div className="flex items-center gap-6 overflow-x-auto no-scrollbar pb-2">
         <div className="flex items-center gap-10 flex-wrap">
           <div className="flex items-center gap-4">
-            <span className="text-[1.8rem] text-gray-500 font-semibold">اختر الوقت</span>
+            <span className="text-[1.8rem] text-gray-500 font-semibold">
+              اختر الوقت
+            </span>
             <div className="flex items-center gap-2">
               <span className="text-[1.6rem] text-gray-400">من</span>
               <TimePickerPopover
@@ -204,17 +227,21 @@ export default function SeasonSchedulesView({
           </div>
 
           <div className="flex items-center gap-4 ml-10">
-            <span className="text-[1.8rem] text-gray-500 font-semibold">اختر اليوم</span>
+            <span className="text-[1.8rem] text-gray-500 font-semibold">
+              اختر اليوم
+            </span>
             <div className="flex bg-[#F3F3F5] p-2 rounded-xl gap-2 shadow-inner">
               {DAYS.map((day) => (
                 <button
                   key={`${day.label}-${day.value}`}
-                  onClick={() => setSelectedDay(selectedDay === day.value ? null : day.value)}
+                  onClick={() =>
+                    setSelectedDay(selectedDay === day.value ? null : day.value)
+                  }
                   className={cn(
                     "size-12 flex items-center justify-center rounded-lg text-2xl font-bold transition-all",
-                    selectedDay === day.value 
-                      ? "bg-olive-300 text-white shadow-lg scale-110" 
-                      : "text-gray-400 hover:bg-gray-200"
+                    selectedDay === day.value
+                      ? "bg-olive-300 text-white shadow-lg scale-110"
+                      : "text-gray-400 hover:bg-gray-200",
                   )}
                 >
                   {day.label}
@@ -225,7 +252,7 @@ export default function SeasonSchedulesView({
         </div>
 
         <div className="flex items-center gap-4 ml-auto">
-          <button 
+          <button
             onClick={() => {
               setModalDefaultType("lecture");
               setIsAddModalOpen(true);
@@ -259,8 +286,18 @@ export default function SeasonSchedulesView({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="min-w-[200px] bg-white shadow-2xl rounded-xl z-50 p-2">
-            <DropdownMenuItem onClick={() => setSortBy("name")} className="text-xl p-4 cursor-pointer hover:bg-gray-100 rounded-lg font-medad">الاسم</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSortBy("time")} className="text-xl p-4 cursor-pointer hover:bg-gray-100 rounded-lg font-medad">الوقت</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setSortBy("name")}
+              className="text-xl p-4 cursor-pointer hover:bg-gray-100 rounded-lg font-medad"
+            >
+              الاسم
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setSortBy("time")}
+              className="text-xl p-4 cursor-pointer hover:bg-gray-100 rounded-lg font-medad"
+            >
+              الوقت
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -268,19 +305,38 @@ export default function SeasonSchedulesView({
           <DropdownMenuTrigger asChild>
             <button className="shadow-soft bg-[#F3F3F5] rounded-[0_2.5rem] flex items-center justify-between gap-12 px-10 py-4 min-w-[200px]">
               <span className="text-[1.8rem] text-gray-500">
-                {filterType === "all" ? "كل الفئات" : filterType === "lecture" ? "محاضرات" : "إشراف"}
+                {filterType === "all"
+                  ? "كل الفئات"
+                  : filterType === "lecture"
+                    ? "محاضرات"
+                    : "إشراف"}
               </span>
               <ChevronDown className="size-6 text-gray-400" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="min-w-[200px] bg-white shadow-2xl rounded-xl z-50 p-2 font-medad">
-            <DropdownMenuItem onClick={() => setFilterType("all")} className="text-xl p-4 cursor-pointer hover:bg-gray-100 rounded-lg">كل الفئات</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterType("lecture")} className="text-xl p-4 cursor-pointer hover:bg-gray-100 rounded-lg">محاضرات</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterType("supervision")} className="text-xl p-4 cursor-pointer hover:bg-gray-100 rounded-lg">إشراف</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setFilterType("all")}
+              className="text-xl p-4 cursor-pointer hover:bg-gray-100 rounded-lg"
+            >
+              كل الفئات
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setFilterType("lecture")}
+              className="text-xl p-4 cursor-pointer hover:bg-gray-100 rounded-lg"
+            >
+              محاضرات
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setFilterType("supervision")}
+              className="text-xl p-4 cursor-pointer hover:bg-gray-100 rounded-lg"
+            >
+              إشراف
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <button 
+        <button
           onClick={handleExportExcel}
           className="shadow-soft bg-[#F3F3F5] rounded-xl p-1 hover:bg-gray-200 transition-colors"
         >
@@ -299,15 +355,25 @@ export default function SeasonSchedulesView({
         >
           <div className="w-full overflow-x-auto">
             <div className="min-w-[1200px] flex flex-col gap-4">
-              <DataViewHeaderLegacy 
-                className="bg-[#C8D0CB] h-[70px] shadow-soft rounded-[20px_0] px-10 mb-2 border-none items-center"
-              >
-                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">م</DataViewCellLegacy>
-                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">الدورة</DataViewCellLegacy>
-                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">المحاضر</DataViewCellLegacy>
-                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">الموسم</DataViewCellLegacy>
-                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">الايام</DataViewCellLegacy>
-                <DataViewCellLegacy className="text-center font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">عدد الطلاب</DataViewCellLegacy>
+              <DataViewHeaderLegacy className="bg-[#C8D0CB] h-[70px] shadow-soft rounded-[20px_0] px-10 mb-2 border-none items-center">
+                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">
+                  م
+                </DataViewCellLegacy>
+                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">
+                  الدورة
+                </DataViewCellLegacy>
+                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">
+                  المحاضر
+                </DataViewCellLegacy>
+                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">
+                  الموسم
+                </DataViewCellLegacy>
+                <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">
+                  الايام
+                </DataViewCellLegacy>
+                <DataViewCellLegacy className="text-center font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">
+                  عدد الطلاب
+                </DataViewCellLegacy>
                 <DataViewCellLegacy className="flex items-center justify-end">
                   {/* Redundant add button removed from here */}
                 </DataViewCellLegacy>
@@ -316,8 +382,8 @@ export default function SeasonSchedulesView({
               <DataViewBodyLegacy<WeeklySchedule>
                 render={{
                   table: (item, i) => (
-                    <DataViewRowLegacy 
-                      index={i} 
+                    <DataViewRowLegacy
+                      index={i}
                       key={`${item.type}-${item.id}`}
                       className="bg-white shadow-soft rounded-2xl h-[70px] px-10 border-none mb-4 items-center transition-none"
                     >
@@ -329,7 +395,8 @@ export default function SeasonSchedulesView({
                           {item.course_name}
                         </span>
                         <span className="text-[12px] text-gray-700 font-bold whitespace-nowrap bg-gray-100 px-4 py-1 rounded-full">
-                          {formatTime(item.start_time)} - {formatTime(item.end_time)}
+                          {formatTime(item.start_time)} -{" "}
+                          {formatTime(item.end_time)}
                         </span>
                       </DataViewCellLegacy>
                       <DataViewCellLegacy className="font-['El_Messiri'] font-medium text-[14px] text-gray-900 leading-[20px] text-right">
@@ -345,31 +412,35 @@ export default function SeasonSchedulesView({
                         {toHindiDigits(item.student_count || 0)}
                       </DataViewCellLegacy>
                       <DataViewCellLegacy className="flex items-center justify-end gap-6">
-                        <button 
+                        <button
                           onClick={() => {
                             setScheduleToDelete(item.id);
                             setIsDeleteModalOpen(true);
                           }}
                           className="p-2 text-red-400 hover:scale-110 transition-transform"
                         >
-                          <Image src={DeleteIcon} alt="Delete" className="size-8" />
+                          <Image
+                            src={DeleteIcon}
+                            alt="Delete"
+                            className="size-8"
+                          />
                         </button>
                       </DataViewCellLegacy>
                     </DataViewRowLegacy>
                   ),
-                  cards: () => null
+                  cards: () => null,
                 }}
               />
             </div>
           </div>
           <div className="pt-10 border-t border-gray-100 mt-20">
-             <DataViewPaginationLegacy />
+            <DataViewPaginationLegacy />
           </div>
         </DataViewLegacy>
       </div>
 
       {/* Add Modal */}
-      <AddScheduleModal 
+      <AddScheduleModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAdd}
@@ -379,7 +450,7 @@ export default function SeasonSchedulesView({
       />
 
       {/* Delete Confirmation Modal */}
-      <ConfirmationModal 
+      <ConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}

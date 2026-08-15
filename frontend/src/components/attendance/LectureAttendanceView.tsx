@@ -1,5 +1,9 @@
 "use client";
 
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { markLectureAttendanceInBulk } from "@/actions/attendances";
 import AddNoteModal from "@/components/attendance/AddNoteModal";
 import AttendanceStudentIdQrCodeScannerModal from "@/components/attendance/AttendanceStudentIdQrCodeScannerModal";
@@ -13,20 +17,15 @@ import {
   DataViewHeaderLegacy,
   DataViewRowLegacy,
 } from "@/components/ui/data-view/DataViewRow";
-
+import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
 import { cn, persistInLocalStorage, toHindiDigits } from "@/lib/utils";
-import {
+import type {
   BulkLectureAttendanceBody,
   LectureAttendanceDetail,
   LectureAttendanceViewOptions,
   LectureDetail,
 } from "@/types/entities";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import toast from "react-hot-toast";
 import DataViewLegacy from "../ui/data-view/DataView";
-import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
 
 const { filterConfig, sortConfig } = lectureAttendanceViewConfig;
 
@@ -127,9 +126,7 @@ export default function LectureAttendanceView({
       const res = await markLectureAttendanceInBulk(String(lecture?.id), body);
 
       if (!res || res.summary.failed > 0) {
-        throw new Error(
-          "حدث خطأ أثناء تسجيل غياب المحاضرة!\nرجاءً حاول مجدداً!",
-        );
+        throw new Error("حدث خطأ أثناء تسجيل غياب المحاضرة!\nرجاءً حاول مجدداً!");
       } else {
         toast.success("تم تسجيل غياب المحاضرة بنجاح!");
         localStorage.removeItem(localStorageKey);
@@ -324,7 +321,7 @@ export default function LectureAttendanceView({
 
                 <DataViewCellLegacy className="justify-start! overflow-hidden pe-0!">
                   <span className="truncate">
-                    {!!currentRecord?.notes?.trim()
+                    {currentRecord?.notes?.trim()
                       ? currentRecord.notes.trim()
                       : "لا توجد ملاحظات"}
                   </span>

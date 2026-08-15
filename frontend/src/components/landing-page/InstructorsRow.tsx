@@ -1,8 +1,8 @@
+import { differenceInCalendarYears } from "date-fns";
+import Image from "next/image";
 import InstructorProfile from "@/assets/instructor-profile.png";
 import { cn, getArabicPlural, toHindiDigits } from "@/lib/utils";
-import Image from "next/image";
-import { differenceInCalendarYears } from "date-fns";
-import { LandingPageInstructor } from "@/types/entities";
+import type { LandingPageInstructor } from "@/types/entities";
 
 const straight = cn("rounded-[0_19rem]");
 const reversed = cn("rounded-[19rem_0]");

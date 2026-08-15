@@ -1,10 +1,10 @@
+import Image from "next/image";
+import { getServerSession } from "next-auth";
 import { authConfig } from "@/app/api/auth/[...nextauth]/route";
 import HeroBG from "@/assets/hero-bg.svg";
+import SignupModal from "@/components/auth/SignupModal";
 import SectionDivider from "@/components/landing-page/SectionDivider";
 import Button from "@/components/ui/Button";
-import { getServerSession } from "next-auth";
-import Image from "next/image";
-import SignupModal from "@/components/auth/SignupModal";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export default async function HeroSection() {
@@ -21,18 +21,30 @@ export default async function HeroSection() {
       />
 
       <div className="relative z-10 w-full max-w-260 mr-12 lg:mr-32 xl:mr-64 ml-auto flex flex-col items-start text-right px-6 tablet:mx-auto tablet:items-center tablet:text-center">
-        <ScrollReveal direction="up" delay={0.1} className="w-full flex flex-col items-start tablet:items-center">
+        <ScrollReveal
+          direction="up"
+          delay={0.1}
+          className="w-full flex flex-col items-start tablet:items-center"
+        >
           <h1 className="font-medad text-shadow-primary text-[8rem] md:text-[4.8rem] font-black text-gray-100 mb-4 leading-tight">
             واحة الرضوان التعليمية
           </h1>
         </ScrollReveal>
-        <ScrollReveal direction="up" delay={0.2} className="w-full flex flex-col items-start tablet:items-center">
+        <ScrollReveal
+          direction="up"
+          delay={0.2}
+          className="w-full flex flex-col items-start tablet:items-center"
+        >
           <p className="text-olive-900 text-shadow-soft text-[3rem] md:text-[2.2rem] lg:text-[2.6rem] font-medium mb-12 tablet:mb-16">
             علمٌ يُزهر، وإيمانٌ يُثمر
           </p>
         </ScrollReveal>
 
-        <ScrollReveal direction="up" delay={0.3} className="w-full flex flex-col items-start tablet:items-center">
+        <ScrollReveal
+          direction="up"
+          delay={0.3}
+          className="w-full flex flex-col items-start tablet:items-center"
+        >
           <div className="flex gap-4 md:gap-6">
             <Button
               variant="primary"
@@ -43,7 +55,7 @@ export default async function HeroSection() {
               تصفح الدورات
             </Button>
 
-            {!!session?.user ? (
+            {session?.user ? (
               <Button
                 variant="secondary"
                 size="medium"

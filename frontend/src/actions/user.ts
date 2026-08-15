@@ -1,12 +1,15 @@
 "use server";
 
-import { apiRequest, getAuthApiClient, unwrapPaginated } from "@/lib/api";
-import { PaginatedResponse } from "@/types/config";
 import { isAxiosError } from "axios";
-import { EnrollmentListItem, EnrollmentRequestListItem } from "@/types/entities";
+import { revalidatePath } from "next/cache";
 import { getCourseById } from "@/actions/courses";
 import { getEnrollmentProgressById } from "@/actions/enrollments";
-import { revalidatePath } from "next/cache";
+import { apiRequest, getAuthApiClient, unwrapPaginated } from "@/lib/api";
+import type { PaginatedResponse } from "@/types/config";
+import type {
+  EnrollmentListItem,
+  EnrollmentRequestListItem,
+} from "@/types/entities";
 
 export interface ParentChildDetail {
   id: string;
@@ -24,20 +27,16 @@ export interface ParentChildDetail {
 }
 
 export async function getParentChildren(): Promise<ParentChildDetail[]> {
-  return apiRequest(
-    "Failed to load parent's children:",
-    async () => {
-      const apiClient = await getAuthApiClient();
+  return apiRequest("Failed to load parent's children:", async () => {
+    const apiClient = await getAuthApiClient();
 
-      const { data } = await apiClient.get<
-        PaginatedResponse<ParentChildDetail> | ParentChildDetail[]
-      >("/api/parents/children/?page_size=100");
+    const { data } = await apiClient.get<
+      PaginatedResponse<ParentChildDetail> | ParentChildDetail[]
+    >("/api/parents/children/?page_size=100");
 
-      const childrenList = unwrapPaginated(data);
-      return childrenList.sort((a, b) => b.age - a.age);
-    },
-    [],
-  );
+    const childrenList = unwrapPaginated(data);
+    return childrenList.sort((a, b) => b.age - a.age);
+  }, []);
 }
 
 export async function addChild(data: {
@@ -48,11 +47,14 @@ export async function addChild(data: {
 }) {
   try {
     const apiClient = await getAuthApiClient();
-    const response = await apiClient.post("/api/parents/children/create/", data);
+    const response = await apiClient.post(
+      "/api/parents/children/create/",
+      data,
+    );
     revalidatePath("/dashboard/my-children");
     return { data: response.data, error: null };
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     if (isAxiosError(error)) {
       return {
         data: null,
@@ -63,19 +65,25 @@ export async function addChild(data: {
   }
 }
 
-export async function updateChild(id: string, data: {
-  first_name: string;
-  last_name: string;
-  dob: string;
-  gender: "boy" | "girl";
-}) {
+export async function updateChild(
+  id: string,
+  data: {
+    first_name: string;
+    last_name: string;
+    dob: string;
+    gender: "boy" | "girl";
+  },
+) {
   try {
     const apiClient = await getAuthApiClient();
-    const response = await apiClient.patch(`/api/parents/children/${id}/update/`, data);
+    const response = await apiClient.patch(
+      `/api/parents/children/${id}/update/`,
+      data,
+    );
     revalidatePath("/dashboard/my-children");
     return { data: response.data, error: null };
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     if (isAxiosError(error)) {
       return {
         data: null,
@@ -92,7 +100,7 @@ export async function deleteChild(id: string) {
     await apiClient.delete(`/api/parents/children/${id}/delete/`);
     return { error: null };
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     if (isAxiosError(error)) {
       return {
         error: error.response?.data ?? "حدث خطأ أثناء حذف الطفل",
@@ -102,19 +110,25 @@ export async function deleteChild(id: string) {
   }
 }
 
-export async function getChildById(id: string): Promise<ParentChildDetail | null> {
+export async function getChildById(
+  id: string,
+): Promise<ParentChildDetail | null> {
   try {
     const apiClient = await getAuthApiClient();
-    const { data } = await apiClient.get<ParentChildDetail>(`/api/parents/children/${id}/`);
+    const { data } = await apiClient.get<ParentChildDetail>(
+      `/api/parents/children/${id}/`,
+    );
     return data;
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     console.error("Failed to fetch child details:", error);
     return null;
   }
 }
 
-export async function getChildEnrollments(childId: string): Promise<EnrollmentListItem[]> {
+export async function getChildEnrollments(
+  childId: string,
+): Promise<EnrollmentListItem[]> {
   try {
     const apiClient = await getAuthApiClient();
     const { data } = await apiClient.get<
@@ -124,13 +138,15 @@ export async function getChildEnrollments(childId: string): Promise<EnrollmentLi
     const results = Array.isArray(data) ? data : data.results;
     return results;
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     console.error("Failed to load child enrollments:", error);
     return [];
   }
 }
 
-export async function getChildEnrollmentRequests(childId: string): Promise<EnrollmentRequestListItem[]> {
+export async function getChildEnrollmentRequests(
+  childId: string,
+): Promise<EnrollmentRequestListItem[]> {
   try {
     const apiClient = await getAuthApiClient();
     const { data } = await apiClient.get<
@@ -140,7 +156,7 @@ export async function getChildEnrollmentRequests(childId: string): Promise<Enrol
     const results = Array.isArray(data) ? data : data.results;
     return results;
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     console.error("Failed to load child enrollment requests:", error);
     return [];
   }
@@ -164,7 +180,7 @@ export async function getChildCourses(childId: string) {
 
     return myCourses;
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     console.error("Failed to load child courses:", error);
     return [];
   }
@@ -201,7 +217,7 @@ export async function getInstructorById(id: string | number) {
     const { data } = await apiClient.get(`/api/users/instructors/${id}/`);
     return data;
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     console.error("Failed to fetch instructor details:", error);
     return null;
   }

@@ -1,8 +1,8 @@
 "use client";
 
-import WhatsappIcon from "@/components/icons/WhatsappIcon";
-import Link from "next/link";
 import { motion } from "motion/react";
+import Link from "next/link";
+import WhatsappIcon from "@/components/icons/WhatsappIcon";
 
 export default function WhatsAppWidget() {
   const phoneNumber = "201233313590";

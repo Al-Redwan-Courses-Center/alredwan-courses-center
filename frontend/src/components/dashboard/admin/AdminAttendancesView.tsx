@@ -1,41 +1,23 @@
 "use client";
-import { useSearchParams } from "next/navigation";
-
-import useWebSocket from "react-use-websocket";
+import { cva, type VariantProps } from "class-variance-authority";
+import { format, parseISO } from "date-fns";
+import { ChevronDown, PlusCircle } from "lucide-react";
 import Image from "next/image";
-import { StaffAttendanceServerEvent } from "@/types/entities/staff-attendance-events";
-import { ReactNode, useEffect, useState } from "react";
-import { getClientAccessToken } from "@/actions/temp";
-import DataViewLegacy from "@/components/ui/data-view/DataView";
-import {
-  DataViewHeaderLegacy,
-  DataViewRowLegacy,
-} from "@/components/ui/data-view/DataViewRow";
-import { cn, formatTime, toHindiDigits } from "@/lib/utils";
-import { StaffAttendanceListItem } from "@/types/entities/staff-attendance";
-import StatusBadge from "@/components/ui/StatusBadge";
-import ClientLocalTime from "@/components/ui/ClientLocalTime";
-import { cva, VariantProps } from "class-variance-authority";
-import { parseISO } from "date-fns";
-import Button from "@/components/ui/Button";
+import { useSearchParams } from "next/navigation";
+import { type ReactNode, useEffect, useState } from "react";
+import useWebSocket from "react-use-websocket";
 import {
   manualCheckIn,
   manualCheckOut,
   markAbsent,
-  generateAttendances,
 } from "@/actions/admin-attendances";
-import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
-import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
-import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
-import AttendanceRatingModal from "./AttendanceRatingModal";
-import AttendanceGenerationModal from "./AttendanceGenerationModal";
-import { Star, ChevronDown, PlusCircle } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/Popover";
-import { Calendar } from "@/components/ui/Calendar";
+import { getClientAccessToken } from "@/actions/temp";
+import DeleteIcon from "@/components/icons/deleteIcon.svg";
+import DetailsIcon from "@/components/icons/detailsIcon.svg";
+import EditIcon from "@/components/icons/editIcon.svg";
+import MicrosoftExcelLogo from "@/components/icons/microsoftExcelLogo.svg";
+import SearchIcon from "@/components/icons/searchIcon.svg";
+import ClientLocalTime from "@/components/ui/ClientLocalTime";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,13 +25,21 @@ import {
   DropdownMenuTrigger,
   dropdownMenuContentStyles,
 } from "@/components/ui/DropdownMenu";
+import DataViewLegacy from "@/components/ui/data-view/DataView";
+import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
+import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
+import {
+  DataViewHeaderLegacy,
+  DataViewRowLegacy,
+} from "@/components/ui/data-view/DataViewRow";
+import StatusBadge from "@/components/ui/StatusBadge";
 import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
-import { format } from "date-fns";
-import MicrosoftExcelLogo from "@/components/icons/microsoftExcelLogo.svg";
-import SearchIcon from "@/components/icons/searchIcon.svg";
-import DetailsIcon from "@/components/icons/detailsIcon.svg";
-import DeleteIcon from "@/components/icons/deleteIcon.svg";
-import EditIcon from "@/components/icons/editIcon.svg";
+import { cn, formatTime, toHindiDigits } from "@/lib/utils";
+import type { StaffAttendanceListItem } from "@/types/entities/staff-attendance";
+import type { StaffAttendanceServerEvent } from "@/types/entities/staff-attendance-events";
+import AttendanceGenerationModal from "./AttendanceGenerationModal";
+import AttendanceRatingModal from "./AttendanceRatingModal";
 
 // ─── Time Badge ──────────────────────────────────────────────────────────────
 
@@ -90,7 +80,6 @@ function TimeBadge({
 function StaffAttendanceRow({
   attendance,
   index,
-  onRate,
   onUpdate,
 }: {
   attendance: StaffAttendanceListItem;

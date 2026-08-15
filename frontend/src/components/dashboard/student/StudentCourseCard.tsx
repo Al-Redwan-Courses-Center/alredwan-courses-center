@@ -1,3 +1,5 @@
+import { parseISO } from "date-fns";
+import Image from "next/image";
 import CourseImage from "@/assets/course-img.jpg";
 import BookIcon from "@/components/icons/BookIcon";
 import CalendarIcon from "@/components/icons/CalendarIcon";
@@ -6,9 +8,7 @@ import Button from "@/components/ui/Button";
 import ItemCard from "@/components/ui/ItemCard";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
-import { CourseDetail } from "@/types/entities";
-import { parseISO } from "date-fns";
-import Image from "next/image";
+import type { CourseDetail } from "@/types/entities";
 
 export default function StudentCourseCard({
   course,

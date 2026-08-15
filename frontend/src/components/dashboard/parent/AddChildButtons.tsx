@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
 import { Plus } from "lucide-react";
-import { Modal, ModalContent, ModalTitle } from "@/components/ui/Modal";
+import type React from "react";
+import { useState } from "react";
 import AddChildForm from "@/components/dashboard/parent/AddChildForm";
-import ItemCard from "@/components/ui/ItemCard";
 import Button from "@/components/ui/Button";
+import ItemCard from "@/components/ui/ItemCard";
+import { Modal, ModalContent, ModalTitle } from "@/components/ui/Modal";
 
 export function AddChildWrapper({
   children,
@@ -39,7 +40,9 @@ export function AddChildCard() {
             <div className="w-20 h-20 rounded-full bg-olive-100 flex items-center justify-center text-olive-700 shadow-sm">
               <Plus size={40} />
             </div>
-            <span className="text-3xl font-bold text-olive-700">إضافة طفل جديد</span>
+            <span className="text-3xl font-bold text-olive-700">
+              إضافة طفل جديد
+            </span>
             <p className="text-2xl text-gray-500 max-w-[24rem] leading-relaxed">
               أضف بيانات طفلك للبدء بالتسجيل في الحلقات والدورات بسهولة.
             </p>
@@ -62,13 +65,19 @@ export function AddChildButton({ className }: { className?: string }) {
   );
 }
 
-function AddChildModal({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (open: boolean) => void }) {
+function AddChildModal({
+  isOpen,
+  setIsOpen,
+}: {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+}) {
   return (
     <Modal open={isOpen} onOpenChange={setIsOpen}>
-      <ModalContent
-        className="max-w-4xl [&>div,&>form]:px-8 [&>div,&>form]:last:p-[2rem_2rem_3rem_2rem] tablet-sm:max-w-full tablet-sm:[&>div,&>form]:px-4 tablet-sm:[&>div,&>form]:last:p-[1.5rem_1.5rem_2rem_1.5rem]"
-      >
-        <ModalTitle className="text-olive-700 text-center font-bold">إضافة طفل جديد</ModalTitle>
+      <ModalContent className="max-w-4xl [&>div,&>form]:px-8 [&>div,&>form]:last:p-[2rem_2rem_3rem_2rem] tablet-sm:max-w-full tablet-sm:[&>div,&>form]:px-4 tablet-sm:[&>div,&>form]:last:p-[1.5rem_1.5rem_2rem_1.5rem]">
+        <ModalTitle className="text-olive-700 text-center font-bold">
+          إضافة طفل جديد
+        </ModalTitle>
         <div className="p-0">
           <AddChildForm onSuccess={() => setIsOpen(false)} />
         </div>
@@ -76,4 +85,3 @@ function AddChildModal({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (ope
     </Modal>
   );
 }
-

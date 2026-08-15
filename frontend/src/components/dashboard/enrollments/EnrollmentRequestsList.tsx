@@ -1,10 +1,10 @@
 import EnrollmentRequestCard from "@/components/dashboard/enrollments/EnrollmentRequestCard";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
-import { cn } from "@/lib/utils";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 import Refresh from "@/components/ui/Refresh";
-import InfoTooltip from "@/components/ui/InfoTooltip";
+import { cn } from "@/lib/utils";
 
 const emptyActionClassName =
   "!shadow-[0_4px_14px_rgba(47,61,56,0.2)] hover:!shadow-[0_6px_18px_rgba(47,61,56,0.24)]";
@@ -53,9 +53,9 @@ export default function EnrollmentRequestsList({
       >
         {hasEnrollments ? (
           enrollments.map((e) => (
-            <EnrollmentRequestCard 
-              key={e.id} 
-              enrollmentRequest={e} 
+            <EnrollmentRequestCard
+              key={e.id}
+              enrollmentRequest={e}
               childName={e.child?.name}
             />
           ))

@@ -1,11 +1,16 @@
 "use client";
 
+import { Star } from "lucide-react";
 import { useState } from "react";
-import { Modal, ModalContent, ModalHeader, ModalTitle } from "@/components/ui/Modal";
+import { rateAttendance } from "@/actions/admin-attendances";
 import Button from "@/components/ui/Button";
 import FieldSetInput from "@/components/ui/FieldSetInput";
-import { rateAttendance } from "@/actions/admin-attendances";
-import { Star } from "lucide-react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
 
 interface AttendanceRatingModalProps {
@@ -46,7 +51,9 @@ export default function AttendanceRatingModal({
     <Modal open={isOpen} onOpenChange={onClose}>
       <ModalContent className="sm:max-w-[400px]">
         <ModalHeader>
-          <ModalTitle className="text-olive-700">تقييم الأداء: {instructorName}</ModalTitle>
+          <ModalTitle className="text-olive-700">
+            تقييم الأداء: {instructorName}
+          </ModalTitle>
         </ModalHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-20 p-20">
           <div className="flex flex-col items-center gap-10">
@@ -64,14 +71,18 @@ export default function AttendanceRatingModal({
                     <Star
                       className={cn(
                         "size-25 transition-colors",
-                        rating >= value ? "fill-olive-300 text-olive-300" : "text-gray-300"
+                        rating >= value
+                          ? "fill-olive-300 text-olive-300"
+                          : "text-gray-300",
                       )}
                     />
                   </button>
                 );
               })}
             </div>
-            <span className="text-3xl font-bold text-olive-700">{rating} / 10</span>
+            <span className="text-3xl font-bold text-olive-700">
+              {rating} / 10
+            </span>
           </div>
 
           <FieldSetInput

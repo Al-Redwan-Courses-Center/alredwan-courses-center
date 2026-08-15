@@ -1,12 +1,12 @@
 "use client";
 
-import PublicCourseCard from "@/components/courses/PublicCourseCard";
-import { cn } from "@/lib/utils";
-import { LandingPageCourse } from "@/types/entities";
 import { Autoplay, Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useIsClient, useMediaQuery } from "usehooks-ts";
+import PublicCourseCard from "@/components/courses/PublicCourseCard";
 import Loader from "@/components/ui/Loader";
+import { cn } from "@/lib/utils";
+import type { LandingPageCourse } from "@/types/entities";
 
 const navigationButtonStyles = cn(
   "font-medad absolute top-1/2 transform-[translateY(-50%)] text-7xl font-bold text-gray-900",

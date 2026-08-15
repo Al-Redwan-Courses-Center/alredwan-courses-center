@@ -1,7 +1,7 @@
 "use client";
 
-import Button from "@/components/ui/Button";
 import toast from "react-hot-toast";
+import Button from "@/components/ui/Button";
 
 export default function CopyToClipboardButton({
   resource = "الكود",

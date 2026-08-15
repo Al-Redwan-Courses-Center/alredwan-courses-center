@@ -1,8 +1,7 @@
-import * as React from "react";
 import { Search } from "lucide-react";
-
-import { Input } from "./input";
+import * as React from "react";
 import { cn } from "../../../lib/utils";
+import { Input } from "./input";
 
 interface SearchInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   containerClassName?: string;

@@ -8,8 +8,8 @@ import HeroSection from "@/components/landing-page/HeroSection";
 import InstructorsSection from "@/components/landing-page/InstructorsSection";
 import StatisticsSection from "@/components/landing-page/StatisticsSection";
 import TestimonialsSection from "@/components/landing-page/TestimonialsSection";
-import WhyUsSection from "@/components/landing-page/WhyUsSection";
 import WhatsAppWidget from "@/components/landing-page/WhatsAppWidget";
+import WhyUsSection from "@/components/landing-page/WhyUsSection";
 
 export default async function Home() {
   return (

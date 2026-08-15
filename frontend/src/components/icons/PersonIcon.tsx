@@ -1,4 +1,4 @@
-import { ComponentProps } from "react";
+import type { ComponentProps } from "react";
 
 export default function PersonIcon({ ...props }: ComponentProps<"svg">) {
   return (

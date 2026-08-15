@@ -1,6 +1,6 @@
 "use client";
 
-import { Table as TanStackTable } from "@tanstack/react-table";
+import type { Table as TanStackTable } from "@tanstack/react-table";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { cn, toHindiDigits } from "@/lib/utils";
 import { Button } from "../ui/button";

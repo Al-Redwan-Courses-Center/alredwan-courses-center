@@ -1,8 +1,8 @@
 "use client";
 
+import { useIsClient, useMediaQuery } from "usehooks-ts";
 import AuthModal from "@/components/auth/AuthModal";
 import SignupModal from "@/components/auth/SignupModal";
-import { useIsClient, useMediaQuery } from "usehooks-ts";
 
 export function NavBarAuthButtons() {
   const isClient = useIsClient();

@@ -1,7 +1,7 @@
+import { Suspense } from "react";
 import { getUser } from "@/actions/auth";
 import { getInstructorCourses } from "@/actions/courses";
 import InstructorMyCoursesView from "@/components/dashboard/instructor/InstructorMyCoursesView";
-import { Suspense } from "react";
 
 export default async function InstructorMyCoursesPage() {
   const { first_name, instructor_id } = await getUser();

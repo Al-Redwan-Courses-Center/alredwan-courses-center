@@ -1,13 +1,13 @@
+import type { ReactNode } from "react";
 import AllCoursesIcon from "@/components/icons/AllCoursesIcon";
 import ClipboardIcon from "@/components/icons/ClipboardIcon";
+import MosqueIcon from "@/components/icons/MosqueIcon";
 import MyCoursesIcon from "@/components/icons/MyCoursesIcon";
 import OverviewIcon from "@/components/icons/OverviewIcon";
 import PanelsIcon from "@/components/icons/PanelsIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import PersonIcon from "@/components/icons/PersonIcon";
-import MosqueIcon from "@/components/icons/MosqueIcon";
-import { UserEntity } from "@/types/auth";
-import { ReactNode } from "react";
+import type { UserEntity } from "@/types/auth";
 
 export interface DashboardNavItem {
   label: string;
@@ -205,4 +205,3 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
 export function getDashboardNavItems(role: UserEntity["role"]) {
   return roleMap[role];
 }
-

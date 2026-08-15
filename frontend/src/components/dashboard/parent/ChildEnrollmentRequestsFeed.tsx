@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { ParentChildDetail } from "@/actions/user";
-import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
+import { useMemo, useState } from "react";
+import type { ParentChildDetail } from "@/actions/user";
 import EnrollmentRequestsList from "@/components/dashboard/enrollments/EnrollmentRequestsList";
-import { toHindiDigits, cn } from "@/lib/utils";
-import { EnrollmentRequestListItem } from "@/types/entities";
+import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
+import { cn, toHindiDigits } from "@/lib/utils";
+import type { EnrollmentRequestListItem } from "@/types/entities";
 
 export default function ChildEnrollmentRequestsFeed({
   childrenList,
@@ -30,7 +30,7 @@ export default function ChildEnrollmentRequestsFeed({
         ] -
         ENROLLMENT_REQUEST_STATUS_WEIGHTS[
           b.status as keyof typeof ENROLLMENT_REQUEST_STATUS_WEIGHTS
-        ]
+        ],
     );
   }, [initialRequests, activeTab]);
 
@@ -38,7 +38,9 @@ export default function ChildEnrollmentRequestsFeed({
     <div className="flex flex-col gap-8">
       {/* Tab Pills */}
       <div className="flex flex-wrap items-center gap-4 px-6">
-        <span className="text-2xl font-bold text-gray-500 me-4">تصفية طلبات الاشتراك:</span>
+        <span className="text-2xl font-bold text-gray-500 me-4">
+          تصفية طلبات الاشتراك:
+        </span>
         <button
           type="button"
           onClick={() => setActiveTab("all")}
@@ -46,7 +48,7 @@ export default function ChildEnrollmentRequestsFeed({
             "px-8 py-3 rounded-full text-xl font-bold transition-all cursor-pointer",
             activeTab === "all"
               ? "bg-olive-700 text-white shadow-md"
-              : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+              : "bg-gray-100 hover:bg-gray-200 text-gray-600",
           )}
         >
           الكل ({toHindiDigits(Object.values(initialRequests).flat().length)})
@@ -60,10 +62,11 @@ export default function ChildEnrollmentRequestsFeed({
               "px-8 py-3 rounded-full text-xl font-bold transition-all cursor-pointer",
               activeTab === c.id
                 ? "bg-olive-700 text-white shadow-md"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                : "bg-gray-100 hover:bg-gray-200 text-gray-600",
             )}
           >
-            {`(${toHindiDigits(i + 1)}) ${c.first_name}`} ({toHindiDigits((initialRequests[c.id] || []).length)})
+            {`(${toHindiDigits(i + 1)}) ${c.first_name}`} (
+            {toHindiDigits((initialRequests[c.id] || []).length)})
           </button>
         ))}
       </div>
@@ -79,4 +82,3 @@ export default function ChildEnrollmentRequestsFeed({
     </div>
   );
 }
-

@@ -1,5 +1,6 @@
 "use client";
 
+import { parseISO } from "date-fns";
 import DataViewLegacy from "@/components/ui/data-view/DataView";
 import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
 import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
@@ -11,8 +12,7 @@ import {
 import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { cn, formatDate, toHindiDigits } from "@/lib/utils";
-import { InstructorEnrollmentListItem } from "@/types/entities";
-import { parseISO } from "date-fns";
+import type { InstructorEnrollmentListItem } from "@/types/entities";
 
 const participantTranslationMap: Record<
   NonNullable<InstructorEnrollmentListItem["participant_type"]>,

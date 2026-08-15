@@ -1,4 +1,4 @@
-import { Tag } from "./common";
+import type { Tag } from "./common";
 
 export interface Instructor {
   id: number;

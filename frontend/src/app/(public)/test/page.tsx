@@ -1,13 +1,13 @@
 "use client";
 
+import CheckIcon from "@/components/icons/CheckIcon";
+import StarIcon from "@/components/icons/StarIcon";
 import Accordion from "@/components/ui/accordion/Accordion";
-import AccordionItem from "@/components/ui/accordion/AccordionItem";
+import AccordionContent from "@/components/ui/accordion/AccordionContent";
 import AccordionHeader from "@/components/ui/accordion/AccordionHeader";
 import AccordionHeaderInfo from "@/components/ui/accordion/AccordionHeaderInfo";
-import AccordionContent from "@/components/ui/accordion/AccordionContent";
+import AccordionItem from "@/components/ui/accordion/AccordionItem";
 import StudentHeaderInfo from "@/components/ui/StudentHeaderInfo";
-import StarIcon from "@/components/icons/StarIcon";
-import CheckIcon from "@/components/icons/CheckIcon";
 
 /* =======================
    Fake Data

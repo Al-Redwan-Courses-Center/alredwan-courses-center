@@ -1,17 +1,17 @@
+import Image from "next/image";
+import { getServerSession } from "next-auth";
 import { authConfig } from "@/app/api/auth/[...nextauth]/route";
 import Logo from "@/assets/logo.svg";
 import LogoutButton from "@/components/auth/LogoutButton";
-import NavLink from "@/components/ui/navigation/NavLink";
-import { getServerSession } from "next-auth";
-import Image from "next/image";
 import { NavBarAuthButtons } from "@/components/layout/landing/NavBarAuthButtons";
+import NavLink from "@/components/ui/navigation/NavLink";
 
 export default async function NavBar() {
   const session = await getServerSession(authConfig);
 
   return (
     <nav className="shadow-soft tablet:hidden desktop-sm:px-80 laptop:px-60 sticky top-0 z-1000 flex h-26 w-full items-center justify-between bg-gray-100/80 px-128 py-3 backdrop-blur-md">
-      {!!session?.user ? (
+      {session?.user ? (
         <div className="tablet:hidden grid content-center">
           <LogoutButton variant="primary" size="small">
             تسجيل الخروج

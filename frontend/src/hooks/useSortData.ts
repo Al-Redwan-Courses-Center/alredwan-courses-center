@@ -1,8 +1,8 @@
 "use client";
 
-import { DataViewSortConfig } from "@/types/components";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
+import type { DataViewSortConfig } from "@/types/components";
 
 export function useSortData<T>(data: T[], sortConfig: DataViewSortConfig<T>) {
   const searchParams = useSearchParams();

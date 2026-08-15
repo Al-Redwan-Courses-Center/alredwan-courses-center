@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 const toggleButtonStyles = cn(
   "grid aspect-square h-auto w-[2.6rem] place-items-center rounded-[0.5rem_0] py-3",

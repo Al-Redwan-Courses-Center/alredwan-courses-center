@@ -1,6 +1,6 @@
+import type { Metadata } from "next";
 import { redirectAuthUser } from "@/actions/auth";
 import LoginForm from "@/components/auth/LoginForm";
-import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "تسجيل الدخول",
