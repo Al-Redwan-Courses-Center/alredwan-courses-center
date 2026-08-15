@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { uploadProfileImage } from "@/actions/profile";
+import Image from "next/image";
 
 export default function ProfileImageUploader({
   initialImage,
@@ -62,10 +63,11 @@ export default function ProfileImageUploader({
     <div className="group relative">
       <div className="bg-olive-100 border-olive-500 relative flex h-48 w-48 items-center justify-center overflow-hidden rounded-full border-4 shadow-lg">
         {previewImage ? (
-          <img
+          <Image
             src={previewImage}
-            alt={firstName}
-            className="h-full w-full object-cover"
+            alt={firstName || "Profile image"}
+            fill
+            className="object-cover"
           />
         ) : (
           <User size={80} className="text-olive-500" />
