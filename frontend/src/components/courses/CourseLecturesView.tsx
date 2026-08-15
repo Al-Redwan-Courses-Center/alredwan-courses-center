@@ -36,8 +36,6 @@ export default function CourseLecturesView({
   lectures: LectureListItem[];
   course: CourseDetail | null;
 }) {
-  console.log(lectures[9].id);
-
   return (
     <DataView
       data={lectures}

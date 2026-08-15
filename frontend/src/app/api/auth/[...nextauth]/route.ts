@@ -57,8 +57,6 @@ export const authConfig: AuthOptions = {
           );
 
           user.instructor_id = String(id);
-
-          console.log(id);
         }
 
         user.jwt_access_token = access;

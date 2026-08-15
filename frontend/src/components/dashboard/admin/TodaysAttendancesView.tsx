@@ -300,9 +300,7 @@ export default function TodaysAttendancesView({
 
   const { sendJsonMessage, lastJsonMessage } =
     useWebSocket<StaffAttendanceServerEvent>(wsUrl, {
-      onClose: (event) => {
-        console.log(event);
-      },
+      onClose: (event) => {},
       shouldReconnect: () => true,
       reconnectAttempts: 10,
       reconnectInterval: 10000,
@@ -311,16 +309,12 @@ export default function TodaysAttendancesView({
   function handleWebSocketServerEvent(event: StaffAttendanceServerEvent) {
     switch (event.type) {
       case "connection_established": {
-        console.log(event.message);
         break;
       }
       case "summary_response": {
-        console.log(event);
         break;
       }
       case "attendance_update": {
-        console.log(event);
-
         const { check_in_time, check_out_time, instructor_id, status } =
           event.data;
 
@@ -338,9 +332,6 @@ export default function TodaysAttendancesView({
         );
 
         break;
-      }
-      default: {
-        console.log("NO EVENT");
       }
     }
   }

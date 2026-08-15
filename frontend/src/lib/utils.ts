@@ -175,7 +175,6 @@ export function persistInLocalStorage<T>(
   key: string,
 ) {
   return (arg: T | ((prev: T) => T)) => {
-    // console.log(arg);
     if (typeof arg === "function") {
       fn((prev: T) => {
         //eslint-disable-next-line @typescript-eslint/no-unsafe-function-type

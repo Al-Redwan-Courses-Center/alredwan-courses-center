@@ -8,9 +8,6 @@ export default withAuth(
     const pathname = req.nextUrl.pathname;
     const userRole = token?.role;
 
-    // console.log(pathname);
-    // console.log(userRole);
-
     if (pathname === "/dashboard") {
       switch (userRole) {
         case "admin": {

@@ -42,7 +42,6 @@ export default function AttendanceStudentIdQrCodeScannerModal({
           autoStart
           isActive={isModalOpen}
           onScan={(text) => {
-            console.log(text);
             onScan?.(text);
           }}
         />
