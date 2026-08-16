@@ -9,9 +9,10 @@ export function useFilterData<T>(
   filterConfig: DataViewFilterConfig,
 ) {
   const searchParams = useSearchParams();
+  const filterParam = searchParams.get("filter");
 
   const filteredData = useMemo(() => {
-    const filters = searchParams.get("filter")?.split(",") || [];
+    const filters = filterParam?.split(",") || [];
 
     let filtered = data;
 
@@ -24,7 +25,7 @@ export function useFilterData<T>(
     });
 
     return filtered;
-  }, [data, filterConfig, searchParams]);
+  }, [data, filterConfig, filterParam]);
 
   return filteredData;
 }

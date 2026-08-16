@@ -5,13 +5,13 @@ import { ChevronDown, PlusCircle } from "lucide-react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
-import useWebSocket from "react-use-websocket";
+import useAuthedWebSocket from "@/hooks/useAuthedWebSocket";
+
 import {
   manualCheckIn,
   manualCheckOut,
   markAbsent,
 } from "@/actions/admin-attendances";
-import { getClientAccessToken } from "@/actions/temp";
 import DeleteIcon from "@/components/icons/deleteIcon.svg";
 import DetailsIcon from "@/components/icons/detailsIcon.svg";
 import EditIcon from "@/components/icons/editIcon.svg";
@@ -36,11 +36,9 @@ import {
 import StatusBadge from "@/components/ui/StatusBadge";
 import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import { cn, formatTime, toHindiDigits } from "@/lib/utils";
+import { filterAttendances } from "@/lib/attendance";
 import type { StaffAttendanceListItem } from "@/types/entities/staff-attendance";
-import type {
-  StaffAttendanceServerEvent,
-  StaffAttendanceStatus,
-} from "@/types/entities/staff-attendance-events";
+import type { StaffAttendanceServerEvent } from "@/types/entities/staff-attendance-events";
 import AttendanceGenerationModal from "./AttendanceGenerationModal";
 import AttendanceRatingModal from "./AttendanceRatingModal";
 
@@ -101,10 +99,14 @@ function StaffAttendanceRow({
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isMarkingAbsent, setIsMarkingAbsent] = useState(false);
 
-  const [checkInHours, checkInMinutes] = attendance.scheduled_check_in_time
+  const [checkInHours, checkInMinutes] = (
+    attendance.scheduled_check_in_time ?? ""
+  )
     .split(":")
     .map(Number);
-  const [checkOutHours, checkOutMinutes] = attendance.scheduled_check_out_time
+  const [checkOutHours, checkOutMinutes] = (
+    attendance.scheduled_check_out_time ?? ""
+  )
     .split(":")
     .map(Number);
 
@@ -584,6 +586,8 @@ function FilterBar({
 
 // ─── Main View ────────────────────────────────────────────────────────────────
 
+const WS_URL = `ws://${typeof window !== "undefined" ? window.location.hostname : "localhost"}:8001/ws/attendance/`;
+
 export default function AdminAttendancesView({
   initialAttendances,
   hideDateFilter = false,
@@ -591,9 +595,12 @@ export default function AdminAttendancesView({
   initialAttendances: StaffAttendanceListItem[];
   hideDateFilter?: boolean;
 }) {
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [attendances, setAttendances] =
     useState<StaffAttendanceListItem[]>(initialAttendances);
+
+  useEffect(() => {
+    setAttendances(initialAttendances);
+  }, [initialAttendances]);
   const searchParamsHook = useSearchParams();
   const searchQuery = searchParamsHook.get("search")?.toLowerCase() || "";
   const [ratingModal, setRatingModal] = useState<{
@@ -603,40 +610,31 @@ export default function AdminAttendancesView({
 
   const [generationModalOpen, setGenerationModalOpen] = useState(false);
 
-  const wsUrl = accessToken
-    ? `ws://${typeof window !== "undefined" ? window.location.hostname : "localhost"}:8001/ws/attendance/?token=${accessToken}`
-    : null;
-
-  const { lastJsonMessage } = useWebSocket<StaffAttendanceServerEvent>(wsUrl, {
-    shouldReconnect: () => true,
-    reconnectAttempts: 10,
-    reconnectInterval: 10000,
-  });
+  const { lastJsonMessage } =
+    useAuthedWebSocket<StaffAttendanceServerEvent>(WS_URL);
 
   useEffect(() => {
-    const getToken = async () => {
-      const token = await getClientAccessToken();
-      setAccessToken(token ?? null);
-    };
-    getToken();
-  }, []);
-
-  useEffect(() => {
+    console.log(lastJsonMessage);
     if (!lastJsonMessage) return;
-    if (lastJsonMessage.type === "attendance_update") {
-      const { check_in_time, check_out_time, id, status } =
-        lastJsonMessage.data as { check_in_time: string | null; check_out_time: string | null; id: number; status: StaffAttendanceStatus };
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setAttendances((prev) =>
-        prev.map((a) =>
-          a.id === id ? { ...a, check_in_time, check_out_time, status } : a,
-        ),
-      );
-    } else if (lastJsonMessage.type === "attendance_rated") {
-      const { id, rating } = lastJsonMessage.data as { id: number; rating: number | string };
-      setAttendances((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, rating: Number(rating) } : a)),
-      );
+    switch (lastJsonMessage.type) {
+      case "attendance_update": {
+        const { check_in_time, check_out_time, id, status } =
+          lastJsonMessage.data;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setAttendances((prev) =>
+          prev.map((a) =>
+            a.id === id ? { ...a, check_in_time, check_out_time, status } : a,
+          ),
+        );
+        break;
+      }
+      case "attendance_rated": {
+        const { id, rating } = lastJsonMessage.data;
+        setAttendances((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, rating: Number(rating) } : a)),
+        );
+        break;
+      }
     }
   }, [lastJsonMessage]);
 
@@ -649,14 +647,7 @@ export default function AdminAttendancesView({
     );
   };
 
-  const filteredAttendances = attendances.filter((a) => {
-    if (!searchQuery) return true;
-    return (
-      a.instructor_name.toLowerCase().includes(searchQuery) ||
-      a.lecture_info?.course_title?.toLowerCase().includes(searchQuery) ||
-      a.attendance_type_display.toLowerCase().includes(searchQuery)
-    );
-  });
+  const filteredAttendances = filterAttendances(attendances, searchParamsHook);
 
   const handleExport = () => {
     if (filteredAttendances.length === 0) return;

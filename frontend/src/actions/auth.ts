@@ -139,3 +139,16 @@ export async function resetPassword(data: { phone_number1: string }) {
     return { error: "حدث خطأ غير متوقع" };
   }
 }
+
+export async function getWebSocketTicket() {
+  try {
+    const { getAuthApiClient } = await import("@/lib/auth-api");
+    const apiClient = await getAuthApiClient();
+    const res = await apiClient.post<{ ticket: string }>(
+      "/api/attendance/ws-ticket/",
+    );
+    return res.data.ticket;
+  } catch {
+    return null;
+  }
+}

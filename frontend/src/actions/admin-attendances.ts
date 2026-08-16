@@ -185,3 +185,22 @@ export async function generateAttendances(startDate: string, endDate: string) {
     return { success: false, error: message };
   }
 }
+
+export async function getWebSocketTicket(): Promise<string | null> {
+  try {
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.post<{ ticket: string }>("/api/attendance/ws-ticket/");
+    return data.ticket;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
+    console.error("Failed to fetch websocket ticket:", error);
+    return null;
+  }
+}
