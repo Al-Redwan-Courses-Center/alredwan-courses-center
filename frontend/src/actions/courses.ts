@@ -30,35 +30,40 @@ export async function getPublicCourses(): Promise<CourseListItem[]> {
 }
 
 export async function getAllCourses(): Promise<CourseListItem[]> {
-  return apiRequest("Failed to load courses:", async () => {
-    const user = await getUser();
-    const apiClient = await getAuthApiClient();
+  return apiRequest(
+    "Failed to load courses:",
+    async () => {
+      const user = await getUser();
+      const apiClient = await getAuthApiClient();
 
-    const { data } = await apiClient.get<
-      PaginatedResponse<CourseListItem> | CourseListItem[]
-    >("/api/courses/?page_size=100");
+      const { data } = await apiClient.get<
+        PaginatedResponse<CourseListItem> | CourseListItem[]
+      >("/api/courses/?page_size=100");
 
-    const courses = unwrapPaginated(data);
+      const courses = unwrapPaginated(data);
 
-    if (user.role !== "student") {
-      return courses;
-    }
+      if (user.role !== "student") {
+        return courses;
+      }
 
-    const enrollmentsCoursesIds = (await getMyEnrollments()).map(
-      (e) => e.course,
-    );
-    const pendingOrProcessingRequestCourseIds = (
-      await getMyEnrollmentRequests()
-    )
-      .filter((request) => ["pending", "processing"].includes(request.status))
-      .map((request) => request.course);
+      const enrollmentsCoursesIds = (await getMyEnrollments()).map(
+        (e) => e.course,
+      );
 
-    return courses.filter(
-      (c) =>
-        !enrollmentsCoursesIds.includes(c.id) &&
-        !pendingOrProcessingRequestCourseIds.includes(c.id),
-    );
-  }, []);
+      const pendingOrProcessingRequestCourseIds = (
+        await getMyEnrollmentRequests()
+      )
+        .filter((request) => ["pending", "processing"].includes(request.status))
+        .map((request) => request.course);
+
+      return courses.filter(
+        (c) =>
+          !enrollmentsCoursesIds.includes(c.id) &&
+          !pendingOrProcessingRequestCourseIds.includes(c.id),
+      );
+    },
+    [],
+  );
 }
 
 export async function getInstructorCourses(
@@ -66,15 +71,19 @@ export async function getInstructorCourses(
 ): Promise<CourseListItem[]> {
   if (!instructorId) return [];
 
-  return apiRequest("Failed to load instructor courses:", async () => {
-    const apiClient = await getAuthApiClient();
+  return apiRequest(
+    "Failed to load instructor courses:",
+    async () => {
+      const apiClient = await getAuthApiClient();
 
-    const { data } = await apiClient.get<
-      PaginatedResponse<CourseListItem> | CourseListItem[]
-    >(`/api/courses/?page_size=100&instructor=${instructorId}`);
+      const { data } = await apiClient.get<
+        PaginatedResponse<CourseListItem> | CourseListItem[]
+      >(`/api/courses/?page_size=100&instructor=${instructorId}`);
 
-    return unwrapPaginated(data);
-  }, []);
+      return unwrapPaginated(data);
+    },
+    [],
+  );
 }
 
 export async function getCourseById(
@@ -95,20 +104,24 @@ export async function getCourseById(
   );
 }
 
-export async function getStudentCourses() {
-  return apiRequest("Failed to load student courses:", async () => {
-    const myEnrollments = await getMyEnrollments();
+export async function getStudentCourses(): Promise<CourseDetail[]> {
+  return apiRequest(
+    "Failed to load student courses:",
+    async () => {
+      const myEnrollments = await getMyEnrollments();
 
-    const myCoursesInitial = await Promise.all(
-      myEnrollments.map((e) => getCourseById(e.course)),
-    );
-    const myEnrollmentsProgresses = await Promise.all(
-      myEnrollments.map((e) => getEnrollmentProgressById(e.id)),
-    );
+      const myCoursesInitial = (
+        await Promise.all(myEnrollments.map((e) => getCourseById(e.course)))
+      ).filter((c) => c != null);
+      const myEnrollmentsProgresses = await Promise.all(
+        myEnrollments.map((e) => getEnrollmentProgressById(e.id)),
+      );
 
-    return myCoursesInitial.map((c, i) => ({
-      ...c,
-      course_progress: myEnrollmentsProgresses[i]?.percentage,
-    }));
-  }, []);
+      return myCoursesInitial.map((c, i) => ({
+        ...c,
+        course_progress: myEnrollmentsProgresses[i]?.percentage,
+      }));
+    },
+    [],
+  );
 }
