@@ -50,7 +50,7 @@ export default function ProfileImageUploader({
         }
         router.refresh();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Upload error details:", error);
       toast.error("حدث خطأ أثناء رفع الصورة");
       setPreviewImage(initialImage || null);

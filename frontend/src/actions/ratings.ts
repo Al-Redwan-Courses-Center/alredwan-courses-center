@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthApiClient } from "@/lib/auth-api";
+import { isAxiosError } from "axios";
 
 /**
  * Submit a rating for a course
@@ -27,14 +28,19 @@ export async function rateCourse(
     }
 
     return { success: false, message: "حدث خطأ أثناء حفظ التقييم" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error rating course:", error);
-    return {
-      success: false,
-      message:
+
+    let message = "فشل الاتصال بالخادم";
+    if (isAxiosError(error)) {
+      message =
         error.response?.data?.non_field_errors?.[0] ||
         error.response?.data?.detail ||
-        "فشل الاتصال بالخادم",
+        message;
+    }
+    return {
+      success: false,
+      message,
     };
   }
 }
@@ -68,14 +74,15 @@ export async function rateInstructor(
     }
 
     return { success: false, message: "حدث خطأ أثناء حفظ التقييم" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error rating instructor:", error);
+    const message =
+      isAxiosError<{ detail: string }>(error) && error.response?.data.detail
+        ? error.response.data.detail
+        : "حدث خطأ أثناء حذف الذكرى";
     return {
       success: false,
-      message:
-        error.response?.data?.non_field_errors?.[0] ||
-        error.response?.data?.detail ||
-        "فشل الاتصال بالخادم",
+      message,
     };
   }
 }
@@ -88,7 +95,7 @@ export async function getCourseRatings(courseId: string | number) {
     const client = await getAuthApiClient();
     const response = await client.get(`/api/courses/${courseId}/ratings/`);
     return { success: true, data: response.data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching course ratings:", error);
     return { success: false, message: "فشل تحميل التقييمات" };
   }
@@ -104,7 +111,7 @@ export async function getInstructorRatings(instructorId: number) {
       `/api/users/instructors/${instructorId}/ratings/`,
     );
     return { success: true, data: response.data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching instructor ratings:", error);
     return { success: false, message: "فشل تحميل التقييمات" };
   }

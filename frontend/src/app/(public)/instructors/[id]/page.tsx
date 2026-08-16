@@ -40,7 +40,7 @@ export default async function InstructorPage({
             <div className="space-y-6 text-center lg:col-span-8 lg:text-right">
               <div className="space-y-2">
                 <div className="mb-4 flex flex-wrap justify-center gap-2 lg:justify-start">
-                  {instructor.tags.map((tag: any) => (
+                  {instructor.tags.map((tag) => (
                     <span
                       key={tag.id}
                       className="bg-olive-500/10 text-olive-500 rounded-full px-4 py-1 text-sm font-bold"

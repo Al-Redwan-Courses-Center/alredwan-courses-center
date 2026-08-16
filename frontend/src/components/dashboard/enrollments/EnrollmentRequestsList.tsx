@@ -1,4 +1,5 @@
 import EnrollmentRequestCard from "@/components/dashboard/enrollments/EnrollmentRequestCard";
+import type { EnrollmentRequestListItem } from "@/types/entities/enrollments";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import InfoTooltip from "@/components/ui/InfoTooltip";
@@ -14,7 +15,7 @@ export default function EnrollmentRequestsList({
   wrapperStyles,
   listStyles,
 }: {
-  enrollments: any[];
+  enrollments: EnrollmentRequestListItem[];
   listStyles?: string;
   wrapperStyles?: string;
 }) {
@@ -23,7 +24,6 @@ export default function EnrollmentRequestsList({
     ...new Set(
       enrollments
         .map((e) => {
-          if (e.child?.name) return e.child.name.split(" ")[0];
           if (e.participant_name) return e.participant_name.split(" ")[0];
           return null;
         })
@@ -56,7 +56,7 @@ export default function EnrollmentRequestsList({
             <EnrollmentRequestCard
               key={e.id}
               enrollmentRequest={e}
-              childName={e.child?.name}
+              childName={e.participant_name || undefined}
             />
           ))
         ) : (

@@ -4,46 +4,59 @@ import { revalidatePath } from "next/cache";
 import { apiRequest, getAuthApiClient, unwrapPaginated } from "@/lib/api";
 import type { PaginatedResponse } from "@/types/config";
 import type { MemoryListItem, ParticipantSearchResult } from "@/types/entities";
+import { isAxiosError } from "axios";
 
 export async function getGeneralMemories(
   page_size = 50,
 ): Promise<MemoryListItem[]> {
-  return apiRequest("Failed to load general memories:", async () => {
-    const apiClient = await getAuthApiClient();
-    const { data } = await apiClient.get<
-      PaginatedResponse<MemoryListItem> | MemoryListItem[]
-    >(`/api/memories/feed/general/?page_size=${page_size}`);
-    return unwrapPaginated(data);
-  }, []);
+  return apiRequest(
+    "Failed to load general memories:",
+    async () => {
+      const apiClient = await getAuthApiClient();
+      const { data } = await apiClient.get<
+        PaginatedResponse<MemoryListItem> | MemoryListItem[]
+      >(`/api/memories/feed/general/?page_size=${page_size}`);
+      return unwrapPaginated(data);
+    },
+    [],
+  );
 }
 
 export async function getPrivateMemories(
   childId?: string,
   page_size = 50,
 ): Promise<MemoryListItem[]> {
-  return apiRequest("Failed to load private memories:", async () => {
-    const apiClient = await getAuthApiClient();
-    const url = childId
-      ? `/api/memories/feed/private/?child_id=${childId}&page_size=${page_size}`
-      : `/api/memories/feed/private/?page_size=${page_size}`;
-    const { data } = await apiClient.get<
-      PaginatedResponse<MemoryListItem> | MemoryListItem[]
-    >(url);
-    return unwrapPaginated(data);
-  }, []);
+  return apiRequest(
+    "Failed to load private memories:",
+    async () => {
+      const apiClient = await getAuthApiClient();
+      const url = childId
+        ? `/api/memories/feed/private/?child_id=${childId}&page_size=${page_size}`
+        : `/api/memories/feed/private/?page_size=${page_size}`;
+      const { data } = await apiClient.get<
+        PaginatedResponse<MemoryListItem> | MemoryListItem[]
+      >(url);
+      return unwrapPaginated(data);
+    },
+    [],
+  );
 }
 
 export async function searchParticipants(
   query: string,
 ): Promise<ParticipantSearchResult[]> {
-  return apiRequest("Failed to search participants:", async () => {
-    if (query.length < 2) return [];
-    const apiClient = await getAuthApiClient();
-    const { data } = await apiClient.get<ParticipantSearchResult[]>(
-      `/api/memories/participants/search/?q=${encodeURIComponent(query)}`,
-    );
-    return data;
-  }, []);
+  return apiRequest(
+    "Failed to search participants:",
+    async () => {
+      if (query.length < 2) return [];
+      const apiClient = await getAuthApiClient();
+      const { data } = await apiClient.get<ParticipantSearchResult[]>(
+        `/api/memories/participants/search/?q=${encodeURIComponent(query)}`,
+      );
+      return data;
+    },
+    [],
+  );
 }
 
 export async function deleteMemory(
@@ -54,10 +67,15 @@ export async function deleteMemory(
     await apiClient.delete(`/api/memories/${id}/`);
     revalidatePath("/dashboard/memories");
     return { ok: true, message: "تم حذف الذكرى بنجاح" };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message =
+      isAxiosError<{ detail: string }>(error) && error.response?.data.detail
+        ? error.response.data.detail
+        : "حدث خطأ أثناء حذف الذكرى";
+
     return {
       ok: false,
-      message: error.response?.data?.detail || "حدث خطأ أثناء حذف الذكرى",
+      message,
     };
   }
 }
@@ -73,7 +91,16 @@ export async function getUploadToken(): Promise<{
     if (!token?.jwt_access_token) throw new Error("Unauthorized");
 
     return { ok: true, token: token.jwt_access_token };
-  } catch (error: any) {
-    return { ok: false, message: error.message || "حدث خطأ في المصادقة" };
+  } catch (error: unknown) {
+    return {
+      ok: false,
+      message:
+        error &&
+        typeof error === "object" &&
+        "message" in error &&
+        typeof error.message === "string"
+          ? error.message
+          : "حدث خطأ في المصادقة",
+    };
   }
 }

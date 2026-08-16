@@ -22,8 +22,15 @@ export async function getPublicCourses(): Promise<CourseListItem[]> {
     >("/api/courses/?page_size=100");
 
     return Array.isArray(data) ? data : data.results;
-  } catch (error: any) {
-    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Failed to load public courses:", error);
     return [];
   }
@@ -104,23 +111,28 @@ export async function getCourseById(
   );
 }
 
-export async function getStudentCourses(): Promise<CourseDetail[]> {
+export async function getStudentCourses(): Promise<(CourseDetail & { course_progress: number })[]> {
   return apiRequest(
     "Failed to load student courses:",
     async () => {
       const myEnrollments = await getMyEnrollments();
 
-      const myCoursesInitial = (
-        await Promise.all(myEnrollments.map((e) => getCourseById(e.course)))
-      ).filter((c) => c != null);
+      const myCoursesInitial = await Promise.all(
+        myEnrollments.map((e) => getCourseById(e.course)),
+      );
       const myEnrollmentsProgresses = await Promise.all(
         myEnrollments.map((e) => getEnrollmentProgressById(e.id)),
       );
 
-      return myCoursesInitial.map((c, i) => ({
-        ...c,
-        course_progress: myEnrollmentsProgresses[i]?.percentage,
-      }));
+      return myCoursesInitial
+        .map((c, i) => {
+          if (!c) return null;
+          return {
+            ...c,
+            course_progress: myEnrollmentsProgresses[i]?.percentage ?? 0,
+          };
+        })
+        .filter((c): c is CourseDetail & { course_progress: number } => c !== null);
     },
     [],
   );

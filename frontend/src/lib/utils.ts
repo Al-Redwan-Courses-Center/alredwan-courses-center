@@ -87,10 +87,10 @@ export function getWeekDayIndex(weekday: string) {
   return WEEKDAYS.findIndex((w) => w === weekday);
 }
 
-export function debounceFn(fn: (...args: any[]) => any, delay: number) {
+export function debounceFn<Args extends unknown[]>(fn: (...args: Args) => void, delay: number) {
   let timerId: NodeJS.Timeout;
 
-  return (...args: any[]) => {
+  return (...args: Args) => {
     clearTimeout(timerId);
     timerId = setTimeout(() => fn(...args), delay);
   };

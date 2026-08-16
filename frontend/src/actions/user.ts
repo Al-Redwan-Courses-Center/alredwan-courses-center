@@ -7,9 +7,11 @@ import { getEnrollmentProgressById } from "@/actions/enrollments";
 import { apiRequest, getAuthApiClient, unwrapPaginated } from "@/lib/api";
 import type { PaginatedResponse } from "@/types/config";
 import type {
+  CourseDetail,
   EnrollmentListItem,
   EnrollmentRequestListItem,
 } from "@/types/entities";
+import type { InstructorDetail } from "@/types/entities/instructors";
 
 export interface ParentChildDetail {
   id: string;
@@ -27,16 +29,20 @@ export interface ParentChildDetail {
 }
 
 export async function getParentChildren(): Promise<ParentChildDetail[]> {
-  return apiRequest("Failed to load parent's children:", async () => {
-    const apiClient = await getAuthApiClient();
+  return apiRequest(
+    "Failed to load parent's children:",
+    async () => {
+      const apiClient = await getAuthApiClient();
 
-    const { data } = await apiClient.get<
-      PaginatedResponse<ParentChildDetail> | ParentChildDetail[]
-    >("/api/parents/children/?page_size=100");
+      const { data } = await apiClient.get<
+        PaginatedResponse<ParentChildDetail> | ParentChildDetail[]
+      >("/api/parents/children/?page_size=100");
 
-    const childrenList = unwrapPaginated(data);
-    return childrenList.sort((a, b) => b.age - a.age);
-  }, []);
+      const childrenList = unwrapPaginated(data);
+      return childrenList.sort((a, b) => b.age - a.age);
+    },
+    [],
+  );
 }
 
 export async function addChild(data: {
@@ -53,8 +59,15 @@ export async function addChild(data: {
     );
     revalidatePath("/dashboard/my-children");
     return { data: response.data, error: null };
-  } catch (error: any) {
-    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     if (isAxiosError(error)) {
       return {
         data: null,
@@ -82,8 +95,15 @@ export async function updateChild(
     );
     revalidatePath("/dashboard/my-children");
     return { data: response.data, error: null };
-  } catch (error: any) {
-    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     if (isAxiosError(error)) {
       return {
         data: null,
@@ -99,8 +119,15 @@ export async function deleteChild(id: string) {
     const apiClient = await getAuthApiClient();
     await apiClient.delete(`/api/parents/children/${id}/delete/`);
     return { error: null };
-  } catch (error: any) {
-    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     if (isAxiosError(error)) {
       return {
         error: error.response?.data ?? "حدث خطأ أثناء حذف الطفل",
@@ -119,8 +146,15 @@ export async function getChildById(
       `/api/parents/children/${id}/`,
     );
     return data;
-  } catch (error: any) {
-    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Failed to fetch child details:", error);
     return null;
   }
@@ -137,8 +171,15 @@ export async function getChildEnrollments(
 
     const results = Array.isArray(data) ? data : data.results;
     return results;
-  } catch (error: any) {
-    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Failed to load child enrollments:", error);
     return [];
   }
@@ -155,14 +196,21 @@ export async function getChildEnrollmentRequests(
 
     const results = Array.isArray(data) ? data : data.results;
     return results;
-  } catch (error: any) {
-    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Failed to load child enrollment requests:", error);
     return [];
   }
 }
 
-export async function getChildCourses(childId: string) {
+export async function getChildCourses(childId: string): Promise<(CourseDetail & { course_progress: number })[]> {
   try {
     const myEnrollments = await getChildEnrollments(childId);
 
@@ -173,14 +221,26 @@ export async function getChildCourses(childId: string) {
       myEnrollments.map((e) => getEnrollmentProgressById(e.id)),
     );
 
-    const myCourses = myCoursesInitial.map((c, i) => ({
-      ...c,
-      course_progress: myEnrollmentsProgresses[i]?.percentage,
-    }));
+    const myCourses = myCoursesInitial
+      .map((c, i) => {
+        if (!c) return null;
+        return {
+          ...c,
+          course_progress: myEnrollmentsProgresses[i]?.percentage ?? 0,
+        };
+      })
+      .filter((c): c is CourseDetail & { course_progress: number } => c !== null);
 
     return myCourses;
-  } catch (error: any) {
-    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Failed to load child courses:", error);
     return [];
   }
@@ -211,13 +271,20 @@ export async function getChildCourses(childId: string) {
 //     return null;
 //   }
 // }
-export async function getInstructorById(id: string | number) {
+export async function getInstructorById(id: string | number): Promise<InstructorDetail | null> {
   try {
     const apiClient = await getAuthApiClient();
-    const { data } = await apiClient.get(`/api/users/instructors/${id}/`);
+    const { data } = await apiClient.get<InstructorDetail>(`/api/users/instructors/${id}/`);
     return data;
-  } catch (error: any) {
-    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Failed to fetch instructor details:", error);
     return null;
   }

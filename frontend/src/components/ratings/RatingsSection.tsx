@@ -15,13 +15,43 @@ interface RatingsSectionProps {
   courseId?: number; // Needed for instructor rating
 }
 
+interface RatingItem {
+  id: number;
+  rater_name: string;
+  rating: number;
+  feedback: string;
+  created_at: string;
+  course_name?: string;
+}
+
+interface RatingsStatistics {
+  average_rating: number | null;
+  total_ratings: number;
+  student_ratings_count: number;
+  student_average: number | null;
+  parent_ratings_count: number;
+  parent_average: number | null;
+}
+
+interface RatingsData {
+  ratings: {
+    student_ratings: RatingItem[];
+    parent_ratings: RatingItem[];
+  };
+  statistics: RatingsStatistics;
+}
+
+interface DisplayReview extends RatingItem {
+  type: "student" | "parent";
+}
+
 const RatingsSection: React.FC<RatingsSectionProps> = ({
   type,
   id,
   showForm = false,
   courseId,
 }) => {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<RatingsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -33,8 +63,8 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
           ? await getCourseRatings(id)
           : await getInstructorRatings(id as number);
 
-      if (result.success) {
-        setData(result.data);
+      if (result.success && result.data) {
+        setData(result.data as RatingsData);
       }
       setLoading(false);
     };
@@ -52,12 +82,15 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
 
   if (!data) return null;
 
-  const allReviews = [
-    ...data.ratings.student_ratings.map((r: any) => ({
+  const allReviews: DisplayReview[] = [
+    ...data.ratings.student_ratings.map((r: RatingItem) => ({
       ...r,
-      type: "student",
+      type: "student" as const,
     })),
-    ...data.ratings.parent_ratings.map((r: any) => ({ ...r, type: "parent" })),
+    ...data.ratings.parent_ratings.map((r: RatingItem) => ({
+      ...r,
+      type: "parent" as const,
+    })),
   ].sort(
     (a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
@@ -80,7 +113,7 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
         <div className="col-span-2 tablet:col-span-1 w-full space-y-8">
           {allReviews.length > 0 ? (
             <div className="flex flex-col gap-6">
-              {allReviews.map((review: any) => (
+              {allReviews.map((review) => (
                 <ReviewCard
                   key={`${review.type}-${review.id}`}
                   reviewerName={review.rater_name}

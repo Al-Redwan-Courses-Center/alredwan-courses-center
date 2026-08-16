@@ -3,6 +3,8 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import type { WeeklySchedule } from "@/actions/admin-schedules";
+import type { CourseListItem } from "@/types/entities/courses";
+import type { Instructor } from "@/types/entities/instructors";
 import {
   Modal,
   ModalContent,
@@ -31,8 +33,8 @@ interface AddScheduleModalProps {
     instructorId?: number,
   ) => Promise<void>;
   defaultType?: "lecture" | "supervision";
-  courses?: any[];
-  instructors?: any[];
+  courses?: CourseListItem[];
+  instructors?: Instructor[];
 }
 
 export default function AddScheduleModal({
@@ -99,9 +101,7 @@ export default function AddScheduleModal({
         course_name: selectedCourse?.name || "إشراف",
         instructor_name:
           type === "lecture"
-            ? selectedCourse?.instructor?.user?.first_name
-              ? `${selectedCourse.instructor.user.first_name} ${selectedCourse.instructor.user.last_name}`
-              : "غير محدد"
+            ? selectedCourse?.instructor?.name || "غير محدد"
             : selectedInstructor?.name || "غير محدد",
         weekday: selectedDay,
         weekday_display: DAYS.find((d) => d.value === selectedDay)?.label || "",

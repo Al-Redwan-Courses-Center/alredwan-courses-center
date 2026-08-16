@@ -3,6 +3,7 @@
 import { Star } from "lucide-react";
 import { useState } from "react";
 import { rateAttendance } from "@/actions/admin-attendances";
+import type { StaffAttendanceDetail } from "@/types/entities/staff-attendance";
 import Button from "@/components/ui/Button";
 import FieldSetInput from "@/components/ui/FieldSetInput";
 import {
@@ -20,7 +21,7 @@ interface AttendanceRatingModalProps {
   instructorName: string;
   initialRating?: number;
   initialNotes?: string;
-  onSuccess: (updatedAttendance: any) => void;
+  onSuccess: (updatedAttendance: StaffAttendanceDetail) => void;
 }
 
 export default function AttendanceRatingModal({

@@ -12,6 +12,8 @@ import {
   deleteSupervisionSchedule,
   type WeeklySchedule,
 } from "@/actions/admin-schedules";
+import type { CourseListItem } from "@/types/entities/courses";
+import type { Instructor } from "@/types/entities/instructors";
 import DeleteIcon from "@/components/icons/deleteIcon.svg";
 import MicrosoftExcelLogo from "@/components/icons/microsoftExcelLogo.svg";
 import SearchIcon from "@/components/icons/searchIcon.svg";
@@ -50,8 +52,8 @@ export default function SeasonSchedulesView({
   instructors = [],
 }: {
   initialSchedules: WeeklySchedule[];
-  courses?: any[];
-  instructors?: any[];
+  courses?: CourseListItem[];
+  instructors?: Instructor[];
 }) {
   const router = useRouter();
   const [schedules, setSchedules] =

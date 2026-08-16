@@ -20,7 +20,7 @@ interface DataViewContext<T> {
   columnSizing: string;
   layout: "table" | "cards";
   setLayout: Dispatch<SetStateAction<"table" | "cards">>;
-  data: any[];
+  data: T[];
   page: number;
   numPages: number;
   maxItemsPerPage: number;

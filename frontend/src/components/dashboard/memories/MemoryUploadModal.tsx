@@ -192,10 +192,11 @@ export default function MemoryUploadModal({
         const errorData = await response.json().catch(() => ({}));
         toast.error(errorData.detail || "فشل تسجيل الرفع في النظام");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setIsUploading(false);
       setUploadProgress(0);
-      toast.error(err.message || "حدث خطأ في الاتصال");
+      const errorMessage = err instanceof Error ? err.message : "حدث خطأ في الاتصال";
+      toast.error(errorMessage);
     }
   };
 

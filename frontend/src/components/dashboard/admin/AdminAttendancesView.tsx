@@ -37,7 +37,10 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import { cn, formatTime, toHindiDigits } from "@/lib/utils";
 import type { StaffAttendanceListItem } from "@/types/entities/staff-attendance";
-import type { StaffAttendanceServerEvent } from "@/types/entities/staff-attendance-events";
+import type {
+  StaffAttendanceServerEvent,
+  StaffAttendanceStatus,
+} from "@/types/entities/staff-attendance-events";
 import AttendanceGenerationModal from "./AttendanceGenerationModal";
 import AttendanceRatingModal from "./AttendanceRatingModal";
 
@@ -250,7 +253,7 @@ function StaffAttendanceRow({
             setIsMarkingAbsent(false);
             if (result)
               onUpdate({
-                status: result.status as any,
+                status: result.status,
                 check_in_time: result.check_in_time,
                 check_out_time: result.check_out_time,
               });
@@ -274,7 +277,7 @@ function StaffAttendanceRow({
               setIsCheckingIn(false);
               if (result)
                 onUpdate({
-                  status: result.status as any,
+                  status: result.status,
                   check_in_time: result.check_in_time,
                   check_out_time: result.check_out_time,
                 });
@@ -297,7 +300,7 @@ function StaffAttendanceRow({
               setIsCheckingOut(false);
               if (result)
                 onUpdate({
-                  status: result.status as any,
+                  status: result.status,
                   check_in_time: result.check_in_time,
                   check_out_time: result.check_out_time,
                 });
@@ -622,7 +625,7 @@ export default function AdminAttendancesView({
     if (!lastJsonMessage) return;
     if (lastJsonMessage.type === "attendance_update") {
       const { check_in_time, check_out_time, id, status } =
-        lastJsonMessage.data as any;
+        lastJsonMessage.data as { check_in_time: string | null; check_out_time: string | null; id: number; status: StaffAttendanceStatus };
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setAttendances((prev) =>
         prev.map((a) =>
@@ -630,7 +633,7 @@ export default function AdminAttendancesView({
         ),
       );
     } else if (lastJsonMessage.type === "attendance_rated") {
-      const { id, rating } = lastJsonMessage.data as any;
+      const { id, rating } = lastJsonMessage.data as { id: number; rating: number | string };
       setAttendances((prev) =>
         prev.map((a) => (a.id === id ? { ...a, rating: Number(rating) } : a)),
       );
@@ -763,7 +766,10 @@ export default function AdminAttendancesView({
           instructorName={ratingModal.attendance.instructor_name}
           initialRating={ratingModal.attendance.rating || 0}
           onSuccess={(updated) =>
-            updateAttendance(ratingModal.attendance!.id, updated)
+            updateAttendance(ratingModal.attendance!.id, {
+              ...updated,
+              rating: updated.rating ? Number(updated.rating) : null,
+            })
           }
         />
       )}
