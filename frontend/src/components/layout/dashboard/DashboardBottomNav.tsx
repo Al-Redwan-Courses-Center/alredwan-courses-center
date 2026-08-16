@@ -1,13 +1,6 @@
-import {
-  type DashboardNavItem,
-  getDashboardNavItems,
-} from "@/components/layout/dashboard/dashboardNavConfig";
+import { getDashboardNavItems } from "@/components/layout/dashboard/dashboardNavConfig";
 import NavLink from "@/components/ui/navigation/NavLink";
 import type { UserEntity } from "@/types/auth";
-
-function isBottomNavItem(item: DashboardNavItem) {
-  return !item.nestedNavLinks?.length;
-}
 
 export default function DashboardBottomNav({
   role,

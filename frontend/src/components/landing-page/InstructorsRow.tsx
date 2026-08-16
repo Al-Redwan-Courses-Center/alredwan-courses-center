@@ -66,9 +66,6 @@ export default function InstructorsRow({ instructors }: InstructorsRowProps) {
                   })}{" "}
                   خبرة
                 </li>
-                {/* <li className="mt-4 max-w-50 text-[1.2rem]">
-                  {instructor.qualification}
-                </li> */}
               </ul>
             </div>
           </div>
