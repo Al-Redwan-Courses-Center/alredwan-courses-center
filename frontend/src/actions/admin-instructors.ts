@@ -1,32 +1,17 @@
 import { unwrapPaginated } from "@/lib/api";
 import { getAuthApiClient } from "@/lib/auth-api";
 import type { Instructor } from "@/types/entities/instructors";
-import { getClientAccessToken } from "./temp";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
 /**
  * Fetch detailed instructor profile information.
  */
 export async function getInstructorDetail(instructorId: string | number) {
   try {
-    const token = await getClientAccessToken();
-    const response = await fetch(
-      `${API_BASE_URL}/api/users/instructors/${instructorId}/`,
-      {
-        headers: {
-          Authorization: `JWT ${token}`,
-        },
-        next: { revalidate: 60 }, // Cache for 1 minute
-      },
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.get(
+      `/api/users/instructors/${instructorId}/`,
     );
 
-    if (!response.ok) {
-      if (response.status === 404) return null;
-      throw new Error("Failed to fetch instructor detail");
-    }
-
-    return await response.json();
+    return data;
   } catch (error: unknown) {
     if (
       error &&
@@ -46,22 +31,11 @@ export async function getInstructorDetail(instructorId: string | number) {
  */
 export async function getSupervisorSchedules(instructorId: string | number) {
   try {
-    const token = await getClientAccessToken();
-    const response = await fetch(
-      `${API_BASE_URL}/api/attendance/schedules/?instructor=${instructorId}`,
-      {
-        headers: {
-          Authorization: `JWT ${token}`,
-        },
-        next: { revalidate: 60 },
-      },
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.get(
+      `/api/attendance/schedules/?instructor=${instructorId}`,
     );
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch supervisor schedules");
-    }
-
-    const data = await response.json();
     return data.results || data;
   } catch (error: unknown) {
     if (
@@ -84,22 +58,10 @@ export async function getInstructorAttendanceHistory(
   instructorId: string | number,
 ) {
   try {
-    const token = await getClientAccessToken();
-    const response = await fetch(
-      `${API_BASE_URL}/api/attendance/instructor/${instructorId}/`,
-      {
-        headers: {
-          Authorization: `JWT ${token}`,
-        },
-        next: { revalidate: 60 },
-      },
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.get(
+      `/api/attendance/instructor/${instructorId}/`,
     );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch instructor attendance history");
-    }
-
-    const data = await response.json();
     return data.results || data;
   } catch (error: unknown) {
     if (

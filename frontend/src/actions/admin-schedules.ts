@@ -6,6 +6,53 @@ import { getAuthApiClient } from "@/lib/auth-api";
 import type { CourseListItem, CourseScheduleDetail } from "@/types/entities/courses";
 import type { SupervisorSchedule } from "@/types/entities/schedules";
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (!isAxiosError(error)) {
+    return fallback;
+  }
+
+  const data = error.response?.data;
+  if (!data) {
+    return fallback;
+  }
+
+  // If data is a string (e.g. Django debug traceback or raw HTML)
+  if (typeof data === "string") {
+    const trimmed = data.trim();
+    if (trimmed.startsWith("<!DOCTYPE") || trimmed.includes("traceback") || trimmed.includes("wsgi")) {
+      return fallback;
+    }
+    return trimmed;
+  }
+
+  // If data is an object
+  if (typeof data === "object") {
+    // 1. Check for 'detail' key
+    if ("detail" in data && typeof data.detail === "string") {
+      return data.detail;
+    }
+
+    // 2. Check for 'non_field_errors' or other array messages
+    if ("non_field_errors" in data && Array.isArray(data.non_field_errors)) {
+      return data.non_field_errors.join(", ");
+    }
+
+    // 3. Fallback to extracting validation error values
+    const values = Object.values(data);
+    if (values.length > 0) {
+      const firstVal = values[0];
+      if (Array.isArray(firstVal)) {
+        return firstVal.join(", ");
+      }
+      if (typeof firstVal === "string") {
+        return firstVal;
+      }
+    }
+  }
+
+  return fallback;
+}
+
 export interface Season {
   id: number;
   name: string;
@@ -166,10 +213,7 @@ export async function createCourseSchedule(
       throw error;
     }
     console.error("Failed to create course schedule", error);
-    let message = "فشل في إنشاء موعد الدورة";
-    if (isAxiosError(error) && error.response?.data) {
-      message = JSON.stringify(error.response.data);
-    }
+    const message = getErrorMessage(error, "فشل في إنشاء موعد الدورة");
     return { success: false, error: message };
   }
 }
@@ -194,10 +238,7 @@ export async function createSupervisionSchedule(data: {
       throw error;
     }
     console.error("Failed to create supervision schedule", error);
-    let message = "فشل في إنشاء فترة الإشراف";
-    if (isAxiosError(error) && error.response?.data) {
-      message = JSON.stringify(error.response.data);
-    }
+    const message = getErrorMessage(error, "فشل في إنشاء فترة الإشراف");
     return { success: false, error: message };
   }
 }

@@ -15,6 +15,19 @@ import {
 } from "@/components/ui/Modal";
 import type { ParticipantSearchResult } from "@/types/entities";
 
+const getApiBaseUrl = () => {
+  const url = process.env.NEXT_PUBLIC_API_URL;
+  if (!url) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("NEXT_PUBLIC_API_URL is missing in production environment!");
+    }
+    return "http://localhost:8000";
+  }
+  return url;
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -110,7 +123,7 @@ export default function MemoryUploadModal({
     try {
       // 2. Get Cloudinary Signature from Django
       const sigRes = await fetch(
-        "http://localhost:8000/api/memories/cloudinary/signature/",
+        `${API_BASE_URL}/api/memories/cloudinary/signature/`,
         {
           headers: { Authorization: `JWT ${tokenResult.token}` },
         },
@@ -171,7 +184,7 @@ export default function MemoryUploadModal({
       studentIds.forEach((id) => finalFormData.append("students", id));
 
       const response = await fetch(
-        "http://localhost:8000/api/memories/upload/",
+        `${API_BASE_URL}/api/memories/upload/`,
         {
           method: "POST",
           headers: { Authorization: `JWT ${tokenResult.token}` },

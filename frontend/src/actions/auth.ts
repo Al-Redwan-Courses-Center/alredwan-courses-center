@@ -10,12 +10,20 @@ import { publicApiClient } from "@/lib/api";
 import type { SignupInputs, UserEntity } from "@/types/auth";
 
 export async function signUp(data: SignupInputs) {
-  let errors: Record<keyof SignupInputs, string[]> | null = null;
+  let errors: Record<string, string[]> | null = null;
 
   try {
     await publicApiClient.post("/auth/users/", data);
   } catch (err) {
-    if (axios.isAxiosError(err)) errors = err.response?.data;
+    if (axios.isAxiosError(err) && err.response?.data) {
+      errors = err.response.data as Record<string, string[]>;
+    } else {
+      errors = {
+        error: [
+          "حدث خطأ في الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.",
+        ],
+      };
+    }
   }
 
   return { errors };
@@ -65,6 +73,22 @@ export async function getServerJwtToken() {
       token: tokenCookie.value,
       secret: process.env.NEXTAUTH_SECRET!,
     });
+
+    if (!decodedToken) {
+      return null;
+    }
+    console.log(decodedToken);
+
+    if (decodedToken.exp) {
+      if (typeof decodedToken.exp !== "number") {
+        console.warn("No expiry");
+        return null;
+      }
+      if (decodedToken.exp < Math.floor(Date.now() / 1000)) {
+        console.warn("Token has expired!");
+        return null;
+      }
+    }
 
     return decodedToken as JWT &
       UserEntity & {
