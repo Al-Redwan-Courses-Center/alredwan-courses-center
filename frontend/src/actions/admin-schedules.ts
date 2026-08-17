@@ -223,6 +223,8 @@ export async function createSupervisionSchedule(data: {
   day_of_week: number;
   start_time: string;
   end_time: string;
+  grace_period_minutes?: number;
+  auto_absent_after_minutes?: number;
 }) {
   try {
     const apiClient = await getAuthApiClient();
@@ -281,5 +283,54 @@ export async function deleteSupervisionSchedule(scheduleId: number) {
     }
     console.error("Failed to delete supervision schedule", error);
     return { success: false, error: "فشل في حذف فترة الإشراف" };
+  }
+}
+
+export async function getOnlySupervisorSchedules(params?: { instructor?: number; day_of_week?: number }) {
+  try {
+    const apiClient = await getAuthApiClient();
+    const response = await apiClient.get("/api/attendance/schedules/?page_size=100", { params });
+    return unwrapPaginated<SupervisorSchedule>(response.data);
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
+    console.error("Failed to fetch supervisor schedules", error);
+    return [];
+  }
+}
+
+export async function updateSupervisionSchedule(
+  scheduleId: number,
+  data: {
+    instructor: number;
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+    grace_period_minutes?: number;
+    auto_absent_after_minutes?: number;
+  }
+) {
+  try {
+    const apiClient = await getAuthApiClient();
+    const response = await apiClient.patch(`/api/attendance/schedules/${scheduleId}/`, data);
+    return { success: true, data: response.data };
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
+    console.error("Failed to update supervision schedule", error);
+    const message = getErrorMessage(error, "فشل في تعديل فترة الإشراف");
+    return { success: false, error: message };
   }
 }

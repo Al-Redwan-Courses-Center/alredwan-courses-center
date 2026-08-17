@@ -15,7 +15,6 @@ export default async function Page() {
   const seasons: Season[] = await getSeasons();
   const activeSeason = seasons.find((s) => s.is_active);
 
-  // Real schedules from API
   const dbSchedules = await getAllSchedules({
     season: activeSeason?.id,
   });

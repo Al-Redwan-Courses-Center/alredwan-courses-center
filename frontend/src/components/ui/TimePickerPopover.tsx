@@ -107,25 +107,34 @@ function TimeColumn({
   isNumeric?: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isReady, setIsReady] = useState(false);
+  const timeoutRef = useRef<any>(null);
 
   useEffect(() => {
     const idx = items.indexOf(selected);
     if (scrollRef.current && idx !== -1) {
-      scrollRef.current.scrollTop = idx * 40;
+      const target = idx * 40;
+      if (Math.abs(scrollRef.current.scrollTop - target) > 1) {
+        scrollRef.current.scrollTop = target;
+      }
     }
-    const timer = setTimeout(() => setIsReady(true), 150);
-    return () => clearTimeout(timer);
   }, [items, selected]);
 
-  const handleScroll = () => {
-    if (!scrollRef.current || !isReady) return;
-    const scrollTop = scrollRef.current.scrollTop;
-    const idx = Math.round(scrollTop / 40);
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
-    if (items[idx] !== undefined && items[idx] !== selected) {
-      onSelect(items[idx]);
-    }
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      if (!scrollRef.current) return;
+      const idx = Math.round(scrollRef.current.scrollTop / 40);
+      if (items[idx] !== undefined && items[idx] !== selected) {
+        onSelect(items[idx]);
+      }
+    }, 80);
   };
 
   return (

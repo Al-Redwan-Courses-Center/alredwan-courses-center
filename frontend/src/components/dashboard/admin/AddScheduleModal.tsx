@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import type { WeeklySchedule } from "@/actions/admin-schedules";
 import type { CourseListItem } from "@/types/entities/courses";
@@ -28,13 +28,23 @@ interface AddScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (
-    schedule: Partial<WeeklySchedule>,
+    schedule: Partial<WeeklySchedule> & { grace_period_minutes?: number; auto_absent_after_minutes?: number },
     courseId?: number,
     instructorId?: number,
   ) => Promise<void>;
   defaultType?: "lecture" | "supervision";
+  fixedType?: "lecture" | "supervision";
   courses?: CourseListItem[];
   instructors?: Instructor[];
+  editSchedule?: {
+    id: number;
+    instructor: number;
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+    grace_period_minutes: number;
+    auto_absent_after_minutes: number;
+  };
 }
 
 export default function AddScheduleModal({
@@ -42,18 +52,59 @@ export default function AddScheduleModal({
   onClose,
   onAdd,
   defaultType = "lecture",
+  fixedType,
   courses = [],
   instructors = [],
+  editSchedule,
 }: AddScheduleModalProps) {
-  const [type, setType] = useState<"lecture" | "supervision">(defaultType);
+  const [type, setType] = useState<"lecture" | "supervision">(fixedType || defaultType);
   const [courseId, setCourseId] = useState<number | "">("");
   const [instructorId, setInstructorId] = useState<number | "">("");
   const [selectedDay, setSelectedDay] = useState<number>(0);
   const [startTime, setStartTime] = useState("06:00 pm");
   const [endTime, setEndTime] = useState("07:00 pm");
+  const [gracePeriod, setGracePeriod] = useState<number>(20);
+  const [autoAbsent, setAutoAbsent] = useState<number>(60);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Helper to convert "06:00 pm" to "18:00:00"
+  const convertTo12HourFormat = (timeStr: string) => {
+    if (!timeStr) return "06:00 pm";
+    try {
+      const parts = timeStr.split(":");
+      let hours = parseInt(parts[0], 10);
+      const minutes = parts[1];
+      const period = hours >= 12 ? "pm" : "am";
+      if (hours > 12) {
+        hours = hours - 12;
+      } else if (hours === 0) {
+        hours = 12;
+      }
+      return `${hours.toString().padStart(2, "0")}:${minutes} ${period}`;
+    } catch (e) {
+      return timeStr;
+    }
+  };
+
+  useEffect(() => {
+    if (editSchedule) {
+      setType("supervision");
+      setInstructorId(editSchedule.instructor);
+      setSelectedDay(editSchedule.day_of_week);
+      setStartTime(convertTo12HourFormat(editSchedule.start_time));
+      setEndTime(convertTo12HourFormat(editSchedule.end_time));
+      setGracePeriod(editSchedule.grace_period_minutes);
+      setAutoAbsent(editSchedule.auto_absent_after_minutes);
+    } else {
+      setType(fixedType || defaultType);
+      setInstructorId("");
+      setSelectedDay(0);
+      setStartTime("06:00 pm");
+      setEndTime("07:00 pm");
+      setGracePeriod(20);
+      setAutoAbsent(60);
+    }
+  }, [editSchedule, isOpen]);
+
   const convertTo24HourFormat = (timeStr: string) => {
     if (!timeStr) return "00:00:00";
     try {
@@ -109,6 +160,8 @@ export default function AddScheduleModal({
         end_time: convertTo24HourFormat(endTime),
         season_name: selectedCourse?.season?.name || "-",
         student_count: selectedCourse?.enrolled_count || 0,
+        grace_period_minutes: gracePeriod,
+        auto_absent_after_minutes: autoAbsent,
       },
       Number(courseId),
       Number(instructorId),
@@ -116,7 +169,6 @@ export default function AddScheduleModal({
 
     setIsSubmitting(false);
     onClose();
-    // Reset form
     setCourseId("");
     setInstructorId("");
   };
@@ -126,40 +178,44 @@ export default function AddScheduleModal({
       <ModalContent className="sm:max-w-[600px] bg-white rounded-3xl p-0 overflow-hidden">
         <ModalHeader className="bg-olive-300 py-10 px-12">
           <ModalTitle className="text-white text-4xl font-medad text-right">
-            {type === "lecture" ? "إضافة دورة جديدة" : "إضافة فترة إشراف"}
+            {editSchedule
+              ? "تعديل فترة الإشراف"
+              : type === "lecture"
+              ? "إضافة دورة جديدة"
+              : "إضافة فترة إشراف"}
           </ModalTitle>
         </ModalHeader>
 
         <form onSubmit={handleSubmit} className="p-12 flex flex-col gap-10">
-          {/* Type Toggle */}
-          <div className="flex bg-[#F3F3F5] p-2 rounded-2xl gap-2">
-            <button
-              type="button"
-              onClick={() => setType("lecture")}
-              className={cn(
-                "flex-1 py-4 rounded-xl text-2xl font-bold transition-all",
-                type === "lecture"
-                  ? "bg-white shadow-md text-olive-700"
-                  : "text-gray-400",
-              )}
-            >
-              دورة تعليمية
-            </button>
-            <button
-              type="button"
-              onClick={() => setType("supervision")}
-              className={cn(
-                "flex-1 py-4 rounded-xl text-2xl font-bold transition-all",
-                type === "supervision"
-                  ? "bg-white shadow-md text-olive-700"
-                  : "text-gray-400",
-              )}
-            >
-              فترة إشراف
-            </button>
-          </div>
+          {!fixedType && (
+            <div className="flex bg-[#F3F3F5] p-2 rounded-2xl gap-2">
+              <button
+                type="button"
+                onClick={() => setType("lecture")}
+                className={cn(
+                  "flex-1 py-4 rounded-xl text-2xl font-bold transition-all",
+                  type === "lecture"
+                    ? "bg-white shadow-md text-olive-700"
+                    : "text-gray-400"
+                )}
+              >
+                دورة تعليمية
+              </button>
+              <button
+                type="button"
+                onClick={() => setType("supervision")}
+                className={cn(
+                  "flex-1 py-4 rounded-xl text-2xl font-bold transition-all",
+                  type === "supervision"
+                    ? "bg-white shadow-md text-olive-700"
+                    : "text-gray-400"
+                )}
+              >
+                فترة إشراف
+              </button>
+            </div>
+          )}
 
-          {/* Inputs */}
           {type === "lecture" ? (
             <div className="flex flex-col gap-4">
               <label className="text-2xl font-bold text-gray-600 mr-2 text-right">
@@ -202,7 +258,6 @@ export default function AddScheduleModal({
             </div>
           )}
 
-          {/* Day & Time Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="flex flex-col gap-4">
               <label className="text-2xl font-bold text-gray-600 mr-2 text-right">
@@ -229,7 +284,6 @@ export default function AddScheduleModal({
                 <TimePickerPopover
                   value={endTime}
                   onChange={setEndTime}
-                  usePortal={false}
                   trigger={
                     <div className="text-xl font-bold text-gray-700 cursor-pointer hover:text-olive-500">
                       {endTime}
@@ -240,7 +294,6 @@ export default function AddScheduleModal({
                 <TimePickerPopover
                   value={startTime}
                   onChange={setStartTime}
-                  usePortal={false}
                   trigger={
                     <div className="text-xl font-bold text-gray-700 cursor-pointer hover:text-olive-500">
                       {startTime}
@@ -251,6 +304,35 @@ export default function AddScheduleModal({
               </div>
             </div>
           </div>
+
+          {type === "supervision" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="flex flex-col gap-4">
+                <label className="text-2xl font-bold text-gray-600 mr-2 text-right">
+                  فترة السماح (بالدقائق)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={gracePeriod}
+                  onChange={(e) => setGracePeriod(Number(e.target.value))}
+                  className="bg-[#F3F3F5] p-6 rounded-2xl text-2xl focus:outline-none focus:ring-2 focus:ring-olive-300 text-right"
+                />
+              </div>
+              <div className="flex flex-col gap-4">
+                <label className="text-2xl font-bold text-gray-600 mr-2 text-right">
+                  الغياب التلقائي بعد (بالدقائق)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={autoAbsent}
+                  onChange={(e) => setAutoAbsent(Number(e.target.value))}
+                  className="bg-[#F3F3F5] p-6 rounded-2xl text-2xl focus:outline-none focus:ring-2 focus:ring-olive-300 text-right"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex gap-6 mt-6">

@@ -43,6 +43,11 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       icon: <PanelsIcon />,
     },
     {
+      label: "جدول الإشراف",
+      href: "/dashboard/supervisor-schedules",
+      icon: <MosqueIcon />,
+    },
+    {
       label: "جميع الدورات",
       href: "/dashboard/courses",
       icon: <AllCoursesIcon />,

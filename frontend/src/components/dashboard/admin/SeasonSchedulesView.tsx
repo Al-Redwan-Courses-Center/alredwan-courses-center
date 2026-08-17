@@ -56,23 +56,16 @@ export default function SeasonSchedulesView({
   instructors?: Instructor[];
 }) {
   const router = useRouter();
-  const [schedules, setSchedules] =
-    useState<WeeklySchedule[]>(initialSchedules);
+  const [schedules, setSchedules] = useState<WeeklySchedule[]>(initialSchedules);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [startTime, setStartTime] = useState("06:00 pm");
   const [endTime, setEndTime] = useState("11:00 pm");
   const [sortBy, setSortBy] = useState<"name" | "time">("time");
-  const [filterType, setFilterType] = useState<
-    "all" | "lecture" | "supervision"
-  >("all");
+  const [filterType, setFilterType] = useState<"all" | "lecture" | "supervision">("all");
 
-  // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [modalDefaultType, setModalDefaultType] = useState<
-    "lecture" | "supervision"
-  >("lecture");
-
+  const [modalDefaultType, setModalDefaultType] = useState<"lecture" | "supervision">("lecture");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [scheduleToDelete, setScheduleToDelete] = useState<number | null>(null);
 
@@ -105,7 +98,6 @@ export default function SeasonSchedulesView({
 
       let res;
       if (schedule.type === "lecture") {
-        // Find the course ID for this schedule
         const course = courses.find((c) => c.name === schedule.course_name);
         if (course) {
           res = await deleteCourseSchedule(course.id, schedule.id);
@@ -131,7 +123,7 @@ export default function SeasonSchedulesView({
   const handleAdd = async (
     newSchedule: Partial<WeeklySchedule>,
     courseId?: number,
-    instructorId?: number,
+    instructorId?: number
   ) => {
     let res;
     if (newSchedule.type === "lecture" && courseId) {
@@ -151,11 +143,10 @@ export default function SeasonSchedulesView({
 
     if (res?.success) {
       toast.success("تمت الإضافة بنجاح");
-      router.refresh(); // Refresh the page data from server
-      // We can also optimistically update local state while server refreshes
+      router.refresh();
       const schedule = {
         ...newSchedule,
-        id: res.data?.id || Math.max(...schedules.map((s) => s.id)) + 1,
+        id: res.data?.id || Math.max(...schedules.map((s) => s.id), 0) + 1,
       } as WeeklySchedule;
       setSchedules((prev) => [schedule, ...prev]);
     } else {
@@ -185,7 +176,7 @@ export default function SeasonSchedulesView({
     link.setAttribute("href", encodedUri);
     link.setAttribute(
       "download",
-      `جدول_المواعيد_${new Date().toLocaleDateString()}.csv`,
+      `جدول_المواعيد_${new Date().toLocaleDateString()}.csv`
     );
     document.body.appendChild(link);
     link.click();
@@ -195,7 +186,6 @@ export default function SeasonSchedulesView({
 
   return (
     <div className="flex flex-col gap-12 pb-40">
-      {/* Day Selector & Time Filters */}
       <div className="flex items-center gap-6 overflow-x-auto no-scrollbar pb-2">
         <div className="flex items-center gap-10 flex-wrap">
           <div className="flex items-center gap-4">
@@ -243,7 +233,7 @@ export default function SeasonSchedulesView({
                     "size-12 flex items-center justify-center rounded-lg text-2xl font-bold transition-all",
                     selectedDay === day.value
                       ? "bg-olive-300 text-white shadow-lg scale-110"
-                      : "text-gray-400 hover:bg-gray-200",
+                      : "text-gray-400 hover:bg-gray-200"
                   )}
                 >
                   {day.label}
@@ -266,7 +256,6 @@ export default function SeasonSchedulesView({
         </div>
       </div>
 
-      {/* Search Bar & Dropdowns */}
       <div className="flex items-center gap-6">
         <div className="flex-1 min-w-[300px] shadow-soft bg-[#F3F3F5] rounded-[2.5rem_0] flex items-center gap-8 px-10 py-4">
           <Image src={SearchIcon} alt="Search" className="size-8 shrink-0" />
@@ -310,8 +299,8 @@ export default function SeasonSchedulesView({
                 {filterType === "all"
                   ? "كل الفئات"
                   : filterType === "lecture"
-                    ? "محاضرات"
-                    : "إشراف"}
+                  ? "محاضرات"
+                  : "إشراف"}
               </span>
               <ChevronDown className="size-6 text-gray-400" />
             </button>
@@ -346,7 +335,6 @@ export default function SeasonSchedulesView({
         </button>
       </div>
 
-      {/* Single Data Table */}
       <div className="mt-10">
         <DataViewLegacy
           gridLayout="grid-cols-[minmax(0,0.4fr)_minmax(0,1.8fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.5fr)]"
@@ -362,7 +350,7 @@ export default function SeasonSchedulesView({
                   م
                 </DataViewCellLegacy>
                 <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">
-                  الدورة
+                  الدورة / الفئة
                 </DataViewCellLegacy>
                 <DataViewCellLegacy className="font-['Medad_Platinum'] font-normal text-[20px] text-gray-500 leading-[18px]">
                   المحاضر
@@ -377,7 +365,6 @@ export default function SeasonSchedulesView({
                   عدد الطلاب
                 </DataViewCellLegacy>
                 <DataViewCellLegacy className="flex items-center justify-end">
-                  {/* Redundant add button removed from here */}
                 </DataViewCellLegacy>
               </DataViewHeaderLegacy>
 
@@ -441,7 +428,6 @@ export default function SeasonSchedulesView({
         </DataViewLegacy>
       </div>
 
-      {/* Add Modal */}
       <AddScheduleModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -451,7 +437,6 @@ export default function SeasonSchedulesView({
         instructors={instructors}
       />
 
-      {/* Delete Confirmation Modal */}
       <ConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
