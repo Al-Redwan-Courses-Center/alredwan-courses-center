@@ -2,11 +2,13 @@
 
 import { Loader2, Send } from "lucide-react";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { rateCourse, rateInstructor } from "@/actions/ratings";
+import { getInstructorCourses } from "@/actions/courses";
 import RatingStars from "@/components/shared/RatingStars";
 import Button from "@/components/ui/Button";
+import type { CourseListItem } from "@/types/entities";
 
 interface RatingFormProps {
   type: "course" | "instructor";
@@ -26,6 +28,31 @@ const RatingForm: React.FC<RatingFormProps> = ({
   const [rating, setRating] = useState<number>(10);
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  // States for selecting a course when rating an instructor
+  const [courses, setCourses] = useState<CourseListItem[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState<number | "">("");
+  const [loadingCourses, setLoadingCourses] = useState(false);
+
+  useEffect(() => {
+    if (type === "instructor") {
+      const fetchCourses = async () => {
+        setLoadingCourses(true);
+        try {
+          const fetchedCourses = await getInstructorCourses(String(id));
+          setCourses(fetchedCourses);
+          if (fetchedCourses.length > 0) {
+            setSelectedCourseId(fetchedCourses[0].id);
+          }
+        } catch (error) {
+          console.error("Error fetching instructor courses:", error);
+        } finally {
+          setLoadingCourses(false);
+        }
+      };
+      fetchCourses();
+    }
+  }, [type, id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,12 +63,15 @@ const RatingForm: React.FC<RatingFormProps> = ({
       if (type === "course") {
         result = await rateCourse(id, rating, feedback);
       } else {
-        if (!instructorId || !courseId) {
-          toast.error("بيانات المدرس أو الدورة ناقصة");
+        const finalInstructorId = instructorId || Number(id);
+        const finalCourseId = courseId || Number(selectedCourseId);
+
+        if (!finalInstructorId || !finalCourseId) {
+          toast.error("يرجى اختيار الدورة التدريبية");
           setLoading(false);
           return;
         }
-        result = await rateInstructor(instructorId, courseId, rating, feedback);
+        result = await rateInstructor(finalInstructorId, finalCourseId, rating, feedback);
       }
 
       if (result.success) {
@@ -71,6 +101,34 @@ const RatingForm: React.FC<RatingFormProps> = ({
           رأيك يهمنا ويساعدنا في التطوير
         </p>
       </div>
+
+      {type === "instructor" && !courseId && (
+        <div className="space-y-4">
+          <label className="text-2xl font-bold text-gray-700 mr-1">
+            الدورة التدريبية
+          </label>
+          {loadingCourses ? (
+            <div className="flex items-center gap-2 text-xl text-gray-400 py-3">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>جاري تحميل الدورات...</span>
+            </div>
+          ) : (
+            <select
+              value={selectedCourseId}
+              onChange={(e) => setSelectedCourseId(Number(e.target.value))}
+              required
+              className="text-2xl w-full rounded-2xl border border-gray-200 p-6 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all mt-2 bg-white"
+            >
+              <option value="" disabled>اختر الدورة</option>
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-col items-center gap-4 py-6 bg-primary/5 rounded-2xl mt-4">
         <span className="text-2xl font-medium text-primary">

@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { Award, Calendar, Star, Users } from "lucide-react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { getUser } from "@/actions/auth";
 import { getInstructorById } from "@/actions/user";
 import InstructorProfile from "@/assets/instructor-profile.png";
 import RatingsSection from "@/components/ratings/RatingsSection";
@@ -13,6 +14,7 @@ export default async function InstructorPage({
 }) {
   const { id } = await params;
   const instructor = await getInstructorById(id);
+  const session = await getUser();
 
   if (!instructor) {
     notFound();
@@ -104,7 +106,12 @@ export default async function InstructorPage({
 
       {/* Ratings Section */}
       <div className="container mx-auto mt-12 px-6">
-        <RatingsSection type="instructor" id={id} />
+        <RatingsSection
+          type="instructor"
+          id={id}
+          showForm={session.role === "student" || session.role === "parent"}
+          courseId={undefined} // Form will fetch list of courses taught by this instructor for selection
+        />
       </div>
     </div>
   );

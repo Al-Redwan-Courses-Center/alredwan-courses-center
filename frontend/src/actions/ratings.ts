@@ -75,11 +75,16 @@ export async function rateInstructor(
 
     return { success: false, message: "حدث خطأ أثناء حفظ التقييم" };
   } catch (error: unknown) {
-    console.error("Error rating instructor:", error);
-    const message =
-      isAxiosError<{ detail: string }>(error) && error.response?.data.detail
-        ? error.response.data.detail
-        : "حدث خطأ أثناء حذف الذكرى";
+    let message = "فشل الاتصال بالخادم";
+    if (isAxiosError(error)) {
+      message =
+        error.response?.data?.non_field_errors?.[0] ||
+        error.response?.data?.detail ||
+        (typeof error.response?.data === "object" && error.response?.data
+          ? Object.values(error.response.data).flat()[0] as string
+          : null) ||
+        message;
+    }
     return {
       success: false,
       message,

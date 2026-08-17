@@ -2,6 +2,7 @@ import { parseISO } from "date-fns";
 import { ArrowRight, Book, Calendar, Clock, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { getUser } from "@/actions/auth";
 import { getCourseById } from "@/actions/courses";
 import CourseImage from "@/assets/course-img.jpg";
 import RatingsSection from "@/components/ratings/RatingsSection";
@@ -15,6 +16,7 @@ export default async function Page({
 }) {
   const { id } = await params;
   const course = await getCourseById(id);
+  const session = await getUser();
 
   if (!course) {
     return (
@@ -121,7 +123,11 @@ export default async function Page({
               </Link>
             </div>
 
-            <RatingsSection type="course" id={id} />
+            <RatingsSection
+              type="course"
+              id={id}
+              showForm={session.role === "student" || session.role === "parent"}
+            />
           </div>
 
           {/* Sidebar */}
