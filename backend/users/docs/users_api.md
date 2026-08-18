@@ -347,6 +347,69 @@ curl -X GET "http://localhost:8000/api/users/landingpageinstructors/?page=1&page
 }
 ```
 
+### 5. Download Password File
+
+**Download the generated password Excel file**
+
+- **URL:** `/api/users/staff/download-passwords/{filename}/`
+- **Method:** `GET`
+- **Permission:** Admin only
+
+#### Request
+
+**Example using cURL:**
+```bash
+curl -X GET \
+  -H "Authorization: JWT your_admin_token_here" \
+  -o staff_passwords.xlsx \
+  http://localhost:8000/api/users/staff/download-passwords/staff_passwords_20260228_143025.xlsx/
+```
+
+**Example using JavaScript:**
+```javascript
+// Download file
+const downloadUrl = '/api/users/staff/download-passwords/staff_passwords_20260228_143025.xlsx/';
+
+const response = await fetch(downloadUrl, {
+    headers: {
+        'Authorization': `JWT ${adminToken}`
+    }
+});
+
+const blob = await response.blob();
+const url = window.URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'staff_passwords.xlsx';
+a.click();
+```
+
+**Direct Browser Download:**
+```
+http://localhost:8000/api/users/staff/download-passwords/staff_passwords_20260228_143025.xlsx/
+```
+*(Must be logged in as admin)*
+
+#### Response
+
+**Success:**
+- File download starts (Excel file)
+- Content-Type: `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+
+**Error (404):**
+```json
+{
+    "error": "File not found. It may have been deleted or expired."
+}
+```
+
+**Error (404 - Expired):**
+```json
+{
+    "error": "File expired. Password files are automatically deleted after 24 hours for security."
+}
+```
+
 **Use Cases:**
 
 1. **Landing Page Display**: Show featured instructors on the home page
