@@ -1,0 +1,39 @@
+"use client";
+
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback } from "react";
+
+export function useMutateSearchParams() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const generateQueryString = useCallback(
+    (queryParams: { key: string; val: any }[]) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      queryParams.forEach(({ key, val }) => {
+        if (typeof val === "string" && !val) {
+          params.delete(key);
+        } else {
+          params.set(key, val);
+        }
+      });
+
+      return params.toString();
+    },
+    [searchParams],
+  );
+
+  function mutateSearchParams(
+    queryParams: { key: string; val: any }[],
+    replace: boolean = false,
+  ) {
+    const newUrl = `${pathname}?${generateQueryString(queryParams)}`;
+
+    if (replace) router.replace(newUrl);
+    else router.push(newUrl);
+  }
+
+  return { mutateSearchParams, searchParams };
+}

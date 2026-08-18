@@ -3,8 +3,7 @@ import ClockIcon from "@/components/icons/ClockIcon";
 import InstructorIcon from "@/components/icons/InstructorIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import { statistics as statisticsApi, Statistics } from "@/dev-data/statistics";
-import cn from "@/utils/cn";
-import { toHindiDigits } from "@/utils/toHindiDigits";
+import { cn, toHindiDigits } from "@/lib/utils";
 
 const cardStyles = cn(
   "bg-olive-300 [&>svg]:drop-shadow-primary flex flex-col items-center justify-center py-10 shadow-inner [&>svg]:mb-5",
@@ -30,7 +29,7 @@ export default async function StatisticsRow() {
   );
 
   return (
-    <div className="text-shadow-primary grid w-full grid-cols-4 gap-13 text-gray-100">
+    <div className="text-shadow-primary tablet:grid-cols-2 grid w-full grid-cols-4 gap-13 text-gray-100">
       <div className={cn(cardStyles, straight)}>
         <PeopleIcon />
 

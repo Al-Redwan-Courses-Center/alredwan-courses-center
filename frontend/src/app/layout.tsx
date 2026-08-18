@@ -1,8 +1,13 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
-import { El_Messiri } from "next/font/google";
-import "./globals.css";
 import AuthProvider from "@/providers/AuthProvider";
+import type { Metadata, Viewport } from "next";
+import { El_Messiri } from "next/font/google";
+import localFont from "next/font/local";
+import { ReactNode } from "react";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import "./globals.css";
+import ToastProvider from "@/providers/ToastProvider";
 
 const medad = localFont({
   src: "./fonts/medad-platinum.ttf",
@@ -22,17 +27,23 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  userScalable: false,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ar">
       <body
-        className={`${medad.variable} ${messiri.variable} grid min-h-dvh overflow-x-clip antialiased`}
+        className={`${medad.variable} ${messiri.variable} grid min-h-dvh antialiased`}
         dir="rtl"
       >
+        <ToastProvider />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

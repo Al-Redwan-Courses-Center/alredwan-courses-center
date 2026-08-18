@@ -44,3 +44,7 @@ next-env.d.ts
 /.idea/
 /code.txt
 /tailwind.config.ts
+GEMINI.md
+./figma-images/
+!.env.example
+**/shadcn/

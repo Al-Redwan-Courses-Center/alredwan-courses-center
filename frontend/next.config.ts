@@ -1,17 +1,35 @@
 import type { NextConfig } from "next";
+//       "https://d2pi0n2fm836iz.cloudfront.net/435672/0125202313192463d12c5c84b80.jpg",
 
 const nextConfig: NextConfig = {
-  // https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed&gender=male
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "api.dicebear.com",
+        hostname: "mockmind-api.uifaces.co",
         port: "",
-        pathname: "/7.x/avataaars/svg/**",
+        pathname: "/content/human/**",
+      },
+      {
+        protocol: "https",
+        hostname: "d2pi0n2fm836iz.cloudfront.net",
+        port: "",
+        pathname: "/435672/**",
       },
     ],
   },
+
+  async redirects() {
+    return [
+      {
+        source: "/dashboard",
+        destination: "/dashboard/todays-schedule",
+        permanent: true,
+      },
+    ];
+  },
+
+  output: "standalone",
 };
 
 export default nextConfig;

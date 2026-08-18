@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+"""
+Custom User model and manager using phone number as primary login field.
+Supports global phone numbers via `phonenumbers`.
+"""
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+import phonenumbers
+import uuid
+
+
+class CustomUserManager(BaseUserManager):
+    """
+    Custom manager for CustomUser, using phone_number1 as the unique identifier.
+    """
+
+    def normalize_phone(self, phone_number):
+        """
+        Validate and normalize a phone number to E.164 international format.
+        """
+        try:
+            parsed = phonenumbers.parse(phone_number, None)
+            if not phonenumbers.is_valid_number(parsed):
+                raise ValidationError(_("Invalid phone number"))
+            return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+        except phonenumbers.NumberParseException:
+            raise ValidationError(_("Invalid phone number format"))
+
+    def create_user(self, phone_number1, password=None, **extra_fields):
+        """
+        Create and save a regular user with the given phone number and password.
+        """
+        if not phone_number1:
+            raise ValueError(_("The phone number must be set"))
+        phone_number1 = self.normalize_phone(phone_number1)
+
+        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        extra_fields.setdefault('role', 'student')
+
+        user = self.model(phone_number1=phone_number1, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, phone_number1, password=None, **extra_fields):
+        """
+        Create and save a superuser with the given phone number and password.
+        """
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_active", True)
+        extra_fields.setdefault("role", "admin")
+
+        if not extra_fields.get("is_staff"):
+            raise ValueError(_("Superuser must have is_staff=True."))
+        if not extra_fields.get("is_superuser"):
+            raise ValueError(_("Superuser must have is_superuser=True."))
+
+        return self.create_user(phone_number1, password, **extra_fields)
+
+
+class CustomUser(AbstractUser):
+    """
+    Base custom user model with global phone number authentication.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    phone_number1 = models.CharField(
+        _("رقم الواتس آب"), max_length=15, unique=True
+    )
+    phone_number2 = models.CharField(
+        _("رقم هاتف بديل"), max_length=15, null=True, blank=True
+    )
+
+    email = models.EmailField(unique=True, null=True, blank=True)
+    first_name = models.CharField(max_length=128)  # 1st and 2nd names
+    last_name = models.CharField(max_length=128)  # 3rd and 4th names
+
+    date_joined = models.DateTimeField(
+        default=timezone.now, verbose_name=_("تاريخ الانضمام"))
+    dob = models.DateField(_("date of birth"))
+
+    # Phone and admin verification status
+    is_verified = models.BooleanField(
+        default=False, verbose_name=_("تم التحقق"))
+    identity_number = models.CharField(
+        _("Government ID / Passport"), max_length=30, null=True, blank=True, unique=True)
+    identity_type = models.CharField(
+        max_length=20,
+        choices=[("nid", "بطاقة وطنية"),
+                 ("passport", "جواز سفر"), ("other", "أخرى")],
+        default="nid",
+        null=True
+    )
+    gender = models.CharField(
+        max_length=10,
+        choices=[("male", "ذكر"), ("female", "أنثى")],
+        verbose_name=_("النوع")
+    )
+
+    address = models.TextField(null=True, blank=True)
+    location = models.URLField(max_length=512, null=True, blank=True)
+    role = models.CharField(
+        max_length=20,
+        choices=[
+            ("student", "طالب"),
+            ("instructor", "مدرس"),
+            ("supervisor", "مشرف"),
+            ("parent", "ولي أمر"),
+            ("admin", "مدير"),
+        ],
+        default="student",
+        verbose_name=_("الدور")
+    )
+
+    # Authentication settings
+    username = None
+    USERNAME_FIELD = "phone_number1"
+    REQUIRED_FIELDS = ["dob", "first_name", "last_name", "gender"]
+
+    objects = CustomUserManager()
+
+    def __str__(self):
+        return self.get_full_name() or self.phone_number1
+
+    def clean(self):
+        """Custom validation for phone numbers."""
+        if self.phone_number1 == self.phone_number2:
+            raise ValidationError(
+                _("Primary and alternative phone numbers must be different.")
+            )
+
+    def save(self, *args, **kwargs):
+        """Convert empty identity_number to None to maintain unique constraint."""
+        if self.identity_number == '':
+            self.identity_number = None
+        super().save(*args, **kwargs)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["phone_number1"]),
+        ]
+        verbose_name = _("مستخدم")
+        verbose_name_plural = _("جميع المستخدمين")
+
+    def get_age_on_date(self, date=timezone.now().date()):
+        """Calculate age of the user on a given date."""
+        if not self.dob:
+            return None
+        born = self.dob
+        age = date.year - born.year - \
+            ((date.month, date.day) < (born.month, born.day))
+        return age

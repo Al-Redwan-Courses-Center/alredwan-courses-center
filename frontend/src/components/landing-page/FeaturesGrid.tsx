@@ -4,7 +4,7 @@ import HandshakeIcon from "@/components/icons/HandshakeIcon";
 import MosqueIcon from "@/components/icons/MosqueIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import TechnologyIcon from "@/components/icons/TechnologyIcon";
-import cn from "@/utils/cn";
+import { cn } from "@/lib/utils";
 
 const cardStyles = cn(
   "bg-olive-300 [&>svg]:drop-shadow-primary flex flex-col items-center justify-center px-15 py-12 text-gray-100 shadow-inner [&_h3]:text-3xl [&_h3]:leading-0 [&_h3]:font-semibold [&_p]:text-[1.6rem] [&>svg]:mb-5",
@@ -16,7 +16,7 @@ const contentContainerStyles = cn("mb-10 flex w-full items-center gap-10");
 
 export default function FeaturesGrid() {
   return (
-    <div className="grid w-full grid-cols-4 grid-rows-2 gap-13">
+    <div className="tablet:grid-cols-1 tablet:grid-rows-8 grid w-full grid-cols-4 grid-rows-2 gap-13">
       <div className={cn(cardStyles, straight)}>
         <div className={cn(contentContainerStyles)}>
           <CheckBadgeIcon />
@@ -78,7 +78,7 @@ export default function FeaturesGrid() {
 
       <div className={cn(cardStyles, straight)}>
         <div className={cn(contentContainerStyles)}>
-          <PeopleIcon width="3.2rem" />
+          <PeopleIcon width="3.2rem" height="auto" />
           <h3>مجتمع تعليمي متكامل</h3>
         </div>
 

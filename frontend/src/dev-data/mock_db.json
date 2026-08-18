@@ -1,0 +1,493 @@
+{
+  "seasons": [
+    {
+      "id": 1,
+      "name": "معسكر الصيف 2025",
+      "season_type": "summer_camp",
+      "start_date": "2025-06-01",
+      "end_date": "2025-08-31",
+      "description": "دورات صيفية مكثفة لجميع الأعمار",
+      "is_active": true
+    },
+    {
+      "id": 2,
+      "name": "الفصل الدراسي الأول 2025",
+      "season_type": "school",
+      "start_date": "2025-09-15",
+      "end_date": "2026-01-15",
+      "description": "دروس تقوية للمناهج الدراسية",
+      "is_active": false
+    },
+    {
+      "id": 3,
+      "name": "برنامج رمضان 1446",
+      "season_type": "ramadan",
+      "start_date": "2025-02-28",
+      "end_date": "2025-03-30",
+      "description": "مسابقات ودورات دينية مكثفة",
+      "is_active": false
+    }
+  ],
+  "tags": [
+    { "id": 1, "name": "برمجة" },
+    { "id": 2, "name": "رياضيات" },
+    { "id": 3, "name": "فيزياء" },
+    { "id": 4, "name": "لغات" },
+    { "id": 5, "name": "قرآن كريم" },
+    { "id": 6, "name": "فنون" },
+    { "id": 7, "name": "روبوتيكس" }
+  ],
+  "users": [
+    {
+      "id": "u1-admin",
+      "phone_number1": "+201000000000",
+      "first_name": "مدير",
+      "last_name": "النظام",
+      "email": "admin@alredwan.com",
+      "dob": "1980-01-01",
+      "gender": "male",
+      "role": "admin",
+      "is_verified": true,
+      "date_joined": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": "u2-inst-ahmed",
+      "phone_number1": "+201000000001",
+      "first_name": "أحمد",
+      "last_name": "علي",
+      "email": "ahmed.ali@example.com",
+      "dob": "1985-05-15",
+      "gender": "male",
+      "role": "instructor",
+      "is_verified": true,
+      "date_joined": "2024-02-01T00:00:00Z"
+    },
+    {
+      "id": "u3-inst-sara",
+      "phone_number1": "+201000000002",
+      "first_name": "سارة",
+      "last_name": "محمد",
+      "email": "sara.mohamed@example.com",
+      "dob": "1990-08-20",
+      "gender": "female",
+      "role": "instructor",
+      "is_verified": true,
+      "date_joined": "2024-02-15T00:00:00Z"
+    },
+    {
+      "id": "u4-inst-mahmoud",
+      "phone_number1": "+201000000003",
+      "first_name": "محمود",
+      "last_name": "حسن",
+      "dob": "1982-11-10",
+      "gender": "male",
+      "role": "instructor",
+      "is_verified": true,
+      "date_joined": "2024-03-01T00:00:00Z"
+    },
+    {
+      "id": "u5-stud-youssef",
+      "phone_number1": "+201000000004",
+      "phone_number2": "+201200000004",
+      "first_name": "يوسف",
+      "last_name": "إبراهيم",
+      "email": "youssef@student.com",
+      "dob": "2008-03-15",
+      "gender": "male",
+      "role": "student",
+      "is_verified": true,
+      "date_joined": "2025-05-01T00:00:00Z"
+    },
+    {
+      "id": "u6-stud-mariam",
+      "phone_number1": "+201000000005",
+      "first_name": "مريم",
+      "last_name": "سعيد",
+      "dob": "2010-07-22",
+      "gender": "female",
+      "role": "student",
+      "is_verified": false,
+      "date_joined": "2025-05-05T00:00:00Z"
+    },
+    {
+      "id": "u7-stud-omar",
+      "phone_number1": "+201000000006",
+      "first_name": "عمر",
+      "last_name": "خالد",
+      "dob": "2005-01-10",
+      "gender": "male",
+      "role": "student",
+      "is_verified": true,
+      "date_joined": "2025-05-10T00:00:00Z"
+    },
+    {
+      "id": "u8-stud-nour",
+      "phone_number1": "+201000000007",
+      "first_name": "نور",
+      "last_name": "عادل",
+      "dob": "2012-09-01",
+      "gender": "female",
+      "role": "student",
+      "is_verified": true,
+      "date_joined": "2025-05-12T00:00:00Z"
+    }
+  ],
+  "instructors": [
+    {
+      "id": 1,
+      "user_id": "u2-inst-ahmed",
+      "bio": "خبير في علوم الحاسب والبرمجة بخبرة تزيد عن 10 سنوات. عمل في شركات عالمية ولديه شغف بتعليم الأطفال.",
+      "monthly_salary": 8000.0,
+      "joined_date": "2024-02-01",
+      "type": "normal",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed&gender=male"
+    },
+    {
+      "id": 2,
+      "user_id": "u3-inst-sara",
+      "bio": "دكتوراه في الفيزياء من جامعة القاهرة. متخصصة في تبسيط العلوم للمراهقين.",
+      "monthly_salary": 9500.0,
+      "joined_date": "2024-02-15",
+      "type": "supervisor",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah&gender=female"
+    },
+    {
+      "id": 3,
+      "user_id": "u4-inst-mahmoud",
+      "bio": "حافظ للقرآن الكريم بالقراءات العشر. خبرة في تحفيظ القرآن للأطفال.",
+      "monthly_salary": 6000.0,
+      "joined_date": "2024-03-01",
+      "type": "normal",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Mahmoud&gender=male"
+    }
+  ],
+  "students": [
+    {
+      "id": 1,
+      "user_id": "u5-stud-youssef",
+      "unique_code": "M12345",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Youssef&gender=male"
+    },
+    {
+      "id": 2,
+      "user_id": "u6-stud-mariam",
+      "unique_code": "F67890",
+      "image": null
+    },
+    {
+      "id": 3,
+      "user_id": "u7-stud-omar",
+      "unique_code": "M11223",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Omar&gender=male"
+    },
+    {
+      "id": 4,
+      "user_id": "u8-stud-nour",
+      "unique_code": "F44556",
+      "image": "https://api.dicebear.com/7.x/avataaars/svg?seed=Nour&gender=female"
+    }
+  ],
+  "courses": [
+    {
+      "id": 1,
+      "name": "أساسيات البرمجة بلغة بايثون",
+      "slug": "python-basics",
+      "description": "دورة شاملة لتعلم أساسيات البرمجة باستخدام لغة بايثون، مناسبة للمبتدئين.",
+      "start_date": "2025-06-01",
+      "end_date": "2025-07-15",
+      "num_lectures": 12,
+      "capacity": 20,
+      "price": 1500.0,
+      "is_active": true,
+      "season_id": 1,
+      "instructor_id": 1,
+      "tag_ids": [1],
+      "for_adults": true,
+      "min_age": 12,
+      "max_age": 18,
+      "image": "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&q=80"
+    },
+    {
+      "id": 2,
+      "name": "الفيزياء المسلية",
+      "slug": "fun-physics",
+      "description": "استكشاف قوانين الفيزياء من خلال التجارب العملية والممتعة.",
+      "start_date": "2025-06-10",
+      "end_date": "2025-08-10",
+      "num_lectures": 16,
+      "capacity": 15,
+      "price": 2000.0,
+      "is_active": true,
+      "season_id": 1,
+      "instructor_id": 2,
+      "tag_ids": [3],
+      "for_adults": false,
+      "min_age": 10,
+      "max_age": 15,
+      "image": "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=800&q=80"
+    },
+    {
+      "id": 3,
+      "name": "تحفيظ جزء عم",
+      "slug": "juz-amma",
+      "description": "دورة تحفيظ مكثفة لجزء عم مع أحكام التجويد.",
+      "start_date": "2025-06-01",
+      "end_date": null,
+      "num_lectures": null,
+      "capacity": 10,
+      "price": 500.0,
+      "is_active": true,
+      "season_id": 1,
+      "instructor_id": 3,
+      "tag_ids": [5],
+      "for_adults": false,
+      "min_age": 6,
+      "max_age": 12,
+      "image": "https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=800&q=80"
+    },
+    {
+      "id": 4,
+      "name": "الرياضيات المتقدمة",
+      "slug": "advanced-math",
+      "description": "دورة للمتفوقين في الرياضيات.",
+      "start_date": "2025-09-01",
+      "end_date": "2025-12-01",
+      "num_lectures": 24,
+      "capacity": 10,
+      "price": 2500.0,
+      "is_active": false,
+      "season_id": 2,
+      "instructor_id": 1,
+      "tag_ids": [2],
+      "for_adults": true,
+      "min_age": 15,
+      "max_age": 18,
+      "image": "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=800&q=80"
+    }
+  ],
+  "course_schedules": [
+    {
+      "id": 1,
+      "course_id": 1,
+      "weekday": 1,
+      "start_time": "10:00:00",
+      "end_time": "12:00:00"
+    },
+    {
+      "id": 2,
+      "course_id": 1,
+      "weekday": 3,
+      "start_time": "10:00:00",
+      "end_time": "12:00:00"
+    },
+    {
+      "id": 3,
+      "course_id": 2,
+      "weekday": 2,
+      "start_time": "14:00:00",
+      "end_time": "16:00:00"
+    },
+    {
+      "id": 4,
+      "course_id": 2,
+      "weekday": 4,
+      "start_time": "14:00:00",
+      "end_time": "16:00:00"
+    },
+    {
+      "id": 5,
+      "course_id": 3,
+      "weekday": 6,
+      "start_time": "09:00:00",
+      "end_time": "11:00:00"
+    }
+  ],
+  "lectures": [
+    {
+      "id": 1,
+      "course_id": 1,
+      "title": "مقدمة وتثبيت الأدوات",
+      "day": "2025-06-01",
+      "start_time": "2025-06-01T10:00:00",
+      "end_time": "2025-06-01T12:00:00",
+      "lecture_number": 1,
+      "instructor_id": 1,
+      "status": "submitted",
+      "attendance_taken": true
+    },
+    {
+      "id": 2,
+      "course_id": 1,
+      "title": "المتغيرات وأنواع البيانات",
+      "day": "2025-06-03",
+      "start_time": "2025-06-03T10:00:00",
+      "end_time": "2025-06-03T12:00:00",
+      "lecture_number": 2,
+      "instructor_id": 1,
+      "status": "submitted",
+      "attendance_taken": true
+    },
+    {
+      "id": 3,
+      "course_id": 1,
+      "title": "الجمل الشرطية",
+      "day": "2025-06-08",
+      "start_time": "2025-06-08T10:00:00",
+      "end_time": "2025-06-08T12:00:00",
+      "lecture_number": 3,
+      "instructor_id": 1,
+      "status": "submitted",
+      "attendance_taken": true
+    },
+    {
+      "id": 4,
+      "course_id": 1,
+      "title": "الحلقات التكرارية (Loop)",
+      "day": "2025-06-10",
+      "start_time": "2025-06-10T10:00:00",
+      "end_time": "2025-06-10T12:00:00",
+      "lecture_number": 4,
+      "instructor_id": 1,
+      "status": "not-submitted",
+      "attendance_taken": false
+    },
+    {
+      "id": 5,
+      "course_id": 1,
+      "title": "القوائم (Lists)",
+      "day": "2025-06-15",
+      "start_time": "2025-06-15T10:00:00",
+      "end_time": "2025-06-15T12:00:00",
+      "lecture_number": 5,
+      "instructor_id": 1,
+      "status": "not-submitted",
+      "attendance_taken": false
+    },
+    {
+      "id": 6,
+      "course_id": 1,
+      "title": "الدوال (Functions)",
+      "day": "2025-06-17",
+      "start_time": "2025-06-17T10:00:00",
+      "end_time": "2025-06-17T12:00:00",
+      "lecture_number": 6,
+      "instructor_id": 1,
+      "status": "not-submitted",
+      "attendance_taken": false
+    },
+    {
+      "id": 7,
+      "course_id": 2,
+      "title": "السرعة والعجلة",
+      "day": "2025-06-10",
+      "start_time": "2025-06-10T14:00:00",
+      "end_time": "2025-06-10T16:00:00",
+      "lecture_number": 1,
+      "instructor_id": 2,
+      "status": "submitted",
+      "attendance_taken": true
+    },
+    {
+      "id": 8,
+      "course_id": 2,
+      "title": "قوانين نيوتن للحركة",
+      "day": "2025-06-12",
+      "start_time": "2025-06-12T14:00:00",
+      "end_time": "2025-06-12T16:00:00",
+      "lecture_number": 2,
+      "instructor_id": 2,
+      "status": "submitted",
+      "attendance_taken": true
+    },
+    {
+      "id": 9,
+      "course_id": 2,
+      "title": "الشغل والطاقة",
+      "day": "2025-06-17",
+      "start_time": "2025-06-17T14:00:00",
+      "end_time": "2025-06-17T16:00:00",
+      "lecture_number": 3,
+      "instructor_id": 2,
+      "status": "not-submitted",
+      "attendance_taken": false
+    },
+    {
+      "id": 10,
+      "course_id": 2,
+      "title": "قوة الاحتكاك",
+      "day": "2025-06-19",
+      "start_time": "2025-06-19T14:00:00",
+      "end_time": "2025-06-19T16:00:00",
+      "lecture_number": 4,
+      "instructor_id": 2,
+      "status": "not-submitted",
+      "attendance_taken": false
+    },
+    {
+      "id": 11,
+      "course_id": 3,
+      "title": "سورة الناس والفلق",
+      "day": "2025-06-07",
+      "start_time": "2025-06-07T09:00:00",
+      "end_time": "2025-06-07T11:00:00",
+      "lecture_number": 1,
+      "instructor_id": 3,
+      "status": "submitted",
+      "attendance_taken": true
+    },
+    {
+      "id": 12,
+      "course_id": 3,
+      "title": "سورة الإخلاص والمسد",
+      "day": "2025-06-14",
+      "start_time": "2025-06-14T09:00:00",
+      "end_time": "2025-06-14T11:00:00",
+      "lecture_number": 2,
+      "instructor_id": 3,
+      "status": "submitted",
+      "attendance_taken": true
+    },
+    {
+      "id": 13,
+      "course_id": 3,
+      "title": "سورة النصر والكافرون",
+      "day": "2025-06-21",
+      "start_time": "2025-06-21T09:00:00",
+      "end_time": "2025-06-21T11:00:00",
+      "lecture_number": 3,
+      "instructor_id": 3,
+      "status": "not-submitted",
+      "attendance_taken": false
+    }
+  ],
+  "enrollments": [
+    {
+      "id": "enr-1",
+      "course_id": 1,
+      "student_id": 1,
+      "enrolled_at": "2025-05-20T10:00:00Z",
+      "status": "active"
+    },
+    {
+      "id": "enr-2",
+      "course_id": 1,
+      "student_id": 3,
+      "enrolled_at": "2025-05-21T11:30:00Z",
+      "status": "active"
+    },
+    {
+      "id": "enr-3",
+      "course_id": 2,
+      "student_id": 1,
+      "enrolled_at": "2025-05-22T09:00:00Z",
+      "status": "dropped"
+    },
+    {
+      "id": "enr-4",
+      "course_id": 3,
+      "student_id": 4,
+      "enrolled_at": "2025-05-25T15:00:00Z",
+      "status": "active"
+    }
+  ]
+}
