@@ -1,9 +1,9 @@
 "use client";
 
+import { useState } from "react";
+import type { DateRange } from "react-day-picker";
 import { Calendar } from "@/components/ui/Calendar";
 import { cn, formatDate } from "@/lib/utils";
-import { useState } from "react";
-import { DateRange } from "react-day-picker";
 
 export default function DatePicker({
   range,

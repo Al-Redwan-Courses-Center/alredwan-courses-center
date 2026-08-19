@@ -1,10 +1,10 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 import CollapsibleNavLinks from "@/components/ui/navigation/CollapsibleNavList";
 import NavLink from "@/components/ui/navigation/NavLink";
 import { cn } from "@/lib/utils";
-import { usePathname } from "next/navigation";
-import { ReactNode } from "react";
 
 type NestedNavLinks = {
   href: string;

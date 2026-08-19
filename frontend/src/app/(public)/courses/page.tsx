@@ -1,9 +1,9 @@
 export const dynamic = "force-dynamic";
 
-import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getPublicCourses } from "@/actions/courses";
+import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
 
 export const metadata: Metadata = {
   title: "الدورات",
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const courses = await getPublicCourses();
-  
+
   return (
     <div className="mx-auto max-h-full w-full max-w-[1280px] px-6 md:px-16 pt-10 pb-50">
       <Suspense fallback={null}>

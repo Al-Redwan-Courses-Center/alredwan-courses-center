@@ -1,14 +1,19 @@
 "use server";
 
+import { getUser } from "@/actions/auth";
 import {
-  getMyEnrollmentRequests,
   getEnrollmentProgressById,
+  getMyEnrollmentRequests,
   getMyEnrollments,
 } from "@/actions/enrollments";
-import { getUser } from "@/actions/auth";
-import { apiRequest, getAuthApiClient, publicApiClient, unwrapPaginated } from "@/lib/api";
-import { PaginatedResponse } from "@/types/config";
-import { CourseDetail, CourseListItem } from "@/types/entities";
+import {
+  apiRequest,
+  getAuthApiClient,
+  publicApiClient,
+  unwrapPaginated,
+} from "@/lib/api";
+import type { PaginatedResponse } from "@/types/config";
+import type { CourseDetail, CourseListItem } from "@/types/entities";
 
 export async function getPublicCourses(): Promise<CourseListItem[]> {
   try {
@@ -17,8 +22,15 @@ export async function getPublicCourses(): Promise<CourseListItem[]> {
     >("/api/courses/?page_size=100");
 
     return Array.isArray(data) ? data : data.results;
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Failed to load public courses:", error);
     return [];
   }
@@ -44,6 +56,7 @@ export async function getAllCourses(): Promise<CourseListItem[]> {
       const enrollmentsCoursesIds = (await getMyEnrollments()).map(
         (e) => e.course,
       );
+
       const pendingOrProcessingRequestCourseIds = (
         await getMyEnrollmentRequests()
       )
@@ -98,7 +111,7 @@ export async function getCourseById(
   );
 }
 
-export async function getStudentCourses() {
+export async function getStudentCourses(): Promise<(CourseDetail & { course_progress: number })[]> {
   return apiRequest(
     "Failed to load student courses:",
     async () => {
@@ -111,10 +124,15 @@ export async function getStudentCourses() {
         myEnrollments.map((e) => getEnrollmentProgressById(e.id)),
       );
 
-      return myCoursesInitial.map((c, i) => ({
-        ...c,
-        course_progress: myEnrollmentsProgresses[i]?.percentage,
-      }));
+      return myCoursesInitial
+        .map((c, i) => {
+          if (!c) return null;
+          return {
+            ...c,
+            course_progress: myEnrollmentsProgresses[i]?.percentage ?? 0,
+          };
+        })
+        .filter((c): c is CourseDetail & { course_progress: number } => c !== null);
     },
     [],
   );

@@ -1,5 +1,5 @@
-import { StaticTimePicker, TimeView } from "@mui/x-date-pickers";
-import { PickerValue } from "@mui/x-date-pickers/internals";
+import { StaticTimePicker, type TimeView } from "@mui/x-date-pickers";
+import type { PickerValue } from "@mui/x-date-pickers/internals";
 import { useEffect, useState } from "react";
 
 export default function TimePicker({

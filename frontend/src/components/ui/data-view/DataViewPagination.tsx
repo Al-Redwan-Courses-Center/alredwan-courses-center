@@ -1,10 +1,10 @@
 "use client";
 
+import { useContext } from "react";
 import ArrowLeft from "@/components/icons/ArrowLeft";
 import ArrowRight from "@/components/icons/ArrowRight";
 import { DataViewContext } from "@/components/ui/data-view/DataView";
 import { cn, toHindiDigits } from "@/lib/utils";
-import { useContext } from "react";
 
 const paginationBtnStyles = cn(
   "text-olive-400 h-auto w-5 mobile-lg:w-[2rem] mobile:w-[2.5rem] disabled:pointer-events-none disabled:text-gray-600",

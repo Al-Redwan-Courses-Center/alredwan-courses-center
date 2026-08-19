@@ -1,5 +1,5 @@
+import type { ComponentType, SVGProps } from "react";
 import { cn, toHindiDigits } from "@/lib/utils";
-import { ComponentType, SVGProps } from "react";
 
 const progressWrapperStyles = cn("flex items-center gap-4 py-6 ps-6");
 

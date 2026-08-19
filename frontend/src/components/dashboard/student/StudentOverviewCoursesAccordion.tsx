@@ -1,16 +1,16 @@
 "use client";
 
+import { parseISO } from "date-fns";
 import BookIcon from "@/components/icons/BookIcon";
 import CalendarIcon from "@/components/icons/CalendarIcon";
 import ClockIcon from "@/components/icons/ClockIcon";
-import Button from "@/components/ui/Button";
-import ProgressBar from "@/components/ui/ProgressBar";
 import Accordion from "@/components/ui/accordion/Accordion";
 import AccordionHeader from "@/components/ui/accordion/AccordionHeader";
 import AccordionItem from "@/components/ui/accordion/AccordionItem";
+import Button from "@/components/ui/Button";
+import ProgressBar from "@/components/ui/ProgressBar";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
-import { CourseDetail } from "@/types/entities";
-import { parseISO } from "date-fns";
+import type { CourseDetail } from "@/types/entities";
 
 interface StudentOverviewCoursesAccordionProps {
   courses: Array<CourseDetail & { course_progress: number }>;
@@ -61,7 +61,8 @@ export default function StudentOverviewCoursesAccordion({
             <li className="flex items-center gap-2">
               <CalendarIcon className="text-olive-500" />
               <span>
-                يبدأ: {formatDate(parseISO(course.start_date)).replaceAll("-", "/")}
+                يبدأ:{" "}
+                {formatDate(parseISO(course.start_date)).replaceAll("-", "/")}
               </span>
             </li>
             <li className="flex items-center gap-2">
@@ -77,7 +78,9 @@ export default function StudentOverviewCoursesAccordion({
             </li>
             <li className="flex items-center gap-2">
               <CalendarIcon className="text-olive-500" />
-              <span>{course.schedules.map((s) => s.weekday_display).join(" \\\\ ")}</span>
+              <span>
+                {course.schedules.map((s) => s.weekday_display).join(" \\\\ ")}
+              </span>
             </li>
             <li className="flex items-center gap-2">
               <ClockIcon className="text-olive-500" />

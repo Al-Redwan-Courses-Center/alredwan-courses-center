@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 const toggleButtonStyles = cn(
   "grid aspect-square h-auto w-[2.6rem] place-items-center rounded-[0.5rem_0] py-3",
@@ -12,9 +12,9 @@ const toggleSvgStyles = cn(
   "relative z-10 h-full w-auto drop-shadow-[0_1px_2.4px_rgba(0,0,0,0.25)]",
 );
 
-interface ToggleItem {
+interface ToggleItem<T> {
   icon: ReactNode;
-  value: any;
+  value: T;
 }
 
 export default function Toggle<T>({
@@ -25,8 +25,8 @@ export default function Toggle<T>({
   className,
 }: {
   state: T;
-  leftItem: ToggleItem;
-  rightItem: ToggleItem;
+  leftItem: ToggleItem<T>;
+  rightItem: ToggleItem<T>;
   onToggle: (s: T) => void;
   className?: string;
 }) {

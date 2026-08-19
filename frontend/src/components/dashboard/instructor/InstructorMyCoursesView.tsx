@@ -1,9 +1,15 @@
 "use client";
 
+import { parseISO } from "date-fns";
+import Link from "next/link";
 import MyCourseCard from "@/components/courses/MyCourseCard";
+import buildInstructorMyCoursesConfig, {
+  type CourseViewItem,
+} from "@/components/dashboard/instructor/instructor-my-courses-view-config";
 import InfoIcon from "@/components/icons/InfoIcon";
 import DataView from "@/components/ui/data-view/DataView";
 import DataViewBody from "@/components/ui/data-view/DataViewBody";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
 import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
 import DataViewLayoutToggle from "@/components/ui/data-view/DataViewLayoutToggle";
 import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
@@ -14,13 +20,7 @@ import {
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
 import { cn, formatDate, toHindiDigits } from "@/lib/utils";
-import buildInstructorMyCoursesConfig, {
-  CourseViewItem,
-} from "@/components/dashboard/instructor/instructor-my-courses-view-config";
-import { parseISO } from "date-fns";
-import Link from "next/link";
-import { CourseListItem } from "@/types/entities";
-import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
+import type { CourseListItem } from "@/types/entities";
 
 export default function InstructorMyCoursesView({
   courses,

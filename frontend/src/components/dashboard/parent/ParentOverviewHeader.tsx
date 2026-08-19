@@ -1,8 +1,8 @@
+import type { ComponentProps, FC } from "react";
 import MoneyIcon from "@/components/icons/MoneyIcon";
 import PendingTransactionIcon from "@/components/icons/PendingTransactionIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import { cn } from "@/lib/utils";
-import { ComponentProps, FC } from "react";
 
 function DataPoint({
   label,

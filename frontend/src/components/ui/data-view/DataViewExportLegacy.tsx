@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
-import { cn } from "@/lib/utils";
-import ExcelIcon from "@/components/icons/microsoftExcelLogo.svg";
 import Image from "next/image";
+import ExcelIcon from "@/components/icons/microsoftExcelLogo.svg";
+import { cn } from "@/lib/utils";
 
 interface DataViewExportLegacyProps {
   onExport?: () => void;
@@ -18,12 +17,12 @@ export default function DataViewExportLegacy({
     <button
       onClick={onExport}
       className={cn(
-        "flex h-[50px] w-[50px] items-center justify-center rounded-12 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-stone-100 transition-all hover:bg-stone-50 active:scale-95 shrink-0",
-        className
+        "rounded-12 flex h-[50px] w-[50px] shrink-0 items-center justify-center border border-stone-100 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all hover:bg-stone-50 active:scale-95",
+        className,
       )}
       title="تصدير إلى Excel"
     >
-      <Image src={ExcelIcon} alt="" className="w-28 h-28" />
+      <Image src={ExcelIcon} alt="" className="h-28 w-28" />
     </button>
   );
 }

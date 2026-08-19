@@ -1,28 +1,27 @@
 // PASSING CONFIG FUNCTIONS TO THE TABLE COMPONENT (NON-SERIALIZABLE DATA WHILE SERVER -> CLIENT)
 "use client";
 
+import { format } from "date-fns";
+import Link from "next/link";
+import lecturesViewConfig from "@/components/dashboard/instructor/lectures-view.config";
 import EditIcon from "@/components/icons/EditIcon";
 import InfoIcon from "@/components/icons/InfoIcon";
-import lecturesViewConfig from "@/components/dashboard/instructor/lectures-view.config";
+import DataViewLegacy from "@/components/ui/data-view/DataView";
+import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
+import DataViewExportLegacy from "@/components/ui/data-view/DataViewExportLegacy";
+import DataViewFilterLegacy from "@/components/ui/data-view/DataViewFilter";
+import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
+import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
+import DataViewSortLegacy from "@/components/ui/data-view/DataViewSort";
 import StatusBadge from "@/components/ui/StatusBadge";
-
+import { exportToExcel } from "@/lib/export";
 import { cn, formatTime, toHindiDigits } from "@/lib/utils";
-import Link from "next/link";
+import type { TodaysLectureListItem } from "@/types/config";
 import {
   DataViewHeaderLegacy,
   DataViewRowLegacy,
 } from "../../ui/data-view/DataViewRow";
-import { TodaysLectureListItem } from "@/types/config";
-import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
-import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
-import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
-import DataViewSortLegacy from "@/components/ui/data-view/DataViewSort";
-import DataViewFilterLegacy from "@/components/ui/data-view/DataViewFilter";
-import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
-import DataViewLegacy from "@/components/ui/data-view/DataView";
-import DataViewExportLegacy from "@/components/ui/data-view/DataViewExportLegacy";
-import { exportToExcel } from "@/lib/export";
-import { format } from "date-fns";
 
 const { sortConfig, filterConfig, statusMap } = lecturesViewConfig;
 
@@ -35,16 +34,16 @@ export default function TodaysLecturesTable({
     const exportData = todaysLectures.map((lecture, i) => {
       const { label } = statusMap[lecture.status];
       return {
-        "م": i + 1,
-        "المحاضرة": lecture.title,
-        "الدورة": lecture.course.name,
-        "البداية": formatTime(lecture.start_time),
-        "النهاية": formatTime(lecture.end_time),
-        "الحالة": label
+        م: i + 1,
+        المحاضرة: lecture.title,
+        الدورة: lecture.course.name,
+        البداية: formatTime(lecture.start_time),
+        النهاية: formatTime(lecture.end_time),
+        الحالة: label,
       };
     });
-    
-    const today = format(new Date(), 'yyyy-MM-dd');
+
+    const today = format(new Date(), "yyyy-MM-dd");
     exportToExcel(exportData, `محاضرات_اليوم_${today}`);
   }
 

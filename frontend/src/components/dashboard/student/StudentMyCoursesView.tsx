@@ -10,7 +10,7 @@ import { DataViewHeaderLegacy } from "@/components/ui/data-view/DataViewRow";
 import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
 import DataViewSortLegacy from "@/components/ui/data-view/DataViewSort";
 import { cn } from "@/lib/utils";
-import { CourseDetail } from "@/types/entities";
+import type { CourseDetail } from "@/types/entities";
 
 export default function StudentMyCoursesView({
   courses,

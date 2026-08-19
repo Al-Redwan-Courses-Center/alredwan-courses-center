@@ -9,14 +9,14 @@ export function useMutateSearchParams() {
   const searchParams = useSearchParams();
 
   const generateQueryString = useCallback(
-    (queryParams: { key: string; val: any }[]) => {
+    (queryParams: { key: string; val: unknown }[]) => {
       const params = new URLSearchParams(searchParams.toString());
 
       queryParams.forEach(({ key, val }) => {
-        if (typeof val === "string" && !val) {
+        if (val === undefined || val === null || (typeof val === "string" && !val)) {
           params.delete(key);
         } else {
-          params.set(key, val);
+          params.set(key, String(val));
         }
       });
 
@@ -26,7 +26,7 @@ export function useMutateSearchParams() {
   );
 
   function mutateSearchParams(
-    queryParams: { key: string; val: any }[],
+    queryParams: { key: string; val: unknown }[],
     replace: boolean = false,
   ) {
     const newUrl = `${pathname}?${generateQueryString(queryParams)}`;

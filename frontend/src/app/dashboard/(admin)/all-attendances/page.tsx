@@ -1,16 +1,19 @@
+import { format } from "date-fns";
 import { getAttendances } from "@/actions/admin-attendances";
 import AdminAttendancesView from "@/components/dashboard/admin/AdminAttendancesView";
-import { format } from "date-fns";
 
 export default async function Page(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const searchParams = await props.searchParams;
-  const date = (searchParams.date as string) || format(new Date(), "yyyy-MM-dd");
-  
+  const date =
+    (searchParams.date as string) || format(new Date(), "yyyy-MM-dd");
+
   const attendances = await getAttendances({
     date,
-    instructor: searchParams.instructor ? Number(searchParams.instructor) : undefined,
+    instructor: searchParams.instructor
+      ? Number(searchParams.instructor)
+      : undefined,
     status: searchParams.status as string,
     attendance_type: searchParams.attendance_type as string,
     season: searchParams.season ? Number(searchParams.season) : undefined,
@@ -22,7 +25,9 @@ export default async function Page(props: {
         <span className="text-olive-700">السلام عليكم يا شيخ بنداري</span>
         <div className="flex justify-between items-end max-[1000px]:flex-col max-[1000px]:items-start max-[1000px]:gap-2">
           <span>سجل الحضور والغياب</span>
-          <span className="text-2xl text-gray-400 max-[1000px]:text-lg">التاريخ: {date}</span>
+          <span className="text-2xl text-gray-400 max-[1000px]:text-lg">
+            التاريخ: {date}
+          </span>
         </div>
       </div>
 

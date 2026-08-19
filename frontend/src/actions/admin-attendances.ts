@@ -1,9 +1,9 @@
 "use server";
 
-import { apiRequest, getAuthApiClient } from "@/lib/api";
-import { PaginatedResponse } from "@/types/config";
 import { isAxiosError } from "axios";
-import {
+import { apiRequest, getAuthApiClient } from "@/lib/api";
+import type { PaginatedResponse } from "@/types/config";
+import type {
   StaffAttendanceDetail,
   StaffAttendanceListItem,
 } from "@/types/entities";
@@ -64,9 +64,10 @@ export async function getAttendances(params?: {
 }) {
   try {
     const apiClient = await getAuthApiClient();
-    
+
     // Map 'date' to 'date_from' and 'date_to' for the backend filter
-    const apiParams: any = { ...params };
+    const apiParams: typeof params & { date_from?: string; date_to?: string } =
+      { ...params };
     if (apiParams.date) {
       apiParams.date_from = apiParams.date;
       apiParams.date_to = apiParams.date;
@@ -78,8 +79,10 @@ export async function getAttendances(params?: {
     >("/api/attendance/all/", { params: apiParams });
 
     return data.results;
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  } catch (error: unknown) {
+    if (typeof error === "object" && error !== null && "digest" in error) {
+      if (error.digest === "DYNAMIC_SERVER_USAGE") throw error;
+    }
     const errMssg = "Failed to get attendances: ";
 
     if (isAxiosError(error)) {
@@ -101,8 +104,15 @@ export async function markAbsent(id: number) {
     );
 
     return data;
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     const errMssg = "Failed to mark attendance as absent: ";
 
     if (isAxiosError(error)) {
@@ -129,8 +139,15 @@ export async function rateAttendance(
     );
 
     return data;
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     const errMssg = "Failed to rate attendance: ";
 
     if (isAxiosError(error)) {
@@ -151,12 +168,39 @@ export async function generateAttendances(startDate: string, endDate: string) {
       end_date: endDate,
     });
     return { success: true, data };
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     let message = "Failed to generate attendances";
     if (isAxiosError(error)) {
-      message = error.response?.data?.error || error.response?.data?.detail || message;
+      message =
+        error.response?.data?.error || error.response?.data?.detail || message;
     }
     return { success: false, error: message };
+  }
+}
+
+export async function getWebSocketTicket(): Promise<string | null> {
+  try {
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.post<{ ticket: string }>("/api/attendance/ws-ticket/");
+    return data.ticket;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
+    console.error("Failed to fetch websocket ticket:", error);
+    return null;
   }
 }

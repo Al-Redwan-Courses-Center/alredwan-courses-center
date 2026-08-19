@@ -1,8 +1,8 @@
-import { CourseDetailsInputs } from "@/components/courses/CourseDetailsForm";
-import { cn } from "@/lib/utils";
-import { PickerValue } from "@mui/x-date-pickers/internals";
+import type { PickerValue } from "@mui/x-date-pickers/internals";
 import { parse } from "date-fns";
-import { UseFormSetValue } from "react-hook-form";
+import type { UseFormSetValue } from "react-hook-form";
+import type { CourseDetailsInputs } from "@/components/courses/CourseDetailsForm";
+import { cn } from "@/lib/utils";
 
 const daySelectionBtnStyles = cn(
   "text-olive-900 hover:bg-olive-100 aspect-square h-auto w-17 rounded-[0.7rem] font-bold transition-colors",

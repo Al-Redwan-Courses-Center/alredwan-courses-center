@@ -1,16 +1,19 @@
 import Image from "next/image";
 import HeroBG from "@/assets/hero-bg.svg";
-import Button from "@/components/ui/Button";
+import SignupModal from "@/components/auth/SignupModal";
+import EmailIcon from "@/components/icons/EmailIcon";
 import PhoneIcon from "@/components/icons/PhoneIcon";
 import WhatsappIcon from "@/components/icons/WhatsappIcon";
-import EmailIcon from "@/components/icons/EmailIcon";
 import SectionDivider from "@/components/landing-page/SectionDivider";
-import SignupModal from "@/components/auth/SignupModal";
+import Button from "@/components/ui/Button";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export default function CallToActionSection() {
   return (
-    <section id="contact-us" className="tablet:h-[60dvh] tablet:items-start relative flex h-[calc(100dvh-6.5rem)] items-center bg-[linear-gradient(0deg,#D2DBC8_-3.15%,#557767_204.81%)]">
+    <section
+      id="contact-us"
+      className="tablet:h-[60dvh] tablet:items-start relative flex h-[calc(100dvh-6.5rem)] items-center bg-[linear-gradient(0deg,#D2DBC8_-3.15%,#557767_204.81%)]"
+    >
       <Image
         src={HeroBG}
         alt="Hero Background"
@@ -19,7 +22,10 @@ export default function CallToActionSection() {
         draggable="false"
       />
 
-      <ScrollReveal direction="up" className="w-full flex flex-col items-center">
+      <ScrollReveal
+        direction="up"
+        className="w-full flex flex-col items-center"
+      >
         <div className="relative z-10 mx-auto text-center flex flex-col items-center text-gray-100 px-6 max-w-4xl">
           <h2 className="text-shadow-primary mb-9 max-w-170 text-8xl mobile-lg:text-6xl font-bold">
             <span className="text-beige-500">ابدأ</span> رحلة التعلم مع أطفالك

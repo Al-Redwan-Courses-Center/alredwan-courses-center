@@ -1,11 +1,11 @@
-import { getGeneralMemories } from "@/actions/memories";
 import { getUser } from "@/actions/auth";
+import { getGeneralMemories } from "@/actions/memories";
 import MemoriesClient from "@/components/dashboard/memories/MemoriesClient";
 
 export default async function MemoriesPage() {
   const [initialMemories, user] = await Promise.all([
     getGeneralMemories(),
-    getUser()
+    getUser(),
   ]);
 
   return (

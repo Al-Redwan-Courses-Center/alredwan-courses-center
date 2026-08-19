@@ -1,7 +1,7 @@
+import DataViewExportLegacy from "@/components/ui/data-view/DataViewExportLegacy";
+import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
-import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
-import DataViewExportLegacy from "@/components/ui/data-view/DataViewExportLegacy";
 
 export default function DataViewControlsLegacy({
   showSearch = true,
@@ -19,7 +19,11 @@ export default function DataViewControlsLegacy({
   return (
     <div className="relative z-100 mb-14 flex items-center justify-between w-full gap-16">
       <div className="flex items-center gap-16 flex-1">
-        {showSearch && <div className="flex-1 max-w-[400px]"><DataViewSearch /></div>}
+        {showSearch && (
+          <div className="flex-1 max-w-[400px]">
+            <DataViewSearch />
+          </div>
+        )}
         {showSort && <DataViewSort />}
         {showFilter && <DataViewFilter />}
       </div>

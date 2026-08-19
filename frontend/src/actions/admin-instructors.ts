@@ -1,31 +1,26 @@
-import { getClientAccessToken } from "./temp";
-import { getAuthApiClient } from "@/lib/auth-api";
 import { unwrapPaginated } from "@/lib/api";
-import { Instructor } from "@/types/entities/instructors";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
+import { getAuthApiClient } from "@/lib/auth-api";
+import type { Instructor } from "@/types/entities/instructors";
 /**
  * Fetch detailed instructor profile information.
  */
 export async function getInstructorDetail(instructorId: string | number) {
   try {
-    const token = await getClientAccessToken();
-    const response = await fetch(`${API_BASE_URL}/api/users/instructors/${instructorId}/`, {
-      headers: {
-        Authorization: `JWT ${token}`,
-      },
-      next: { revalidate: 60 }, // Cache for 1 minute
-    });
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.get(
+      `/api/users/instructors/${instructorId}/`,
+    );
 
-    if (!response.ok) {
-      if (response.status === 404) return null;
-      throw new Error("Failed to fetch instructor detail");
+    return data;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
     }
-
-    return await response.json();
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
     console.error("Error fetching instructor detail:", error);
     return null;
   }
@@ -36,22 +31,21 @@ export async function getInstructorDetail(instructorId: string | number) {
  */
 export async function getSupervisorSchedules(instructorId: string | number) {
   try {
-    const token = await getClientAccessToken();
-    const response = await fetch(`${API_BASE_URL}/api/attendance/schedules/?instructor=${instructorId}`, {
-      headers: {
-        Authorization: `JWT ${token}`,
-      },
-      next: { revalidate: 60 },
-    });
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.get(
+      `/api/attendance/schedules/?instructor=${instructorId}`,
+    );
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch supervisor schedules");
-    }
-
-    const data = await response.json();
     return data.results || data;
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Error fetching supervisor schedules:", error);
     return [];
   }
@@ -60,24 +54,24 @@ export async function getSupervisorSchedules(instructorId: string | number) {
 /**
  * Fetch instructor attendance history (used for the timetable/recent sessions).
  */
-export async function getInstructorAttendanceHistory(instructorId: string | number) {
+export async function getInstructorAttendanceHistory(
+  instructorId: string | number,
+) {
   try {
-    const token = await getClientAccessToken();
-    const response = await fetch(`${API_BASE_URL}/api/attendance/instructor/${instructorId}/`, {
-      headers: {
-        Authorization: `JWT ${token}`,
-      },
-      next: { revalidate: 60 },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch instructor attendance history");
-    }
-
-    const data = await response.json();
+    const apiClient = await getAuthApiClient();
+    const { data } = await apiClient.get(
+      `/api/attendance/instructor/${instructorId}/`,
+    );
     return data.results || data;
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Error fetching instructor attendance history:", error);
     return [];
   }
@@ -89,10 +83,19 @@ export async function getInstructorAttendanceHistory(instructorId: string | numb
 export async function getInstructors(): Promise<Instructor[]> {
   try {
     const apiClient = await getAuthApiClient();
-    const { data } = await apiClient.get("/api/users/instructors/?page_size=100");
+    const { data } = await apiClient.get(
+      "/api/users/instructors/?page_size=100",
+    );
     return unwrapPaginated(data) as Instructor[];
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Error fetching instructors:", error);
     return [];
   }

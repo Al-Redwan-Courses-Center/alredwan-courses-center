@@ -1,15 +1,15 @@
 "use client";
 
-import { useIsClient, useMediaQuery } from "usehooks-ts";
 import Image from "next/image";
-import AvatarProfile from "@/assets/images/default-user.svg";
-import { Testimonial } from "@/dev-data/testimonials";
-import StarIcon from "@/components/icons/StarIcon";
-import HalfStarIcon from "@/components/icons/HalfStarIcon";
-import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation } from "swiper/modules";
-import { cn } from "@/lib/utils";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { useIsClient, useMediaQuery } from "usehooks-ts";
+import AvatarProfile from "@/assets/images/default-user.svg";
+import HalfStarIcon from "@/components/icons/HalfStarIcon";
+import StarIcon from "@/components/icons/StarIcon";
 import Loader from "@/components/ui/Loader";
+import type { Testimonial } from "@/dev-data/testimonials";
+import { cn } from "@/lib/utils";
 
 function renderRating(rating: number) {
   const flooredRating = Math.floor(rating);

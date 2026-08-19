@@ -1,9 +1,9 @@
 "use client";
 
-import EmptyState from "@/components/ui/EmptyState";
+import { type ReactNode, useContext } from "react";
 import { DataViewContext } from "@/components/ui/data-view/DataView";
+import EmptyState from "@/components/ui/EmptyState";
 import { cn } from "@/lib/utils";
-import { ReactNode, useContext } from "react";
 
 export default function DataViewBodyLegacy<T>({
   render,

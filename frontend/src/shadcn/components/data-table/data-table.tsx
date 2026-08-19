@@ -2,19 +2,20 @@
 
 import {
   type ColumnFiltersState,
-  type OnChangeFn,
-  type PaginationState,
-  type SortingState,
-  type VisibilityState,
   flexRender,
   functionalUpdate,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type OnChangeFn,
+  type PaginationState,
+  type SortingState,
   useReactTable,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { cn } from "@/lib/utils";
 import {
@@ -25,12 +26,11 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { DataTablePagination } from "./data-table-pagination";
 import { DataTableMobileView } from "./data-table-mobile";
+import { DataTablePagination } from "./data-table-pagination";
 import { DataTableRowsSkeleton } from "./data-table-skeletons";
 import { DataTableToolbar } from "./data-table-toolbar";
 import type { DataTableProps } from "./types";
-import { useState } from "react";
 
 export function DataTable<TData, TValue>({
   columns,

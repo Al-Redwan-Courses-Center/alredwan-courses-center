@@ -1,10 +1,15 @@
 "use client";
 
-import { cn, cva } from "@/lib/utils";
-import { VariantProps } from "class-variance-authority";
-import { ChangeEvent, InputHTMLAttributes, ReactNode, useState } from "react";
-import { UseFormRegisterReturn } from "react-hook-form";
+import type { VariantProps } from "class-variance-authority";
 import { Eye, EyeOff } from "lucide-react";
+import {
+  type ChangeEvent,
+  type InputHTMLAttributes,
+  type ReactNode,
+  useState,
+} from "react";
+import type { UseFormRegisterReturn } from "react-hook-form";
+import { cn, cva } from "@/lib/utils";
 
 const containerStyles = cva(
   cn(
@@ -70,7 +75,7 @@ export default function Input({
         "[&_svg]:text-olive-300 flex items-center gap-6",
         wrapperStyles,
         !unstyled && icon && containerStyles({ shape }),
-        isPassword && !unstyled && !icon && "relative"
+        isPassword && !unstyled && !icon && "relative",
       )}
     >
       {iconAlignment === "start" && icon}

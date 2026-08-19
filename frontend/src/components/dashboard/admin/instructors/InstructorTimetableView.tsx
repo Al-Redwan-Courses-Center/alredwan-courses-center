@@ -1,7 +1,7 @@
-import { StaffAttendanceListItem } from "@/types/entities/staff-attendance";
-import { SupervisorSchedule } from "@/types/entities/schedules";
-import { toHindiDigits, formatTime } from "@/lib/utils";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { formatTime, toHindiDigits } from "@/lib/utils";
+import type { SupervisorSchedule } from "@/types/entities/schedules";
+import type { StaffAttendanceListItem } from "@/types/entities/staff-attendance";
 
 interface InstructorTimetableViewProps {
   attendances: StaffAttendanceListItem[];
@@ -35,19 +35,33 @@ export default function InstructorTimetableView({
             <tbody>
               {attendances.length > 0 ? (
                 attendances.map((attendance, index) => (
-                  <tr 
-                    key={attendance.id} 
+                  <tr
+                    key={attendance.id}
                     className="border-t border-olive-100/30 hover:bg-olive-50/50 transition-colors"
                   >
                     <td className="p-16">
                       <div className="flex flex-col">
-                        <span className="font-bold text-gray-800">{attendance.lecture_info?.lecture_title}</span>
-                        <span className="text-sm text-gray-500">{attendance.lecture_info?.course_title}</span>
+                        <span className="font-bold text-gray-800">
+                          {attendance.lecture_info?.lecture_title}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {attendance.lecture_info?.course_title}
+                        </span>
                       </div>
                     </td>
-                    <td className="p-16 text-gray-700">{toHindiDigits(attendance.date)}</td>
-                    <td className="p-16 text-gray-700">{toHindiDigits(formatTime(attendance.scheduled_check_in_time) || "")}</td>
-                    <td className="p-16 text-gray-700">{toHindiDigits(formatTime(attendance.scheduled_check_out_time) || "")}</td>
+                    <td className="p-16 text-gray-700">
+                      {toHindiDigits(attendance.date)}
+                    </td>
+                    <td className="p-16 text-gray-700">
+                      {toHindiDigits(
+                        formatTime(attendance.scheduled_check_in_time) || "",
+                      )}
+                    </td>
+                    <td className="p-16 text-gray-700">
+                      {toHindiDigits(
+                        formatTime(attendance.scheduled_check_out_time) || "",
+                      )}
+                    </td>
                     <td className="p-16">
                       <StatusBadge>{attendance.status_display}</StatusBadge>
                     </td>
@@ -55,7 +69,10 @@ export default function InstructorTimetableView({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="p-32 text-center text-gray-500 italic">
+                  <td
+                    colSpan={5}
+                    className="p-32 text-center text-gray-500 italic"
+                  >
                     لا توجد محاضرات مجدولة حالياً.
                   </td>
                 </tr>
@@ -84,21 +101,33 @@ export default function InstructorTimetableView({
               <tbody>
                 {supervisorSchedules.length > 0 ? (
                   supervisorSchedules.map((schedule) => (
-                    <tr 
-                      key={schedule.id} 
+                    <tr
+                      key={schedule.id}
                       className="border-t border-olive-100/30 hover:bg-olive-50/50 transition-colors"
                     >
-                      <td className="p-16 font-bold text-gray-800">{schedule.day_display}</td>
-                      <td className="p-16 text-gray-700">{toHindiDigits(formatTime(schedule.start_time) || "")}</td>
-                      <td className="p-16 text-gray-700">{toHindiDigits(formatTime(schedule.end_time) || "")}</td>
+                      <td className="p-16 font-bold text-gray-800">
+                        {schedule.day_display}
+                      </td>
                       <td className="p-16 text-gray-700">
-                        {toHindiDigits(schedule.grace_period_minutes.toString())} دقيقة
+                        {toHindiDigits(formatTime(schedule.start_time) || "")}
+                      </td>
+                      <td className="p-16 text-gray-700">
+                        {toHindiDigits(formatTime(schedule.end_time) || "")}
+                      </td>
+                      <td className="p-16 text-gray-700">
+                        {toHindiDigits(
+                          schedule.grace_period_minutes.toString(),
+                        )}{" "}
+                        دقيقة
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="p-32 text-center text-gray-500 italic">
+                    <td
+                      colSpan={4}
+                      className="p-32 text-center text-gray-500 italic"
+                    >
                       لا يوجد جدول إشراف محدد حالياً.
                     </td>
                   </tr>

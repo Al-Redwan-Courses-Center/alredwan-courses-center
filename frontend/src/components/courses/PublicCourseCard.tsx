@@ -1,3 +1,5 @@
+import { parseISO } from "date-fns";
+import Image from "next/image";
 import BookIcon from "@/components/icons/BookIcon";
 import CalendarIcon from "@/components/icons/CalendarIcon";
 import OpenBookIcon from "@/components/icons/OpenBookIcon";
@@ -5,12 +7,10 @@ import PeopleIcon from "@/components/icons/PeopleIcon";
 import Button from "@/components/ui/Button";
 import ItemCard from "@/components/ui/ItemCard";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
-import { CourseListItem } from "@/types/entities";
-import { parseISO } from "date-fns";
-import Image from "next/image";
+import type { CourseListItem } from "@/types/entities";
 
 export default function PublicCourseCard({
-  course: course,
+  course,
   index,
   linkTo = "landing",
 }: {
@@ -27,7 +27,7 @@ export default function PublicCourseCard({
   return (
     <ItemCard
       cardHeader={
-        !!course.image && isCourseImageValid ? (
+        course.image && isCourseImageValid ? (
           <Image
             src={course.image}
             fill
@@ -74,7 +74,9 @@ export default function PublicCourseCard({
       }
       index={index}
     >
-      <h3 className="mb-3 text-[1.28rem] mobile-lg:text-[2.4rem] mobile:text-[3rem] font-bold">{course.name}</h3>
+      <h3 className="mb-3 text-[1.28rem] mobile-lg:text-[2.4rem] mobile:text-[3rem] font-bold">
+        {course.name}
+      </h3>
       <p className="mb-5">{course.description}</p>
 
       <div className="mb-5 grid grid-cols-[repeat(auto-fill,minmax(5rem,auto))] items-center gap-2">

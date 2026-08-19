@@ -1,8 +1,8 @@
+import type { Metadata } from "next";
+import NotFound from "@/components/feedback/NotFound";
 import Footer from "@/components/layout/landing/Footer";
 import MobileNavBar from "@/components/layout/landing/MobileNavBar";
 import NavBar from "@/components/layout/landing/NavBar";
-import NotFound from "@/components/feedback/NotFound";
-import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "صفحة غير موجودة",

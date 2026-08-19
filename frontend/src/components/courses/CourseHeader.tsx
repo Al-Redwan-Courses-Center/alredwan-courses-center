@@ -1,19 +1,17 @@
+import { parseISO } from "date-fns";
 import CalendarIcon from "@/components/icons/CalendarIcon";
 import ClockIcon from "@/components/icons/ClockIcon";
 import InstructorIcon from "@/components/icons/InstructorIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import CopyToClipboardButton from "@/components/ui/CopyToClipboardButton";
 import { cn, formatDate, toHindiDigits } from "@/lib/utils";
-import { CourseDetail } from "@/types/entities";
-import { parseISO } from "date-fns";
+import type { CourseDetail } from "@/types/entities";
 
 const dataPointWrapperStyles = cn(
-  "flex flex-col items-center gap-1 text-center"
+  "flex flex-col items-center gap-1 text-center",
 );
 
-const dataPointIconStyles = cn(
-  "h-8 w-auto text-olive-400 mb-1"
-);
+const dataPointIconStyles = cn("h-8 w-auto text-olive-400 mb-1");
 
 const labelStyles = cn("text-gray-400 text-lg font-medium");
 const valueStyles = cn("text-olive-700 text-xl font-bold");
@@ -27,7 +25,6 @@ export default function CourseHeader({
     <div className="mb-12 relative w-full">
       {/* Background/Glass Container */}
       <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-soft p-10 max-[1000px]:p-6 flex flex-col items-center gap-8 max-[1000px]:gap-6 relative overflow-hidden w-full">
-        
         {/* Course ID Badge */}
         <div className="absolute top-6 left-10 max-[1000px]:static max-[1000px]:self-end">
           <CopyToClipboardButton className="bg-white/80 hover:bg-white shadow-sm border-none px-4 py-1.5 rounded-full text-lg">
@@ -47,26 +44,34 @@ export default function CourseHeader({
           <div className={dataPointWrapperStyles}>
             <InstructorIcon className={dataPointIconStyles} />
             <span className={labelStyles}>المعلمين</span>
-            <span className={valueStyles}>{course?.instructor?.name || "لا يوجد معلم"}</span>
+            <span className={valueStyles}>
+              {course?.instructor?.name || "لا يوجد معلم"}
+            </span>
           </div>
 
           <div className={dataPointWrapperStyles}>
             <CalendarIcon className={dataPointIconStyles} />
             <span className={labelStyles}>الموسم</span>
-            <span className={valueStyles}>{course?.season?.name || "رمضان"}</span>
+            <span className={valueStyles}>
+              {course?.season?.name || "رمضان"}
+            </span>
           </div>
 
           <div className={dataPointWrapperStyles}>
             <PeopleIcon className={dataPointIconStyles} />
             <span className={labelStyles}>الحصة</span>
-            <span className={valueStyles}>{toHindiDigits(course?.capacity || 200)}</span>
+            <span className={valueStyles}>
+              {toHindiDigits(course?.capacity || 200)}
+            </span>
           </div>
 
           <div className={dataPointWrapperStyles}>
             <ClockIcon className={dataPointIconStyles} />
             <span className={labelStyles}>المواعيد</span>
             <span className={valueStyles}>
-              {course?.start_date ? formatDate(parseISO(course.start_date)) : "من 12/9/2021 إلى 12/10/2021"}
+              {course?.start_date
+                ? formatDate(parseISO(course.start_date))
+                : "من 12/9/2021 إلى 12/10/2021"}
             </span>
           </div>
         </div>

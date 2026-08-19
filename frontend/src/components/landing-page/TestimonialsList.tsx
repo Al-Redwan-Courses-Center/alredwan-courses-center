@@ -1,8 +1,8 @@
+import TestimonialsSlider from "@/components/landing-page/TestimonialsSlider";
 import {
-  Testimonial,
+  type Testimonial,
   testimonials as testimonialsApi,
 } from "@/dev-data/testimonials";
-import TestimonialsSlider from "@/components/landing-page/TestimonialsSlider";
 
 export default async function TestimonialsList() {
   const {

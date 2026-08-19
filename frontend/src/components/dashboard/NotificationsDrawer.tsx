@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import NotificationWithBadgeIcon from "@/components/icons/NotificationWithBadgeIcon";
 import {
   DropdownMenu,
@@ -6,7 +7,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { cn } from "@/lib/utils";
-import { ReactNode } from "react";
 
 const baseStyles = cn(
   "shadow-soft w-105 rounded-[2rem_0] bg-gray-50 text-[1.8rem] transition-colors",
