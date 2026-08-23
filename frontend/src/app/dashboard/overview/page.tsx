@@ -4,9 +4,9 @@ import {
   getMyEnrollmentRequests,
   getMyEnrollments,
 } from "@/actions/enrollments";
-import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
 import ParentOverviewPage from "@/components/dashboard/parent/ParentOverviewPage";
 import StudentOverviewPage from "@/components/dashboard/student/StudentOverviewPage";
+import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
 
 export default async function Page() {
   await protect(["student", "parent"]);
@@ -30,8 +30,12 @@ export default async function Page() {
         ],
     );
 
-    const activeCoursesCount = enrollments.filter((e) => e.status === "active").length;
-    const pendingRequestsCount = requests.filter((e) => e.status === "pending").length;
+    const activeCoursesCount = enrollments.filter(
+      (e) => e.status === "active",
+    ).length;
+    const pendingRequestsCount = requests.filter(
+      (e) => e.status === "pending",
+    ).length;
     const attendanceRate = enrollments.length
       ? Math.round(
           enrollments.reduce(

@@ -1,11 +1,11 @@
-import { logApiError, publicApiClient } from "@/lib/api";
-import { UserEntity } from "@/types/auth";
-import { PaginatedResponse } from "@/types/config";
-import { Instructor } from "@/types/entities";
 import { jwtDecode } from "jwt-decode";
-import NextAuth, { AuthOptions } from "next-auth";
-import { JWT } from "next-auth/jwt";
+import NextAuth, { type AuthOptions } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { logApiError, publicApiClient } from "@/lib/api";
+import type { UserEntity } from "@/types/auth";
+import type { PaginatedResponse } from "@/types/config";
+import type { Instructor } from "@/types/entities";
 
 export const authConfig: AuthOptions = {
   providers: [
@@ -27,11 +27,14 @@ export const authConfig: AuthOptions = {
 
         if (!access || !refresh) return null;
 
-        const userRes = await publicApiClient.get<UserEntity>("/auth/users/me/", {
-          headers: {
-            Authorization: `JWT ${access}`,
+        const userRes = await publicApiClient.get<UserEntity>(
+          "/auth/users/me/",
+          {
+            headers: {
+              Authorization: `JWT ${access}`,
+            },
           },
-        });
+        );
 
         const user: UserEntity = userRes.data;
 
@@ -54,8 +57,6 @@ export const authConfig: AuthOptions = {
           );
 
           user.instructor_id = String(id);
-
-          console.log(id);
         }
 
         user.jwt_access_token = access;

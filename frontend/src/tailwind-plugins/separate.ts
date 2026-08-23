@@ -1,6 +1,6 @@
 import plugin from "tailwindcss/plugin";
 
-export default plugin(function ({ matchUtilities, theme }) {
+export default plugin(({ matchUtilities, theme }) => {
   matchUtilities(
     {
       separators: (value) => ({

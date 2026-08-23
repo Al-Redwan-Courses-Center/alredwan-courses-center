@@ -1,16 +1,16 @@
 "use client";
 
+import { parseISO } from "date-fns";
 import BookIcon from "@/components/icons/BookIcon";
 import CalendarIcon from "@/components/icons/CalendarIcon";
 import ClockIcon from "@/components/icons/ClockIcon";
-import Button from "@/components/ui/Button";
-import ProgressBar from "@/components/ui/ProgressBar";
 import Accordion from "@/components/ui/accordion/Accordion";
 import AccordionHeader from "@/components/ui/accordion/AccordionHeader";
 import AccordionItem from "@/components/ui/accordion/AccordionItem";
+import Button from "@/components/ui/Button";
+import ProgressBar from "@/components/ui/ProgressBar";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
-import { CourseDetail } from "@/types/entities";
-import { parseISO } from "date-fns";
+import type { CourseDetail } from "@/types/entities";
 
 interface StudentOverviewCoursesAccordionProps {
   courses: any[];
@@ -102,8 +102,7 @@ export default function StudentOverviewCoursesAccordion({
                 <CalendarIcon className="text-olive-500" />
                 <span>{course.schedules.map((s: any) => s.weekday_display).join(" \\\\ ")}</span>
               </li>
-            )}
-          </ul>
+            )}          </ul>
 
           <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
             <ProgressBar className="h-3" progress={course.course_progress} />

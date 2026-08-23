@@ -1,13 +1,13 @@
-import Loader from "@/components/ui/Loader";
-import { cn, cva } from "@/lib/utils";
-import { VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
 import Link from "next/link";
-import {
+import type {
   ButtonHTMLAttributes,
   ComponentProps,
   MouseEvent,
   ReactNode,
 } from "react";
+import Loader from "@/components/ui/Loader";
+import { cn, cva } from "@/lib/utils";
 
 interface BaseProps {
   className?: string;

@@ -1,7 +1,10 @@
 "use client";
 
+import { type ReactNode, useState } from "react";
+import { type SubmitHandler, useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 import { createEnrollmentRequest } from "@/actions/enrollments";
-import { ParentChildDetail } from "@/actions/user";
+import type { ParentChildDetail } from "@/actions/user";
 import Button from "@/components/ui/Button";
 import {
   Modal,
@@ -11,10 +14,7 @@ import {
   ModalTitle,
   ModalTrigger,
 } from "@/components/ui/Modal";
-import { EnrollmentRequestCreateBody } from "@/types/entities";
-import { ReactNode, useState } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
-import toast from "react-hot-toast";
+import type { EnrollmentRequestCreateBody } from "@/types/entities";
 
 type PaymentMethod = NonNullable<EnrollmentRequestCreateBody["payment_method"]>;
 
@@ -185,8 +185,8 @@ export default function CoursePurchaseModal({
 
           {hasNoChildren && (
             <p className="rounded-[1.2rem_0] bg-gray-200 px-5 py-4 text-2xl text-gray-600">
-              لا يوجد أطفال متاحون للإلتحاق بهذه الدورة حاليًا (إما لا يوجد
-              أطفال مرتبطون أو أنهم ملتحقون بالفعل).
+              لا يوجد أطفال متاحون للإلتحاق بهذه الدورة حاليًا (إما لا يوجد أطفال
+              مرتبطون أو أنهم ملتحقون بالفعل).
             </p>
           )}
 

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState } from 'react';
 import RatingStars from '@/components/shared/RatingStars';
@@ -23,16 +23,20 @@ const RatingForm: React.FC<RatingFormProps> = ({
     instructorId,
     courseId,
     onSuccess,
-    compact = false
-}) => {
-    const [rating, setRating] = useState<number>(10);
-    const [feedback, setFeedback] = useState('');
-    const [loading, setLoading] = useState(false);
+    compact = false}) => {
+  const [rating, setRating] = useState<number>(10);
+  const [feedback, setFeedback] = useState("");
+  const [loading, setLoading] = useState(false);
+  
+  // States for selecting a course when rating an instructor
+  const [courses, setCourses] = useState<CourseListItem[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState<number | "">("");
+  const [loadingCourses, setLoadingCourses] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-
+  useEffect(() => {
+    if (type === "instructor") {
+      const fetchCourses = async () => {
+        setLoadingCourses(true);
         try {
             let result;
             if (type === 'course') {
@@ -54,13 +58,15 @@ const RatingForm: React.FC<RatingFormProps> = ({
                 if (onSuccess) onSuccess();
             } else {
                 toast.error(result.message);
-            }
-        } catch (error) {
-            toast.error('حدث خطأ غير متوقع');
+            }        } catch (error) {
+          console.error("Error fetching instructor courses:", error);
         } finally {
-            setLoading(false);
+          setLoadingCourses(false);
         }
-    };
+      };
+      fetchCourses();
+    }
+  }, [type, id]);
 
     return (
         <form onSubmit={handleSubmit} className={cn("bg-white border border-gray-100 shadow-xl", compact ? "rounded-2xl p-4 space-y-4" : "rounded-3xl p-8 space-y-6")}>
@@ -108,7 +114,6 @@ const RatingForm: React.FC<RatingFormProps> = ({
                 )}
             </Button>
         </form>
-    );
-};
+    );};
 
 export default RatingForm;

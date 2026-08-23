@@ -1,6 +1,10 @@
-import { CSSProperties } from "react";
+import type { CSSProperties } from "react";
 
-export default function Loader({ thickness = "0.3em" }: { thickness?: string }) {
+export default function Loader({
+  thickness = "0.3em",
+}: {
+  thickness?: string;
+}) {
   const style = { borderWidth: thickness } as CSSProperties;
 
   return (

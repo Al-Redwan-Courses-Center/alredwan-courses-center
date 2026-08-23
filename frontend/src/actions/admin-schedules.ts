@@ -1,8 +1,57 @@
 "use server";
 
-import { getAuthApiClient } from "@/lib/auth-api";
-import { unwrapPaginated } from "@/lib/api";
 import { isAxiosError } from "axios";
+import { unwrapPaginated } from "@/lib/api";
+import { getAuthApiClient } from "@/lib/auth-api";
+import type { CourseListItem, CourseScheduleDetail } from "@/types/entities/courses";
+import type { SupervisorSchedule } from "@/types/entities/schedules";
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (!isAxiosError(error)) {
+    return fallback;
+  }
+
+  const data = error.response?.data;
+  if (!data) {
+    return fallback;
+  }
+
+  // If data is a string (e.g. Django debug traceback or raw HTML)
+  if (typeof data === "string") {
+    const trimmed = data.trim();
+    if (trimmed.startsWith("<!DOCTYPE") || trimmed.includes("traceback") || trimmed.includes("wsgi")) {
+      return fallback;
+    }
+    return trimmed;
+  }
+
+  // If data is an object
+  if (typeof data === "object") {
+    // 1. Check for 'detail' key
+    if ("detail" in data && typeof data.detail === "string") {
+      return data.detail;
+    }
+
+    // 2. Check for 'non_field_errors' or other array messages
+    if ("non_field_errors" in data && Array.isArray(data.non_field_errors)) {
+      return data.non_field_errors.join(", ");
+    }
+
+    // 3. Fallback to extracting validation error values
+    const values = Object.values(data);
+    if (values.length > 0) {
+      const firstVal = values[0];
+      if (Array.isArray(firstVal)) {
+        return firstVal.join(", ");
+      }
+      if (typeof firstVal === "string") {
+        return firstVal;
+      }
+    }
+  }
+
+  return fallback;
+}
 
 export interface Season {
   id: number;
@@ -28,8 +77,15 @@ export async function getSeasons() {
     const apiClient = await getAuthApiClient();
     const { data } = await apiClient.get<Season[]>("/api/courses/seasons/");
     return data;
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     if (isAxiosError(error) && error.response?.status === 404) {
       // Endpoint might not exist yet, return empty array gracefully
       return [];
@@ -46,25 +102,32 @@ export async function getAllSchedules(params?: {
 }) {
   try {
     const apiClient = await getAuthApiClient();
-    
+
     // We fetch courses and supervisor schedules
     const [coursesRes, supervisorRes] = await Promise.all([
       apiClient.get("/api/courses/?page_size=100", { params }),
       apiClient.get("/api/attendance/schedules/?page_size=100", { params }),
     ]);
 
-    const coursesData = unwrapPaginated(coursesRes.data);
-    const supervisorData = unwrapPaginated(supervisorRes.data);
+    const coursesData = unwrapPaginated<CourseListItem>(coursesRes.data);
+    const supervisorData = unwrapPaginated<SupervisorSchedule>(supervisorRes.data);
 
     const schedules: WeeklySchedule[] = [];
 
     // Process Course Schedules by fetching them individually
-    const courseSchedulesPromises = coursesData.map(async (course: any) => {
+    const courseSchedulesPromises = coursesData.map(async (course: CourseListItem) => {
       try {
         const res = await apiClient.get(`/api/courses/${course.id}/schedules/`);
-        return { course, schedules: unwrapPaginated(res.data) };
-      } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+        return { course, schedules: unwrapPaginated<CourseScheduleDetail>(res.data) };
+      } catch (error: unknown) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "digest" in error &&
+          error.digest === "DYNAMIC_SERVER_USAGE"
+        ) {
+          throw error;
+        }
         return { course, schedules: [] };
       }
     });
@@ -72,7 +135,7 @@ export async function getAllSchedules(params?: {
     const coursesWithSchedules = await Promise.all(courseSchedulesPromises);
 
     coursesWithSchedules.forEach(({ course, schedules: courseSchedules }) => {
-      courseSchedules.forEach((s: any) => {
+      courseSchedules.forEach((s: CourseScheduleDetail) => {
         const instructorName = course.instructor?.name || "غير محدد";
 
         schedules.push({
@@ -91,11 +154,19 @@ export async function getAllSchedules(params?: {
     });
 
     // Process Supervisor Schedules
-    supervisorData.forEach((s: any) => {
+    supervisorData.forEach((s: SupervisorSchedule) => {
       schedules.push({
         id: s.id,
         weekday: s.day_of_week,
-        weekday_display: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"][s.day_of_week],
+        weekday_display: [
+          "الأحد",
+          "الاثنين",
+          "الثلاثاء",
+          "الأربعاء",
+          "الخميس",
+          "الجمعة",
+          "السبت",
+        ][s.day_of_week],
         start_time: s.start_time,
         end_time: s.end_time,
         instructor_name: s.instructor_name,
@@ -107,52 +178,90 @@ export async function getAllSchedules(params?: {
     });
 
     return schedules;
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Failed to fetch schedules", error);
     return [];
   }
 }
 
-export async function createCourseSchedule(courseId: number, data: { weekday: number, start_time: string, end_time: string }) {
+export async function createCourseSchedule(
+  courseId: number,
+  data: { weekday: number; start_time: string; end_time: string },
+) {
   try {
     const apiClient = await getAuthApiClient();
-    const response = await apiClient.post(`/api/courses/${courseId}/schedules/`, data);
+    const response = await apiClient.post(
+      `/api/courses/${courseId}/schedules/`,
+      data,
+    );
     return { success: true, data: response.data };
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
-    console.error("Failed to create course schedule", error);
-    let message = "فشل في إنشاء موعد الدورة";
-    if (isAxiosError(error) && error.response?.data) {
-      message = JSON.stringify(error.response.data);
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
     }
+    console.error("Failed to create course schedule", error);
+    const message = getErrorMessage(error, "فشل في إنشاء موعد الدورة");
     return { success: false, error: message };
   }
 }
 
-export async function createSupervisionSchedule(data: { instructor: number, day_of_week: number, start_time: string, end_time: string }) {
+export async function createSupervisionSchedule(data: {
+  instructor: number;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  grace_period_minutes?: number;
+  auto_absent_after_minutes?: number;
+}) {
   try {
     const apiClient = await getAuthApiClient();
     const response = await apiClient.post(`/api/attendance/schedules/`, data);
     return { success: true, data: response.data };
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
-    console.error("Failed to create supervision schedule", error);
-    let message = "فشل في إنشاء فترة الإشراف";
-    if (isAxiosError(error) && error.response?.data) {
-      message = JSON.stringify(error.response.data);
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
     }
+    console.error("Failed to create supervision schedule", error);
+    const message = getErrorMessage(error, "فشل في إنشاء فترة الإشراف");
     return { success: false, error: message };
   }
 }
 
-export async function deleteCourseSchedule(courseId: number, scheduleId: number) {
+export async function deleteCourseSchedule(
+  courseId: number,
+  scheduleId: number,
+) {
   try {
     const apiClient = await getAuthApiClient();
     await apiClient.delete(`/api/courses/${courseId}/schedules/${scheduleId}/`);
     return { success: true };
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Failed to delete course schedule", error);
     return { success: false, error: "فشل في حذف موعد الدورة" };
   }
@@ -163,9 +272,65 @@ export async function deleteSupervisionSchedule(scheduleId: number) {
     const apiClient = await getAuthApiClient();
     await apiClient.delete(`/api/attendance/schedules/${scheduleId}/`);
     return { success: true };
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Failed to delete supervision schedule", error);
     return { success: false, error: "فشل في حذف فترة الإشراف" };
+  }
+}
+
+export async function getOnlySupervisorSchedules(params?: { instructor?: number; day_of_week?: number }) {
+  try {
+    const apiClient = await getAuthApiClient();
+    const response = await apiClient.get("/api/attendance/schedules/?page_size=100", { params });
+    return unwrapPaginated<SupervisorSchedule>(response.data);
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
+    console.error("Failed to fetch supervisor schedules", error);
+    return [];
+  }
+}
+
+export async function updateSupervisionSchedule(
+  scheduleId: number,
+  data: {
+    instructor: number;
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+    grace_period_minutes?: number;
+    auto_absent_after_minutes?: number;
+  }
+) {
+  try {
+    const apiClient = await getAuthApiClient();
+    const response = await apiClient.patch(`/api/attendance/schedules/${scheduleId}/`, data);
+    return { success: true, data: response.data };
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
+    console.error("Failed to update supervision schedule", error);
+    const message = getErrorMessage(error, "فشل في تعديل فترة الإشراف");
+    return { success: false, error: message };
   }
 }

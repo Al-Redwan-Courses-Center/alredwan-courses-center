@@ -1,9 +1,11 @@
 "use client";
-
-import { useState } from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
-import { Modal, ModalContent, ModalHeader, ModalTitle, ModalFooter } from "@/components/ui/Modal";
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -28,18 +30,20 @@ export default function ConfirmationModal({
 }: ConfirmationModalProps) {
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
-      <ModalContent className="sm:max-w-[500px] bg-white rounded-3xl p-10 overflow-hidden">
+      <ModalContent className="overflow-hidden rounded-3xl bg-white p-10 sm:max-w-[500px]">
         <ModalHeader className="mb-6">
-          <ModalTitle className={cn(
-            "text-4xl font-medad text-center",
-            variant === "danger" ? "text-red-500" : "text-olive-700"
-          )}>
+          <ModalTitle
+            className={cn(
+              "font-medad text-center text-4xl",
+              variant === "danger" ? "text-red-500" : "text-olive-700",
+            )}
+          >
             {title}
           </ModalTitle>
         </ModalHeader>
-        
+
         {description && (
-          <p className="text-2xl text-gray-500 text-center mb-10 leading-relaxed font-medad">
+          <p className="font-medad mb-10 text-center text-2xl leading-relaxed text-gray-500">
             {description}
           </p>
         )}
@@ -51,17 +55,17 @@ export default function ConfirmationModal({
               onClose();
             }}
             className={cn(
-              "flex-1 py-5 rounded-2xl text-2xl font-bold transition-all shadow-md active:scale-95",
-              variant === "danger" 
-                ? "bg-red-500 text-white hover:bg-red-600" 
-                : "bg-olive-300 text-white hover:bg-olive-400"
+              "flex-1 rounded-2xl py-5 text-2xl font-bold shadow-md transition-all active:scale-95",
+              variant === "danger"
+                ? "bg-red-500 text-white hover:bg-red-600"
+                : "bg-olive-300 hover:bg-olive-400 text-white",
             )}
           >
             {confirmText}
           </button>
           <button
             onClick={onClose}
-            className="flex-1 bg-gray-100 text-gray-500 py-5 rounded-2xl text-2xl font-bold hover:bg-gray-200 transition-all"
+            className="flex-1 rounded-2xl bg-gray-100 py-5 text-2xl font-bold text-gray-500 transition-all hover:bg-gray-200"
           >
             {cancelText}
           </button>

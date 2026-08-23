@@ -1,5 +1,14 @@
 "use client";
 
+import { signIn } from "next-auth/react";
+import { type FocusEvent, type ReactNode, useState } from "react";
+import {
+  type FieldErrors,
+  type FieldValues,
+  type SubmitHandler,
+  useForm,
+} from "react-hook-form";
+import toast from "react-hot-toast";
 import { signUp } from "@/actions/auth";
 import Button from "@/components/ui/Button";
 import {
@@ -9,17 +18,7 @@ import {
 } from "@/components/ui/DropdownMenu";
 import FieldSetInput from "@/components/ui/FieldSetInput";
 import { cn, toHindiDigits } from "@/lib/utils";
-import { SignupInputs } from "@/types/auth";
-import { signIn } from "next-auth/react";
-import { FocusEvent, ReactNode, useState } from "react";
-import {
-  FieldErrors,
-  FieldValues,
-  SubmitHandler,
-  useForm,
-} from "react-hook-form";
-import toast from "react-hot-toast";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import type { SignupInputs } from "@/types/auth";
 
 function renderError<T extends FieldValues>(
   errors: FieldErrors<T>,
@@ -128,9 +127,10 @@ export default function SignupForm() {
         });
 
         if (res?.ok) {
-          const redirectPath = formattedData.role === "parent" 
-            ? "/dashboard/my-children/new" 
-            : "/dashboard";
+          const redirectPath =
+            formattedData.role === "parent"
+              ? "/dashboard/my-children/new"
+              : "/dashboard";
           return window.location.replace(redirectPath);
         }
         toast.error(res?.error || "حدث خطأ أثناء تسجيل الدخول! حاول مرة أخرى!");

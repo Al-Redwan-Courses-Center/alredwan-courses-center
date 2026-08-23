@@ -1,23 +1,26 @@
 "use client";
 
+import {
+  createContext,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+  useState,
+} from "react";
 import { useFilterData } from "@/hooks/useFilterData";
 import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
 import { useSearchData } from "@/hooks/useSearchData";
 import { useSortData } from "@/hooks/useSortData";
-import { DataViewFilterConfig, DataViewSortConfig } from "@/types/components";
-import {
-  createContext,
-  Dispatch,
-  ReactNode,
-  SetStateAction,
-  useState,
-} from "react";
+import type {
+  DataViewFilterConfig,
+  DataViewSortConfig,
+} from "@/types/components";
 
 interface DataViewContext<T> {
   columnSizing: string;
   layout: "table" | "cards";
   setLayout: Dispatch<SetStateAction<"table" | "cards">>;
-  data: any[];
+  data: T[];
   page: number;
   numPages: number;
   maxItemsPerPage: number;
@@ -71,7 +74,7 @@ export default function DataViewLegacy<T extends Record<string, any>>({
 
   const { mutateSearchParams, searchParams } = useMutateSearchParams();
 
-  const searchableKeys = !!data.length ? Object.keys(data[0]) : [""];
+  const searchableKeys = data.length ? Object.keys(data[0]) : [""];
 
   const filteredData = useFilterData<T>(data, filterConfig);
   const searchedData = useSearchData<T>(filteredData, searchableKeys);

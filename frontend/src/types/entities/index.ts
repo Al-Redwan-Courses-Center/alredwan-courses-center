@@ -1,11 +1,15 @@
-export * from "./common";
 export * from "./attendance";
+export * from "./common";
 export * from "./courses";
 export * from "./enrollments";
 export * from "./instructors";
 export * from "./lectures";
+export * from "./memories";
 export * from "./people";
 export * from "./staff-attendance";
+<<<<<<< HEAD
 export * from "./memories";
 export * from "./online-courses";
 
+=======
+>>>>>>> upstream/dev

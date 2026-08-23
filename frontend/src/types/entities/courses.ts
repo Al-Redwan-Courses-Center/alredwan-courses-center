@@ -53,10 +53,8 @@ export interface CourseScheduleDetail {
   end_time: string;
 }
 
-export interface CourseDetail extends Omit<
-  CourseListItem,
-  "average_rating" | "rating_count"
-> {
+export interface CourseDetail
+  extends Omit<CourseListItem, "average_rating" | "rating_count"> {
   schedules: CourseScheduleDetail[];
 }
 
@@ -73,9 +71,6 @@ export interface CourseStats {
   lectures: number;
 }
 */
-
-
-
 
 // TODO(types): Unused entity type; reintroduce when an API uses it.
 /*

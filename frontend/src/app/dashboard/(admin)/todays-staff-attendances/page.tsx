@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getTodaysAttendances } from "@/actions/admin-attendances";
 import AdminAttendancesView from "@/components/dashboard/admin/AdminAttendancesView";
 
@@ -11,7 +13,10 @@ export default async function Page() {
         <span>حضور و مهام اليوم</span>
       </div>
 
-      <AdminAttendancesView initialAttendances={attendances} hideDateFilter={true} />
+      <AdminAttendancesView
+        initialAttendances={attendances}
+        hideDateFilter={true}
+      />
     </div>
   );
 }

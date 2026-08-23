@@ -1,7 +1,7 @@
 "use server";
 
 import { apiRequest, getAuthApiClient } from "@/lib/api";
-import {
+import type {
   BulkLectureAttendanceBody,
   BulkLectureAttendanceResponse,
   LectureAttendanceDetailsResponse,

@@ -1,3 +1,5 @@
+import type React from "react";
+import type { ComponentProps } from "react";
 import BookIcon from "@/components/icons/BookIcon";
 import CalendarIcon from "@/components/icons/CalendarIcon";
 import CheckBadgeIcon from "@/components/icons/CheckBadgeIcon";
@@ -7,7 +9,6 @@ import MosqueIcon from "@/components/icons/MosqueIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import TechnologyIcon from "@/components/icons/TechnologyIcon";
 import { cn } from "@/lib/utils";
-import React, { ComponentProps } from "react";
 
 const featureCardsConfig = [
   {
@@ -82,7 +83,9 @@ function FeatureCard({
       <div className="flex gap-6 items-start w-full">
         <Icon className="drop-shadow-primary h-12 w-12 shrink-0 mt-1" />
         <div className="flex flex-col gap-3">
-          <h3 className="text-2xl md:text-3xl font-semibold leading-tight">{title}</h3>
+          <h3 className="text-2xl md:text-3xl font-semibold leading-tight">
+            {title}
+          </h3>
           <p className="text-[1.5rem] md:text-[1.6rem] leading-relaxed opacity-90">
             {content}
           </p>

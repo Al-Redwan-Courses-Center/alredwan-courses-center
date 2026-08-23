@@ -1,6 +1,6 @@
-import { cn } from "@/lib/utils";
 import Image from "next/image";
 import DefaultUser from "@/assets/images/default-user.svg";
+import { cn } from "@/lib/utils";
 
 interface StudentHeaderInfoProps {
   name: string;

@@ -1,7 +1,7 @@
 import { cva } from "class-variance-authority";
 import clsx from "clsx";
 import { parse } from "date-fns";
-import { ClassNameValue, twMerge } from "tailwind-merge";
+import { type ClassNameValue, twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassNameValue[]) {
   return twMerge(clsx(inputs));
@@ -9,66 +9,18 @@ export function cn(...inputs: ClassNameValue[]) {
 
 export { cva };
 
-/*
-type HindiDigitsMode = "auto" | "string" | "number";
-
-interface HindiDigitsOptions {
-  mode?: HindiDigitsMode;
-  decimals?: number;
-  preserveLeadingZeros?: boolean;
-}
-
-// TODO(utils): Advanced version kept for later reuse.
-export function toHindiDigits(
-  num: number | string,
-  options: HindiDigitsOptions = {},
-): string {
-  const westernToHindiDigits: Record<string, string> = {
-    "0": "٠",
-    "1": "١",
-    "2": "٢",
-    "3": "٣",
-    "4": "٤",
-    "5": "٥",
-    "6": "٦",
-    "7": "٧",
-    "8": "٨",
-    "9": "٩",
-  };
-
-  const { mode = "auto", decimals = 2, preserveLeadingZeros = false } = options;
-  const isString = typeof num === "string";
-  const raw = isString ? num : String(num);
-
-  const hasLeadingZeros = isString && /^0\d+/.test(raw);
-  const isIntegerString = isString && /^\d+$/.test(raw);
-  const isDecimalString = isString && /^\d+\.\d+$/.test(raw);
-
-  const useRawString =
-    mode === "string" ||
-    (mode === "auto" &&
-      ((preserveLeadingZeros && hasLeadingZeros && isIntegerString) ||
-        isDecimalString));
-
-  const numberText = useRawString
-    ? raw
-    : Number.isInteger(+num)
-      ? (+num).toFixed(0)
-      : (+num).toFixed(decimals);
-
-  return numberText.replace(
-    /[0-9]/g,
-    (digit) => westernToHindiDigits[digit] || digit,
-  );
-}
-*/
-
 export function toHindiDigits(
   num: number | string,
   preserveLeadingZeros: boolean = false,
 ): string {
-  if (num === null || num === undefined || num === "" || isNaN(+num) && typeof num !== 'string') return "٠";
-  
+  if (
+    num === null ||
+    num === undefined ||
+    num === "" ||
+    (isNaN(+num) && typeof num !== "string")
+  )
+    return "٠";
+
   let number = num;
 
   const westernToHindiDigits: Record<string, string> = {
@@ -146,10 +98,10 @@ export function getWeekDayIndex(weekday: string) {
   return WEEKDAYS.findIndex((w) => w === weekday);
 }
 
-export function debounceFn(fn: (...args: any[]) => any, delay: number) {
+export function debounceFn<Args extends unknown[]>(fn: (...args: Args) => void, delay: number) {
   let timerId: NodeJS.Timeout;
 
-  return (...args: any[]) => {
+  return (...args: Args) => {
     clearTimeout(timerId);
     timerId = setTimeout(() => fn(...args), delay);
   };
@@ -179,8 +131,7 @@ export function persistInLocalStorage<T>(
   fn: (value: T | ((prev: T) => T)) => void,
   key: string,
 ) {
-  return function (arg: T | ((prev: T) => T)) {
-    // console.log(arg);
+  return (arg: T | ((prev: T) => T)) => {
     if (typeof arg === "function") {
       fn((prev: T) => {
         //eslint-disable-next-line @typescript-eslint/no-unsafe-function-type

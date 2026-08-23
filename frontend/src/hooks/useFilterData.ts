@@ -1,17 +1,18 @@
 "use client";
 
-import { DataViewFilterConfig } from "@/types/components";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
+import type { DataViewFilterConfig } from "@/types/components";
 
 export function useFilterData<T>(
   data: T[],
   filterConfig: DataViewFilterConfig,
 ) {
   const searchParams = useSearchParams();
+  const filterParam = searchParams.get("filter");
 
   const filteredData = useMemo(() => {
-    const filters = searchParams.get("filter")?.split(",") || [];
+    const filters = filterParam?.split(",") || [];
 
     let filtered = data;
 
@@ -24,7 +25,7 @@ export function useFilterData<T>(
     });
 
     return filtered;
-  }, [data, filterConfig, searchParams]);
+  }, [data, filterConfig, filterParam]);
 
   return filteredData;
 }

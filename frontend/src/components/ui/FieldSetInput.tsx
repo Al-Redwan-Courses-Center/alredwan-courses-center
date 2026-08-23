@@ -1,10 +1,15 @@
 "use client";
 
-import { cn, cva } from "@/lib/utils";
-import { VariantProps } from "class-variance-authority";
-import { ChangeEvent, InputHTMLAttributes, ReactNode, useState } from "react";
-import { UseFormRegisterReturn } from "react-hook-form";
+import type { VariantProps } from "class-variance-authority";
 import { Eye, EyeOff } from "lucide-react";
+import {
+  type ChangeEvent,
+  type InputHTMLAttributes,
+  type ReactNode,
+  useState,
+} from "react";
+import type { UseFormRegisterReturn } from "react-hook-form";
+import { cn, cva } from "@/lib/utils";
 
 interface BaseInput {
   shape?: VariantProps<typeof containerStyles>["shape"];
@@ -91,7 +96,12 @@ export default function FieldSetInput({
         </button>
       )}
       {button && (
-        <div className={cn("absolute top-1/2 -translate-y-[50%]", isPassword ? "left-14" : "left-5")}>
+        <div
+          className={cn(
+            "absolute top-1/2 -translate-y-[50%]",
+            isPassword ? "left-14" : "left-5",
+          )}
+        >
           {button}
         </div>
       )}

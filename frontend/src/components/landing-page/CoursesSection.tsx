@@ -11,8 +11,7 @@ export default async function CoursesSection() {
 
   return (
     <section id="courses" className="flex flex-col items-center bg-[linear-gradient(180deg,#FFF_0%,#F3F6F4_100%)] pb-24">
-      <ScrollReveal direction="up" className="w-full flex flex-col items-center">
-        <div className="title-block">
+      <ScrollReveal direction="up" className="w-full flex flex-col items-center">        <div className="title-block">
           <h2>
             الدورات <span>المميزة</span>
           </h2>
@@ -24,7 +23,12 @@ export default async function CoursesSection() {
         </div>
       </ScrollReveal>
 
-      <ScrollReveal direction="up" delay={0.2} amount={0.1} className="w-full flex flex-col items-center">
+      <ScrollReveal
+        direction="up"
+        delay={0.2}
+        amount={0.1}
+        className="w-full flex flex-col items-center"
+      >
         <PublicCoursesList courses={courses} />
       </ScrollReveal>
 
@@ -55,8 +59,7 @@ export default async function CoursesSection() {
           <Button variant="secondary" href="/courses?type=online" className="w-full flex items-center justify-center text-2xl py-5 rounded-2xl">
             تصفح الدورات الإلكترونية
           </Button>
-        </div>
-      </ScrollReveal>
+        </div>      </ScrollReveal>
     </section>
   );
 }

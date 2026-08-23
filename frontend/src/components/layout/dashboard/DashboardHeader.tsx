@@ -1,3 +1,4 @@
+import Image from "next/image";
 import LeftDecoration from "@/assets/dashboard/navbar-decoration-left.svg";
 import RightDecoration from "@/assets/dashboard/navbar-decoration-right.svg";
 import Logo from "@/assets/logo.svg";
@@ -5,8 +6,7 @@ import LogoutButton from "@/components/auth/LogoutButton";
 import NotificationsDrawer from "@/components/dashboard/NotificationsDrawer";
 import Avatar from "@/components/ui/Avatar";
 import NavLink from "@/components/ui/navigation/NavLink";
-import { UserEntity } from "@/types/auth";
-import Image from "next/image";
+import type { UserEntity } from "@/types/auth";
 
 export default function DashboardHeader({
   firstName,

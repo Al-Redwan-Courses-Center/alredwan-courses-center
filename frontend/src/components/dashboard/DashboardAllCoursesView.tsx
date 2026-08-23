@@ -1,23 +1,21 @@
 "use client";
 
 import PublicCourseCard from "@/components/courses/PublicCourseCard";
-import DataView from "@/components/ui/data-view/DataView";
-
-import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
-import { DataViewHeaderLegacy } from "@/components/ui/data-view/DataViewRow";
-
-import { cn } from "@/lib/utils";
-import { CourseListItem } from "@/types/entities";
 import {
   buildAllCoursesView,
   getAllCoursesFilterConfig,
   sortConfig,
 } from "@/components/dashboard/dashboard-all-courses-view-config";
-import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
+import DataView from "@/components/ui/data-view/DataView";
 import DataViewBodyLegacy from "@/components/ui/data-view/DataViewBody";
-import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
-import DataViewSortLegacy from "../ui/data-view/DataViewSort";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
 import DataViewFilterLegacy from "@/components/ui/data-view/DataViewFilter";
+import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
+import { DataViewHeaderLegacy } from "@/components/ui/data-view/DataViewRow";
+import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
+import { cn } from "@/lib/utils";
+import type { CourseListItem } from "@/types/entities";
+import DataViewSortLegacy from "../ui/data-view/DataViewSort";
 
 export default function DashboardAllCoursesView({
   courses: inputCourses = [],

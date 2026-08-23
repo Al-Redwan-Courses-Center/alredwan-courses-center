@@ -1,23 +1,19 @@
 "use server";
 
 import { apiRequest, getAuthApiClient, unwrapPaginated } from "@/lib/api";
-import { PaginatedResponse, TodaysLecturesResponse } from "@/types/config";
-import { LectureDetail, LectureListItem } from "@/types/entities";
+import type { PaginatedResponse, TodaysLecturesResponse } from "@/types/config";
+import type { LectureDetail, LectureListItem } from "@/types/entities";
 
 export async function getLecturesByCourseId(courseId: string) {
-  return apiRequest(
-    "Failed to get lectures: ",
-    async () => {
-      const apiClient = await getAuthApiClient();
+  return apiRequest("Failed to get lectures: ", async () => {
+    const apiClient = await getAuthApiClient();
 
-      const { data } = await apiClient.get<
-        PaginatedResponse<LectureListItem> | LectureListItem[]
-      >(`/api/courses/${courseId}/lectures/?page_size=100`);
+    const { data } = await apiClient.get<
+      PaginatedResponse<LectureListItem> | LectureListItem[]
+    >(`/api/courses/${courseId}/lectures/?page_size=100`);
 
-      return unwrapPaginated(data);
-    },
-    [],
-  );
+    return unwrapPaginated(data);
+  }, []);
 }
 
 export async function getLectureById(lectureId: string) {

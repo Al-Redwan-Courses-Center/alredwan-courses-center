@@ -258,6 +258,41 @@ class LectureListSerializer(serializers.ModelSerializer):
         return start_dt.isoformat() if start_dt else None
 
 
+class PersonalAttendanceSerializer(serializers.ModelSerializer):
+    """Serializer for a student's personal attendance record"""
+    class Meta:
+        from attendance.models import LectureAttendance
+        model = LectureAttendance
+        fields = ['present', 'rating', 'notes', 'marked_at']
+
+
+class StudentLectureListSerializer(serializers.ModelSerializer):
+    """Serializer for listing lectures for a student/parent, embedding their personal attendance"""
+    status_display = serializers.CharField(
+        source='get_status_display', read_only=True)
+    scheduled_at = serializers.SerializerMethodField()
+    attendance_info = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Lecture
+        fields = [
+            'id', 'lecture_number', 'title', 'day', 'scheduled_at',
+            'start_time', 'end_time', 'status', 'status_display', 
+            'is_accepted', 'attendance_info'
+        ]
+
+    def get_scheduled_at(self, obj):
+        start_dt = obj.get_start_datetime()
+        return start_dt.isoformat() if start_dt else None
+
+    def get_attendance_info(self, obj):
+        """Extract the prefetched personal attendance record (if any)"""
+        # The view should prefetch this into a custom attribute 'personal_attendance'
+        attendance = getattr(obj, 'personal_attendance', None)
+        if attendance:
+            return PersonalAttendanceSerializer(attendance).data
+        return None
+
 class LectureDetailSerializer(serializers.ModelSerializer):
     """Serializer for detailed lecture view with full course and instructor info"""
     course = CourseListSerializer(read_only=True)

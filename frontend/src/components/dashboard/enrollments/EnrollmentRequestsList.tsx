@@ -1,10 +1,11 @@
 import EnrollmentRequestCard from "@/components/dashboard/enrollments/EnrollmentRequestCard";
+import type { EnrollmentRequestListItem } from "@/types/entities/enrollments";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
-import { cn } from "@/lib/utils";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 import Refresh from "@/components/ui/Refresh";
-import InfoTooltip from "@/components/ui/InfoTooltip";
+import { cn } from "@/lib/utils";
 
 const emptyActionClassName =
   "!shadow-[0_4px_14px_rgba(47,61,56,0.2)] hover:!shadow-[0_6px_18px_rgba(47,61,56,0.24)]";
@@ -14,7 +15,7 @@ export default function EnrollmentRequestsList({
   wrapperStyles,
   listStyles,
 }: {
-  enrollments: any[];
+  enrollments: EnrollmentRequestListItem[];
   listStyles?: string;
   wrapperStyles?: string;
 }) {
@@ -23,7 +24,6 @@ export default function EnrollmentRequestsList({
     ...new Set(
       enrollments
         .map((e) => {
-          if (e.child?.name) return e.child.name.split(" ")[0];
           if (e.participant_name) return e.participant_name.split(" ")[0];
           return null;
         })
@@ -53,10 +53,10 @@ export default function EnrollmentRequestsList({
       >
         {hasEnrollments ? (
           enrollments.map((e) => (
-            <EnrollmentRequestCard 
-              key={e.id} 
-              enrollmentRequest={e} 
-              childName={e.child?.name}
+            <EnrollmentRequestCard
+              key={e.id}
+              enrollmentRequest={e}
+              childName={e.participant_name || undefined}
             />
           ))
         ) : (

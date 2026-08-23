@@ -1,4 +1,7 @@
-import { ParentChildDetail } from "@/actions/user";
+import type { FunctionComponent, SVGProps } from "react";
+import type { ParentChildDetail } from "@/actions/user";
+import DeleteChildButton from "@/components/dashboard/parent/DeleteChildButton";
+import EditChildButton from "@/components/dashboard/parent/EditChildButton";
 import ActiveCourseIcon from "@/components/icons/ActiveCourseIcon";
 import CheckBadgeIcon from "@/components/icons/CheckBadgeIcon";
 import PendingTransactionIcon from "@/components/icons/PendingTransactionIcon";
@@ -8,9 +11,6 @@ import CopyToClipboardButton from "@/components/ui/CopyToClipboardButton";
 import ItemCard from "@/components/ui/ItemCard";
 import ProgressBarWithLabel from "@/components/ui/ProgressBarWithLabel";
 import { cn, getArabicPlural, toHindiDigits } from "@/lib/utils";
-import { FunctionComponent, SVGProps } from "react";
-import DeleteChildButton from "@/components/dashboard/parent/DeleteChildButton";
-import EditChildButton from "@/components/dashboard/parent/EditChildButton";
 
 function StatCard({
   icon: Icon,
@@ -47,7 +47,6 @@ export default function ChildCard({
   attendanceRate: number;
   showActions?: boolean;
 }) {
-
   return (
     <ItemCard
       shape="square"
@@ -95,7 +94,10 @@ export default function ChildCard({
           {showActions && (
             <div className="flex items-center gap-2">
               <EditChildButton child={child} />
-              <DeleteChildButton childId={child.id} childName={child.first_name} />
+              <DeleteChildButton
+                childId={child.id}
+                childName={child.first_name}
+              />
             </div>
           )}
           <Button

@@ -1,8 +1,8 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 import { TableCell, TableRow } from "../ui/table";
-import { cn } from "@/lib/utils";
 
 interface DataTableRowsSkeletonProps {
   rowsCount: number;
