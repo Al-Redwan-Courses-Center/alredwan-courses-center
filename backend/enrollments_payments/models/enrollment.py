@@ -119,11 +119,11 @@ class Enrollment(models.Model):
                 name='unique_course_student_enrollment'),
             models.UniqueConstraint(
                 fields=['online_course', 'child'],
-                condition=Q(online_course__isnull=False, child__isnull=False),
+                condition=Q(online_course__isnull=False, child__isnull=False, status__in=['active', 'suspended']),
                 name='unique_online_course_child_enrollment'),
             models.UniqueConstraint(
                 fields=['online_course', 'student'],
-                condition=Q(online_course__isnull=False, student__isnull=False),
+                condition=Q(online_course__isnull=False, student__isnull=False, status__in=['active', 'suspended']),
                 name='unique_online_course_student_enrollment'),
         ]
 

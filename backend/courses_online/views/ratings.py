@@ -3,7 +3,7 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Avg, Count
+from django.db.models import Sum, Count
 from django.shortcuts import get_object_or_404
 
 from courses_online.models import OnlineCourse
@@ -30,28 +30,25 @@ class OnlineCourseRatingsView(generics.RetrieveAPIView):
         """Retrieve course ratings and statistics"""
         course = self.get_object()
 
-        # Get aggregated statistics using database aggregation
+        # Get aggregated statistics using Sum and Count directly
         student_stats = StudentOnlineCourseRating.objects.filter(course=course).aggregate(
-            avg_rating=Avg('rating'),
+            sum_rating=Sum('rating'),
             total_ratings=Count('id')
         )
         parent_stats = ParentOnlineCourseRating.objects.filter(course=course).aggregate(
-            avg_rating=Avg('rating'),
+            sum_rating=Sum('rating'),
             total_ratings=Count('id')
         )
 
-        # Calculate combined average
-        student_total = (student_stats['avg_rating'] or 0) * \
-            (student_stats['total_ratings'] or 0)
-        parent_total = (parent_stats['avg_rating'] or 0) * \
-            (parent_stats['total_ratings'] or 0)
-        total_count = (student_stats['total_ratings']
-                       or 0) + (parent_stats['total_ratings'] or 0)
+        student_sum = student_stats['sum_rating'] or 0
+        parent_sum = parent_stats['sum_rating'] or 0
+        student_count = student_stats['total_ratings'] or 0
+        parent_count = parent_stats['total_ratings'] or 0
+        total_count = student_count + parent_count
 
         combined_avg = None
         if total_count > 0:
-            combined_avg = round(
-                (student_total + parent_total) / total_count, 2)
+            combined_avg = round((student_sum + parent_sum) / total_count, 2)
 
         # Get individual ratings with pagination support
         student_ratings = StudentOnlineCourseRating.objects.filter(
@@ -74,10 +71,10 @@ class OnlineCourseRatingsView(generics.RetrieveAPIView):
             'statistics': {
                 'average_rating': combined_avg,
                 'total_ratings': total_count,
-                'student_ratings_count': student_stats['total_ratings'] or 0,
-                'student_average': round(student_stats['avg_rating'], 2) if student_stats['avg_rating'] else None,
-                'parent_ratings_count': parent_stats['total_ratings'] or 0,
-                'parent_average': round(parent_stats['avg_rating'], 2) if parent_stats['avg_rating'] else None,
+                'student_ratings_count': student_count,
+                'student_average': round(student_sum / student_count, 2) if student_count > 0 else None,
+                'parent_ratings_count': parent_count,
+                'parent_average': round(parent_sum / parent_count, 2) if parent_count > 0 else None,
             },
             'ratings': {
                 'student_ratings': student_ratings_data,

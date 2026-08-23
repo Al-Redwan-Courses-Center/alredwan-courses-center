@@ -54,11 +54,12 @@ export default function StudentOnlineCourseViewer({
       {/* Sidebar: Lectures List */}
       <div 
         className={cn(
-          "flex flex-col bg-white border-l border-gray-200 overflow-y-auto transition-all duration-300 shrink-0",
+          "flex flex-col bg-white border-l border-gray-200 overflow-y-auto transition-[width] duration-300 shrink-0",
           isSidebarOpen 
             ? "w-full min-[1000px]:w-80 lg:w-96 min-[1000px]:h-full border-l" 
-            : "w-0 h-0 min-[1000px]:h-full border-none"
+            : "w-0 h-0 min-[1000px]:h-full border-none pointer-events-none invisible"
         )}
+        aria-hidden={!isSidebarOpen}
       >
         <div className="p-6 border-b border-gray-200 sticky top-0 bg-white z-10 w-full">
           <div className="flex items-center justify-between mb-4">
