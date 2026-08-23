@@ -2,10 +2,7 @@ import { getUser } from "@/actions/auth";
 import { getAllCourses } from "@/actions/courses";
 import { getAllOnlineCourses } from "@/actions/online-courses";
 import PublicCourseCatalog from "@/components/courses/PublicCourseCatalog";
-import { Suspense } from "react";
-import { getUser, protect } from "@/actions/auth";
-import { getAllCourses } from "@/actions/courses";
-import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
+
 export default async function Page() {
   const [user, physicalCourses, onlineCourses] = await Promise.all([
     getUser(),

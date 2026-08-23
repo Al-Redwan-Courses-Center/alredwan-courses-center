@@ -5,11 +5,6 @@ import { getPublicCourses } from "@/actions/courses";
 import { getPublicOnlineCourses } from "@/actions/online-courses";
 
 export const dynamic = "force-dynamic";
-export const dynamic = "force-dynamic";
-
-import { Suspense } from "react";
-import { getPublicCourses } from "@/actions/courses";
-import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
 export const metadata: Metadata = {
   title: "الدورات | واحة الرضوان",
 };

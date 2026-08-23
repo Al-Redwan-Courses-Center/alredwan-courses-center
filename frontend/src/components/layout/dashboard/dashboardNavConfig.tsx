@@ -7,11 +7,8 @@ import OverviewIcon from "@/components/icons/OverviewIcon";
 import PanelsIcon from "@/components/icons/PanelsIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import PersonIcon from "@/components/icons/PersonIcon";
-import MosqueIcon from "@/components/icons/MosqueIcon";
 import MonitorPlayIcon from "@/components/icons/MonitorPlayIcon";
 import type { UserEntity } from "@/types/auth";
-import type { ReactNode } from "react";
-
 export interface DashboardNavItem {
   label: string;
   href: string;

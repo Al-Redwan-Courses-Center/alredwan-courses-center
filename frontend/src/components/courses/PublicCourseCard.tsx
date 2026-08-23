@@ -26,10 +26,12 @@ export default function PublicCourseCard({
   return (
     <ItemCard
       cardHeader={
-        course.image && isCourseImageValid ? (
-          <Image            src={course.image}
+        course.image ? (
+          <Image src={course.image}
             alt="Template Course Image"
             draggable="false"
+            width={500}
+            height={300}
             className="object-cover w-full h-full"
           />
         ) : (
