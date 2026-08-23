@@ -5,13 +5,7 @@ import HeroBG from "@/assets/hero-bg.svg";
 import SignupModal from "@/components/auth/SignupModal";
 import SectionDivider from "@/components/landing-page/SectionDivider";
 import Button from "@/components/ui/Button";
-<<<<<<< HEAD
-import { getServerSession } from "next-auth";
-import Image from "next/image";
-import Link from "next/link";
-import SignupModal from "@/components/auth/SignupModal";
-=======
->>>>>>> upstream/dev
+
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { Sparkles, MonitorPlay, ArrowLeft } from "lucide-react";
 

@@ -1,15 +1,5 @@
-<<<<<<< HEAD
-import { getCourseById } from "@/actions/courses";
-import RatingsSection from "@/components/ratings/RatingsSection";
-import Image from "next/image";
-import CourseImage from "@/assets/course-img.jpg";
-import { Badge } from "lucide-react"; // Actually I'll use custom div
-import { Calendar, Book, Users, Clock, Tag as TagIcon, ArrowRight, Phone, Mail } from "lucide-react";
-import { formatDate, toHindiDigits, getArabicPlural } from "@/lib/utils";
-=======
->>>>>>> upstream/dev
 import { parseISO } from "date-fns";
-import { ArrowRight, Book, Calendar, Clock, Users } from "lucide-react";
+import { ArrowRight, Book, Calendar, Clock, Users, Phone, Mail } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { getUser } from "@/actions/auth";

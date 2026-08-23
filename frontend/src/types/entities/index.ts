@@ -7,9 +7,4 @@ export * from "./lectures";
 export * from "./memories";
 export * from "./people";
 export * from "./staff-attendance";
-<<<<<<< HEAD
-export * from "./memories";
 export * from "./online-courses";
-
-=======
->>>>>>> upstream/dev

@@ -1,0 +1,1193 @@
+=== docker-compose.yml ===
+Line 65:
+<<<<<<< HEAD
+    environment:
+      - REST_API_URL=http://redwan-backend:8000
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=NMgLwPWT!R6VIxQd^Yr&t#pBqy4CDAn*)bsJve@SU257aZj9%zcuKEmkh3FG(8Xf
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+=======
+    env_file:
+      - ./frontend/.env
+>>>>>>> upstream/dev
+
+=== frontend/src/actions/courses.ts ===
+Line 56:
+<<<<<<< HEAD
+      return courses;
+=======
+      const enrollmentsCoursesIds = (await getMyEnrollments()).map(
+        (e) => e.course,
+      );
+
+      const pendingOrProcessingRequestCourseIds = (
+        await getMyEnrollmentRequests()
+      )
+        .filter((request) => ["pending", "processing"].includes(request.status))
+        .map((request) => request.course);
+
+      return courses.filter(
+        (c) =>
+          !enrollmentsCoursesIds.includes(c.id) &&
+          !pendingOrProcessingRequestCourseIds.includes(c.id),
+      );
+>>>>>>> upstream/dev
+
+Line 129:
+<<<<<<< HEAD
+      const physicalEnrollments = myEnrollments.filter((e) => e.course !== null);
+      const onlineEnrollments = myEnrollments.filter((e) => e.online_course !== null);
+
+      const physicalRequests = pendingRequests.filter((r) => r.course !== null);
+      const onlineRequests = pendingRequests.filter((r) => r.online_course !== null);
+
+      const getUniqueIds = (arr: any[], key: string) =>
+        Array.from(new Set(arr.map((item) => item[key]!)));
+
+      const physicalCourseIds = getUniqueIds(
+        [...physicalEnrollments, ...physicalRequests],
+        "course"
+      );
+      const onlineCourseIds = getUniqueIds(
+        [...onlineEnrollments, ...onlineRequests],
+        "online_course"
+      );
+
+      const [myCoursesInitial, myEnrollmentsProgresses] = await Promise.all([
+        Promise.all(physicalCourseIds.map((id) => getCourseById(id))),
+        Promise.all(physicalEnrollments.map((e) => getEnrollmentProgressById(e.id))),
+      ]);
+
+      const physical = myCoursesInitial
+        .filter((c) => c !== null)
+        .map((c, i) => {
+          const isPending = !physicalEnrollments.find((e) => e.course === c?.id);
+          const req = physicalRequests.find((r) => r.course === c?.id);
+          const activeIndex = physicalEnrollments.findIndex((e) => e.course === c?.id);
+
+          return {
+            ...c,
+            course_progress: isPending ? 0 : myEnrollmentsProgresses[activeIndex]?.percentage || 0,
+            type: "physical" as const,
+            enrollment_status: isPending ? req?.status : "active",
+            enrollment_status_display: isPending ? req?.status_display : "نشط",
+          };
+        });
+
+      const apiClient = await getAuthApiClient();
+      const onlineCoursesInitial = await Promise.all(
+        onlineCourseIds.map((id) =>
+          apiClient
+            .get(`/api/online-courses/courses/${id}/`)
+            .then((res) => res.data)
+            .catch(() => null)
+        )
+      );
+
+      const online = onlineCoursesInitial
+        .filter((c) => c !== null)
+        .map((c: any) => {
+          const isPending = !onlineEnrollments.find((e) => e.online_course === c?.id);
+          const req = onlineRequests.find((r) => r.online_course === c?.id);
+
+          const completedLecturesCount = c.video_lectures?.filter((l: any) => l.watch_progress?.is_completed).length || 0;
+          const progressPercentage = c.video_lectures?.length > 0 
+            ? Math.round((completedLecturesCount / c.video_lectures.length) * 100) 
+            : 0;
+
+          return {
+            ...c,
+            course_progress: progressPercentage,
+            type: "online" as const,
+            enrollment_status: isPending ? req?.status : "active",
+            enrollment_status_display: isPending ? req?.status_display : "نشط",
+          };
+        });
+
+      return [...physical, ...online];
+=======
+      return myCoursesInitial
+        .map((c, i) => {
+          if (!c) return null;
+          return {
+            ...c,
+            course_progress: myEnrollmentsProgresses[i]?.percentage ?? 0,
+          };
+        })
+        .filter((c): c is CourseDetail & { course_progress: number } => c !== null);
+>>>>>>> upstream/dev
+
+=== frontend/src/actions/landing.ts ===
+Line 4:
+<<<<<<< HEAD
+import { PaginatedResponse } from "@/types/config";
+import { LandingPageCourse, LandingPageInstructor, OnlineCourseListItem } from "@/types/entities";
+=======
+import type { PaginatedResponse } from "@/types/config";
+import type {
+  LandingPageCourse,
+  LandingPageInstructor,
+} from "@/types/entities";
+
+>>>>>>> upstream/dev
+
+=== frontend/src/actions/user.ts ===
+Line 222:
+<<<<<<< HEAD
+    const physicalEnrollments = myEnrollments.filter((e) => e.course !== null);
+    const onlineEnrollments = myEnrollments.filter((e) => e.online_course !== null);
+
+    const physicalRequests = pendingRequests.filter((r) => r.course !== null);
+    const onlineRequests = pendingRequests.filter((r) => r.online_course !== null);
+
+    const getUniqueIds = (arr: any[], key: string) =>
+      Array.from(new Set(arr.map((item) => item[key]!)));
+
+    const physicalCourseIds = getUniqueIds(
+      [...physicalEnrollments, ...physicalRequests],
+      "course"
+    );
+    const onlineCourseIds = getUniqueIds(
+      [...onlineEnrollments, ...onlineRequests],
+      "online_course"
+    );
+
+    const [myCoursesInitial, myEnrollmentsProgresses] = await Promise.all([
+      Promise.all(physicalCourseIds.map((id) => getCourseById(id))),
+      Promise.all(physicalEnrollments.map((e) => getEnrollmentProgressById(e.id))),
+    ]);
+
+    const physical = myCoursesInitial
+      .filter((c) => c !== null)
+      .map((c, i) => {
+        const isPending = !physicalEnrollments.find((e) => e.course === c?.id);
+        const req = physicalRequests.find((r) => r.course === c?.id);
+        const activeIndex = physicalEnrollments.findIndex((e) => e.course === c?.id);
+
+        return {
+          ...c,
+          course_progress: isPending ? 0 : myEnrollmentsProgresses[activeIndex]?.percentage || 0,
+          type: "physical" as const,
+          enrollment_status: isPending ? req?.status : "active",
+          enrollment_status_display: isPending ? req?.status_display : "نشط",
+        };
+      });
+
+    const apiClient = await getAuthApiClient();
+    const onlineCoursesInitial = await Promise.all(
+      onlineCourseIds.map((id) =>
+        apiClient
+          .get(`/api/online-courses/courses/${id}/`)
+          .then((res) => res.data)
+          .catch(() => null)
+      )
+    );
+
+    const online = onlineCoursesInitial
+      .filter((c) => c !== null)
+      .map((c: any) => {
+        const isPending = !onlineEnrollments.find((e) => e.online_course === c?.id);
+        const req = onlineRequests.find((r) => r.online_course === c?.id);
+
+        const completedLecturesCount = c.video_lectures?.filter((l: any) => l.watch_progress?.is_completed).length || 0;
+        const progressPercentage = c.video_lectures?.length > 0 
+          ? Math.round((completedLecturesCount / c.video_lectures.length) * 100) 
+          : 0;
+
+        return {
+          ...c,
+          course_progress: progressPercentage,
+          type: "online" as const,
+          enrollment_status: isPending ? req?.status : "active",
+          enrollment_status_display: isPending ? req?.status_display : "نشط",
+        };
+      });
+
+    return [...physical, ...online];
+  } catch (error: any) {
+    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+=======
+    const myCourses = myCoursesInitial
+      .map((c, i) => {
+        if (!c) return null;
+        return {
+          ...c,
+          course_progress: myEnrollmentsProgresses[i]?.percentage ?? 0,
+        };
+      })
+      .filter((c): c is CourseDetail & { course_progress: number } => c !== null);
+
+    return myCourses;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
+>>>>>>> upstream/dev
+
+=== frontend/src/app/(public)/courses/[id]/page.tsx ===
+Line 1:
+<<<<<<< HEAD
+import { getCourseById } from "@/actions/courses";
+import RatingsSection from "@/components/ratings/RatingsSection";
+import Image from "next/image";
+import CourseImage from "@/assets/course-img.jpg";
+import { Badge } from "lucide-react"; // Actually I'll use custom div
+import { Calendar, Book, Users, Clock, Tag as TagIcon, ArrowRight, Phone, Mail } from "lucide-react";
+import { formatDate, toHindiDigits, getArabicPlural } from "@/lib/utils";
+=======
+>>>>>>> upstream/dev
+
+=== frontend/src/app/(public)/courses/page.tsx ===
+Line 1:
+<<<<<<< HEAD
+import PublicCourseCatalog from "@/components/courses/PublicCourseCatalog";
+import { Metadata } from "next";
+import { Suspense } from "react";
+import { getPublicCourses } from "@/actions/courses";
+import { getPublicOnlineCourses } from "@/actions/online-courses";
+
+export const dynamic = "force-dynamic";
+=======
+export const dynamic = "force-dynamic";
+
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import { getPublicCourses } from "@/actions/courses";
+import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
+>>>>>>> upstream/dev
+
+Line 23:
+<<<<<<< HEAD
+  const [physicalCourses, onlineCourses] = await Promise.all([
+    getPublicCourses(),
+    getPublicOnlineCourses()
+  ]);
+  
+=======
+  const courses = await getPublicCourses();
+
+>>>>>>> upstream/dev
+
+=== frontend/src/app/dashboard/courses/layout.tsx ===
+Line 1:
+<<<<<<< HEAD
+import { ReactNode } from "react";
+=======
+import type { ReactNode } from "react";
+import { protect } from "@/actions/auth";
+>>>>>>> upstream/dev
+
+=== frontend/src/app/dashboard/courses/page.tsx ===
+Line 1:
+<<<<<<< HEAD
+import { getUser } from "@/actions/auth";
+import { getAllCourses } from "@/actions/courses";
+import { getAllOnlineCourses } from "@/actions/online-courses";
+import PublicCourseCatalog from "@/components/courses/PublicCourseCatalog";
+=======
+import { Suspense } from "react";
+import { getUser, protect } from "@/actions/auth";
+import { getAllCourses } from "@/actions/courses";
+import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
+>>>>>>> upstream/dev
+
+=== frontend/src/app/dashboard/layout.tsx ===
+Line 21:
+<<<<<<< HEAD
+      <DashboardNavSidebar firstName={first_name} image={userImage} role={role} />
+      <div className="relative z-10 min-h-0 overflow-y-auto overflow-x-hidden bg-[linear-gradient(179deg,#FFF_0.75%,#93A494_480.3%)] max-[1000px]:pb-[120px] no-scrollbar">
+=======
+      <DashboardNavSidebar
+        firstName={first_name}
+        image={userImage}
+        role={role}
+      />
+      <div className="relative min-h-0 overflow-y-auto overflow-x-hidden bg-[linear-gradient(179deg,#FFF_0.75%,#93A494_480.3%)] max-[1000px]:pb-[120px] no-scrollbar">
+>>>>>>> upstream/dev
+
+=== frontend/src/components/courses/CourseHeader.tsx ===
+Line 62:
+<<<<<<< HEAD
+            <span className={labelStyles}>العمر</span>
+            <span className={valueStyles}>
+              {course?.for_adults ? "للبالغين (+18)" : (course?.min_age && course?.max_age ? `من ${toHindiDigits(course.min_age)} إلى ${toHindiDigits(course.max_age)}` : course?.min_age ? `+${toHindiDigits(course.min_age)}` : course?.max_age ? `حتى ${toHindiDigits(course.max_age)}` : "الكل")}
+=======
+            <span className={labelStyles}>الحصة</span>
+            <span className={valueStyles}>
+              {toHindiDigits(course?.capacity || 200)}
+>>>>>>> upstream/dev
+
+=== frontend/src/components/courses/PublicCourseCard.tsx ===
+Line 29:
+<<<<<<< HEAD
+        !!course.image ? (
+          <img
+=======
+        course.image && isCourseImageValid ? (
+          <Image
+>>>>>>> upstream/dev
+
+=== frontend/src/components/dashboard/memories/Lightbox.tsx ===
+Line 149:
+<<<<<<< HEAD
+        <div className="mt-8 text-center text-white max-w-3xl px-4">
+          {memory.caption && <p className="text-xl md:text-2xl font-medium mb-3 leading-relaxed">{memory.caption}</p>}
+          <div className="text-base text-gray-300 opacity-90">
+            تم الرفع بواسطة <span className="font-semibold text-white">{memory.uploader_name}</span>
+          </div>
+          {memory.tagged_participants.length > 0 && (
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              {memory.tagged_participants.map(p => (
+                <span key={p.id} className="bg-white/15 hover:bg-white/25 transition-colors px-4 py-1.5 rounded-full text-sm font-medium">
+=======
+
+        <div className="mt-6 text-center text-white max-w-2xl">
+          {memory.caption && <p className="text-lg mb-2">{memory.caption}</p>}
+          <div className="text-sm text-gray-400">
+            تم الرفع بواسطة {memory.uploader_name}
+          </div>
+          {memory.tagged_participants.length > 0 && (
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              {memory.tagged_participants.map((p) => (
+                <span
+                  key={p.id}
+                  className="bg-white/10 px-3 py-1 rounded-full text-xs"
+                >
+>>>>>>> upstream/dev
+
+=== frontend/src/components/dashboard/memories/MemoriesClient.tsx ===
+Line 64:
+<<<<<<< HEAD
+        
+        {canManageMemories && (
+          <Button onClick={() => setIsUploadModalOpen(true)}>
+            إضافة ذكرى
+          </Button>
+=======
+
+        {isSupervisor && (
+          <Button onClick={() => setIsUploadModalOpen(true)}>إضافة ذكرى</Button>
+>>>>>>> upstream/dev
+
+=== frontend/src/components/dashboard/memories/MemoryCard.tsx ===
+Line 16:
+<<<<<<< HEAD
+    <div 
+      className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mb-8 transition-all duration-300 hover:shadow-md hover:border-olive-200 group"
+    >
+=======
+    <div className="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+>>>>>>> upstream/dev
+
+Line 26:
+<<<<<<< HEAD
+        <div className="h-12 w-12 rounded-full bg-olive-100 flex items-center justify-center text-olive-700 font-bold text-lg shrink-0">
+          {memory.uploader_name ? memory.uploader_name[0] : "م"}
+        </div>
+        <div className="flex flex-col">
+          <span className="font-semibold text-gray-900 text-base">
+=======
+        <div className="bg-olive-100 text-olive-700 flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-bold">
+          {memory.uploader_name ? memory.uploader_name[0] : "م"}
+        </div>
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold text-gray-900">
+>>>>>>> upstream/dev
+
+Line 48:
+<<<<<<< HEAD
+      <div 
+        className="relative w-full bg-gray-50 flex items-center justify-center cursor-pointer max-h-[600px] min-h-[300px] overflow-hidden"
+=======
+      <div
+        className="relative flex max-h-[600px] min-h-[300px] w-full cursor-pointer items-center justify-center bg-black"
+>>>>>>> upstream/dev
+
+Line 62:
+<<<<<<< HEAD
+          className="object-contain w-full h-auto max-h-[600px] transition-transform duration-500 group-hover:scale-[1.02]"
+=======
+          className="h-auto max-h-[600px] w-full object-contain"
+>>>>>>> upstream/dev
+
+Line 71:
+<<<<<<< HEAD
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
+            <div className="w-16 h-16 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg transform transition-transform group-hover:scale-110">
+              <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[16px] border-l-gray-900 border-b-[10px] border-b-transparent ml-2" />
+=======
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors hover:bg-black/40">
+            <div className="flex h-16 w-16 transform items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm transition-transform hover:scale-110">
+              <div className="ml-2 h-0 w-0 border-t-[10px] border-b-[10px] border-l-[16px] border-t-transparent border-b-transparent border-l-gray-900" />
+>>>>>>> upstream/dev
+
+Line 87:
+<<<<<<< HEAD
+        <div className="p-5 bg-white">
+          <p className="text-base text-gray-800 leading-relaxed whitespace-pre-wrap">
+            <span className="font-bold ml-2 text-gray-900">{memory.uploader_name}</span>
+=======
+        <div className="p-4">
+          <p className="text-sm leading-relaxed whitespace-pre-wrap text-gray-900">
+            <span className="ml-2 font-semibold">{memory.uploader_name}</span>
+>>>>>>> upstream/dev
+
+=== frontend/src/components/dashboard/student/StudentMyCoursesPage.tsx ===
+Line 7:
+<<<<<<< HEAD
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+=======
+import { CourseDetail } from "@/types/entities";
+>>>>>>> upstream/dev
+
+Line 19:
+<<<<<<< HEAD
+  const { first_name, role } = await getUser();
+  let myActiveCourses, name: string;
+
+  if (role === "parent") {
+    const child = await getChildById(childId);
+    if (!child) return notFound();
+
+    myActiveCourses = await getChildCourses(childId);
+    name = child.first_name;
+  } else {
+    myActiveCourses = await getStudentCourses();
+    name = first_name;
+  }
+=======
+  const { first_name } = await getUser();
+  const myActiveCourses: CourseDetail[] = await getStudentCourses();
+  const name: string = childId
+    ? ((await getChildById(childId))?.first_name ?? "Unknown")
+    : first_name;
+>>>>>>> upstream/dev
+
+=== frontend/src/components/dashboard/student/StudentOverviewCoursesAccordion.tsx ===
+Line 63:
+<<<<<<< HEAD
+            {course.start_date && (
+              <li className="flex items-center gap-2">
+                <CalendarIcon className="text-olive-500" />
+                <span>
+                  يبدأ: {formatDate(parseISO(course.start_date)).replaceAll("-", "/")}
+                </span>
+              </li>
+            )}
+            
+            {course.num_lectures !== undefined && (
+              <li className="flex items-center gap-2">
+                <BookIcon className="text-olive-500" />
+                <span>
+                  {toHindiDigits(course.num_lectures)}{" "}
+                  {getArabicPlural(course.num_lectures, {
+                    singular: "محاضرة",
+                    twofer: "محاضرتان",
+                    plural: "محاضرات",
+                  })}
+                </span>
+              </li>
+            )}
+
+            {course.video_count !== undefined && (
+              <li className="flex items-center gap-2">
+                <BookIcon className="text-olive-500" />
+                <span>
+                  {toHindiDigits(course.video_count)}{" "}
+                  {getArabicPlural(course.video_count, {
+                    singular: "فيديو",
+                    twofer: "فيديوهان",
+                    plural: "فيديوهات",
+                  })}
+                </span>
+              </li>
+            )}
+
+            {course.schedules && course.schedules.length > 0 && (
+              <li className="flex items-center gap-2">
+                <CalendarIcon className="text-olive-500" />
+                <span>{course.schedules.map((s: any) => s.weekday_display).join(" \\\\ ")}</span>
+              </li>
+            )}
+=======
+            <li className="flex items-center gap-2">
+              <CalendarIcon className="text-olive-500" />
+              <span>
+                يبدأ:{" "}
+                {formatDate(parseISO(course.start_date)).replaceAll("-", "/")}
+              </span>
+            </li>
+            <li className="flex items-center gap-2">
+              <BookIcon className="text-olive-500" />
+              <span>
+                {toHindiDigits(course.num_lectures)}{" "}
+                {getArabicPlural(course.num_lectures, {
+                  singular: "محاضرة",
+                  twofer: "محاضرتان",
+                  plural: "محاضرات",
+                })}
+              </span>
+            </li>
+            <li className="flex items-center gap-2">
+              <CalendarIcon className="text-olive-500" />
+              <span>
+                {course.schedules.map((s) => s.weekday_display).join(" \\\\ ")}
+              </span>
+            </li>
+            <li className="flex items-center gap-2">
+              <ClockIcon className="text-olive-500" />
+              <span>من الساعة 8 مـ حتى 10 مـ</span>
+            </li>
+>>>>>>> upstream/dev
+
+=== frontend/src/components/landing-page/CoursesSection.tsx ===
+Line 13:
+<<<<<<< HEAD
+    <section id="courses" className="flex flex-col items-center bg-[linear-gradient(180deg,#FFF_0%,#F3F6F4_100%)] pb-24">
+      <ScrollReveal direction="up" className="w-full flex flex-col items-center">
+=======
+    <section
+      id="courses"
+      className="flex flex-col items-center bg-[linear-gradient(180deg,#FFF_0%,#F3F6F4_100%)]"
+    >
+      <ScrollReveal
+        direction="up"
+        className="w-full flex flex-col items-center"
+      >
+>>>>>>> upstream/dev
+
+Line 47:
+<<<<<<< HEAD
+      <ScrollReveal direction="up" delay={0.4} className="w-full max-w-6xl mx-auto px-6 mt-16 flex flex-col tablet:flex-row gap-8 justify-center">
+        {/* Physical Courses */}
+        <div className="flex-1 flex flex-col items-center bg-white p-10 rounded-[2.5rem] shadow-soft border border-olive-100 hover:shadow-primary hover:-translate-y-2 transition-all duration-300">
+          <div className="bg-olive-100/50 p-5 rounded-full mb-6">
+            <Users size={40} className="text-olive-700" />
+          </div>
+          <h3 className="text-4xl font-bold text-olive-700 mb-4 font-medad">الدورات الحضورية</h3>
+          <p className="text-gray-500 text-center mb-10 text-2xl leading-relaxed flex-grow">
+            تفاعل مباشر مع المعلمين في بيئة تعليمية محفزة، مع تطبيق عملي وتنمية للمهارات الاجتماعية والتفاعلية.
+          </p>
+          <Button variant="primary" href="/courses?type=physical" className="w-full flex items-center justify-center text-2xl py-5 rounded-2xl">
+            تصفح الدورات الحضورية
+          </Button>
+        </div>
+
+        {/* Online Courses */}
+        <div className="flex-1 flex flex-col items-center bg-white p-10 rounded-[2.5rem] shadow-soft border border-beige-500/30 hover:shadow-primary hover:-translate-y-2 transition-all duration-300">
+          <div className="bg-beige-500/20 p-5 rounded-full mb-6">
+            <MonitorPlay size={40} className="text-beige-500" />
+          </div>
+          <h3 className="text-4xl font-bold text-beige-500 mb-4 font-medad">الدورات الإلكترونية</h3>
+          <p className="text-gray-500 text-center mb-10 text-2xl leading-relaxed flex-grow">
+            تعلم مرن في أي وقت وأي مكان، مع وصول دائم للمحتوى التعليمي وتوفير للوقت والجهد للطلاب وأولياء الأمور.
+          </p>
+          <Button variant="secondary" href="/courses?type=online" className="w-full flex items-center justify-center text-2xl py-5 rounded-2xl">
+            تصفح الدورات الإلكترونية
+          </Button>
+        </div>
+=======
+      <ScrollReveal
+        direction="up"
+        delay={0.4}
+        className="w-full flex flex-col items-center"
+      >
+        <Button
+          variant="primary"
+          href="/courses"
+          className="mobile-lg:mt-10 self-center"
+        >
+          تصفح الدورات
+        </Button>
+>>>>>>> upstream/dev
+
+=== frontend/src/components/landing-page/HeroSection.tsx ===
+Line 8:
+<<<<<<< HEAD
+import { getServerSession } from "next-auth";
+import Image from "next/image";
+import Link from "next/link";
+import SignupModal from "@/components/auth/SignupModal";
+=======
+>>>>>>> upstream/dev
+
+=== frontend/src/components/layout/dashboard/dashboardNavConfig.tsx ===
+Line 10:
+<<<<<<< HEAD
+import MosqueIcon from "@/components/icons/MosqueIcon";
+import MonitorPlayIcon from "@/components/icons/MonitorPlayIcon";
+import { UserEntity } from "@/types/auth";
+import { ReactNode } from "react";
+=======
+import type { UserEntity } from "@/types/auth";
+>>>>>>> upstream/dev
+
+=== frontend/src/components/ratings/RatingForm.tsx ===
+Line 3:
+<<<<<<< HEAD
+import React, { useState } from 'react';
+import RatingStars from '@/components/shared/RatingStars';
+import Button from '@/components/ui/Button';
+import { toast } from 'react-hot-toast';
+import { Loader2, Send } from 'lucide-react';
+import { rateCourse, rateInstructor, rateOnlineCourse } from '@/actions/ratings';
+import { cn } from '@/lib/utils';
+
+interface RatingFormProps {
+    type: 'course' | 'instructor' | 'online_course';
+    id: string | number;
+    instructorId?: number; // Only for instructor rating
+    courseId?: number; // Only for instructor rating
+    onSuccess?: () => void;
+    compact?: boolean;
+}
+
+const RatingForm: React.FC<RatingFormProps> = ({
+    type,
+    id,
+    instructorId,
+    courseId,
+    onSuccess,
+    compact = false
+=======
+import { Loader2, Send } from "lucide-react";
+import type React from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
+import { rateCourse, rateInstructor } from "@/actions/ratings";
+import { getInstructorCourses } from "@/actions/courses";
+import RatingStars from "@/components/shared/RatingStars";
+import Button from "@/components/ui/Button";
+import type { CourseListItem } from "@/types/entities";
+
+interface RatingFormProps {
+  type: "course" | "instructor";
+  id: string | number;
+  instructorId?: number; // Only for instructor rating
+  courseId?: number; // Only for instructor rating
+  onSuccess?: () => void;
+}
+
+const RatingForm: React.FC<RatingFormProps> = ({
+  type,
+  id,
+  instructorId,
+  courseId,
+  onSuccess,
+>>>>>>> upstream/dev
+
+Line 69:
+<<<<<<< HEAD
+            let result;
+            if (type === 'course') {
+                result = await rateCourse(id, rating, feedback);
+            } else if (type === 'online_course') {
+                result = await rateOnlineCourse(id as string, rating, feedback);
+            } else {
+                if (!instructorId || !courseId) {
+                    toast.error('بيانات المدرس أو الدورة ناقصة');
+                    setLoading(false);
+                    return;
+                }
+                result = await rateInstructor(instructorId, courseId, rating, feedback);
+            }
+
+            if (result.success) {
+                toast.success(result.message);
+                setFeedback('');
+                if (onSuccess) onSuccess();
+            } else {
+                toast.error(result.message);
+            }
+=======
+          const fetchedCourses = await getInstructorCourses(String(id));
+          setCourses(fetchedCourses);
+          if (fetchedCourses.length > 0) {
+            setSelectedCourseId(fetchedCourses[0].id);
+          }
+>>>>>>> upstream/dev
+
+Line 108:
+<<<<<<< HEAD
+    return (
+        <form onSubmit={handleSubmit} className={cn("bg-white border border-gray-100 shadow-xl", compact ? "rounded-2xl p-4 space-y-4" : "rounded-3xl p-8 space-y-6")}>
+            <div className="text-center space-y-2">
+                <h3 className={cn("font-bold text-gray-900", compact ? "text-2xl" : "text-4xl mobile-lg:text-5xl")}>أضف تقييمك</h3>
+                {!compact && <p className="text-xl mobile-lg:text-2xl text-gray-500 mt-2">رأيك يهمنا ويساعدنا في التطوير</p>}
+            </div>
+
+            <div className={cn("flex flex-col items-center bg-primary/5 rounded-2xl", compact ? "gap-2 py-3 mt-2" : "gap-4 py-6 mt-4")}>
+                <span className={cn("font-medium text-primary", compact ? "text-lg" : "text-2xl")}>التقييم العام (من 10)</span>
+                <RatingStars 
+                    rating={rating} 
+                    editable 
+                    size={compact ? "sm" : "lg"} 
+                    onChange={setRating} 
+                />
+                <span className={cn("font-black text-primary", compact ? "text-3xl mt-1" : "text-4xl mobile-lg:text-5xl mt-2")}>{rating}/10</span>
+            </div>
+
+            <div className={cn("space-y-2", compact ? "mt-4" : "mt-6 space-y-4")}>
+                <label className={cn("font-bold text-gray-700 mr-1", compact ? "text-lg" : "text-2xl")}>ملاحظاتك (اختياري)</label>
+                <textarea
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="اكتب تجربتك هنا..."
+                    className={cn(
+                        "w-full rounded-2xl border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none transition-all mt-2",
+                        compact ? "text-lg min-h-[80px] p-4" : "text-2xl min-h-[120px] p-6"
+                    )}
+                />
+            </div>
+
+            <Button 
+                type="submit" 
+                disabled={loading}
+                className={cn("w-full rounded-2xl font-bold gap-3 shadow-lg shadow-primary/20", compact ? "h-12 mt-4 text-xl" : "h-16 mt-6 text-3xl")}
+            >
+                {loading ? (
+                    <Loader2 className={cn("animate-spin", compact ? "w-5 h-5" : "w-8 h-8")} />
+                ) : (
+                    <>
+                        <Send className={compact ? "w-5 h-5" : "w-8 h-8"} />
+                        إرسال التقييم
+                    </>
+                )}
+            </Button>
+        </form>
+    );
+=======
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      let result;
+      if (type === "course") {
+        result = await rateCourse(id, rating, feedback);
+      } else {
+        const finalInstructorId = instructorId || Number(id);
+        const finalCourseId = courseId || Number(selectedCourseId);
+
+        if (!finalInstructorId || !finalCourseId) {
+          toast.error("يرجى اختيار الدورة التدريبية");
+          setLoading(false);
+          return;
+        }
+        result = await rateInstructor(finalInstructorId, finalCourseId, rating, feedback);
+      }
+
+      if (result.success) {
+        toast.success(result.message);
+        setFeedback("");
+        if (onSuccess) onSuccess();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error("حدث خطأ غير متوقع");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6 bg-white rounded-3xl p-8 border border-gray-100 shadow-xl"
+    >
+      <div className="text-center space-y-2">
+        <h3 className="text-4xl mobile-lg:text-5xl font-bold text-gray-900">
+          أضف تقييمك
+        </h3>
+        <p className="text-xl mobile-lg:text-2xl text-gray-500 mt-2">
+          رأيك يهمنا ويساعدنا في التطوير
+        </p>
+      </div>
+
+      {type === "instructor" && !courseId && (
+        <div className="space-y-4">
+          <label className="text-2xl font-bold text-gray-700 mr-1">
+            الدورة التدريبية
+          </label>
+          {loadingCourses ? (
+            <div className="flex items-center gap-2 text-xl text-gray-400 py-3">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>جاري تحميل الدورات...</span>
+            </div>
+          ) : (
+            <select
+              value={selectedCourseId}
+              onChange={(e) => setSelectedCourseId(Number(e.target.value))}
+              required
+              className="text-2xl w-full rounded-2xl border border-gray-200 p-6 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all mt-2 bg-white"
+            >
+              <option value="" disabled>اختر الدورة</option>
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+
+      <div className="flex flex-col items-center gap-4 py-6 bg-primary/5 rounded-2xl mt-4">
+        <span className="text-2xl font-medium text-primary">
+          التقييم العام (من 10)
+        </span>
+        <RatingStars rating={rating} editable size="lg" onChange={setRating} />
+        <span className="text-4xl mobile-lg:text-5xl font-black text-primary mt-2">
+          {rating}/10
+        </span>
+      </div>
+
+      <div className="space-y-4 mt-6">
+        <label className="text-2xl font-bold text-gray-700 mr-1">
+          ملاحظاتك (اختياري)
+        </label>
+        <textarea
+          value={feedback}
+          onChange={(e) => setFeedback(e.target.value)}
+          placeholder="اكتب تجربتك هنا..."
+          className="text-2xl w-full min-h-[120px] rounded-2xl border border-gray-200 p-6 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none transition-all mt-2"
+        />
+      </div>
+
+      <Button
+        type="submit"
+        disabled={loading}
+        className="w-full h-16 mt-6 rounded-2xl text-3xl font-bold gap-3 shadow-lg shadow-primary/20"
+      >
+        {loading ? (
+          <Loader2 className="w-8 h-8 animate-spin" />
+        ) : (
+          <>
+            <Send className="w-8 h-8" />
+            إرسال التقييم
+          </>
+        )}
+      </Button>
+    </form>
+  );
+>>>>>>> upstream/dev
+
+=== frontend/src/components/ratings/RatingsBreakdown.tsx ===
+Line 1:
+<<<<<<< HEAD
+import React from 'react';
+import RatingStars from '@/components/shared/RatingStars';
+import ProgressBar from '@/components/ui/ProgressBar';
+import { cn } from '@/lib/utils';
+
+interface RatingsBreakdownProps {
+    statistics: {
+        average_rating: number | null;
+        total_ratings: number;
+        student_ratings_count: number;
+        student_average: number | null;
+        parent_ratings_count: number;
+        parent_average: number | null;
+    };
+    compact?: boolean;
+}
+
+const RatingsBreakdown: React.FC<RatingsBreakdownProps> = ({ statistics, compact = false }) => {
+    const {
+        average_rating,
+        total_ratings,
+        student_ratings_count,
+        student_average,
+        parent_ratings_count,
+        parent_average
+    } = statistics;
+
+    if (total_ratings === 0) {
+        return (
+            <div className="text-center py-12 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+                <p className="text-gray-500 text-2xl font-medium">لا توجد تقييمات بعد</p>
+            </div>
+        );
+    }
+=======
+import type React from "react";
+import RatingStars from "@/components/shared/RatingStars";
+import ProgressBar from "@/components/ui/ProgressBar";
+
+interface RatingsBreakdownProps {
+  statistics: {
+    average_rating: number | null;
+    total_ratings: number;
+    student_ratings_count: number;
+    student_average: number | null;
+    parent_ratings_count: number;
+    parent_average: number | null;
+  };
+}
+
+const RatingsBreakdown: React.FC<RatingsBreakdownProps> = ({ statistics }) => {
+  const {
+    average_rating,
+    total_ratings,
+    student_ratings_count,
+    student_average,
+    parent_ratings_count,
+    parent_average,
+  } = statistics;
+>>>>>>> upstream/dev
+
+Line 65:
+<<<<<<< HEAD
+        <div className={cn(
+            "grid grid-cols-3 tablet:grid-cols-1 bg-white rounded-3xl border border-gray-100 shadow-sm divide-x divide-x-reverse tablet:divide-x-0 tablet:divide-y divide-gray-100",
+            compact ? "p-4 gap-4" : "p-8 gap-8"
+        )}>
+            {/* Overall Score */}
+            <div className="flex flex-col items-center justify-center tablet:pt-0 tablet:pb-6">
+                <span className={cn("font-bold text-gray-500 mb-2", compact ? "text-xl" : "text-2xl mobile-lg:text-3xl")}>التقييم العام</span>
+                <div className={cn("leading-none font-black text-primary mb-2 mt-4", compact ? "text-6xl" : "text-[6rem] mobile-lg:text-[8rem]")}>
+                    {average_rating ? average_rating.toFixed(1) : '0.0'}
+                </div>
+                <RatingStars rating={average_rating || 0} size="sm" />
+                <span className={cn("text-gray-400 mt-2", compact ? "text-lg" : "text-xl mobile-lg:text-2xl")}>من {total_ratings} تقييم</span>
+            </div>
+
+            {/* Student Score */}
+            <div className="flex flex-col items-center justify-center tablet:pt-6">
+                <span className={cn("font-bold text-blue-600 mb-2", compact ? "text-xl" : "text-2xl mobile-lg:text-3xl")}>تقييم الطلاب</span>
+                <div className={cn("leading-none font-bold text-gray-900 mb-2 mt-2", compact ? "text-5xl" : "text-[4rem] mobile-lg:text-[5rem]")}>
+                    {student_average ? student_average.toFixed(1) : '0.0'}
+                </div>
+                <div className="w-full max-w-[120px] space-y-2 mt-2">
+                    <ProgressBar progress={(student_average || 0) * 10} className="h-2" />
+                    <div className={cn("flex justify-between text-gray-400", compact ? "text-lg" : "text-xl mobile-lg:text-2xl")}>
+                        <span>{student_ratings_count} تقييم</span>
+                        <span>10/10</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Parent Score */}
+            <div className="flex flex-col items-center justify-center tablet:pt-6">
+                <span className={cn("font-bold text-purple-600 mb-2", compact ? "text-xl" : "text-2xl mobile-lg:text-3xl")}>تقييم أولياء الأمور</span>
+                <div className={cn("leading-none font-bold text-gray-900 mb-2 mt-2", compact ? "text-5xl" : "text-[4rem] mobile-lg:text-[5rem]")}>
+                    {parent_average ? parent_average.toFixed(1) : '0.0'}
+                </div>
+                <div className="w-full max-w-[120px] space-y-2 mt-2">
+                    <ProgressBar progress={(parent_average || 0) * 10} className="h-2" />
+                    <div className={cn("flex justify-between text-gray-400", compact ? "text-lg" : "text-xl mobile-lg:text-2xl")}>
+                        <span>{parent_ratings_count} تقييم</span>
+                        <span>10/10</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+=======
+      <div className="text-center py-12 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+        <p className="text-gray-500 text-2xl font-medium">
+          لا توجد تقييمات بعد
+        </p>
+      </div>
+>>>>>>> upstream/dev
+
+=== frontend/src/components/ratings/RatingsSection.tsx ===
+Line 3:
+<<<<<<< HEAD
+import React, { useEffect, useState } from 'react';
+import RatingsBreakdown from './RatingsBreakdown';
+import ReviewCard from './ReviewCard';
+import RatingForm from './RatingForm';
+import { getCourseRatings, getInstructorRatings, getOnlineCourseRatings } from '@/actions/ratings';
+import { Loader2, MessageSquare, Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface RatingsSectionProps {
+    type: 'course' | 'instructor' | 'online_course';
+    id: string | number;
+    showForm?: boolean;
+    courseId?: number; // Needed for instructor rating
+    compact?: boolean;
+}
+
+const RatingsSection: React.FC<RatingsSectionProps> = ({
+    type,
+    id,
+    showForm = false,
+    courseId,
+    compact = false
+=======
+import { Loader2, MessageSquare, Star } from "lucide-react";
+import type React from "react";
+import { useEffect, useState } from "react";
+import { getCourseRatings, getInstructorRatings } from "@/actions/ratings";
+import RatingForm from "./RatingForm";
+import RatingsBreakdown from "./RatingsBreakdown";
+import ReviewCard from "./ReviewCard";
+import Link from "next/link";
+
+interface RatingsSectionProps {
+  type: "course" | "instructor";
+  id: string | number;
+  showForm?: boolean;
+  courseId?: number; // Needed for instructor rating
+}
+
+interface RatingItem {
+  id: number;
+  rater_name: string;
+  rating: number;
+  feedback: string;
+  created_at: string;
+  course_name?: string;
+}
+
+interface RatingsStatistics {
+  average_rating: number | null;
+  total_ratings: number;
+  student_ratings_count: number;
+  student_average: number | null;
+  parent_ratings_count: number;
+  parent_average: number | null;
+}
+
+interface RatingsData {
+  ratings: {
+    student_ratings: RatingItem[];
+    parent_ratings: RatingItem[];
+  };
+  statistics: RatingsStatistics;
+}
+
+interface DisplayReview extends RatingItem {
+  type: "student" | "parent";
+}
+
+const RatingsSection: React.FC<RatingsSectionProps> = ({
+  type,
+  id,
+  showForm = false,
+  courseId,
+>>>>>>> upstream/dev
+
+Line 84:
+<<<<<<< HEAD
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            let result;
+            if (type === 'course') {
+                result = await getCourseRatings(id);
+            } else if (type === 'instructor') {
+                result = await getInstructorRatings(id as number);
+            } else {
+                result = await getOnlineCourseRatings(id as string);
+            }
+            
+            if (result.success) {
+                setData(result.data);
+            }
+            setLoading(false);
+        };
+=======
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const result =
+        type === "course"
+          ? await getCourseRatings(id)
+          : await getInstructorRatings(id as number);
+>>>>>>> upstream/dev
+
+Line 123:
+<<<<<<< HEAD
+        <section id="ratings" className={compact ? "space-y-6 py-4" : "space-y-12 py-12"}>
+            <div className="flex items-center gap-3">
+                <div className={cn("bg-olive-500/10 rounded-xl flex items-center justify-center text-olive-500", compact ? "w-8 h-8" : "w-10 h-10")}>
+                    <Star className={cn("fill-olive-500", compact ? "w-4 h-4" : "w-6 h-6")} />
+                </div>
+                <h2 className={cn("font-black text-gray-900", compact ? "text-3xl" : "text-5xl mobile-lg:text-6xl")}>التقييمات والمراجعات</h2>
+            </div>
+
+            <RatingsBreakdown statistics={data.statistics} compact={compact} />
+
+            <div className="grid grid-cols-3 tablet:grid-cols-1 gap-12 items-start w-full">
+                <div className="col-span-2 tablet:col-span-1 w-full space-y-8">
+                    {allReviews.length > 0 ? (
+                        <div className="flex flex-col gap-6">
+                            {allReviews.map((review: any) => (
+                                <ReviewCard
+                                    key={`${review.type}-${review.id}`}
+                                    reviewerName={review.rater_name}
+                                    rating={review.rating}
+                                    feedback={review.feedback}
+                                    date={review.created_at}
+                                    type={review.type as 'student' | 'parent'}
+                                    courseName={review.course_name}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 text-gray-400 w-full">
+                            <MessageSquare className="w-16 h-16 mb-4 opacity-20" />
+                            <p className="text-3xl mobile-lg:text-4xl font-medium">لا توجد مراجعات نصية بعد</p>
+                        </div>
+                    )}
+                </div>
+
+                <div className="col-span-1 space-y-8">
+                    {showForm && (
+                        <RatingForm 
+                            type={type} 
+                            id={id} 
+                            instructorId={type === 'instructor' ? id as number : undefined}
+                            courseId={courseId}
+                            onSuccess={() => setRefreshTrigger(prev => prev + 1)}
+                            compact={compact}
+                        />
+                    )}
+                    
+                    {!compact && (
+                        <div className="bg-linear-to-br from-olive-500 to-olive-700 rounded-3xl p-8 text-white shadow-xl">
+                            <h4 className="text-3xl mobile-lg:text-4xl font-bold mb-4">لماذا تقييمك مهم؟</h4>
+                        <ul className="space-y-3 text-2xl mobile-lg:text-3xl opacity-90">
+                            <li className="flex items-start gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-white mt-1.5 shrink-0" />
+                                يساعد المعلمين على تحسين أسلوب الشرح
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-white mt-1.5 shrink-0" />
+                                يوجه الطلاب الآخرين لاختيار الكورس المناسب
+                            </li>
+                            <li className="flex items-start gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-white mt-1.5 shrink-0" />
+                                يساهم في رفع جودة المركز التعليمي ككل
+                            </li>
+                        </ul>
+                    </div>
+                    )}
+                </div>
+            </div>
+        </section>
+=======
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="text-primary h-10 w-10 animate-spin" />
+      </div>
+>>>>>>> upstream/dev
+
+=== frontend/src/types/entities/index.ts ===
+Line 10:
+<<<<<<< HEAD
+export * from "./memories";
+export * from "./online-courses";
+
+=======
+>>>>>>> upstream/dev
+
