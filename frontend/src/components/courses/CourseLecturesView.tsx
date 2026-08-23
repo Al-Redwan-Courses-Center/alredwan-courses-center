@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { parseISO } from "date-fns";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import courseLecturesViewConfig from "@/components/courses/course-lectures-view.config";
 import EditIcon from "@/components/icons/EditIcon";
 import InfoIcon from "@/components/icons/InfoIcon";
@@ -36,6 +38,15 @@ export default function CourseLecturesView({
   lectures: LectureListItem[];
   course: CourseDetail | null;
 }) {
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+
+  const isAdmin = userRole === "admin";
+  const canEditOrDelete = isAdmin;
+
+  // حالة التحكم بالتركيز لمكون البحث
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
   return (
     <DataView
       data={lectures}
@@ -46,10 +57,25 @@ export default function CourseLecturesView({
         "grid-cols-[minmax(0,0.5fr)_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]",
       )}
     >
-      <div className="relative z-100 mb-14 flex items-center gap-32">
-        <DataViewSearchLegacy />
-        <DataViewSortLegacy />
-        <DataViewFilterLegacy />
+      {/* قسم شريط البحث والفلترة مع التفاعلات الديناميكية */}
+      <div className="relative z-100 mb-14 flex items-center gap-32 transition-all duration-300">
+        <DataViewSearchLegacy
+          isFocused={isSearchFocused}
+          setIsFocused={setIsSearchFocused}
+        />
+
+        {/* الحاويات الجانبية للفلترة والترتيب تنكمش وتختفي بسلاسة نحو اليسار */}
+        <div
+          className={cn(
+            "flex items-center gap-32 transition-all duration-300 transform origin-left overflow-hidden",
+            isSearchFocused
+              ? "opacity-0 scale-95 max-w-0 pointer-events-none"
+              : "opacity-100 scale-100 max-w-[500px]",
+          )}
+        >
+          <DataViewSortLegacy />
+          <DataViewFilterLegacy />
+        </div>
       </div>
 
       <DataViewHeaderLegacy>
@@ -66,7 +92,10 @@ export default function CourseLecturesView({
       <DataViewBodyLegacy
         render={{
           table: (lecture: LectureListItem, i: number) => {
-            const { label, color } = statusMap[lecture.status];
+            const { label, color } = statusMap[lecture.status] || {
+              label: lecture.status,
+              color: "gray",
+            };
             const weekday = getWeekDay(parseISO(lecture.scheduled_at).getDay());
 
             return (
@@ -99,18 +128,24 @@ export default function CourseLecturesView({
 
                 <DataViewCellLegacy>
                   <div className="*:text-olive-300 *:hover:text-olive-700 flex items-center justify-center gap-6 *:transition-colors">
-                    <button>
-                      <TrashIcon />
-                    </button>
+                    {canEditOrDelete && (
+                      <>
+                        <button type="button" title="حذف المحاضرة">
+                          <TrashIcon />
+                        </button>
 
-                    <Link
-                      href={`/dashboard/my-courses/${course?.id}/lectures/`}
-                    >
-                      <EditIcon />
-                    </Link>
+                        <Link
+                          href={`/dashboard/my-courses/${course?.id}/lectures/`}
+                          title="تعديل المحاضرة"
+                        >
+                          <EditIcon />
+                        </Link>
+                      </>
+                    )}
 
                     <Link
                       href={`/dashboard/my-courses/${course?.id}/lectures/${lecture.id}`}
+                      title="عرض التفاصيل"
                     >
                       <InfoIcon />
                     </Link>

@@ -1,92 +1,302 @@
-import { getLectureAttendance } from "@/actions/attendances";
-import { getLectureById } from "@/actions/lectures";
-import AddLectureNotesInput from "@/components/attendance/AddLectureNotesInput";
-import LectureAttendanceView from "@/components/attendance/LectureAttendanceView";
-import ClockIcon from "@/components/icons/ClockIcon";
-import CommentIcon from "@/components/icons/CommentIcon";
-import CopyToClipboardButton from "@/components/ui/CopyToClipboardButton";
-import { cn, formatTime } from "@/lib/utils";
+import { protect } from "@/actions/auth";
+import { getAuthApiClient } from "@/lib/auth-api";
+import { notFound } from "next/navigation";
+import Link from "next/link";
 
-const dataPointWrapperStyles = cn(
-  "text-olive-300 grid grid-cols-[auto_1fr] grid-rows-2 gap-x-5 gap-y-2 text-xl font-bold",
-);
+interface AttendanceInfo {
+  present: boolean;
+  rating: number | null;
+  notes: string | null;
+  marked_at: string | null;
+}
 
-const dataPointIconStyles = cn(
-  "drop-shadow-soft row-span-full h-10 w-auto self-center",
-);
+interface LectureFromList {
+  id: number;
+  lecture_number: number;
+  title: string;
+  day: string;
+  scheduled_at: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  status: string;
+  status_display: string;
+  is_accepted: boolean;
+  attendance_info: AttendanceInfo | null;
+  notes?: string | null; // إضافة ملاحظات المحاضرة المباشرة
+}
 
-export default async function Page({
-  params,
+async function getLectureForStudent(
+  courseId: string,
+  lectureId: string
+): Promise<LectureFromList | null> {
+  try {
+    const api = await getAuthApiClient();
+    const res = await api.get(`/api/courses/${courseId}/student/lectures/`);
+    const lectures: LectureFromList[] = Array.isArray(res.data)
+      ? res.data
+      : res.data?.results ?? [];
+    return lectures.find((l) => String(l.id) === String(lectureId)) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function getLectureForParent(
+  courseId: string,
+  lectureId: string,
+  childId: string
+): Promise<LectureFromList | null> {
+  try {
+    const api = await getAuthApiClient();
+    const res = await api.get(
+      `/api/courses/${courseId}/parent/${childId}/lectures/`
+    );
+    const lectures: LectureFromList[] = Array.isArray(res.data)
+      ? res.data
+      : res.data?.results ?? [];
+    return lectures.find((l) => String(l.id) === String(lectureId)) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return "غير محدد";
+  try {
+    return new Date(dateStr).toLocaleDateString("ar-EG", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+// معالجة صحيحة للوقت لتجنب ظهور "من إلى" فارغة
+function formatLectureTime(start: string | null, end: string | null): string {
+  if (!start && !end) return "غير محدد";
+  
+  const formatSingle = (t: string | null) => {
+    if (!t) return "";
+    const parts = t.split(":");
+    return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : t;
+  };
+
+  const startTime = formatSingle(start);
+  const endTime = formatSingle(end);
+
+  if (startTime && endTime) return `من ${startTime} إلى ${endTime}`;
+  if (startTime) return `من ${startTime}`;
+  if (endTime) return `إلى ${endTime}`;
+  return "غير محدد";
+}
+
+function StatusPill({ status, label }: { status: string; label: string }) {
+  const styles: Record<string, string> = {
+    scheduled: "bg-[#e8f0ea] text-[#2f5d50] border-[#c5d9cc]",
+    completed: "bg-emerald-50 text-emerald-800 border-emerald-200",
+    cancelled: "bg-red-50 text-red-700 border-red-200",
+    additional: "bg-violet-50 text-violet-800 border-violet-200",
+  };
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-6 py-2 text-base sm:text-xl font-bold ${
+        styles[status] || styles.scheduled
+      }`}
+    >
+      {label}
+    </span>
+  );
+}
+
+function MetaItem({
+  label,
+  value,
+  icon,
 }: {
-  params: Promise<{ lectureId: string; courseId: string }>;
+  label: string;
+  value: string;
+  icon: string;
 }) {
-  const { lectureId, courseId } = await params;
-  const [lecture, lectureAttendance] = await Promise.all([
-    getLectureById(lectureId),
-    getLectureAttendance(lectureId),
-  ]);
+  return (
+    <div className="flex flex-col items-center gap-3 text-center">
+      <span className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-[#e8f0ea] text-3xl sm:text-4xl text-[#2f5d50] shadow-sm">
+        {icon}
+      </span>
+      <p className="text-base sm:text-lg font-semibold text-muted-foreground">{label}</p>
+      <p className="text-xl sm:text-2xl font-extrabold text-[#1a3c34]">{value}</p>
+    </div>
+  );
+}
 
-  const { attendances } = lectureAttendance || {};
-  const attendanceViewOptions = lectureAttendance
-    ? {
-        is_future_lecture: lectureAttendance.is_future_lecture,
-        is_attendance_submittable: lectureAttendance.is_attendance_submittable,
-        is_editable: lectureAttendance.is_editable,
-        user_can_bypass_deadline: lectureAttendance.user_can_bypass_deadline,
-        user_can_mark_future_lectures:
-          lectureAttendance.user_can_mark_future_lectures,
-      }
-    : null;
+export default async function LectureDetailPage({
+  params,
+  searchParams,
+}: {
+  params:
+    | { courseId: string; lectureId: string }
+    | Promise<{ courseId: string; lectureId: string }>;
+  searchParams?: { child?: string } | Promise<{ child?: string }>;
+}) {
+  await protect(["student", "parent", "admin"]);
+
+  const resolvedParams = await Promise.resolve(params);
+  const resolvedSearch = await Promise.resolve(searchParams ?? {});
+  const { courseId, lectureId } = resolvedParams;
+  const childId = resolvedSearch.child;
+
+  let lecture = await getLectureForStudent(courseId, lectureId);
+  if (!lecture && childId) {
+    lecture = await getLectureForParent(courseId, lectureId, childId);
+  }
+
+  if (!lecture) {
+    notFound();
+  }
+
+  const attendance = lecture.attendance_info;
+  const noteContent = attendance?.notes || lecture.notes;
 
   return (
-    <div className="flex flex-col pt-4">
-      <div className="ms-16 mb-14 grid h-76 w-6/10 grid-cols-[1fr_1fr_2fr] grid-rows-2 gap-x-20 rounded-[0_0_1.5951rem_1.5951rem] bg-[linear-gradient(164deg,#EDF0ED_12.23%,#F8F9F8_88.43%)] px-36 shadow-inner">
-        <div className="col-span-full flex items-center justify-between">
-          <div className="flex flex-col pt-5">
-            <span className="text-olive-300 text-xl font-bold">
-              {lecture?.course.name}
-            </span>
-            <h2 className="text-olive-500 text-[4rem] font-bold">
-              {lecture?.title}
-            </h2>
-          </div>
+    <div className="mx-auto max-w-7xl space-y-10 pb-24 px-4 sm:px-8" dir="ltr">
+      {/* العودة */}
+      <div className="flex justify-end">
+        <Link
+          href={`/dashboard/my-courses/${courseId}/lectures`}
+          className="inline-flex items-center gap-3 rounded-2xl border-2 border-[#c5d9cc] bg-white px-7 py-3.5 text-lg sm:text-xl font-bold text-[#2f5d50] shadow-md transition hover:bg-[#e8f0ea]"
+        >
+          العودة إلى قائمة المحاضرات
+        </Link>
+      </div>
 
-          {!!lecture?.id && lecture.id >= 0 && (
-            <div className="flex items-center gap-7">
-              <span className="text-olive-700 text-2xl font-bold">الكود</span>
-              <CopyToClipboardButton>
-                {String(lecture.id)}
-              </CopyToClipboardButton>
+      {/* البطاقة الرئيسية */}
+      <div className="overflow-hidden rounded-[2.5rem] border-2 border-[#dce8e1] bg-white shadow-[0_15px_45px_rgb(0,0,0,0.06)]">
+        {/* العنوان */}
+        <div className="border-b-2 border-[#e8f0ea] px-8 py-12 text-center sm:px-16">
+          <div className="mb-6 flex justify-center">
+            <StatusPill
+              status={lecture.status}
+              label={lecture.status_display}
+            />
+          </div>
+          <h1 className="text-4xl font-black text-[#1a3c34] sm:text-5xl lg:text-6xl tracking-tight">
+            {lecture.title || `محاضرة رقم ${lecture.lecture_number}`}
+          </h1>
+          <p className="mt-4 text-xl sm:text-2xl font-medium text-muted-foreground">
+            محاضرة رقم {lecture.lecture_number} في الكورس
+          </p>
+        </div>
+
+        {/* الملاحظات والمواعيد */}
+        <div className="grid grid-cols-2 gap-8 border-b-2 border-[#e8f0ea] px-8 py-12 sm:grid-cols-4 sm:px-16">
+          <MetaItem
+            icon="📅"
+            label="التاريخ"
+            value={formatDate(lecture.day)}
+          />
+          <MetaItem
+            icon="🕐"
+            label="المواعيد"
+            value={formatLectureTime(lecture.start_time, lecture.end_time)}
+          />
+          <MetaItem
+            icon="#️⃣"
+            label="رقم المحاضرة"
+            value={String(lecture.lecture_number)}
+          />
+          <MetaItem
+            icon="✅"
+            label="حالة القبول"
+            value={lecture.is_accepted ? "مقبولة" : "قيد المراجعة"}
+          />
+        </div>
+
+        {/* الحضور */}
+        <div className="px-8 py-12 sm:px-16">
+          <h2 className="mb-6 text-2xl font-black text-[#1a3c34] sm:text-3xl lg:text-4xl">
+            حالة حضورك
+          </h2>
+
+          {attendance ? (
+            <div className="flex flex-col gap-6 rounded-3xl border-2 border-[#dce8e1] bg-[#f7faf8] p-8 sm:flex-row sm:items-center sm:justify-between sm:p-10">
+              <div className="flex items-center gap-6">
+                <div
+                  className={`flex h-18 w-18 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-2xl text-3xl sm:text-4xl font-black ${
+                    attendance.present
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-red-100 text-red-600"
+                  }`}
+                >
+                  {attendance.present ? "✓" : "✗"}
+                </div>
+                <div>
+                  <p
+                    className={`text-2xl sm:text-3xl font-extrabold ${
+                      attendance.present
+                        ? "text-emerald-800"
+                        : "text-red-700"
+                    }`}
+                  >
+                    {attendance.present
+                      ? "حضرت هذه المحاضرة"
+                      : "لم تحضر هذه المحاضرة"}
+                  </p>
+                  {attendance.marked_at && (
+                    <p className="mt-2 text-base sm:text-lg text-muted-foreground">
+                      تم التسجيل:{" "}
+                      {new Date(attendance.marked_at).toLocaleString("ar-EG")}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {attendance.rating != null && (
+                <div className="rounded-2xl bg-white px-8 py-4 text-center shadow-md border-2 border-[#dce8e1]">
+                  <p className="text-base sm:text-lg font-medium text-muted-foreground">التقييم</p>
+                  <p className="text-3xl sm:text-4xl font-black text-[#2f5d50]">
+                    {attendance.rating}
+                    <span className="text-lg font-normal text-muted-foreground">
+                      {" "}
+                      / 10
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-3xl border-2 border-dashed border-[#c5d9cc] bg-[#f7faf8] px-8 py-14 text-center">
+              <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#2f5d50]">
+                لم يتم تسجيل الحضور بعد
+              </p>
+              <p className="mt-3 text-lg sm:text-xl text-muted-foreground">
+                سيظهر هنا حالة حضورك بمجرد ما المدرس يسجّل الحضور
+              </p>
             </div>
           )}
         </div>
 
-        <div className={dataPointWrapperStyles}>
-          <ClockIcon className={dataPointIconStyles} />
-          <span className="self-end">المواعيد</span>
-          <span className="text-olive-500">
-            من {formatTime(lecture?.start_time)} إلي{" "}
-            {formatTime(lecture?.end_time)}
-          </span>
-        </div>
+        {/* الملاحظات */}
+        <div className="border-t-2 border-[#e8f0ea] px-8 py-12 sm:px-16">
+          <h2 className="mb-2 text-2xl font-black text-[#1a3c34] sm:text-3xl lg:text-4xl">
+            الملاحظات
+          </h2>
+          <p className="mb-6 text-lg sm:text-xl text-muted-foreground">
+            الملاحظات المسجّلة على هذه المحاضرة
+          </p>
 
-        <div className={dataPointWrapperStyles}>
-          <CommentIcon className={dataPointIconStyles} />
-          <span className="self-end">الوصف</span>
-          <span className="text-olive-500">محاضرة تمهيدية</span>
-        </div>
-
-        <div className="flex grow items-center justify-stretch">
-          <AddLectureNotesInput />
+          {noteContent ? (
+            <div className="rounded-3xl border-2 border-amber-200 bg-amber-50/90 px-8 py-6 text-xl sm:text-2xl leading-relaxed text-amber-950 font-medium">
+              {noteContent}
+            </div>
+          ) : (
+            <div className="rounded-3xl border-2 border-dashed border-[#c5d9cc] bg-[#f7faf8] px-8 py-10 text-center text-lg sm:text-xl font-semibold text-muted-foreground">
+              لا توجد ملاحظات مسجّلة على هذه المحاضرة حاليًا
+            </div>
+          )}
         </div>
       </div>
-
-      <LectureAttendanceView
-        attendances={attendances || []}
-        courseId={courseId}
-        lecture={lecture}
-        options={attendanceViewOptions}
-      />
     </div>
   );
 }
