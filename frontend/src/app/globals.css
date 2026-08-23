@@ -87,6 +87,15 @@
     :root {
         font-size: 50%;
     }
+    #whatsapp-widget{
+        margin-bottom: 50px
+   }
+}
+@media only screen and (max-width: 900px) {
+
+    #whatsapp-widget{
+        margin-bottom: 70px;
+   }
 }
 
 @media only screen and (max-width: 400px) {
