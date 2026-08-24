@@ -11,13 +11,6 @@ class OnlineLectureMaterialSerializer(serializers.ModelSerializer):
 
     def get_file(self, obj):
         if obj.file:
-            name = str(obj.file.name)
-            if name.startswith('raw/upload/') or name.startswith('image/upload/'):
-                from django.conf import settings
-                cloud_name = settings.CLOUDINARY_STORAGE.get('CLOUD_NAME')
-                if cloud_name:
-                    return f"https://res.cloudinary.com/{cloud_name}/{name}"
-            
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(obj.file.url)
@@ -42,7 +35,10 @@ class VideoLectureSerializer(serializers.ModelSerializer):
         if not request or not request.user.is_authenticated:
             return None
 
-        # Parents view a specific child's progress via ?child=<uuid>
+        if hasattr(obj, 'prefetched_watch_progress'):
+            progress = obj.prefetched_watch_progress[0] if obj.prefetched_watch_progress else None
+            return VideoWatchProgressSerializer(progress).data if progress else None
+
         student, child = resolve_participant(
             request.user, request.query_params.get('child'))
         if student is None and child is None:
@@ -77,12 +73,12 @@ class OnlineCourseListSerializer(serializers.ModelSerializer):
         return None
 
     def get_video_count(self, obj):
-        return obj.video_lectures.count()
+        return getattr(obj, 'annotated_video_count', len(obj.video_lectures.all()))
 
     def get_total_duration_seconds(self, obj):
-        from django.db.models import Sum
-        total = obj.video_lectures.aggregate(Sum('duration_seconds'))['duration_seconds__sum']
-        return total or 0
+        if hasattr(obj, 'annotated_total_duration'):
+            return getattr(obj, 'annotated_total_duration') or 0
+        return sum((lecture.duration_seconds or 0) for lecture in obj.video_lectures.all())
 
 class OnlineCourseDetailSerializer(OnlineCourseListSerializer):
     video_lectures = VideoLectureSerializer(many=True, read_only=True)

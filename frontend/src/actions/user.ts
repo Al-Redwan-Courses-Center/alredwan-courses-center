@@ -259,14 +259,15 @@ export async function getChildCourses(childId: string): Promise<(CourseDetail & 
       });
 
     const apiClient = await getAuthApiClient();
-    const onlineCoursesInitial = await Promise.all(
-      onlineCourseIds.map((id) =>
-        apiClient
-          .get(`/api/online-courses/courses/${id}/`, { params: { child: childId } })
-          .then((res) => res.data)
-          .catch(() => null)
-      )
-    );
+    let onlineCoursesInitial: any[] = [];
+    if (onlineCourseIds.length > 0) {
+      const res = await apiClient
+        .get(`/api/online-courses/courses/batch/`, {
+          params: { ids: onlineCourseIds.join(","), child: childId },
+        })
+        .catch(() => ({ data: [] }));
+      onlineCoursesInitial = res.data;
+    }
 
     const online = onlineCoursesInitial
       .filter((c) => c !== null)

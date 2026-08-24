@@ -276,14 +276,24 @@ class Enrollment(models.Model):
             return {}
 
         if self.is_online:
+            from courses_online.models import VideoWatchProgress
+            total = target.video_lectures.count()
+            completed = VideoWatchProgress.objects.filter(
+                lecture__course=target,
+                student=self.student,
+                child=self.child,
+                is_completed=True
+            ).count()
+            percentage = (completed / total * 100) if total > 0 else 0
+            
             return {
-                'total_lectures': target.video_lectures.count(),
-                'expected_lectures': target.video_lectures.count(),
-                'completed_lectures': 0, # Should be calculated based on watch progress, stub for now
-                'percentage': 0,
+                'total_lectures': total,
+                'expected_lectures': total,
+                'completed_lectures': completed,
+                'percentage': round(percentage, 1),
                 'end_date_passed': False,
                 'course_end_date': None,
-                'is_completable': False,
+                'is_completable': (total > 0 and completed == total),
             }
 
         total_lectures = target.lectures.count()

@@ -25,7 +25,11 @@ export default function StudentOnlineCourseViewer({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  const completedLecturesCount = course.video_lectures.filter((l) => l.watch_progress?.is_completed).length;
+  const [optimisticCompletedIds, setOptimisticCompletedIds] = useState<Set<string>>(
+    new Set(course.video_lectures.filter((l) => l.watch_progress?.is_completed).map((l) => l.id))
+  );
+
+  const completedLecturesCount = optimisticCompletedIds.size;
   const progressPercentage = course.video_lectures.length > 0 
     ? Math.round((completedLecturesCount / course.video_lectures.length) * 100) 
     : 0;
@@ -35,6 +39,10 @@ export default function StudentOnlineCourseViewer({
   const handleMarkAsCompleted = async () => {
     if (!activeLecture) return;
     setIsSubmitting(true);
+    
+    // Optimistic UI update
+    setOptimisticCompletedIds(prev => new Set([...prev, activeLecture.id]));
+
     try {
       await updateVideoWatchProgress(
         course.id,
@@ -49,6 +57,12 @@ export default function StudentOnlineCourseViewer({
       router.refresh();
     } catch (error) {
       console.error("Failed to mark as completed:", error);
+      // Revert on error
+      setOptimisticCompletedIds(prev => {
+        const next = new Set(prev);
+        next.delete(activeLecture.id);
+        return next;
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -104,7 +118,7 @@ export default function StudentOnlineCourseViewer({
           ) : (
             course.video_lectures.map((lecture, index) => {
               const isActive = activeLectureId === lecture.id;
-              const isCompleted = lecture.watch_progress?.is_completed;
+              const isCompleted = optimisticCompletedIds.has(lecture.id);
               
               return (
                 <button
@@ -172,12 +186,12 @@ export default function StudentOnlineCourseViewer({
             <div className="flex justify-end w-full">
               <Button 
                 onClick={handleMarkAsCompleted}
-                disabled={isSubmitting || activeLecture.watch_progress?.is_completed}
-                variant={activeLecture.watch_progress?.is_completed ? "secondary" : "primary"}
+                disabled={isSubmitting || optimisticCompletedIds.has(activeLecture.id)}
+                variant={optimisticCompletedIds.has(activeLecture.id) ? "secondary" : "primary"}
                 className="px-8 shadow-soft"
               >
                 {isSubmitting ? "جاري الحفظ..." : 
-                 activeLecture.watch_progress?.is_completed ? "تم إتمام المحاضرة" : "تحديد المحاضرة كمكتملة"}
+                 optimisticCompletedIds.has(activeLecture.id) ? "تم إتمام المحاضرة" : "تحديد المحاضرة كمكتملة"}
               </Button>
             </div>
 

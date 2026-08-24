@@ -104,7 +104,11 @@ export default async function Page({
                             <Clock className="w-5 h-5 opacity-40" />
                             <span>إجمالي الساعات</span>
                         </div>
-                        <span className="font-bold">{Math.floor(course.total_duration_seconds / 3600)} ساعة</span>
+                        <span className="font-bold">
+                            {Math.floor(course.total_duration_seconds / 3600) > 0 ? `${toHindiDigits(Math.floor(course.total_duration_seconds / 3600))} ساعة ` : ""}
+                            {Math.floor((course.total_duration_seconds % 3600) / 60) > 0 ? `${toHindiDigits(Math.floor((course.total_duration_seconds % 3600) / 60))} دقيقة` : ""}
+                            {course.total_duration_seconds < 60 ? "أقل من دقيقة" : ""}
+                        </span>
                     </div>
                 </div>
 

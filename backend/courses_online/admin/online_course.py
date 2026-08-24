@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from core.utils import ExcelExportMixin
@@ -16,6 +17,12 @@ class OnlineCourseAdmin(ExcelExportMixin, admin.ModelAdmin):
     inlines = [VideoLectureInline]
     excel_filename = 'online_courses'
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.select_related('instructor').prefetch_related('tags')
+        qs = qs.annotate(annotated_video_count=Count('video_lectures', distinct=True))
+        return qs
+
     def get_video_count(self, obj):
-        return obj.video_lectures.count()
+        return getattr(obj, 'annotated_video_count', obj.video_lectures.count())
     get_video_count.short_description = _("عدد الفيديوهات")

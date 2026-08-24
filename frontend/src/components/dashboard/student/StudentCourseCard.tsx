@@ -8,11 +8,13 @@ import ItemCard from "@/components/ui/ItemCard";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
 
+import type { CourseDetail } from "@/types/entities";
+
 export default function StudentCourseCard({
   course,
   index,
 }: {
-  course: any;
+  course: CourseDetail & { course_progress: number; type?: "physical" | "online"; enrollment_status?: string; enrollment_status_display?: string; video_count?: number; thumbnail?: string };
   index: number;
 }) {
   const isOnline = course.type === "online";

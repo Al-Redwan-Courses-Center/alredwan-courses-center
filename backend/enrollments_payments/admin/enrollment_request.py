@@ -6,6 +6,9 @@ from django.utils import timezone
 from django.urls import reverse
 from django.db.models import Count
 from django import forms
+from courses.models import Course
+from courses_online.models import OnlineCourse
+from payments.models import Payment
 
 from core.utils import ExcelExportMixin
 from enrollments_payments.models.enrollment_request import (
@@ -586,7 +589,7 @@ class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
         """Display detailed course info in edit form."""
         target = obj.course_instance
         if target:
-            is_online = hasattr(target, 'video_lectures')
+            is_online = isinstance(target, OnlineCourse)
             return format_html(
                 '<div style="padding: 10px; background: #264b5d; border-radius: 5px;">'
                 '<strong>📚 الدورة:</strong> {}<br>'

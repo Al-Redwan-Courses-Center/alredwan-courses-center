@@ -162,14 +162,15 @@ export async function getStudentCourses(): Promise<(CourseDetail & { course_prog
         });
 
       const apiClient = await getAuthApiClient();
-      const onlineCoursesInitial = await Promise.all(
-        onlineCourseIds.map((id) =>
-          apiClient
-            .get(`/api/online-courses/courses/${id}/`)
-            .then((res) => res.data)
-            .catch(() => null)
-        )
-      );
+      let onlineCoursesInitial: any[] = [];
+      if (onlineCourseIds.length > 0) {
+        const res = await apiClient
+          .get(`/api/online-courses/courses/batch/`, {
+            params: { ids: onlineCourseIds.join(",") },
+          })
+          .catch(() => ({ data: [] }));
+        onlineCoursesInitial = res.data;
+      }
 
       const online = onlineCoursesInitial
         .filter((c) => c !== null)

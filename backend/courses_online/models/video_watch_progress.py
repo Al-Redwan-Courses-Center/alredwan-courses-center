@@ -33,4 +33,8 @@ class VideoWatchProgress(models.Model):
                 fields=['lecture', 'child'],
                 condition=models.Q(child__isnull=False),
                 name='unique_video_lecture_child_progress'),
+            models.CheckConstraint(
+                check=models.Q(student__isnull=False) | models.Q(child__isnull=False),
+                name='video_watch_requires_participant'
+            ),
         ]

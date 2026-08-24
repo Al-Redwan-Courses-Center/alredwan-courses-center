@@ -50,6 +50,10 @@ class OnlineCourseRatingsView(generics.RetrieveAPIView):
         if total_count > 0:
             combined_avg = round((student_sum + parent_sum) / total_count, 2)
 
+        from rest_framework.pagination import PageNumberPagination
+        paginator = PageNumberPagination()
+        paginator.page_size = 20
+
         # Get individual ratings with pagination support
         student_ratings = StudentOnlineCourseRating.objects.filter(
             course=course
@@ -59,11 +63,23 @@ class OnlineCourseRatingsView(generics.RetrieveAPIView):
             course=course
         ).select_related('parent__user').order_by('-created_at')
 
-        # Serialize the ratings
-        student_ratings_data = OnlineCourseRatingSerializer(
-            student_ratings, many=True, context={'type': 'student'}).data
-        parent_ratings_data = OnlineCourseRatingSerializer(
-            parent_ratings, many=True, context={'type': 'parent'}).data
+        student_page = paginator.paginate_queryset(student_ratings, request)
+        if student_page is not None:
+            student_ratings_data = OnlineCourseRatingSerializer(student_page, many=True, context={'type': 'student'}).data
+            student_paginated = paginator.get_paginated_response(student_ratings_data).data
+        else:
+            student_paginated = {'results': OnlineCourseRatingSerializer(student_ratings, many=True, context={'type': 'student'}).data}
+
+        # Need a separate paginator instance to avoid state collision
+        parent_paginator = PageNumberPagination()
+        parent_paginator.page_size = 20
+        
+        parent_page = parent_paginator.paginate_queryset(parent_ratings, request)
+        if parent_page is not None:
+            parent_ratings_data = OnlineCourseRatingSerializer(parent_page, many=True, context={'type': 'parent'}).data
+            parent_paginated = parent_paginator.get_paginated_response(parent_ratings_data).data
+        else:
+            parent_paginated = {'results': OnlineCourseRatingSerializer(parent_ratings, many=True, context={'type': 'parent'}).data}
 
         response_data = {
             'course_id': course.id,
@@ -77,8 +93,8 @@ class OnlineCourseRatingsView(generics.RetrieveAPIView):
                 'parent_average': round(parent_sum / parent_count, 2) if parent_count > 0 else None,
             },
             'ratings': {
-                'student_ratings': student_ratings_data,
-                'parent_ratings': parent_ratings_data,
+                'student_ratings': student_paginated,
+                'parent_ratings': parent_paginated,
             }
         }
 

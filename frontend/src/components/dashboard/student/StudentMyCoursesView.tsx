@@ -61,7 +61,7 @@ export default function StudentMyCoursesView({
           table: () => null,
 
           cards: (
-            item: any,
+            item: CourseDetail & { course_progress: number; type: "physical" | "online"; enrollment_status?: string; enrollment_status_display?: string },
             index,
           ) => <StudentCourseCard course={item} index={index} key={item.id} />,
         }}
