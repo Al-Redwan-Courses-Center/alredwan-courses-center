@@ -63,11 +63,13 @@ const nextConfig: NextConfig = {
   },
 
   async rewrites() {
+    const backendUrl = process.env.REST_API_URL || "http://127.0.0.1:8000";
+
     return {
       fallback: [
         {
           source: "/api/:path*",
-          destination: "http://127.0.0.1:8000/api/:path*", // Proxy to Backend
+          destination: `${backendUrl}/api/:path*`, // Proxy to Backend
         },
       ],
     };

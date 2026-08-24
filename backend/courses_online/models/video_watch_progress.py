@@ -18,7 +18,7 @@ class VideoWatchProgress(models.Model):
     completion_percentage = models.FloatField(default=0.0, verbose_name=_("نسبة الإكمال"))
     is_completed = models.BooleanField(default=False, verbose_name=_("مكتمل"))
     last_position_seconds = models.PositiveIntegerField(default=0, verbose_name=_("آخر موضع"))
-    watch_count = models.PositiveIntegerField(default=1, verbose_name=_("عدد المشاهدات"))
+    watch_count = models.PositiveIntegerField(default=0, verbose_name=_("عدد المشاهدات المكتملة"))
     last_watched_at = models.DateTimeField(auto_now=True, verbose_name=_("آخر مشاهدة"))
 
     class Meta:

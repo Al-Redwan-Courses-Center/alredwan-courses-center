@@ -14,7 +14,7 @@ from courses_online.serializers.ratings import OnlineCourseRatingSerializer, Onl
 class OnlineCourseRatingsView(generics.RetrieveAPIView):
     """
     API endpoint for retrieving ratings of a specific online course.
-    GET /api/courses_online/courses/{id}/ratings/
+    GET /api/online-courses/courses/{id}/ratings/
 
     Returns aggregated rating statistics and individual ratings.
     """
@@ -88,7 +88,7 @@ class OnlineCourseRatingsView(generics.RetrieveAPIView):
 class OnlineCourseRateView(generics.CreateAPIView):
     """
     API endpoint for submitting a rating for a specific online course.
-    POST /api/courses_online/courses/{id}/rate/
+    POST /api/online-courses/courses/{id}/rate/
     """
     permission_classes = [IsAuthenticated]
 
@@ -100,35 +100,29 @@ class OnlineCourseRateView(generics.CreateAPIView):
         return StudentOnlineCourseRateSerializer
 
     def create(self, request, *args, **kwargs):
-        lookup_value = self.kwargs.get('pk')
-        try:
-            course = get_object_or_404(OnlineCourse, pk=lookup_value)
+        course = get_object_or_404(OnlineCourse, pk=self.kwargs.get('pk'))
 
-            serializer = self.get_serializer(
-                data=request.data, 
-                context={'request': request, 'course': course}
-            )
-            serializer.is_valid(raise_exception=True)
-            
-            if request.user.role == 'parent':
-                rating, created = ParentOnlineCourseRating.objects.update_or_create(
-                    parent=request.user.parent_profile,
-                    course=course,
-                    defaults={'rating': serializer.validated_data['rating'], 'feedback': serializer.validated_data.get('feedback', '')}
-                )
-            else:
-                rating, created = StudentOnlineCourseRating.objects.update_or_create(
-                    student=request.user.student_profile,
-                    course=course,
-                    defaults={'rating': serializer.validated_data['rating'], 'feedback': serializer.validated_data.get('feedback', '')}
-                )
+        serializer = self.get_serializer(
+            data=request.data,
+            context={'request': request, 'course': course}
+        )
+        serializer.is_valid(raise_exception=True)
 
-            return Response(
-                {"detail": "تم حفظ التقييم بنجاح.", "created": created},
-                status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        defaults = {
+            'rating': serializer.validated_data['rating'],
+            'feedback': serializer.validated_data.get('feedback', ''),
+        }
+
+        if request.user.role == 'parent':
+            _, created = ParentOnlineCourseRating.objects.update_or_create(
+                parent=request.user.parent_profile, course=course, defaults=defaults
             )
-        except Exception as e:
-            return Response(
-                {"detail": f"Internal Error: {str(e)}", "type": str(type(e))},
-                status=status.HTTP_400_BAD_REQUEST
+        else:
+            _, created = StudentOnlineCourseRating.objects.update_or_create(
+                student=request.user.student_profile, course=course, defaults=defaults
             )
+
+        return Response(
+            {"detail": "تم حفظ التقييم بنجاح.", "created": created},
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        )

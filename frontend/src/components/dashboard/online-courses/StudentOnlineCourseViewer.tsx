@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { OnlineCourseDetail, VideoLectureItem } from "@/types/entities";
-import { PlayCircle, FileText, CheckCircle2, ChevronRight, Clock, Menu, X } from "lucide-react";
-import RatingsSection from "@/components/ratings/RatingsSection";
+import { OnlineCourseDetail } from "@/types/entities";
+import { PlayCircle, FileText, CheckCircle2, ChevronRight, Menu, X } from "lucide-react";
 import { cn, toHindiDigits } from "@/lib/utils";
 import { getFullImageUrl } from "@/lib/image-utils";
 import Button from "@/components/ui/Button";
@@ -12,8 +11,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 export default function StudentOnlineCourseViewer({
   course,
+  childId = null,
 }: {
   course: OnlineCourseDetail;
+  childId?: string | null;
 }) {
   const searchParams = useSearchParams();
   const lectureIdParam = searchParams.get("lecture");
@@ -35,11 +36,16 @@ export default function StudentOnlineCourseViewer({
     if (!activeLecture) return;
     setIsSubmitting(true);
     try {
-      await updateVideoWatchProgress(course.id, activeLecture.id, {
-        watched_seconds: activeLecture.duration_seconds || 1,
-        total_seconds: activeLecture.duration_seconds || 1,
-        last_position_seconds: activeLecture.duration_seconds || 1,
-      });
+      await updateVideoWatchProgress(
+        course.id,
+        activeLecture.id,
+        {
+          watched_seconds: activeLecture.duration_seconds || 1,
+          total_seconds: activeLecture.duration_seconds || 1,
+          last_position_seconds: activeLecture.duration_seconds || 1,
+        },
+        childId,
+      );
       router.refresh();
     } catch (error) {
       console.error("Failed to mark as completed:", error);

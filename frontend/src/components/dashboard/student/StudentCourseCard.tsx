@@ -3,12 +3,10 @@ import Image from "next/image";
 import CourseImage from "@/assets/course-img.jpg";
 import BookIcon from "@/components/icons/BookIcon";
 import CalendarIcon from "@/components/icons/CalendarIcon";
-import ClockIcon from "@/components/icons/ClockIcon";
 import Button from "@/components/ui/Button";
 import ItemCard from "@/components/ui/ItemCard";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
-import type { CourseDetail } from "@/types/entities";
 
 export default function StudentCourseCard({
   course,

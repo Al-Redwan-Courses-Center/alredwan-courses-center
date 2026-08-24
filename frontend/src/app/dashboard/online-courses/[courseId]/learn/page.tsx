@@ -12,21 +12,24 @@ export default async function Page({
   await protect(["student", "parent"]);
   
   const { courseId } = await params;
-  const course = await getOnlineCourseById(courseId);
+
+  // Verify enrollment status before rendering content
+  const myEnrollments = await getMyEnrollments();
+  const enrollment = myEnrollments.find(
+    (e) => String(e.online_course) === String(courseId) && e.status === "active"
+  );
+
+  if (!enrollment) {
+    redirect("/dashboard/my-courses");
+  }
+
+  // Parents watch on behalf of a child, so progress is tracked against them.
+  const childId = enrollment.child_id;
+  const course = await getOnlineCourseById(courseId, childId);
 
   if (!course) {
     redirect("/dashboard/my-courses");
   }
-  
-  // Verify enrollment status before rendering content
-  const myEnrollments = await getMyEnrollments();
-  const isEnrolled = myEnrollments.some(
-    (e) => String(e.online_course) === String(courseId) && e.status === "active"
-  );
 
-  if (!isEnrolled) {
-    redirect("/dashboard/my-courses");
-  }
-
-  return <StudentOnlineCourseViewer course={course} />;
+  return <StudentOnlineCourseViewer course={course} childId={childId} />;
 }

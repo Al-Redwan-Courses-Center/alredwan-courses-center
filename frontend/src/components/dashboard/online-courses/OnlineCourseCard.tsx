@@ -1,5 +1,4 @@
 import { OnlineCourseListItem } from "@/types/entities";
-import Image from "next/image";
 import Button from "@/components/ui/Button";
 import ItemCard from "@/components/ui/ItemCard";
 import { cn, toHindiDigits } from "@/lib/utils";
@@ -9,7 +8,7 @@ import ClockIcon from "@/components/icons/ClockIcon";
 interface OnlineCourseCardProps {
   course: OnlineCourseListItem;
   index?: number;
-  linkTo?: "dashboard" | "landing" | "student-dashboard";
+  linkTo?: "dashboard" | "landing";
 }
 
 function formatDuration(seconds: number) {
@@ -22,14 +21,6 @@ function formatDuration(seconds: number) {
 export default function OnlineCourseCard({ course, index = 0, linkTo = "landing" }: OnlineCourseCardProps) {
   const isEven = index % 2 === 0;
   const isCourseImageValid = course.thumbnail?.startsWith("http") || course.thumbnail?.startsWith("/");
-
-  let targetHref = `/online-courses/${course.id}`;
-
-  if (linkTo === "dashboard") {
-    targetHref = `/dashboard/online-courses/${course.id}`;
-  } else if (linkTo === "student-dashboard") {
-    targetHref = `/dashboard/my-courses/${course.id}`;
-  }
 
   return (
     <ItemCard

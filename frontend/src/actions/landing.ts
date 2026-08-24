@@ -2,7 +2,12 @@
 
 import { apiRequest, publicApiClient, unwrapPaginated } from "@/lib/api";
 import type { PaginatedResponse } from "@/types/config";
-import type { LandingPageCourse, LandingPageInstructor, OnlineCourseListItem } from "@/types/entities";
+import type {
+  LandingPageCourse,
+  LandingPageInstructor,
+  OnlineCourseListItem,
+} from "@/types/entities";
+
 export async function getLandingPageInstructors(): Promise<
   LandingPageInstructor[]
 > {

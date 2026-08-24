@@ -14,7 +14,7 @@ export default async function Page({
   const course = await getOnlineCourseById(courseId);
 
   if (!course) {
-    redirect("/dashboard/online-courses");
+    redirect("/dashboard/courses?type=online");
   }
 
   return <VideoStudioWorkspace course={course} />;

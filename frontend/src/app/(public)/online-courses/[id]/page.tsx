@@ -2,10 +2,8 @@ import { getPublicOnlineCourseById } from "@/actions/online-courses";
 import RatingsSection from "@/components/ratings/RatingsSection";
 import Image from "next/image";
 import CourseImage from "@/assets/course-img.jpg";
-import { Badge } from "lucide-react"; // Actually I'll use custom div
-import { Calendar, Book, Users, Clock, Tag as TagIcon, ArrowRight, Phone, Mail } from "lucide-react";
-import { formatDate, toHindiDigits, getArabicPlural } from "@/lib/utils";
-import { parseISO } from "date-fns";
+import { Book, Clock, ArrowRight, Phone, Mail } from "lucide-react";
+import { toHindiDigits, getArabicPlural } from "@/lib/utils";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
 

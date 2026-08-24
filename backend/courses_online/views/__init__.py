@@ -6,7 +6,7 @@ from .progress import VideoProgressUpdateView
 
 class OnlineCourseViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
-    queryset = OnlineCourse.objects.filter(is_active=True)
+    queryset = OnlineCourse.objects.filter(is_active=True, is_published=True)
 
     def get_serializer_class(self):
         if self.action == 'retrieve':

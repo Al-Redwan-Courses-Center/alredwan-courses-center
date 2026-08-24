@@ -3,14 +3,12 @@
 import { parseISO } from "date-fns";
 import BookIcon from "@/components/icons/BookIcon";
 import CalendarIcon from "@/components/icons/CalendarIcon";
-import ClockIcon from "@/components/icons/ClockIcon";
 import Accordion from "@/components/ui/accordion/Accordion";
 import AccordionHeader from "@/components/ui/accordion/AccordionHeader";
 import AccordionItem from "@/components/ui/accordion/AccordionItem";
 import Button from "@/components/ui/Button";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
-import type { CourseDetail } from "@/types/entities";
 
 interface StudentOverviewCoursesAccordionProps {
   courses: any[];

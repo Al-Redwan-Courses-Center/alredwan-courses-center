@@ -7,8 +7,6 @@ export interface OnlineCourseListItem {
   price: string;
   allow_replay: boolean;
   access_validity_days: number;
-  is_published: boolean;
-  is_active: boolean;
   enrolled_count: number;
   video_count: number;
   total_duration_seconds: number;

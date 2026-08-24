@@ -67,7 +67,8 @@ export async function getAllCourses(): Promise<CourseListItem[]> {
         (c) =>
           !enrollmentsCoursesIds.includes(c.id) &&
           !pendingOrProcessingRequestCourseIds.includes(c.id),
-      );    },
+      );
+    },
     [],
   );
 }
@@ -190,7 +191,8 @@ export async function getStudentCourses(): Promise<(CourseDetail & { course_prog
           };
         });
 
-      return [...physical, ...online];    },
+      return [...physical, ...online];
+    },
     [],
   );
 }

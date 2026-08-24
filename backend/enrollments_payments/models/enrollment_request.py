@@ -116,14 +116,19 @@ class EnrollmentRequest(models.Model):
                 name='unique_course_student_request'
             ),
 
+            # Online requests are only unique while still in flight, so a
+            # course can be bought again after a previous request is closed.
+            # Mirrors the status scoping on Enrollment's online constraints.
             models.UniqueConstraint(
                 fields=['online_course', 'child'],
-                condition=Q(online_course__isnull=False, child__isnull=False),
+                condition=Q(online_course__isnull=False, child__isnull=False,
+                            status__in=['pending', 'processing']),
                 name='unique_online_course_child_request'
             ),
             models.UniqueConstraint(
                 fields=['online_course', 'student'],
-                condition=Q(online_course__isnull=False, student__isnull=False),
+                condition=Q(online_course__isnull=False, student__isnull=False,
+                            status__in=['pending', 'processing']),
                 name='unique_online_course_student_request'
             ),
             models.CheckConstraint(

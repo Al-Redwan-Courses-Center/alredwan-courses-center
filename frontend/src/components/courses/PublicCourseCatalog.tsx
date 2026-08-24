@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CourseListItem, OnlineCourseListItem } from "@/types/entities";
 import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
 import DashboardOnlineCoursesView from "@/components/dashboard/DashboardOnlineCoursesView";
@@ -16,19 +15,18 @@ export default function PublicCourseCatalog({
   online,
   linkTo = "landing",
 }: PublicCourseCatalogProps & { linkTo?: "landing" | "dashboard" }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const typeParam = searchParams.get("type");
-  
-  const [activeTab, setActiveTab] = useState<"physical" | "online">(
-    typeParam === "online" ? "online" : "physical"
-  );
 
-  // Sync state if URL changes directly
-  useEffect(() => {
-    if (typeParam === "online" || typeParam === "physical") {
-      setActiveTab(typeParam);
-    }
-  }, [typeParam]);
+  // The tab lives in the URL so it survives refreshes and back/forward,
+  // and so it needs no state to keep in sync.
+  const activeTab = searchParams.get("type") === "online" ? "online" : "physical";
+
+  const setActiveTab = (tab: "physical" | "online") => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("type", tab);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
 
   return (
     <div className="space-y-6">

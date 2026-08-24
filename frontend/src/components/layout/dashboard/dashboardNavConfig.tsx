@@ -7,8 +7,8 @@ import OverviewIcon from "@/components/icons/OverviewIcon";
 import PanelsIcon from "@/components/icons/PanelsIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import PersonIcon from "@/components/icons/PersonIcon";
-import MonitorPlayIcon from "@/components/icons/MonitorPlayIcon";
 import type { UserEntity } from "@/types/auth";
+
 export interface DashboardNavItem {
   label: string;
   href: string;
@@ -52,7 +52,6 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       href: "/dashboard/courses",
       icon: <AllCoursesIcon />,
     },
-
     {
       label: "ذكريات المسجد",
       href: "/dashboard/memories",
@@ -76,7 +75,6 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       href: "/dashboard/instructors",
       icon: <PeopleIcon />,
     },
-
     {
       label: "ذكريات المسجد",
       href: "/dashboard/memories",
@@ -152,7 +150,6 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       href: "/dashboard/courses",
       icon: <AllCoursesIcon />,
     },
-
     {
       label: "ذكريات المسجد",
       href: "/dashboard/memories",
@@ -188,7 +185,6 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       href: "/dashboard/courses",
       icon: <AllCoursesIcon />,
     },
-
     {
       label: "ذكريات المسجد",
       href: "/dashboard/memories",

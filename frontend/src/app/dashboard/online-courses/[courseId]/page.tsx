@@ -7,13 +7,11 @@ import {
 import { getParentChildren } from "@/actions/user";
 import CourseImage from "@/assets/course-img.jpg";
 import CoursePurchaseModal from "@/components/courses/CoursePurchaseModal";
-import CourseHeader from "@/components/courses/CourseHeader";
 import Button from "@/components/ui/Button";
 import {
   toHindiDigits,
 } from "@/lib/utils";
 import Image from "next/image";
-import { redirect } from "next/navigation";
 import RatingsSection from "@/components/ratings/RatingsSection";
 import { Pencil } from "lucide-react";
 
@@ -28,7 +26,6 @@ export default async function Page({
     getUser(),
   ]);
   const isParent = user.role === "parent";
-  const enrollmentRole = isParent ? "parent" : "student";
 
   const [myEnrollments, myEnrollmentRequests, parentChildren] =
     await Promise.all([

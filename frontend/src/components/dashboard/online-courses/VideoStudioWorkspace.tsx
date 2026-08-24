@@ -16,19 +16,6 @@ export default function VideoStudioWorkspace({ course }: VideoStudioWorkspacePro
     course.video_lectures?.[0] || null
   );
 
-  const handleProgress = (progress: { playedSeconds: number; played: number }) => {
-    // In a real implementation, debounced call to updateVideoWatchProgress server action
-  };
-
-  const handleEnded = () => {
-    // Optionally auto-advance to next lecture
-    if (!activeLecture) return;
-    const currentIndex = course.video_lectures.findIndex(l => l.id === activeLecture.id);
-    if (currentIndex >= 0 && currentIndex < course.video_lectures.length - 1) {
-      setActiveLecture(course.video_lectures[currentIndex + 1]);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-black -m-6 flex flex-col font-sans">
       {/* Header */}
@@ -52,11 +39,7 @@ export default function VideoStudioWorkspace({ course }: VideoStudioWorkspacePro
           {activeLecture ? (
             <div className="flex-1 p-4 lg:p-6 flex flex-col justify-center">
               <div className="max-w-[1200px] w-full mx-auto">
-                <VideoPlayer 
-                  lecture={activeLecture} 
-                  onProgress={handleProgress}
-                  onEnded={handleEnded}
-                />
+                <VideoPlayer lecture={activeLecture} />
                 
                 <div className="mt-6 text-white">
                   <h2 className="text-2xl font-bold mb-2">{activeLecture.title}</h2>

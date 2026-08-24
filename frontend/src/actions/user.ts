@@ -262,7 +262,7 @@ export async function getChildCourses(childId: string): Promise<(CourseDetail & 
     const onlineCoursesInitial = await Promise.all(
       onlineCourseIds.map((id) =>
         apiClient
-          .get(`/api/online-courses/courses/${id}/`)
+          .get(`/api/online-courses/courses/${id}/`, { params: { child: childId } })
           .then((res) => res.data)
           .catch(() => null)
       )
@@ -290,7 +290,8 @@ export async function getChildCourses(childId: string): Promise<(CourseDetail & 
 
     return [...physical, ...online];
   } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;    console.error("Failed to load child courses:", error);
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
+    console.error("Failed to load child courses:", error);
     return [];
   }
 }

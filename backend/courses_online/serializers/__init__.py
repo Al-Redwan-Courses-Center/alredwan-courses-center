@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from ..models import OnlineCourse, VideoLecture, OnlineLectureMaterial, VideoWatchProgress
+from ..participants import resolve_participant
 
 class OnlineLectureMaterialSerializer(serializers.ModelSerializer):
     file = serializers.SerializerMethodField()
@@ -38,14 +39,18 @@ class VideoLectureSerializer(serializers.ModelSerializer):
 
     def get_watch_progress(self, obj):
         request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            user = request.user
-            progress = None
-            if hasattr(user, 'student_profile'):
-                progress = VideoWatchProgress.objects.filter(lecture=obj, student=user.student_profile).first()
-            if progress:
-                return VideoWatchProgressSerializer(progress).data
-        return None
+        if not request or not request.user.is_authenticated:
+            return None
+
+        # Parents view a specific child's progress via ?child=<uuid>
+        student, child = resolve_participant(
+            request.user, request.query_params.get('child'))
+        if student is None and child is None:
+            return None
+
+        progress = VideoWatchProgress.objects.filter(
+            lecture=obj, student=student, child=child).first()
+        return VideoWatchProgressSerializer(progress).data if progress else None
 
 class OnlineCourseListSerializer(serializers.ModelSerializer):
     instructor = serializers.SerializerMethodField()
@@ -55,12 +60,16 @@ class OnlineCourseListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OnlineCourse
-        fields = ['id', 'name', 'description', 'thumbnail', 'instructor', 'price', 'allow_replay', 'access_validity_days', 'is_published', 'is_active', 'enrolled_count', 'video_count', 'total_duration_seconds', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'description', 'thumbnail', 'instructor', 'price', 'allow_replay', 'access_validity_days', 'enrolled_count', 'video_count', 'total_duration_seconds', 'created_at', 'updated_at']
 
     def get_instructor(self, obj):
-        if obj.instructor:
-            return {'id': obj.instructor.id, 'name': obj.instructor.user.get_full_name()}
-        return None
+        if not obj.instructor:
+            return None
+        return {
+            'id': obj.instructor.id,
+            'name': obj.instructor.user.get_full_name(),
+            'image_url': obj.instructor.image.url if obj.instructor.image else None,
+        }
 
     def get_thumbnail(self, obj):
         if obj.image:

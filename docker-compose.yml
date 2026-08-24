@@ -34,8 +34,6 @@ services:
     build: ./backend
     env_file:
       - ./backend/.env
-    volumes:
-      - ./backend:/app
     container_name: redwan-backend
     depends_on:
       redwan-db:
@@ -65,11 +63,11 @@ services:
     environment:
       - REST_API_URL=http://redwan-backend:8000
       - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=NMgLwPWT!R6VIxQd^Yr&t#pBqy4CDAn*)bsJve@SU257aZj9%zcuKEmkh3FG(8Xf
       - HOSTNAME=0.0.0.0
       - PORT=3000
     env_file:
-      - ./frontend/.env    restart: unless-stopped
+      - ./frontend/.env
+    restart: unless-stopped
 
 volumes:
   postgres_data:

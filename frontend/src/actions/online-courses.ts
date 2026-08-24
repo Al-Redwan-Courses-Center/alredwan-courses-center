@@ -3,7 +3,7 @@
 import { apiRequest, getAuthApiClient, publicApiClient, unwrapPaginated } from "@/lib/api";
 import { PaginatedResponse } from "@/types/config";
 import { OnlineCourseListItem, OnlineCourseDetail, VideoWatchProgressItem } from "@/types/entities";
-import { getMyEnrollmentRequests, getMyEnrollments } from "@/actions/enrollments";
+import { getMyEnrollments } from "@/actions/enrollments";
 import { getUser } from "@/actions/auth";
 import { revalidatePath } from "next/cache";
 
@@ -69,8 +69,10 @@ export async function getAllOnlineCourses(): Promise<OnlineCourseListItem[]> {
   );
 }
 
+// `childId` is required for parents: it says whose watch progress to return.
 export async function getOnlineCourseById(
   courseId: string,
+  childId?: string | null,
 ): Promise<OnlineCourseDetail | null> {
   return apiRequest(
     "Failed to load online course details:",
@@ -79,6 +81,7 @@ export async function getOnlineCourseById(
 
       const { data } = await apiClient.get<OnlineCourseDetail>(
         `/api/online-courses/courses/${courseId}/`,
+        { params: childId ? { child: childId } : undefined },
       );
 
       return data;
@@ -91,6 +94,7 @@ export async function updateVideoWatchProgress(
   courseId: string,
   lectureId: string,
   payload: { watched_seconds: number; total_seconds: number; last_position_seconds: number },
+  childId?: string | null,
 ): Promise<VideoWatchProgressItem | null> {
   return apiRequest(
     "Failed to update video progress:",
@@ -99,7 +103,7 @@ export async function updateVideoWatchProgress(
 
       const { data } = await apiClient.post<VideoWatchProgressItem>(
         `/api/online-courses/courses/${courseId}/lectures/${lectureId}/progress/`,
-        payload
+        childId ? { ...payload, child: childId } : payload
       );
 
       revalidatePath(`/dashboard/online-courses/${courseId}/learn`);

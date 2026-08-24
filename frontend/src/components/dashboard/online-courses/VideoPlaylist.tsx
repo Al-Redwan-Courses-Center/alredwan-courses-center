@@ -4,7 +4,6 @@ import { VideoLectureItem } from "@/types/entities";
 import MonitorPlayIcon from "@/components/icons/MonitorPlayIcon";
 import CheckMarkIcon from "@/components/icons/CheckMarkIcon";
 import ExcelIcon from "@/components/icons/ExcelIcon"; // Using this as generic file icon for now
-import { formatCurrency } from "@/lib/utils";
 import { getFullImageUrl } from "@/lib/image-utils";
 
 interface VideoPlaylistProps {
