@@ -385,7 +385,7 @@ class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
         """Display course as clickable link."""
         target = obj.course_instance
         if target:
-            if hasattr(target, 'video_lectures'):  # it's an OnlineCourse
+            if isinstance(target, OnlineCourse):
                 url = reverse('admin:courses_online_onlinecourse_change', args=[target.pk])
                 icon = '💻'
             else:
