@@ -4,7 +4,6 @@ services:
     container_name: redwan-db
     env_file:
       - ./backend/db.env
-    # Remove ports - DB should not be exposed to host in production
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -20,7 +19,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis
-    # Remove ports - Redis should not be exposed to host in production
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -38,12 +36,18 @@ services:
     depends_on:
       redwan-db:
         condition: service_healthy
+    volumes:
+      - ./backend:/app # ← Mounts backend files so Django auto-reloads on file changes
     ports:
-      - "8000:8000"   # Gunicorn (HTTP)
-      - "8001:8001"   # Uvicorn (WebSocket/ASGI)  ← ADD THIS
+      - "8000:8000" # Gunicorn/Django HTTP
+      - "8001:8001" # Uvicorn WebSocket/ASGI
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "python3 -c \"import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health/').getcode() == 200 else 1)\""]
+      test:
+        [
+          "CMD-SHELL",
+          'python3 -c "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen(''http://localhost:8000/health/'').getcode() == 200 else 1)"',
+        ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -53,20 +57,26 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      target: final   # ← production stage, not dev
+      target: dev # ← dev
     container_name: redwan-frontend
+    stdin_open: true # ← Keeps terminal channels open for Next.js development mode
+    tty: true # ← Allocates a pseudo-TTY to stop instant container exits
+    command: pnpm dev
+    volumes:
+      - ./frontend:/app # ← Mounts your local frontend files for hot-reloading
+      - /app/node_modules # ← Safeguards container node_modules from host interference
     depends_on:
       redwan-backend:
         condition: service_healthy
     ports:
       - "3000:3000"
+    env_file:
+      - ./frontend/.env
     environment:
       - REST_API_URL=http://redwan-backend:8000
       - NEXTAUTH_URL=http://localhost:3000
       - HOSTNAME=0.0.0.0
       - PORT=3000
-    env_file:
-      - ./frontend/.env
     restart: unless-stopped
 
 volumes:
