@@ -202,13 +202,13 @@ class TestAdminEnrollmentRequestUpdate(EnrollmentAPIBaseTestCase):
         self.authenticate_as_admin()
         
         response = self.client.patch(f'/api/admin/enrollment-requests/{self.request.id}/update/', {
-            'payment_method': 'bank_transfer'
+            'payment_method': 'instapay'
         })
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
         self.request.refresh_from_db()
-        self.assertEqual(self.request.payment_method, 'bank_transfer')
+        self.assertEqual(self.request.payment_method, 'instapay')
 
     def test_admin_can_add_notes(self):
         """Test that admin can add notes."""

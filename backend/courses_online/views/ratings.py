@@ -109,7 +109,7 @@ class OnlineCourseRateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
-        if self.request.user.role == 'parent':
+        if getattr(self.request.user, 'role', None) == 'parent':
             from courses_online.serializers.ratings import ParentOnlineCourseRateSerializer
             return ParentOnlineCourseRateSerializer
         from courses_online.serializers.ratings import StudentOnlineCourseRateSerializer
@@ -129,13 +129,31 @@ class OnlineCourseRateView(generics.CreateAPIView):
             'feedback': serializer.validated_data.get('feedback', ''),
         }
 
-        if request.user.role == 'parent':
+        user_role = getattr(request.user, 'role', None)
+        if user_role == 'parent':
+            parent_profile = getattr(request.user, 'parent_profile', None)
+            if not parent_profile:
+                return Response(
+                    {"detail": "لم يتم العثور على ملف ولي الأمر لهذا المستخدم."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             _, created = ParentOnlineCourseRating.objects.update_or_create(
-                parent=request.user.parent_profile, course=course, defaults=defaults
+                parent=parent_profile, course=course, defaults=defaults
+            )
+        elif user_role == 'student':
+            student_profile = getattr(request.user, 'student_profile', None)
+            if not student_profile:
+                return Response(
+                    {"detail": "لم يتم العثور على ملف الطالب لهذا المستخدم."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            _, created = StudentOnlineCourseRating.objects.update_or_create(
+                student=student_profile, course=course, defaults=defaults
             )
         else:
-            _, created = StudentOnlineCourseRating.objects.update_or_create(
-                student=request.user.student_profile, course=course, defaults=defaults
+            return Response(
+                {"detail": "فقط الطلاب وأولياء الأمور يمكنهم تقديم تقييمات."},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         return Response(

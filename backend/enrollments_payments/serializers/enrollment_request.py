@@ -3,7 +3,7 @@
 Handles validation and serialization of enrollment request data.
 """
 from rest_framework import serializers
-from ..models.enrollment_request import EnrollmentRequest, EnrollmentRequestStatus
+from ..models.enrollment_request import EnrollmentRequest, EnrollmentRequestStatus, PaymentMethod
 from ..models.enrollment import Enrollment, EnrollmentStatus
 
 
@@ -12,7 +12,8 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EnrollmentRequest
-        fields = ['course', 'online_course', 'child', 'price', 'payment_method', 'notes']
+        fields = ['id', 'course', 'online_course', 'child', 'price', 'payment_method', 'notes']
+        read_only_fields = ['id']
 
     def validate_course(self, course):
         """Validate course is active and has capacity"""
@@ -184,9 +185,8 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
 
 class EnrollmentRequestListSerializer(serializers.ModelSerializer):
     """Serializer for listing EnrollmentRequests with minimal course info"""
-    course_name = serializers.CharField(source='course.name', read_only=True)
-    course_price = serializers.DecimalField(
-        source='course.price', max_digits=10, decimal_places=2, read_only=True)
+    course_name = serializers.SerializerMethodField()
+    course_price = serializers.SerializerMethodField()
     child_id = serializers.UUIDField(
         source='child.id', read_only=True, default=None)
     participant_name = serializers.SerializerMethodField()
@@ -196,11 +196,19 @@ class EnrollmentRequestListSerializer(serializers.ModelSerializer):
     class Meta:
         model = EnrollmentRequest
         fields = [
-            'id', 'course', 'course_name', 'course_price',
+            'id', 'course', 'online_course', 'course_name', 'course_price',
             'child_id', 'participant_name', 'price', 'status', 'status_display',
             'payment_method', 'created_at', 'expires_at', 'notes'
         ]
         read_only_fields = fields
+
+    def get_course_name(self, obj):
+        target = obj.course_instance
+        return target.name if target else None
+
+    def get_course_price(self, obj):
+        target = obj.course_instance
+        return target.price if (target and target.price is not None) else None
 
     def get_participant_name(self, obj):
         """Get the name of the participant (child or student)"""
@@ -213,13 +221,10 @@ class EnrollmentRequestListSerializer(serializers.ModelSerializer):
 
 class EnrollmentRequestDetailSerializer(serializers.ModelSerializer):
     """Serializer for detailed view of EnrollmentRequest"""
-    course_name = serializers.CharField(source='course.name', read_only=True)
-    course_description = serializers.CharField(
-        source='course.description', read_only=True)
-    course_price = serializers.DecimalField(
-        source='course.price', max_digits=10, decimal_places=2, read_only=True)
-    course_start_date = serializers.DateField(
-        source='course.start_date', read_only=True)
+    course_name = serializers.SerializerMethodField()
+    course_description = serializers.SerializerMethodField()
+    course_price = serializers.SerializerMethodField()
+    course_start_date = serializers.SerializerMethodField()
     course_instructor = serializers.SerializerMethodField()
 
     participant_name = serializers.SerializerMethodField()
@@ -235,7 +240,7 @@ class EnrollmentRequestDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = EnrollmentRequest
         fields = [
-            'id', 'course', 'course_name', 'course_description',
+            'id', 'course', 'online_course', 'course_name', 'course_description',
             'course_price', 'course_start_date', 'course_instructor',
             'participant_name', 'participant_type',
             'price', 'status', 'status_display',
@@ -245,10 +250,28 @@ class EnrollmentRequestDetailSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
+    def get_course_name(self, obj):
+        target = obj.course_instance
+        return target.name if target else None
+
+    def get_course_description(self, obj):
+        target = obj.course_instance
+        return target.description if target else None
+
+    def get_course_price(self, obj):
+        target = obj.course_instance
+        return target.price if (target and target.price is not None) else None
+
+    def get_course_start_date(self, obj):
+        if obj.course:
+            return obj.course.start_date
+        return None
+
     def get_course_instructor(self, obj):
         """Get the instructor name for the course"""
-        if obj.course and obj.course.instructor:
-            return obj.course.instructor.user.get_full_name()
+        target = obj.course_instance
+        if target and target.instructor and target.instructor.user:
+            return target.instructor.user.get_full_name()
         return None
 
     def get_participant_name(self, obj):
@@ -278,11 +301,9 @@ class EnrollmentRequestDetailSerializer(serializers.ModelSerializer):
 
 class AdminEnrollmentRequestListSerializer(serializers.ModelSerializer):
     """Serializer for admin listing of EnrollmentRequests with full info"""
-    course_name = serializers.CharField(source='course.name', read_only=True)
-    course_price = serializers.DecimalField(
-        source='course.price', max_digits=10, decimal_places=2, read_only=True)
-    season_name = serializers.CharField(
-        source='course.season.name', read_only=True, default=None)
+    course_name = serializers.SerializerMethodField()
+    course_price = serializers.SerializerMethodField()
+    season_name = serializers.SerializerMethodField()
     participant_name = serializers.SerializerMethodField()
     participant_type = serializers.SerializerMethodField()
     parent_name = serializers.SerializerMethodField()
@@ -294,7 +315,7 @@ class AdminEnrollmentRequestListSerializer(serializers.ModelSerializer):
     class Meta:
         model = EnrollmentRequest
         fields = [
-            'id', 'course', 'course_name', 'course_price', 'season_name',
+            'id', 'course', 'online_course', 'course_name', 'course_price', 'season_name',
             'parent', 'parent_name', 'student', 'child',
             'participant_name', 'participant_type',
             'price', 'status', 'status_display',
@@ -302,6 +323,19 @@ class AdminEnrollmentRequestListSerializer(serializers.ModelSerializer):
             'created_at', 'processed_at', 'expires_at', 'notes'
         ]
         read_only_fields = fields
+
+    def get_course_name(self, obj):
+        target = obj.course_instance
+        return target.name if target else None
+
+    def get_course_price(self, obj):
+        target = obj.course_instance
+        return target.price if (target and target.price is not None) else None
+
+    def get_season_name(self, obj):
+        if obj.course and obj.course.season:
+            return obj.course.season.name
+        return None
 
     def get_participant_name(self, obj):
         if obj.child:
@@ -341,7 +375,8 @@ class AdminEnrollmentRequestUpdateSerializer(serializers.ModelSerializer):
             if value < 0:
                 raise serializers.ValidationError(
                     "السعر يجب أن يكون قيمة موجبة.")
-            if self.instance and value > self.instance.course.price:
+            target = self.instance.course_instance if self.instance else None
+            if target and target.price is not None and value > target.price:
                 raise serializers.ValidationError(
                     "السعر لا يمكن أن يكون أكبر من سعر الدورة.")
         return value
@@ -378,8 +413,7 @@ class EnrollmentRequestApproveSerializer(serializers.Serializer):
     paid_amount = serializers.DecimalField(
         max_digits=10, decimal_places=2, required=False, allow_null=True)
     payment_method = serializers.ChoiceField(
-        choices=['cash', 'card', 'bank_transfer',
-                 'instapay', 'vodafone_cash', 'other'],
+        choices=PaymentMethod.values,
         required=False)
     payment_notes = serializers.CharField(required=False, allow_blank=True)
 
@@ -435,9 +469,8 @@ class BulkApproveSerializer(serializers.Serializer):
         max_length=50  # Limit to prevent performance issues
     )
     payment_method = serializers.ChoiceField(
-        choices=['cash', 'card', 'bank_transfer',
-                 'instapay', 'vodafone_cash', 'other'],
-        default='cash'
+        choices=PaymentMethod.values,
+        default=PaymentMethod.CASH
     )
 
     def validate_request_ids(self, value):

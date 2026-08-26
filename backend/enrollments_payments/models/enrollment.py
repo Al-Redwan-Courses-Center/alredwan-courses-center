@@ -105,7 +105,7 @@ class Enrollment(models.Model):
                 name='exact_one_course_type_per_enrollment'
             ),
             models.CheckConstraint(
-                check=Q(child__isnull=False, student__isnull=True) | Q(
+                condition=Q(child__isnull=False, student__isnull=True) | Q(
                     child__isnull=True, student__isnull=False),
                 name='child_or_student_enrollment'
             ),

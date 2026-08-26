@@ -38,7 +38,8 @@ class IsOwnerOrAdminOrSupervisorOrInstructor(IsAuthenticated):
         # Course instructor can view enrollments in their courses
         if user.role == 'instructor':
             instructor = getattr(user, 'instructor_profile', None)
-            if instructor and obj.course.instructor_id == instructor.id:
+            target = obj.course_instance
+            if instructor and target and target.instructor_id == instructor.id:
                 return True
 
         # Check if user is the owner (parent of child or the student)
@@ -149,12 +150,13 @@ class EnrollmentProgressView(APIView):
     permission_classes = [IsOwnerOrAdminOrSupervisorOrInstructor]
 
     def get_object(self, id):
+        from django.core.exceptions import ValidationError
         try:
             return Enrollment.objects.select_related(
                 'course', 'online_course', 'child', 'child__primary_parent',
                 'student'
             ).prefetch_related('course__lectures').get(id=id)
-        except Enrollment.DoesNotExist:
+        except (Enrollment.DoesNotExist, ValidationError, ValueError):
             return None
 
     def check_object_permissions(self, request, obj):
@@ -168,7 +170,8 @@ class EnrollmentProgressView(APIView):
         # Course instructor can view
         if user.role == 'instructor':
             instructor = getattr(user, 'instructor_profile', None)
-            if instructor and obj.course.instructor_id == instructor.id:
+            target = obj.course_instance
+            if instructor and target and target.instructor_id == instructor.id:
                 return True
 
         # Check if user is the owner

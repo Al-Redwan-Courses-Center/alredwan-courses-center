@@ -50,12 +50,22 @@ class VideoProgressUpdateView(views.APIView):
             progress, _ = VideoWatchProgress.objects.get_or_create(
                 lecture=lecture, student=student, child=child)
 
-            progress.watched_seconds = _seconds(
+            incoming_watched = _seconds(
                 request.data.get('watched_seconds'), progress.watched_seconds)
-            progress.total_seconds = _seconds(
+            incoming_total = _seconds(
                 request.data.get('total_seconds'), progress.total_seconds)
-            progress.last_position_seconds = _seconds(
+            incoming_last_pos = _seconds(
                 request.data.get('last_position_seconds'), progress.last_position_seconds)
+
+            progress.total_seconds = incoming_total
+            progress.last_position_seconds = incoming_last_pos
+
+            # Detect replay / restart when video was completed and user restarts from beginning
+            if progress.is_completed and incoming_last_pos < 15 and incoming_watched < 15:
+                progress.is_completed = False
+                progress.watched_seconds = incoming_watched
+            else:
+                progress.watched_seconds = max(progress.watched_seconds, incoming_watched)
 
             if progress.total_seconds > 0:
                 progress.completion_percentage = min(

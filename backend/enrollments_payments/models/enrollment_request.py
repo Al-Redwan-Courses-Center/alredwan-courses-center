@@ -88,7 +88,7 @@ class EnrollmentRequest(models.Model):
 
             # Parent + child OR student only
             models.CheckConstraint(
-                check=(
+                condition=(
                     (Q(parent__isnull=False) & Q(child__isnull=False) & Q(student__isnull=True)) |
                     (Q(student__isnull=False) & Q(
                         parent__isnull=True) & Q(child__isnull=True))
@@ -98,7 +98,7 @@ class EnrollmentRequest(models.Model):
 
             # price must be positive (only when price not null)
             models.CheckConstraint(
-                check=Q(price__gt=0) | Q(price__isnull=True),
+                condition=Q(price__gt=0) | Q(price__isnull=True),
                 name='positive_price'
             ),
 
@@ -225,7 +225,8 @@ class EnrollmentRequest(models.Model):
             elif self.price is not None:
                 final_amount = self.price
             else:
-                final_amount = self.course.price
+                target = self.course_instance
+                final_amount = target.price if (target and target.price is not None) else 0
             
             # Determine payment method
             final_method = payment_method if payment_method else (self.payment_method or "cash")

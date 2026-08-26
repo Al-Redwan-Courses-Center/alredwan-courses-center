@@ -26,7 +26,7 @@ class StudentInstructorRating(models.Model):
         constraints = [
             # Ensure rating is between 1.00 and 10.00
             models.CheckConstraint(
-                check=Q(rating__gte=1.00, rating__lte=10.00),
+                condition=Q(rating__gte=1.00, rating__lte=10.00),
                 name='student_instructor_rating_range'
             ),
             models.UniqueConstraint(
@@ -66,7 +66,7 @@ class ParentInstructorRating(models.Model):
         constraints = [
             # Ensure rating is between 1.00 and 10.00
             models.CheckConstraint(
-                check=Q(rating__gte=1.00, rating__lte=10.00),
+                condition=Q(rating__gte=1.00, rating__lte=10.00),
                 name='parent_instructor_rating_range'
             ),
             models.UniqueConstraint(
@@ -104,7 +104,7 @@ class StudentCourseRating(models.Model):
         constraints = [
             # Ensure rating is between 1.00 and 10.00
             models.CheckConstraint(
-                check=Q(rating__gte=1.00, rating__lte=10.00),
+                condition=Q(rating__gte=1.00, rating__lte=10.00),
                 name='student_course_rating_range'
             ),
             models.UniqueConstraint(
@@ -144,7 +144,7 @@ class ParentCourseRating(models.Model):
         constraints = [
             # Ensure rating is between 1.00 and 10.00
             models.CheckConstraint(
-                check=Q(rating__gte=1.00, rating__lte=10.00),
+                condition=Q(rating__gte=1.00, rating__lte=10.00),
                 name='parent_course_rating_range'
             ),
             models.UniqueConstraint(
@@ -183,7 +183,7 @@ class StudentOnlineCourseRating(models.Model):
         constraints = [
             # Ensure rating is between 1.00 and 10.00
             models.CheckConstraint(
-                check=Q(rating__gte=1.00, rating__lte=10.00),
+                condition=Q(rating__gte=1.00, rating__lte=10.00),
                 name='student_online_course_rating_range'
             ),
             models.UniqueConstraint(
@@ -224,7 +224,7 @@ class ParentOnlineCourseRating(models.Model):
         constraints = [
             # Ensure rating is between 1.00 and 10.00
             models.CheckConstraint(
-                check=Q(rating__gte=1.00, rating__lte=10.00),
+                condition=Q(rating__gte=1.00, rating__lte=10.00),
                 name='parent_online_course_rating_range'
             ),
             models.UniqueConstraint(

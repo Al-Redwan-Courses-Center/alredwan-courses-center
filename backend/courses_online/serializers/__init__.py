@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from ..models import OnlineCourse, VideoLecture, OnlineLectureMaterial, VideoWatchProgress
-from ..participants import resolve_participant
+from ..participants import resolve_participant, user_has_online_course_access
 
 class OnlineLectureMaterialSerializer(serializers.ModelSerializer):
     file = serializers.SerializerMethodField()
@@ -23,12 +23,30 @@ class VideoWatchProgressSerializer(serializers.ModelSerializer):
         fields = ['id', 'watched_seconds', 'total_seconds', 'completion_percentage', 'is_completed', 'last_position_seconds', 'watch_count', 'last_watched_at']
 
 class VideoLectureSerializer(serializers.ModelSerializer):
-    materials = OnlineLectureMaterialSerializer(many=True, read_only=True)
+    video_url = serializers.SerializerMethodField()
+    materials = serializers.SerializerMethodField()
     watch_progress = serializers.SerializerMethodField()
 
     class Meta:
         model = VideoLecture
         fields = ['id', 'order', 'title', 'description', 'video_url', 'video_platform', 'duration_seconds', 'is_live_stream', 'live_stream_time', 'materials', 'watch_progress']
+
+    def _has_access(self, obj):
+        request = self.context.get('request')
+        if not request:
+            return False
+        child_id = request.query_params.get('child') if hasattr(request, 'query_params') else None
+        return user_has_online_course_access(request.user, obj.course, child_id)
+
+    def get_video_url(self, obj):
+        if self._has_access(obj):
+            return obj.video_url
+        return None
+
+    def get_materials(self, obj):
+        if self._has_access(obj):
+            return OnlineLectureMaterialSerializer(obj.materials.all(), many=True, context=self.context).data
+        return []
 
     def get_watch_progress(self, obj):
         request = self.context.get('request')
@@ -39,8 +57,8 @@ class VideoLectureSerializer(serializers.ModelSerializer):
             progress = obj.prefetched_watch_progress[0] if obj.prefetched_watch_progress else None
             return VideoWatchProgressSerializer(progress).data if progress else None
 
-        student, child = resolve_participant(
-            request.user, request.query_params.get('child'))
+        child_param = request.query_params.get('child') if hasattr(request, 'query_params') else None
+        student, child = resolve_participant(request.user, child_param)
         if student is None and child is None:
             return None
 
@@ -53,10 +71,16 @@ class OnlineCourseListSerializer(serializers.ModelSerializer):
     thumbnail = serializers.SerializerMethodField()
     video_count = serializers.SerializerMethodField()
     total_duration_seconds = serializers.SerializerMethodField()
+    enrolled_count = serializers.SerializerMethodField()
 
     class Meta:
         model = OnlineCourse
         fields = ['id', 'name', 'description', 'thumbnail', 'instructor', 'price', 'allow_replay', 'access_validity_days', 'enrolled_count', 'video_count', 'total_duration_seconds', 'created_at', 'updated_at']
+
+    def get_enrolled_count(self, obj):
+        if hasattr(obj, 'annotated_enrolled_count'):
+            return getattr(obj, 'annotated_enrolled_count') or 0
+        return obj.enrolled_count
 
     def get_instructor(self, obj):
         if not obj.instructor:
@@ -73,7 +97,9 @@ class OnlineCourseListSerializer(serializers.ModelSerializer):
         return None
 
     def get_video_count(self, obj):
-        return getattr(obj, 'annotated_video_count', len(obj.video_lectures.all()))
+        if hasattr(obj, 'annotated_video_count'):
+            return getattr(obj, 'annotated_video_count') or 0
+        return len(obj.video_lectures.all())
 
     def get_total_duration_seconds(self, obj):
         if hasattr(obj, 'annotated_total_duration'):
@@ -85,3 +111,4 @@ class OnlineCourseDetailSerializer(OnlineCourseListSerializer):
 
     class Meta(OnlineCourseListSerializer.Meta):
         fields = OnlineCourseListSerializer.Meta.fields + ['video_lectures']
+
