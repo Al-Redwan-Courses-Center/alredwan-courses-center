@@ -3,7 +3,7 @@ import { getUser } from "@/actions/auth";
 import { getStudentCourses } from "@/actions/courses";
 import { getChildCourses, getChildById } from "@/actions/user";
 import StudentMyCoursesView from "@/components/dashboard/student/StudentMyCoursesView";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { CourseDetail } from "@/types/entities";
 
 export default async function StudentMyCoursesPage({
@@ -21,9 +21,11 @@ export default async function StudentMyCoursesPage({
 
     myActiveCourses = await getChildCourses(childId);
     name = child.first_name;
-  } else {
+  } else if (role === "student") {
     myActiveCourses = await getStudentCourses();
     name = first_name;
+  } else {
+    redirect("/dashboard");
   }
 
   return (

@@ -42,21 +42,31 @@ export const authConfig: AuthOptions = {
 
         if (!user) return null;
 
-        if (user.role === "instructor") {
-          const {
-            data: {
-              results: [{ id }],
-            },
-          } = await publicApiClient.get<PaginatedResponse<Instructor>>(
-            `/api/users/instructors/?user__phone_number1__icontains=${user.phone_number1}`,
-            {
-              headers: {
-                Authorization: `JWT ${access}`,
+        if (user.role === "instructor" && !user.instructor_id) {
+          try {
+            const instructorRes = await publicApiClient.get<
+              PaginatedResponse<Instructor>
+            >(
+              `/api/users/instructors/?user__phone_number1__exact=${encodeURIComponent(user.phone_number1)}`,
+              {
+                headers: {
+                  Authorization: `JWT ${access}`,
+                },
               },
-            },
-          );
+            );
 
-          user.instructor_id = String(id);
+            if (
+              instructorRes.data?.results &&
+              instructorRes.data.results.length > 0
+            ) {
+              const matchedInstructor = instructorRes.data.results[0];
+              if (matchedInstructor?.id) {
+                user.instructor_id = String(matchedInstructor.id);
+              }
+            }
+          } catch (err) {
+            logApiError("Error fetching instructor profile:", err);
+          }
         }
 
         user.jwt_access_token = access;

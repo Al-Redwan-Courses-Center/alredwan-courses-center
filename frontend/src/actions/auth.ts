@@ -38,6 +38,14 @@ export async function redirectAuthUser() {
   if (isAuth) redirect("/dashboard");
 }
 
+export async function getOptionalUser(): Promise<UserEntity | null> {
+  const session = (await getServerSession(authConfig)) as
+    | (Session & { user: UserEntity })
+    | null;
+
+  return session?.user ?? null;
+}
+
 export async function getUser() {
   const session = (await getServerSession(authConfig)) as
     | (Session & { user: UserEntity })
@@ -77,7 +85,7 @@ export async function getServerJwtToken() {
     if (!decodedToken) {
       return null;
     }
-    console.log(decodedToken);
+
 
     if (decodedToken.exp) {
       if (typeof decodedToken.exp !== "number") {

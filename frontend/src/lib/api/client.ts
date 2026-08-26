@@ -6,23 +6,22 @@ import { getServerJwtToken } from "@/actions/auth";
 const getApiBaseUrl = () => {
   const url = process.env.REST_API_URL || process.env.NEXT_PUBLIC_API_URL;
   if (!url) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("REST_API_URL or NEXT_PUBLIC_API_URL is missing in production environment!");
-    }
     return "http://localhost:8000";
   }
   return url;
 };
 
-const baseConfig = {
-  baseURL: getApiBaseUrl(),
-};
+export const publicApiClient: AxiosInstance = axios.create();
 
-export const publicApiClient: AxiosInstance = axios.create(baseConfig);
+publicApiClient.interceptors.request.use((config) => {
+  config.baseURL = getApiBaseUrl();
+  return config;
+});
 
-const authApiClient: AxiosInstance = axios.create(baseConfig);
+const authApiClient: AxiosInstance = axios.create();
 
 authApiClient.interceptors.request.use(async (config) => {
+  config.baseURL = getApiBaseUrl();
   const token = await getServerJwtToken();
   const jwtAccessToken = token?.jwt_access_token;
 
@@ -40,3 +39,4 @@ authApiClient.interceptors.request.use(async (config) => {
 export async function getAuthApiClient(): Promise<AxiosInstance> {
   return authApiClient;
 }
+

@@ -1,3 +1,5 @@
+"use server";
+
 import { unwrapPaginated } from "@/lib/api";
 import { getAuthApiClient } from "@/lib/auth-api";
 import type { Instructor } from "@/types/entities/instructors";
