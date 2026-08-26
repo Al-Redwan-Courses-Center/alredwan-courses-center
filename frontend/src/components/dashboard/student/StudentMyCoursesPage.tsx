@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import { getUser } from "@/actions/auth";
-import { getChildById } from "@/actions/user";
+import { getChildById, getChildCourses } from "@/actions/user";
 import { getStudentCourses } from "@/actions/courses";
 import StudentMyCoursesView from "@/components/dashboard/student/StudentMyCoursesView";
+import { notFound, redirect } from "next/navigation";
 import { CourseDetail } from "@/types/entities";
 
 export default async function StudentMyCoursesPage({
@@ -10,11 +11,19 @@ export default async function StudentMyCoursesPage({
 }: {
   childId?: string;
 }) {
-  const { first_name } = await getUser();
-  const myActiveCourses: CourseDetail[] = await getStudentCourses();
-  const name: string = childId
-    ? ((await getChildById(childId))?.first_name ?? "Unknown")
-    : first_name;
+  const { first_name: name, role } = await getUser();
+  let myActiveCourses: CourseDetail[];
+
+  if (role === "parent") {
+    const child = await getChildById(childId);
+    if (!child) return notFound();
+
+    myActiveCourses = await getChildCourses(childId);
+  } else if (role === "student") {
+    myActiveCourses = await getStudentCourses();
+  } else {
+    redirect("/dashboard");
+  }
 
   return (
     <div className="flex h-full max-h-73/100 flex-col pt-15">
