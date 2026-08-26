@@ -542,7 +542,9 @@ class NullEmailUniquenessTest(TestCase):
 
     def test_direct_db_null_emails_allowed(self):
         """Direct DB creation of users with NULL email should not raise."""
+        import uuid
         from django.db import connection
+        now_val = timezone.now()
         with connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -551,13 +553,14 @@ class NullEmailUniquenessTest(TestCase):
                      dob, gender, is_active, is_staff, is_superuser,
                      is_verified, date_joined, role, email)
                 VALUES
-                    (gen_random_uuid(), '+201500000050', 'x', 'A', 'B',
+                    (%s, '+201500000050', 'x', 'A', 'B',
                      '2000-01-01', 'male', true, false, false, false,
-                     NOW(), 'student', NULL),
-                    (gen_random_uuid(), '+201500000051', 'x', 'C', 'D',
+                     %s, 'student', NULL),
+                    (%s, '+201500000051', 'x', 'C', 'D',
                      '2000-01-01', 'male', true, false, false, false,
-                     NOW(), 'student', NULL)
-                """
+                     %s, 'student', NULL)
+                """,
+                [str(uuid.uuid4()), now_val, str(uuid.uuid4()), now_val]
             )
         self.assertEqual(
             CustomUser.objects.filter(email__isnull=True).count(), 2
@@ -569,7 +572,9 @@ class NullEmailUniquenessTest(TestCase):
         Two rows with email='' still violate the unique constraint at DB level.
         Use the ORM (or normalise '' to None before inserting) to avoid this.
         """
+        import uuid
         from django.db import IntegrityError, connection, transaction
+        now_val = timezone.now()
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
                 with connection.cursor() as cursor:
@@ -580,11 +585,115 @@ class NullEmailUniquenessTest(TestCase):
                              dob, gender, is_active, is_staff, is_superuser,
                              is_verified, date_joined, role, email)
                         VALUES
-                            (gen_random_uuid(), '+201500000060', 'x', 'E', 'F',
+                            (%s, '+201500000060', 'x', 'E', 'F',
                              '2000-01-01', 'male', true, false, false, false,
-                             NOW(), 'student', ''),
-                            (gen_random_uuid(), '+201500000061', 'x', 'G', 'H',
+                             %s, 'student', ''),
+                            (%s, '+201500000061', 'x', 'G', 'H',
                              '2000-01-01', 'male', true, false, false, false,
-                             NOW(), 'student', '')
-                        """
+                             %s, 'student', '')
+                        """,
+                        [str(uuid.uuid4()), now_val, str(uuid.uuid4()), now_val]
                     )
+
+
+class InstructorRatingsPaginationTests(TestCase):
+    """Tests for InstructorRatingsView pagination envelopes and query parameters."""
+
+    def setUp(self):
+        self.client = APIClient()
+
+        self.instructor_user = CustomUser.objects.create_user(
+            phone_number1='+201099990001',
+            password='Password123!',
+            first_name='Kareem',
+            last_name='Teacher',
+            role='instructor',
+            dob='1982-01-01',
+            gender='male'
+        )
+        self.instructor = Instructor.objects.create(
+            user=self.instructor_user,
+            monthly_salary=2000
+        )
+
+        self.student_user = CustomUser.objects.create_user(
+            phone_number1='+201099990002',
+            password='Password123!',
+            first_name='Yara',
+            last_name='Student',
+            role='student',
+            dob='2006-01-01',
+            gender='female'
+        )
+
+        self.parent_user = CustomUser.objects.create_user(
+            phone_number1='+201099990003',
+            password='Password123!',
+            first_name='Sameh',
+            last_name='Parent',
+            role='parent',
+            dob='1976-01-01',
+            gender='male'
+        )
+
+        from datetime import date
+        from courses.models import Season, Course
+        self.season = Season.objects.create(
+            name='Winter 2026',
+            season_type='winter',
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 5, 30),
+            is_active=True
+        )
+        self.course = Course.objects.create(
+            name='Biology 101',
+            description='Intro to Biology',
+            instructor=self.instructor,
+            season=self.season,
+            price=300.00,
+            capacity=20,
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 5, 30),
+            is_active=True
+        )
+
+        from users.models.student_instructor_rating import StudentInstructorRating, ParentInstructorRating
+        StudentInstructorRating.objects.create(
+            student=self.student_user.student_profile,
+            instructor=self.instructor,
+            course=self.course,
+            rating=10,
+            feedback='Great teacher!'
+        )
+        ParentInstructorRating.objects.create(
+            parent=self.parent_user.parent_profile,
+            instructor=self.instructor,
+            course=self.course,
+            rating=9,
+            feedback='Very supportive.'
+        )
+
+    def test_instructor_ratings_pagination_envelope(self):
+        self.client.force_authenticate(user=self.student_user)
+        response = self.client.get(f'/api/users/instructors/{self.instructor.id}/ratings/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+
+        self.assertEqual(data['statistics']['total_ratings'], 2)
+        self.assertEqual(data['statistics']['average_rating'], 9.5)
+
+        # Check paginated envelopes
+        self.assertIn('student_ratings', data['ratings'])
+        self.assertIn('parent_ratings', data['ratings'])
+
+        student_ratings = data['ratings']['student_ratings']
+        self.assertIn('results', student_ratings)
+        self.assertEqual(student_ratings['count'], 1)
+        self.assertEqual(len(student_ratings['results']), 1)
+        self.assertEqual(student_ratings['results'][0]['rating'], 10)
+
+        parent_ratings = data['ratings']['parent_ratings']
+        self.assertIn('results', parent_ratings)
+        self.assertEqual(parent_ratings['count'], 1)
+        self.assertEqual(len(parent_ratings['results']), 1)
+        self.assertEqual(parent_ratings['results'][0]['rating'], 9)

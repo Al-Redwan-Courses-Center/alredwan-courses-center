@@ -2,7 +2,8 @@
 """Views for Instructor Ratings"""
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.pagination import PageNumberPagination
 from django.db.models import Avg, Count
 from django.shortcuts import get_object_or_404
 
@@ -11,12 +12,22 @@ from users.models.student_instructor_rating import StudentInstructorRating, Pare
 from users.serializers import InstructorRatingSerializer, InstructorRatingDetailSerializer
 
 
+class StudentRatingsPagination(PageNumberPagination):
+    page_size = 20
+    page_query_param = 'student_page'
+
+
+class ParentRatingsPagination(PageNumberPagination):
+    page_size = 20
+    page_query_param = 'parent_page'
+
+
 class InstructorRatingsView(generics.RetrieveAPIView):
     """
     API endpoint for retrieving ratings of a specific instructor.
     GET /api/instructors/{id}/ratings/
 
-    Returns aggregated rating statistics and individual ratings.
+    Returns aggregated rating statistics and individual ratings in paginated envelopes.
     """
     permission_classes = [IsAuthenticated]
     serializer_class = InstructorRatingDetailSerializer
@@ -62,11 +73,38 @@ class InstructorRatingsView(generics.RetrieveAPIView):
             instructor=instructor
         ).select_related('parent__user', 'course').order_by('-created_at')
 
-        # Serialize the ratings
-        student_ratings_data = InstructorRatingSerializer(
-            student_ratings, many=True, context={'type': 'student'}).data
-        parent_ratings_data = InstructorRatingSerializer(
-            parent_ratings, many=True, context={'type': 'parent'}).data
+        student_paginator = StudentRatingsPagination()
+        parent_paginator = ParentRatingsPagination()
+
+        student_page = student_paginator.paginate_queryset(student_ratings, request)
+        if student_page is not None:
+            student_ratings_data = InstructorRatingSerializer(
+                student_page, many=True, context={'type': 'student'}).data
+            student_paginated = student_paginator.get_paginated_response(student_ratings_data).data
+        else:
+            student_ratings_data = InstructorRatingSerializer(
+                student_ratings, many=True, context={'type': 'student'}).data
+            student_paginated = {
+                'count': len(student_ratings_data),
+                'next': None,
+                'previous': None,
+                'results': student_ratings_data
+            }
+
+        parent_page = parent_paginator.paginate_queryset(parent_ratings, request)
+        if parent_page is not None:
+            parent_ratings_data = InstructorRatingSerializer(
+                parent_page, many=True, context={'type': 'parent'}).data
+            parent_paginated = parent_paginator.get_paginated_response(parent_ratings_data).data
+        else:
+            parent_ratings_data = InstructorRatingSerializer(
+                parent_ratings, many=True, context={'type': 'parent'}).data
+            parent_paginated = {
+                'count': len(parent_ratings_data),
+                'next': None,
+                'previous': None,
+                'results': parent_ratings_data
+            }
 
         response_data = {
             'instructor_id': instructor.id,
@@ -80,8 +118,8 @@ class InstructorRatingsView(generics.RetrieveAPIView):
                 'parent_average': round(parent_stats['avg_rating'], 2) if parent_stats['avg_rating'] else None,
             },
             'ratings': {
-                'student_ratings': student_ratings_data,
-                'parent_ratings': parent_ratings_data,
+                'student_ratings': student_paginated,
+                'parent_ratings': parent_paginated,
             }
         }
 

@@ -165,58 +165,9 @@ class CourseUpdateView(generics.UpdateAPIView):
         return Response(output_serializer.data)
 
 
-def _require_schedule_admin(user):
-    """Raise PermissionDenied if user is not an admin or supervisor."""
-    if not (
-        user.is_staff
-        or user.is_superuser
-        or (hasattr(user, 'role') and user.role in ['admin', 'supervisor'])
-    ):
-        raise PermissionDenied(
-            "Only admins and supervisors can modify course schedules.")
-
-
-class CourseScheduleListView(generics.ListCreateAPIView):
-    """
-    List or create schedules for a specific course.
-
-    GET  /api/courses/<course_id>/schedules/  — any authenticated user
-    POST /api/courses/<course_id>/schedules/  — admin/supervisor only
-    """
-
-    serializer_class = CourseScheduleSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        course = get_object_or_404(Course, pk=self.kwargs['course_id'])
-        return CourseSchedule.objects.filter(course=course).order_by('weekday', 'start_time')
-
-    def perform_create(self, serializer):
-        _require_schedule_admin(self.request.user)
-        course = get_object_or_404(Course, pk=self.kwargs['course_id'])
-        serializer.save(course=course)
-
-
-class CourseScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Retrieve, update, or delete a course schedule.
-
-    GET    /api/courses/<course_id>/schedules/<pk>/  — any authenticated user
-    PATCH  /api/courses/<course_id>/schedules/<pk>/  — admin/supervisor only
-    DELETE /api/courses/<course_id>/schedules/<pk>/  — admin/supervisor only
-    """
-
-    serializer_class = CourseScheduleSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        course = get_object_or_404(Course, pk=self.kwargs['course_id'])
-        return CourseSchedule.objects.filter(course=course)
-
-    def update(self, request, *args, **kwargs):
-        _require_schedule_admin(request.user)
-        return super().update(request, *args, **kwargs)
-
-    def destroy(self, request, *args, **kwargs):
-        _require_schedule_admin(request.user)
-        return super().destroy(request, *args, **kwargs)
+from .course_schedule import (
+    _require_schedule_admin,
+    CourseScheduleListView,
+    CourseScheduleDetailView,
+    BatchCourseScheduleListView,
+)
