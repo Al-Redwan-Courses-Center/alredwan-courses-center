@@ -8,9 +8,10 @@ from ..models.enrollment import EnrollmentStatus
 class InstructorEnrollmentListSerializer(serializers.ModelSerializer):
     """Serializer for instructor viewing enrollments - no financial data"""
     # Course info
-    course_name = serializers.CharField(source='course.name', read_only=True)
-    course_start_date = serializers.DateField(source='course.start_date', read_only=True)
-    course_end_date = serializers.DateField(source='course.end_date', read_only=True)
+    course_name = serializers.SerializerMethodField()
+    course_start_date = serializers.SerializerMethodField()
+    course_end_date = serializers.SerializerMethodField()
+    online_course = serializers.PrimaryKeyRelatedField(read_only=True)
     
     # Participant info
     participant_name = serializers.SerializerMethodField()
@@ -26,13 +27,27 @@ class InstructorEnrollmentListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enrollment
         fields = [
-            'id', 'course', 'course_name', 'course_start_date', 'course_end_date',
+            'id', 'course', 'online_course', 'course_name', 'course_start_date', 'course_end_date',
             'participant_name', 'participant_type', 'participant_phone',
             'status', 'status_display',
             'enrolled_at', 'completed_at',
             'completion_percentage'
         ]
         read_only_fields = fields
+
+    def get_course_name(self, obj):
+        target = obj.course_instance
+        return target.name if target else None
+
+    def get_course_start_date(self, obj):
+        if obj.course:
+            return obj.course.start_date
+        return None
+
+    def get_course_end_date(self, obj):
+        if obj.course:
+            return obj.course.end_date
+        return None
 
     def get_participant_name(self, obj):
         if obj.child:
@@ -62,11 +77,11 @@ class InstructorEnrollmentListSerializer(serializers.ModelSerializer):
 
 class CourseEnrollmentStatsSerializer(serializers.Serializer):
     """Serializer for course enrollment statistics"""
-    course_id = serializers.UUIDField()
+    course_id = serializers.CharField()
     course_name = serializers.CharField()
-    capacity = serializers.IntegerField()
+    capacity = serializers.IntegerField(required=False, allow_null=True)
     enrolled_count = serializers.IntegerField()
-    available_spots = serializers.IntegerField()
+    available_spots = serializers.IntegerField(required=False, allow_null=True)
     active_students = serializers.IntegerField()
     suspended_students = serializers.IntegerField()
     completed_students = serializers.IntegerField()

@@ -139,14 +139,14 @@ urlpatterns = [
     
     # GET /api/instructor/courses/{course_id}/enrollments/ - List enrollments in a course
     path(
-        'instructor/courses/<int:course_id>/enrollments/',
+        'instructor/courses/<str:course_id>/enrollments/',
         InstructorCourseEnrollmentListView.as_view(),
         name='instructor-course-enrollment-list'
     ),
     
     # GET /api/instructor/courses/{course_id}/enrollment-stats/ - Get enrollment stats
     path(
-        'instructor/courses/<int:course_id>/enrollment-stats/',
+        'instructor/courses/<str:course_id>/enrollment-stats/',
         InstructorCourseEnrollmentStatsView.as_view(),
         name='instructor-course-enrollment-stats'
     ),

@@ -157,6 +157,8 @@ class Enrollment(models.Model):
 
     def amount_paid(self):
         """Calculate total amount paid for this enrollment."""
+        if hasattr(self, '_prefetched_objects_cache') and 'payments' in self._prefetched_objects_cache:
+            return sum((p.amount for p in self.payments.all() if p.status == "paid"), 0)
         qs = self.get_payments().filter(status="paid")
         total = qs.aggregate(total=models.Sum("amount"))["total"] or 0
         return total
@@ -246,10 +248,15 @@ class Enrollment(models.Model):
         if hasattr(target, 'num_lectures') and target.num_lectures:
             from courses.models.lecture import LectureStatus
 
-            total_lectures = target.lectures.count()
-            completed_lectures = target.lectures.filter(
-                status=LectureStatus.COMPLETED
-            ).count()
+            if hasattr(target, '_prefetched_objects_cache') and 'lectures' in target._prefetched_objects_cache:
+                lectures = list(target.lectures.all())
+                total_lectures = len(lectures)
+                completed_lectures = sum(1 for l in lectures if l.status == LectureStatus.COMPLETED)
+            else:
+                total_lectures = target.lectures.count()
+                completed_lectures = target.lectures.filter(
+                    status=LectureStatus.COMPLETED
+                ).count()
 
             # If we have the expected number of lectures and all are completed
             if total_lectures >= target.num_lectures and completed_lectures >= target.num_lectures:
@@ -296,10 +303,15 @@ class Enrollment(models.Model):
                 'is_completable': (total > 0 and completed == total),
             }
 
-        total_lectures = target.lectures.count()
-        completed_lectures = target.lectures.filter(
-            status=LectureStatus.COMPLETED
-        ).count()
+        if hasattr(target, '_prefetched_objects_cache') and 'lectures' in target._prefetched_objects_cache:
+            lectures = list(target.lectures.all())
+            total_lectures = len(lectures)
+            completed_lectures = sum(1 for l in lectures if l.status == LectureStatus.COMPLETED)
+        else:
+            total_lectures = target.lectures.count()
+            completed_lectures = target.lectures.filter(
+                status=LectureStatus.COMPLETED
+            ).count()
 
         expected_lectures = target.num_lectures or total_lectures
         percentage = (completed_lectures / expected_lectures *

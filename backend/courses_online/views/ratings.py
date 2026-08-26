@@ -2,7 +2,8 @@
 """Views for Online Course Ratings"""
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.pagination import PageNumberPagination
 from django.db.models import Sum, Count
 from django.shortcuts import get_object_or_404
 
@@ -11,14 +12,24 @@ from users.models.student_instructor_rating import StudentOnlineCourseRating, Pa
 from courses_online.serializers.ratings import OnlineCourseRatingSerializer, OnlineCourseRatingDetailSerializer
 
 
+class StudentRatingsPagination(PageNumberPagination):
+    page_size = 20
+    page_query_param = 'student_page'
+
+
+class ParentRatingsPagination(PageNumberPagination):
+    page_size = 20
+    page_query_param = 'parent_page'
+
+
 class OnlineCourseRatingsView(generics.RetrieveAPIView):
     """
     API endpoint for retrieving ratings of a specific online course.
     GET /api/online-courses/courses/{id}/ratings/
 
-    Returns aggregated rating statistics and individual ratings.
+    Returns aggregated rating statistics and individual ratings in paginated envelopes.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = OnlineCourseRatingDetailSerializer
 
     def get_object(self):
@@ -50,10 +61,6 @@ class OnlineCourseRatingsView(generics.RetrieveAPIView):
         if total_count > 0:
             combined_avg = round((student_sum + parent_sum) / total_count, 2)
 
-        from rest_framework.pagination import PageNumberPagination
-        paginator = PageNumberPagination()
-        paginator.page_size = 20
-
         # Get individual ratings with pagination support
         student_ratings = StudentOnlineCourseRating.objects.filter(
             course=course
@@ -63,23 +70,34 @@ class OnlineCourseRatingsView(generics.RetrieveAPIView):
             course=course
         ).select_related('parent__user').order_by('-created_at')
 
-        student_page = paginator.paginate_queryset(student_ratings, request)
+        student_paginator = StudentRatingsPagination()
+        parent_paginator = ParentRatingsPagination()
+
+        student_page = student_paginator.paginate_queryset(student_ratings, request)
         if student_page is not None:
             student_ratings_data = OnlineCourseRatingSerializer(student_page, many=True, context={'type': 'student'}).data
-            student_paginated = paginator.get_paginated_response(student_ratings_data).data
+            student_paginated = student_paginator.get_paginated_response(student_ratings_data).data
         else:
-            student_paginated = {'results': OnlineCourseRatingSerializer(student_ratings, many=True, context={'type': 'student'}).data}
+            student_ratings_data = OnlineCourseRatingSerializer(student_ratings, many=True, context={'type': 'student'}).data
+            student_paginated = {
+                'count': len(student_ratings_data),
+                'next': None,
+                'previous': None,
+                'results': student_ratings_data
+            }
 
-        # Need a separate paginator instance to avoid state collision
-        parent_paginator = PageNumberPagination()
-        parent_paginator.page_size = 20
-        
         parent_page = parent_paginator.paginate_queryset(parent_ratings, request)
         if parent_page is not None:
             parent_ratings_data = OnlineCourseRatingSerializer(parent_page, many=True, context={'type': 'parent'}).data
             parent_paginated = parent_paginator.get_paginated_response(parent_ratings_data).data
         else:
-            parent_paginated = {'results': OnlineCourseRatingSerializer(parent_ratings, many=True, context={'type': 'parent'}).data}
+            parent_ratings_data = OnlineCourseRatingSerializer(parent_ratings, many=True, context={'type': 'parent'}).data
+            parent_paginated = {
+                'count': len(parent_ratings_data),
+                'next': None,
+                'previous': None,
+                'results': parent_ratings_data
+            }
 
         response_data = {
             'course_id': course.id,

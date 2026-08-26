@@ -78,11 +78,7 @@ class LectureListCreateView(generics.ListCreateAPIView):
     pagination_class = CustomPageNumberPagination
     filterset_class = LectureFilter
     filter_backends = [filters.DjangoFilterBackend]
-
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [AllowAny()]
-        return [IsAdminOrCourseInstructor()]
+    permission_classes = [IsAdminOrCourseInstructor]
 
     def get_serializer_class(self):
         """Return appropriate serializer based on request method"""
@@ -447,7 +443,7 @@ class StudentCourseLecturesView(generics.ListAPIView):
             .prefetch_related(attendance_prefetch)
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        queryset = list(self.get_queryset())
         # Set personal_attendance on each object before serialization
         for obj in queryset:
             att_list = getattr(obj, '_personal_attendance_list', [])
@@ -513,7 +509,7 @@ class ParentCourseLecturesView(generics.ListAPIView):
             .prefetch_related(attendance_prefetch)
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        queryset = list(self.get_queryset())
         for obj in queryset:
             att_list = getattr(obj, '_personal_attendance_list', [])
             obj.personal_attendance = att_list[0] if att_list else None
