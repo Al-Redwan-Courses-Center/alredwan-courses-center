@@ -15,7 +15,7 @@ export default function InstructorsRow({ instructors }: InstructorsRowProps) {
   if (instructors.length <= 0) return null;
 
   return (
-    <div className="tablet:gap-40 laptop:grid-cols-1 laptop:px-55 desktop-sm:grid-cols-2 desktop-sm:gap-y-40 grid w-full grid-cols-3 gap-20 text-[1.5rem] text-gray-600">
+    <div className="tablet:gap-40 laptop:grid-cols-1 laptop:px-0 desktop-sm:grid-cols-2 desktop-sm:gap-y-40 grid w-full grid-cols-3 gap-20 text-[1.5rem] text-gray-600">
       {instructors.slice(0, 3).map(({ instructor }, i) => {
         const joinDate = new Date(instructor.joined_date);
         const yearsOfExp = differenceInCalendarYears(new Date(), joinDate);
@@ -24,7 +24,7 @@ export default function InstructorsRow({ instructors }: InstructorsRowProps) {
           <div
             key={instructor.id}
             className={cn(
-              "shadow-soft mobile-lg:px-5 relative min-h-151 bg-[linear-gradient(181deg,#FFF_3.72%,#93A494_180.46%)] px-10 py-16",
+              "shadow-soft mobile-lg:px-40 relative min-h-151 min-w-150 bg-[linear-gradient(181deg,#FFF_3.72%,#93A494_180.46%)] px-10 py-40",
               i % 2 === 0 ? straight : reversed,
             )}
           >
@@ -38,17 +38,17 @@ export default function InstructorsRow({ instructors }: InstructorsRowProps) {
               <Image
                 src={InstructorProfile}
                 alt={instructor.name + "Picture"}
-                className="mobile-lg:-left-30 relative z-20 w-130 object-cover"
+                className="mobile-lg:-left-30 relative z-20 w-95 object-cover"
                 draggable="false"
               />
             </div>
 
-            <div className="relative z-10 pr-10">
-              <div className="mb-30 pr-15">
-                <h4 className="text-olive-500 max-w-85 text-[2.8rem] font-bold">
+            <div className="relative z-10 pr-0">
+              <div className="mb-30 pr-0">
+                <h4 className="text-olive-500 max-w-85 text-[4rem] font-bold">
                   {instructor.name}
                 </h4>
-                <p className="text-beige-500 max-w-80 text-[1.8rem]">
+                <p className="text-beige-500 max-w-100 text-[2rem]">
                   {instructor.bio}
                 </p>
               </div>
