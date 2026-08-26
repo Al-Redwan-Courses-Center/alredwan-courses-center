@@ -125,20 +125,21 @@ if DATABASE_URL:
     }
 else:
     # Local development - use individual env vars
+    db_engine = config("DATABASE_ENGINE", default="sqlite3")
+    db_options = {}
+    if "postgres" in db_engine:
+        db_options["connect_timeout"] = 10
+
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.{}".format(
-                config("DATABASE_ENGINE", default="sqlite3")
-            ),
+            "ENGINE": f"django.db.backends.{db_engine}",
             "NAME": config("DATABASE_NAME", default="db.sqlite3"),
             "USER": config("DATABASE_USERNAME", default=""),
             "PASSWORD": config("DATABASE_PASSWORD", default=""),
             "HOST": config("DATABASE_HOST", default="127.0.0.1"),
             "PORT": config("DATABASE_PORT", default=5432, cast=int),
             "CONN_MAX_AGE": 600,  # Connection pooling - keep connections for 10 min
-            "OPTIONS": {
-                "connect_timeout": 10,
-            },
+            "OPTIONS": db_options,
         }
     }
 
@@ -265,6 +266,10 @@ CRONJOBS = [
     ("1 0 * * *", "attendance.cron.mark_absent_for_yesterday"),
     # Every day at 06:00 - Log today's expected attendance
     ("0 6 * * *", "attendance.cron.update_pending_to_not_started"),
+    # Every day at 01:00 AM - Automatically mark completable enrollments
+    ("0 1 * * *", "enrollments_payments.cron.mark_completed_enrollments_daily"),
+    # Every day at 02:00 AM - Expire pending enrollment requests
+    ("0 2 * * *", "enrollments_payments.cron.expire_pending_enrollment_requests"),
 ]
 
 

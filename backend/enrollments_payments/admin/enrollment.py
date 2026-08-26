@@ -467,6 +467,13 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
                 '📚 {}</a>',
                 url, obj.course.name
             )
+        elif obj.online_course:
+            url = reverse('admin:courses_online_onlinecourse_change', args=[obj.online_course.pk])
+            return format_html(
+                '<a href="{}" style="color: #2980b9; text-decoration: none;">'
+                '💻 {}</a>',
+                url, obj.online_course.name
+            )
         return '-'
 
     @admin.display(description=_('الحالة'), ordering='status')
@@ -681,27 +688,35 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
     @admin.display(description=_('معلومات الدورة'))
     def get_course_info(self, obj):
         """Display detailed course info in edit form."""
-        if obj.course:
-            return format_html(
-                '<div style="padding: 10px; background: #264b5d; border-radius: 5px;">'
-                '<strong>📚 الدورة:</strong> {}<br>'
-                '<strong>👨‍🏫 المدرس:</strong> {}<br>'
-                '<strong>💰 سعر الدورة:</strong> {} ج.م<br>'
-                '<strong>👥 المسجلين:</strong> {} / {}'
-                '</div>',
-                obj.course.name,
-                obj.course.instructor or '-',
-                obj.course.price or 'مجاني',
-                obj.course.enrolled_count,
-                obj.course.capacity
-            )
-        return '-'
+        target = obj.get_course_instance()
+        if not target:
+            return '-'
+        prefix = '💻 الدورة الإلكترونية' if obj.online_course else '📚 الدورة'
+        instructor = getattr(target, 'instructor', None) or '-'
+        price = getattr(target, 'price', None) or 'مجاني'
+        enrolled = getattr(target, 'enrolled_count', 0)
+        capacity = getattr(target, 'capacity', 'غير محدد')
+        return format_html(
+            '<div style="padding: 10px; background: #264b5d; border-radius: 5px;">'
+            '<strong>{}:</strong> {}<br>'
+            '<strong>👨‍🏫 المدرس:</strong> {}<br>'
+            '<strong>💰 سعر الدورة:</strong> {} ج.م<br>'
+            '<strong>👥 المسجلين:</strong> {} / {}'
+            '</div>',
+            prefix,
+            target.name,
+            instructor,
+            price,
+            enrolled,
+            capacity
+        )
 
     @admin.display(description=_('ملخص المدفوعات'))
     def get_payment_summary(self, obj):
         """Display payment summary with visual progress."""
         paid = obj.amount_paid()
-        course_price = obj.course.price if obj.course.price else 0
+        target = obj.get_course_instance()
+        course_price = target.price if (target and target.price) else 0
         remaining = obj.remaining_amount()
         payments_count = obj.payments.count()
 

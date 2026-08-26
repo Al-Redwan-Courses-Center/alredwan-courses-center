@@ -481,9 +481,13 @@ class ParentCourseLecturesView(generics.ListAPIView):
         
         # Verify child belongs to parent
         from parents.models import Child
+        from django.db.models import Q
+        from django.core.exceptions import ValidationError
         try:
-            child = Child.objects.get(id=child_id, primary_parent=parent)
-        except Child.DoesNotExist:
+            child = Child.objects.get(
+                Q(id=child_id) & (Q(primary_parent=parent) | Q(extra_parents__parent=parent))
+            )
+        except (Child.DoesNotExist, ValidationError, ValueError):
             return Lecture.objects.none()
             
         from enrollments_payments.models import Enrollment, EnrollmentStatus

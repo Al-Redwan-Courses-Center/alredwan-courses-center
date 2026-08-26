@@ -129,9 +129,10 @@ def approve_selected(modeladmin, request, queryset):
             approved_count += 1
             
             # Track if this was a partial payment
+            target = enrollment_request.course_instance
             if (enrollment_request.price is not None and 
-                enrollment_request.course.price and 
-                enrollment_request.price < enrollment_request.course.price):
+                target and target.price and 
+                enrollment_request.price < target.price):
                 partial_count += 1
                 
         except Exception as e:

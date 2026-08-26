@@ -414,3 +414,58 @@ class TestEnrollmentRequestCancel(EnrollmentAPIBaseTestCase):
         response = self.client.delete(f'/api/enrollment-requests/{self.parent_request.id}/cancel/')
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_online_course_request_lifecycle_and_polymorphic_approval(self):
+        from courses_online.models import OnlineCourse
+        from enrollments_payments.models.payment import Payment, PaymentMethod, PaymentStatus
+        from django.utils import timezone
+
+        online_course = OnlineCourse.objects.create(
+            name="Online Web Dev",
+            description="Web Dev Course",
+            price=400.00,
+            is_active=True,
+            is_published=True
+        )
+
+        # 1. Create request for student
+        self.authenticate_as_student()
+        response = self.client.post('/api/enrollment-requests/', {
+            'online_course': str(online_course.id),
+            'payment_method': 'instapay'
+        })
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        req_id = response.data['id']
+
+        # 2. List requests
+        response = self.client.get('/api/enrollment-requests/my-requests/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        found = [r for r in response.json()['results'] if r['id'] == req_id]
+        self.assertEqual(len(found), 1)
+        self.assertEqual(found[0]['course_name'], "Online Web Dev")
+        self.assertEqual(float(found[0]['course_price']), 400.00)
+
+        # 3. Detail request
+        response = self.client.get(f'/api/enrollment-requests/{req_id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['course_name'], "Online Web Dev")
+
+        # 4. Approve request polymorphically
+        er = EnrollmentRequest.objects.get(id=req_id)
+        enrollment = er.approve(processed_by_user=self.admin_user, payment_method='instapay')
+        self.assertIsNotNone(enrollment)
+        self.assertEqual(enrollment.online_course, online_course)
+        self.assertEqual(er.status, EnrollmentRequestStatus.ACCEPTED)
+
+        # 5. Verify payment clean() method
+        payment = Payment(
+            enrollment=enrollment,
+            payer_student=self.student,
+            amount=400.00,
+            method=PaymentMethod.INSTAPAY,
+            status=PaymentStatus.PAID,
+            processed_at=timezone.now()
+        )
+        payment.full_clean()  # should not raise AttributeError or ValidationError
+        payment.save()
+        self.assertEqual(payment.method, PaymentMethod.INSTAPAY)
