@@ -12,16 +12,24 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EnrollmentRequest
-        fields = ['course', 'child', 'price', 'payment_method', 'notes']
+        fields = ['course', 'online_course', 'child', 'price', 'payment_method', 'notes']
 
     def validate_course(self, course):
         """Validate course is active and has capacity"""
-        if not course.is_active:
-            raise serializers.ValidationError("هذه الدورة غير متاحة حالياً.")
-        if course.enrolled_count >= course.capacity:
-            raise serializers.ValidationError(
-                "لا يمكن الإنضمام، تم الوصول إلى الحد الأقصى للمشاركين.")
+        if course:
+            if not course.is_active:
+                raise serializers.ValidationError("هذه الدورة غير متاحة حالياً.")
+            if course.enrolled_count >= course.capacity:
+                raise serializers.ValidationError(
+                    "لا يمكن الإنضمام، تم الوصول إلى الحد الأقصى للمشاركين.")
         return course
+
+    def validate_online_course(self, online_course):
+        """Validate online course is active"""
+        if online_course:
+            if not online_course.is_active:
+                raise serializers.ValidationError("هذه الدورة غير متاحة حالياً.")
+        return online_course
 
     def validate_child(self, child):
         """Validate child belongs to the requesting parent"""
@@ -50,22 +58,40 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         user = request.user
         course = data.get('course')
+        online_course = data.get('online_course')
         child = data.get('child')
         price = data.get('price')
+        
+        if (course is None and online_course is None) or (course is not None and online_course is not None):
+            raise serializers.ValidationError("يجب تحديد إما الدورة الحضورية أو الدورة الإلكترونية فقط.")
+
+        target_course = course or online_course
 
         # Role-based validation
         if user.role not in ['parent', 'student']:
             raise serializers.ValidationError(
                 "فقط أولياء الأمور والطلاب يمكنهم تقديم طلبات إلتحاق.")
 
+        def get_age_requirements_msg(course):
+            msg = "تحقق من متطلبات العمر"
+            if course.min_age and course.max_age:
+                msg = f"العمر المطلوب من {course.min_age} إلى {course.max_age} سنة"
+            elif course.min_age:
+                msg = f"العمر المطلوب {course.min_age} سنة فأكثر"
+            elif course.max_age:
+                msg = f"العمر المطلوب {course.max_age} سنة كحد أقصى"
+            elif course.for_adults:
+                msg = "هذه الدورة مخصصة للبالغين فقط"
+            return msg
+
         if user.role == 'parent':
             if not child:
                 raise serializers.ValidationError(
                     {"child": "يجب تحديد الطفل عند تقديم طلب إلتحاق كولي أمر."})
             # Eligibility check for child
-            if not course.is_participant_eligible(child):
-                raise serializers.ValidationError(
-                    "الطفل غير مؤهل لهذه الدورة (تحقق من متطلبات العمر).")
+            if hasattr(target_course, 'is_participant_eligible') and not target_course.is_participant_eligible(child):
+                req_msg = get_age_requirements_msg(target_course)
+                raise serializers.ValidationError(f"الطفل غير مؤهل لهذه الدورة ({req_msg}).")
 
         if user.role == 'student':
             if child:
@@ -75,24 +101,24 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
             if not student:
                 raise serializers.ValidationError(
                     "لم يتم العثور على ملف الطالب.")
-            if not course.is_participant_eligible(student):
-                raise serializers.ValidationError(
-                    "أنت غير مؤهل لهذه الدورة (تحقق من متطلبات العمر).")
+            if hasattr(target_course, 'is_participant_eligible') and not target_course.is_participant_eligible(student):
+                req_msg = get_age_requirements_msg(target_course)
+                raise serializers.ValidationError(f"أنت غير مؤهل لهذه الدورة ({req_msg}).")
 
         # Price validation against course price
-        if price and course and price > course.price:
+        if price and target_course and price > target_course.price:
             raise serializers.ValidationError(
                 {"price": "السعر المدخل لا يمكن أن يكون أكبر من سعر الدورة."})
 
         # Check for duplicate pending/processing requests
-        self._check_duplicate_request(user, course, child)
+        self._check_duplicate_request(user, course, online_course, child)
 
         # Check for existing active enrollment
-        self._check_existing_enrollment(user, course, child)
+        self._check_existing_enrollment(user, course, online_course, child)
 
         return data
 
-    def _check_duplicate_request(self, user, course, child):
+    def _check_duplicate_request(self, user, course, online_course, child):
         """Check for existing pending/processing requests"""
         active_statuses = [
             EnrollmentRequestStatus.PENDING,
@@ -102,12 +128,14 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
         if user.role == 'student':
             exists = EnrollmentRequest.objects.filter(
                 course=course,
+                online_course=online_course,
                 student=user.student_profile,
                 status__in=active_statuses
             ).exists()
         else:
             exists = EnrollmentRequest.objects.filter(
                 course=course,
+                online_course=online_course,
                 child=child,
                 status__in=active_statuses
             ).exists()
@@ -116,19 +144,21 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "يوجد طلب إلتحاق معلق لهذه الدورة بالفعل.")
 
-    def _check_existing_enrollment(self, user, course, child):
+    def _check_existing_enrollment(self, user, course, online_course, child):
         """Check for existing active enrollment"""
         active_statuses = [EnrollmentStatus.ACTIVE, EnrollmentStatus.SUSPENDED]
 
         if user.role == 'student':
             exists = Enrollment.objects.filter(
                 course=course,
+                online_course=online_course,
                 student=user.student_profile,
                 status__in=active_statuses
             ).exists()
         else:
             exists = Enrollment.objects.filter(
                 course=course,
+                online_course=online_course,
                 child=child,
                 status__in=active_statuses
             ).exists()
@@ -372,7 +402,7 @@ class EnrollmentRequestApproveSerializer(serializers.Serializer):
                 f"لا يمكن الموافقة على طلب بحالة: {instance.get_status_display()}")
 
         # Check course capacity
-        if instance.course.enrolled_count >= instance.course.capacity:
+        if instance.course and instance.course.enrolled_count >= instance.course.capacity:
             raise serializers.ValidationError(
                 "لا يمكن الموافقة - تم الوصول إلى الحد الأقصى للمشاركين في الدورة.")
 

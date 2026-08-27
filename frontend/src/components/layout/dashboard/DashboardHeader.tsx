@@ -18,11 +18,11 @@ export default function DashboardHeader({
   role: UserEntity["role"];
 }) {
   return (
-    <div className="relative z-50 col-span-1 flex items-center bg-gray-100 py-2 ps-8 pe-8 min-[1000px]:col-span-2 min-[1000px]:ps-112 min-[1000px]:pe-200">
+    <div className="relative col-span-1 flex items-center bg-gray-100 py-2 ps-8 pe-8 min-[1000px]:col-span-2 min-[1000px]:ps-112 min-[1000px]:pe-200">
       <Image
         src={RightDecoration}
         alt="Decorative Illustration"
-        className="absolute right-0 -bottom-22 hidden min-[1000px]:block"
+        className="absolute right-0 -bottom-22 hidden min-[1000px]:block -z-10 pointer-events-none"
         draggable={false}
       />
 
@@ -63,7 +63,7 @@ export default function DashboardHeader({
       <Image
         src={LeftDecoration}
         alt="Decorative Illustration"
-        className="absolute -bottom-54 left-0 hidden min-[1000px]:block"
+        className="absolute -bottom-54 left-0 hidden min-[1000px]:block -z-10 pointer-events-none"
         draggable={false}
       />
     </div>

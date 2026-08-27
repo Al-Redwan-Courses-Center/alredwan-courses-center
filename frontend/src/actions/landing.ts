@@ -5,6 +5,7 @@ import type { PaginatedResponse } from "@/types/config";
 import type {
   LandingPageCourse,
   LandingPageInstructor,
+  OnlineCourseListItem,
 } from "@/types/entities";
 
 export async function getLandingPageInstructors(): Promise<
@@ -27,4 +28,18 @@ export async function getLandingPageCourses(): Promise<LandingPageCourse[]> {
 
     return unwrapPaginated(data);
   }, []);
+}
+
+export async function getPublicOnlineCourses(): Promise<OnlineCourseListItem[]> {
+  return apiRequest(
+    "Failed to load public online courses:",
+    async () => {
+      const { data } = await publicApiClient.get<
+        PaginatedResponse<OnlineCourseListItem> | OnlineCourseListItem[]
+      >("/api/online-courses/courses/?page_size=6");
+
+      return unwrapPaginated(data);
+    },
+    [],
+  );
 }

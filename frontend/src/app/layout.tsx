@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { El_Messiri } from "next/font/google";
+import { El_Messiri, Inter } from "next/font/google";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import AuthProvider from "@/providers/AuthProvider";
@@ -17,8 +17,13 @@ const medad = localFont({
 
 const messiri = El_Messiri({
   variable: "--font-messiri",
-  subsets: ["arabic"],
+  subsets: ["arabic", "latin"],
   weight: "variable",
+});
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -60,7 +65,7 @@ export default function RootLayout({
   return (
     <html lang="ar">
       <body
-        className={`${medad.variable} ${messiri.variable} grid min-h-dvh antialiased`}
+        className={`${medad.variable} ${messiri.variable} ${inter.variable} grid min-h-dvh antialiased`}
         dir="rtl"
       >
         <ToastProvider />

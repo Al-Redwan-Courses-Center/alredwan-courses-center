@@ -22,18 +22,17 @@ export default function PublicCourseCard({
   // const endDate = parseISO(course.start_date);
   const lectureCount = course.num_lectures;
   const isEven = index % 2 === 0;
-  const isCourseImageValid = course.image?.startsWith("https");
 
   return (
     <ItemCard
       cardHeader={
-        course.image && isCourseImageValid ? (
-          <Image
-            src={course.image}
-            fill
+        course.image ? (
+          <Image src={course.image}
             alt="Template Course Image"
             draggable="false"
-            className="object-cover"
+            width={500}
+            height={300}
+            className="object-cover w-full h-full"
           />
         ) : (
           <div className="grid place-items-center bg-gray-200">
@@ -44,7 +43,7 @@ export default function PublicCourseCard({
       cardFooter={
         <div
           className={cn(
-            "relative grid w-6/10 grid-cols-2 gap-4",
+            "relative grid w-6/10 grid-cols-1 gap-4",
             isEven && "justify-self-end",
           )}
         >
@@ -59,16 +58,6 @@ export default function PublicCourseCard({
             className="px-0 text-[1.125rem] mobile-lg:text-[1.8rem] mobile:text-[2.2rem]"
           >
             عرض الدورة
-          </Button>
-
-          <Button
-            variant="secondary"
-            size="small"
-            revert
-            href="#"
-            className="px-0 text-[1.125rem] mobile-lg:text-[1.8rem] mobile:text-[2.2rem]"
-          >
-            سجل الآن
           </Button>
         </div>
       }
@@ -98,27 +87,10 @@ export default function PublicCourseCard({
           <CalendarIcon />
           <span>يبدأ: {formatDate(startDate)}</span>
         </li>
-
-        <li>
-          <BookIcon />
-          <span>
-            {toHindiDigits(lectureCount)}{" "}
-            {getArabicPlural(lectureCount, {
-              singular: "محاضرة",
-              twofer: "محاضرتان",
-              plural: "محاضرات",
-            })}
-          </span>
-        </li>
-
         <li>
           <PeopleIcon />
           <span>
-            الأماكن المتاحة:{" "}
-            <span className="font-bold">
-              {toHindiDigits(course.available_spots)}
-            </span>{" "}
-            من {toHindiDigits(course.capacity)}
+            العمر المناسب: {course.for_adults ? "للبالغين (+18)" : (course.min_age && course.max_age ? `من ${toHindiDigits(course.min_age)} إلى ${toHindiDigits(course.max_age)} سنة` : course.min_age ? `${toHindiDigits(course.min_age)} سنة فأكثر` : course.max_age ? `${toHindiDigits(course.max_age)} سنة كحد أقصى` : "الكل")}
           </span>
         </li>
       </ul>

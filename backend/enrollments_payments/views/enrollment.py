@@ -82,6 +82,7 @@ class EnrollmentListView(generics.ListAPIView):
         user = self.request.user
         queryset = Enrollment.objects.select_related(
             'course', 'course__instructor', 'course__instructor__user',
+            'online_course', 'online_course__instructor', 'online_course__instructor__user',
             'child', 'student', 'student__user'
         ).prefetch_related(
             'payments', 'course__lectures'
@@ -129,6 +130,7 @@ class EnrollmentDetailView(generics.RetrieveAPIView):
         return Enrollment.objects.select_related(
             'course', 'course__instructor', 'course__instructor__user',
             'course__season',
+            'online_course', 'online_course__instructor', 'online_course__instructor__user',
             'child', 'child__primary_parent', 'child__primary_parent__user',
             'student', 'student__user',
             'created_by'
@@ -149,7 +151,7 @@ class EnrollmentProgressView(APIView):
     def get_object(self, id):
         try:
             return Enrollment.objects.select_related(
-                'course', 'child', 'child__primary_parent',
+                'course', 'online_course', 'child', 'child__primary_parent',
                 'student'
             ).prefetch_related('course__lectures').get(id=id)
         except Enrollment.DoesNotExist:

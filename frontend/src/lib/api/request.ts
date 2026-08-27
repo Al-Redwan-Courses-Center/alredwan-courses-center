@@ -8,7 +8,10 @@ export async function apiRequest<T>(
 ): Promise<T> {
   try {
     return await request();
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.digest === 'DYNAMIC_SERVER_USAGE') {
+      throw error;
+    }
     if (mapError) {
       return mapError(error);
     }

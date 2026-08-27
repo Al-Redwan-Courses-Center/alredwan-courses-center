@@ -38,6 +38,12 @@ const nextConfig: NextConfig = {
         pathname: "/media/**",
       },
       {
+        protocol: "http",
+        hostname: "127.0.0.1",
+        port: "8000",
+        pathname: "/media/**",
+      },
+      {
         protocol: "https",
         hostname: "res.cloudinary.com",
         port: "",
@@ -56,6 +62,18 @@ const nextConfig: NextConfig = {
     return [];
   },
 
+  async rewrites() {
+    const backendUrl = process.env.REST_API_URL || "http://127.0.0.1:8000";
+
+    return {
+      fallback: [
+        {
+          source: "/api/:path*",
+          destination: `${backendUrl}/api/:path*`, // Proxy to Backend
+        },
+      ],
+    };
+  },
 
   output: "standalone",
 };
