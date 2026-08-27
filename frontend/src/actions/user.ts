@@ -210,7 +210,9 @@ export async function getChildEnrollmentRequests(
   }
 }
 
-export async function getChildCourses(childId: string): Promise<(CourseDetail & { course_progress: number })[]> {
+export async function getChildCourses(
+  childId: string,
+): Promise<(CourseDetail & { course_progress: number })[]> {
   try {
     const myEnrollments = await getChildEnrollments(childId);
 
@@ -229,7 +231,9 @@ export async function getChildCourses(childId: string): Promise<(CourseDetail & 
           course_progress: myEnrollmentsProgresses[i]?.percentage ?? 0,
         };
       })
-      .filter((c): c is CourseDetail & { course_progress: number } => c !== null);
+      .filter(
+        (c): c is CourseDetail & { course_progress: number } => c !== null,
+      );
 
     return myCourses;
   } catch (error: unknown) {
@@ -271,10 +275,14 @@ export async function getChildCourses(childId: string): Promise<(CourseDetail & 
 //     return null;
 //   }
 // }
-export async function getInstructorById(id: string | number): Promise<InstructorDetail | null> {
+export async function getInstructorById(
+  id: string | number,
+): Promise<InstructorDetail | null> {
   try {
     const apiClient = await getAuthApiClient();
-    const { data } = await apiClient.get<InstructorDetail>(`/api/users/instructors/${id}/`);
+    const { data } = await apiClient.get<InstructorDetail>(
+      `/api/users/instructors/${id}/`,
+    );
     return data;
   } catch (error: unknown) {
     if (

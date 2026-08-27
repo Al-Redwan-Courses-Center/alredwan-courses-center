@@ -19,7 +19,9 @@ const getApiBaseUrl = () => {
   const url = process.env.NEXT_PUBLIC_API_URL;
   if (!url) {
     if (process.env.NODE_ENV === "production") {
-      throw new Error("NEXT_PUBLIC_API_URL is missing in production environment!");
+      throw new Error(
+        "NEXT_PUBLIC_API_URL is missing in production environment!",
+      );
     }
     return "http://localhost:8000";
   }
@@ -183,14 +185,11 @@ export default function MemoryUploadModal({
       childrenIds.forEach((id) => finalFormData.append("children", id));
       studentIds.forEach((id) => finalFormData.append("students", id));
 
-      const response = await fetch(
-        `${API_BASE_URL}/api/memories/upload/`,
-        {
-          method: "POST",
-          headers: { Authorization: `JWT ${tokenResult.token}` },
-          body: finalFormData,
-        },
-      );
+      const response = await fetch(`${API_BASE_URL}/api/memories/upload/`, {
+        method: "POST",
+        headers: { Authorization: `JWT ${tokenResult.token}` },
+        body: finalFormData,
+      });
 
       setIsUploading(false);
 
@@ -208,7 +207,8 @@ export default function MemoryUploadModal({
     } catch (err: unknown) {
       setIsUploading(false);
       setUploadProgress(0);
-      const errorMessage = err instanceof Error ? err.message : "حدث خطأ في الاتصال";
+      const errorMessage =
+        err instanceof Error ? err.message : "حدث خطأ في الاتصال";
       toast.error(errorMessage);
     }
   };
@@ -230,19 +230,19 @@ export default function MemoryUploadModal({
 
         <div className="space-y-6 py-4">
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="mb-2 block text-sm font-medium">
               الصورة أو الفيديو
             </label>
             <input
               type="file"
               accept="image/*,video/*"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-olive-50 file:text-olive-700 hover:file:bg-olive-100"
+              className="file:bg-olive-50 file:text-olive-700 hover:file:bg-olive-100 w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="mb-2 block text-sm font-medium">
               تعليق (اختياري)
             </label>
             <Input
@@ -254,7 +254,7 @@ export default function MemoryUploadModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="mb-2 block text-sm font-medium">
               الإشارة للطلاب/الأطفال (اختياري)
             </label>
             <Input
@@ -265,11 +265,11 @@ export default function MemoryUploadModal({
             />
 
             {searchResults.length > 0 && (
-              <div className="mt-2 max-h-40 overflow-y-auto border rounded-md divide-y">
+              <div className="mt-2 max-h-40 divide-y overflow-y-auto rounded-md border">
                 {searchResults.map((p) => (
                   <div
                     key={p.id}
-                    className="p-2 hover:bg-gray-50 cursor-pointer flex justify-between items-center"
+                    className="flex cursor-pointer items-center justify-between p-2 hover:bg-gray-50"
                     onClick={() => toggleParticipant(p)}
                   >
                     <span>
@@ -289,7 +289,7 @@ export default function MemoryUploadModal({
                 {selectedParticipants.map((p) => (
                   <span
                     key={p.id}
-                    className="bg-olive-100 text-olive-800 text-xs px-2 py-1 rounded-full flex items-center gap-1"
+                    className="bg-olive-100 text-olive-800 flex items-center gap-1 rounded-full px-2 py-1 text-xs"
                   >
                     {p.name}
                     <button
@@ -307,14 +307,14 @@ export default function MemoryUploadModal({
 
         <ModalFooter>
           {isUploading && uploadProgress > 0 && uploadProgress < 100 && (
-            <div className="flex-1 flex items-center gap-3">
-              <div className="flex-1 bg-gray-200 rounded-full h-2">
+            <div className="flex flex-1 items-center gap-3">
+              <div className="h-2 flex-1 rounded-full bg-gray-200">
                 <div
                   className="bg-olive-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
               </div>
-              <span className="text-xs text-gray-500 font-medium">
+              <span className="text-xs font-medium text-gray-500">
                 {uploadProgress}%
               </span>
             </div>

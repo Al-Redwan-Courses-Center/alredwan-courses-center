@@ -77,7 +77,6 @@ export async function getServerJwtToken() {
     if (!decodedToken) {
       return null;
     }
-    console.log(decodedToken);
 
     if (decodedToken.exp) {
       if (typeof decodedToken.exp !== "number") {
