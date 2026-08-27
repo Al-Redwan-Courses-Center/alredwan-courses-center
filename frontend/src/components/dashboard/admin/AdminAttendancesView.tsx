@@ -614,7 +614,6 @@ export default function AdminAttendancesView({
     useAuthedWebSocket<StaffAttendanceServerEvent>(WS_URL);
 
   useEffect(() => {
-    console.log(lastJsonMessage);
     if (!lastJsonMessage) return;
     switch (lastJsonMessage.type) {
       case "attendance_update": {
