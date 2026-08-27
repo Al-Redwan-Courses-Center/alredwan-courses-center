@@ -1,17 +1,15 @@
 import { Suspense } from "react";
-import { getUser, protect } from "@/actions/auth";
+import { getUser } from "@/actions/auth";
 import { getAllCourses } from "@/actions/courses";
 import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
 
 export default async function Page() {
-  await protect(["student", "parent"]);
-
   const { first_name } = await getUser();
   const courses = await getAllCourses();
 
   return (
     <div className="flex flex-col pt-15 min-[1000px]:pt-32">
-      <h1 className="dashboard-greeting mb-14 ps-16 relative z-60">
+      <h1 className="dashboard-greeting relative z-60 mb-14 ps-16">
         السلام عليكم يا {first_name}
       </h1>
 
