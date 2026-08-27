@@ -21,7 +21,6 @@ export default function PublicCourseCard({
   const startDate = parseISO(course.start_date);
   // const endDate = parseISO(course.start_date);
   const lectureCount = course.num_lectures;
-  const isEven = index % 2 === 0;
   const isCourseImageValid = course.image?.startsWith("https");
 
   return (
@@ -44,8 +43,7 @@ export default function PublicCourseCard({
       cardFooter={
         <div
           className={cn(
-            "relative grid w-6/10 grid-cols-2 gap-4",
-            isEven && "justify-self-end",
+            "relative mx-auto mt-3 mb-15 grid w-6/10 grid-cols-2 gap-4",
           )}
         >
           <Button
@@ -56,7 +54,7 @@ export default function PublicCourseCard({
                 ? `/dashboard/courses/${course.id}`
                 : `/courses/${course.id}`
             }
-            className="px-0 text-[1.125rem] mobile-lg:text-[1.8rem] mobile:text-[2.2rem]"
+            className="mobile-lg:text-[1.8rem] mobile:text-[2.2rem] px-0 text-[1.125rem]"
           >
             عرض الدورة
           </Button>
@@ -65,8 +63,8 @@ export default function PublicCourseCard({
             variant="secondary"
             size="small"
             revert
-            href="#"
-            className="px-0 text-[1.125rem] mobile-lg:text-[1.8rem] mobile:text-[2.2rem]"
+            href={`/dashboard/courses/${course.id}?openModel=1`}
+            className="mobile-lg:text-[1.8rem] mobile:text-[2.2rem] px-0 text-[1.125rem]"
           >
             سجل الآن
           </Button>
@@ -74,7 +72,7 @@ export default function PublicCourseCard({
       }
       index={index}
     >
-      <h3 className="mb-3 text-[1.28rem] mobile-lg:text-[2.4rem] mobile:text-[3rem] font-bold">
+      <h3 className="mobile-lg:text-[2.4rem] mobile:text-[3rem] mb-3 text-[1.28rem] font-bold">
         {course.name}
       </h3>
       <p className="mb-5">{course.description}</p>
@@ -83,7 +81,7 @@ export default function PublicCourseCard({
         {course.tags.map((tag, i) => (
           <span
             className={cn(
-              "inline-block bg-gray-100 px-4 py-2 text-center text-xl mobile-lg:text-[1.8rem] mobile:text-[2.2rem]",
+              "mobile-lg:text-[1.8rem] mobile:text-[2.2rem] inline-block bg-gray-100 px-4 py-2 text-center text-xl",
               i % 2 === 0 ? "rounded-[1rem_0]" : "rounded-[0_1rem]",
             )}
             key={i}

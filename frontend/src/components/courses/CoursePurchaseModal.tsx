@@ -15,6 +15,7 @@ import {
   ModalTrigger,
 } from "@/components/ui/Modal";
 import type { EnrollmentRequestCreateBody } from "@/types/entities";
+import { useSearchParams } from "next/navigation";
 
 type PaymentMethod = NonNullable<EnrollmentRequestCreateBody["payment_method"]>;
 
@@ -51,7 +52,8 @@ export default function CoursePurchaseModal({
   coursePrice: string;
   childrenOptions?: ParentChildDetail[];
 }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const [isOpen, setIsOpen] = useState(!!searchParams.get("openModel"));
   const {
     register,
     handleSubmit,
@@ -203,8 +205,8 @@ export default function CoursePurchaseModal({
 
           {hasNoChildren && (
             <p className="rounded-[1.2rem_0] bg-gray-200 px-5 py-4 text-2xl text-gray-600">
-              لا يوجد أطفال متاحون للإلتحاق بهذه الدورة حاليًا (إما لا يوجد أطفال
-              مرتبطون أو أنهم ملتحقون بالفعل).
+              لا يوجد أطفال متاحون للإلتحاق بهذه الدورة حاليًا (إما لا يوجد
+              أطفال مرتبطون أو أنهم ملتحقون بالفعل).
             </p>
           )}
 
