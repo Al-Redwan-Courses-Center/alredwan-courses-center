@@ -1,7 +1,10 @@
-import { differenceInCalendarYears } from "date-fns";
+"use client";
+
 import Image from "next/image";
+import { Autoplay } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 import InstructorProfile from "@/assets/instructor-profile.png";
-import { cn, getArabicPlural, toHindiDigits } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type { LandingPageInstructor } from "@/types/entities";
 
 const straight = cn("rounded-[0_19rem]");
@@ -15,14 +18,26 @@ export default function InstructorsRow({ instructors }: InstructorsRowProps) {
   if (instructors.length <= 0) return null;
 
   return (
-    <div className="tablet:gap-40 laptop:grid-cols-1 laptop:px-55 desktop-sm:grid-cols-2 desktop-sm:gap-y-40 grid w-full grid-cols-3 gap-20 text-[1.5rem] text-gray-600">
-      {instructors.slice(0, 3).map(({ instructor }, i) => {
-        const joinDate = new Date(instructor.joined_date);
-        const yearsOfExp = differenceInCalendarYears(new Date(), joinDate);
-
-        return (
+    <Swiper
+      modules={[Autoplay]}
+      loop={true}
+      autoplay={{
+        delay: 3000,
+        disableOnInteraction: false,
+      }}
+      speed={1200}
+      spaceBetween={20}
+      grabCursor={true}
+      breakpoints={{
+        0: { slidesPerView: 1, spaceBetween: 20 },
+        800: { slidesPerView: 2, spaceBetween: 30 },
+        1200: { slidesPerView: 3, spaceBetween: 40 },
+      }}
+      className="laptop:px-55 w-full text-[1.5rem] text-gray-600"
+    >
+      {instructors.map(({ instructor }, i) => (
+        <SwiperSlide key={instructor.id} className="py-5">
           <div
-            key={instructor.id}
             className={cn(
               "shadow-soft mobile-lg:px-5 relative min-h-151 bg-[linear-gradient(181deg,#FFF_3.72%,#93A494_180.46%)] px-10 py-16",
               i % 2 === 0 ? straight : reversed,
@@ -36,8 +51,10 @@ export default function InstructorsRow({ instructors }: InstructorsRowProps) {
               draggable="false"
             >
               <Image
-                src={InstructorProfile}
-                alt={instructor.name + "Picture"}
+                src={instructor.image_url || InstructorProfile}
+                alt={instructor.name + " Picture"}
+                width={400}
+                height={400}
                 className="mobile-lg:-left-30 relative z-20 w-130 object-cover"
                 draggable="false"
               />
@@ -52,25 +69,10 @@ export default function InstructorsRow({ instructors }: InstructorsRowProps) {
                   {instructor.bio}
                 </p>
               </div>
-
-              <ul>
-                {/* <li>{instructor.specialization}</li> */}
-                <li>
-                  <span className="font-bold">
-                    {yearsOfExp > 2 && toHindiDigits(yearsOfExp)}
-                  </span>{" "}
-                  {getArabicPlural(yearsOfExp, {
-                    singular: "سنة",
-                    twofer: "سنتين",
-                    plural: "سنوات",
-                  })}{" "}
-                  خبرة
-                </li>
-              </ul>
             </div>
           </div>
-        );
-      })}
-    </div>
+        </SwiperSlide>
+      ))}
+    </Swiper>
   );
 }
