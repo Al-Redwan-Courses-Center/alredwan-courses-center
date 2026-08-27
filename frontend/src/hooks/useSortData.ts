@@ -14,10 +14,11 @@ export function useSortData<T>(data: T[], sortConfig: DataViewSortConfig<T>) {
   const sortedData = useMemo(() => {
     if (!field || !sortConfig || !Array.isArray(data)) return data;
 
-    const compareFn = sortConfig[field].sortFn;
-    if (!compareFn) {
+    const sortOption = sortConfig[field];
+    if (!sortOption || !sortOption.sortFn) {
       return data;
     }
+    const compareFn = sortOption.sortFn;
     const sorted = [...data].sort((a: T, b: T) => {
       const result = compareFn(a, b);
 

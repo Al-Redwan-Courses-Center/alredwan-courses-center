@@ -33,7 +33,7 @@ export default function LoginForm({
   } = useForm<LoginInputs>({
     defaultValues: {
       phone_number1: "",
-      password: "password123",
+      password: "",
     },
   });
 

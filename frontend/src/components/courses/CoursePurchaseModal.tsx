@@ -53,7 +53,7 @@ export default function CoursePurchaseModal({
   childrenOptions?: ParentChildDetail[];
 }) {
   const searchParams = useSearchParams();
-  const [isOpen, setIsOpen] = useState(!!searchParams.get("openModel"));
+  const [isOpen, setIsOpen] = useState(!!searchParams.get("openModal"));
   const {
     register,
     handleSubmit,

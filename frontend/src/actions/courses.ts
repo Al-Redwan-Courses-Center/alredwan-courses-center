@@ -13,7 +13,11 @@ import {
   unwrapPaginated,
 } from "@/lib/api";
 import type { PaginatedResponse } from "@/types/config";
-import type { CourseDetail, CourseListItem } from "@/types/entities";
+import type {
+  CourseDetail,
+  CourseListItem,
+  StudentCourseItem,
+} from "@/types/entities";
 
 export async function getPublicCourses(): Promise<CourseListItem[]> {
   try {
@@ -111,7 +115,7 @@ export async function getCourseById(
   );
 }
 
-export async function getStudentCourses(): Promise<(CourseDetail & { course_progress: number })[]> {
+export async function getStudentCourses(): Promise<StudentCourseItem[]> {
   return apiRequest(
     "Failed to load student courses:",
     async () => {
@@ -132,7 +136,9 @@ export async function getStudentCourses(): Promise<(CourseDetail & { course_prog
             course_progress: myEnrollmentsProgresses[i]?.percentage ?? 0,
           };
         })
-        .filter((c): c is CourseDetail & { course_progress: number } => c !== null);
+        .filter(
+          (c): c is CourseDetail & { course_progress: number } => c !== null,
+        );
     },
     [],
   );

@@ -63,7 +63,7 @@ export default function PublicCourseCard({
             variant="secondary"
             size="small"
             revert
-            href={`/dashboard/courses/${course.id}?openModel=1`}
+            href={`/dashboard/courses/${course.id}?openModal=1`}
             className="mobile-lg:text-[1.8rem] mobile:text-[2.2rem] px-0 text-[1.125rem]"
           >
             سجل الآن

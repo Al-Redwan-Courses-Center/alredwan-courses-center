@@ -10,6 +10,7 @@ import type {
   CourseDetail,
   EnrollmentListItem,
   EnrollmentRequestListItem,
+  StudentCourseItem,
 } from "@/types/entities";
 import type { InstructorDetail } from "@/types/entities/instructors";
 
@@ -212,7 +213,7 @@ export async function getChildEnrollmentRequests(
 
 export async function getChildCourses(
   childId: string,
-): Promise<(CourseDetail & { course_progress: number })[]> {
+): Promise<StudentCourseItem[]> {
   try {
     const myEnrollments = await getChildEnrollments(childId);
 

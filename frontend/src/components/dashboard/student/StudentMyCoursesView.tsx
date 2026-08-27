@@ -10,12 +10,12 @@ import { DataViewHeaderLegacy } from "@/components/ui/data-view/DataViewRow";
 import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
 import DataViewSortLegacy from "@/components/ui/data-view/DataViewSort";
 import { cn } from "@/lib/utils";
-import type { CourseDetail } from "@/types/entities";
+import type { StudentCourseItem } from "@/types/entities";
 
 export default function StudentMyCoursesView({
   courses,
 }: {
-  courses: CourseDetail[];
+  courses: StudentCourseItem[];
   childId?: string;
   role?: string;
 }) {
@@ -60,12 +60,9 @@ export default function StudentMyCoursesView({
         render={{
           table: () => null,
 
-          cards: (
-            item: CourseDetail & {
-              course_progress: number;
-            },
-            index,
-          ) => <StudentCourseCard course={item} index={index} key={item.id} />,
+          cards: (item: StudentCourseItem, index) => (
+            <StudentCourseCard course={item} index={index} key={item.id} />
+          ),
         }}
       />
 

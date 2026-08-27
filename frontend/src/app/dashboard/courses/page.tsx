@@ -14,8 +14,18 @@ export default async function Page() {
       </h1>
 
       <div className="w-full">
-        <Suspense fallback={null}>
-          <DashboardAllCoursesView courses={courses} />
+        <Suspense
+          fallback={
+            <div className="flex h-64 items-center justify-center text-xl text-gray-500">
+              جاري التحميل...
+            </div>
+          }
+        >
+          <PublicCourseCatalog
+            physical={physicalCourses}
+            online={onlineCourses}
+            linkTo="dashboard"
+          />
         </Suspense>
       </div>
     </div>
