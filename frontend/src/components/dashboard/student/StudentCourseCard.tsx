@@ -8,13 +8,13 @@ import ItemCard from "@/components/ui/ItemCard";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
 
-import type { CourseDetail } from "@/types/entities";
+import type { StudentCourseItem } from "@/types/entities";
 
 export default function StudentCourseCard({
   course,
   index,
 }: {
-  course: CourseDetail & { course_progress: number; type?: "physical" | "online"; enrollment_status?: string; enrollment_status_display?: string; video_count?: number; thumbnail?: string };
+  course: StudentCourseItem;
   index: number;
 }) {
   const isOnline = course.type === "online";
@@ -22,13 +22,23 @@ export default function StudentCourseCard({
     ? `/dashboard/online-courses/${course.id}/learn`
     : `/dashboard/my-courses/${course.id}`;
 
+  const imageSrc =
+    (isOnline ? ("thumbnail" in course ? course.thumbnail : null) : ("image" in course ? course.image : null)) ||
+    CourseImage;
+
+  const tags = "tags" in course ? course.tags : [];
+  const startDate = "start_date" in course ? course.start_date : null;
+  const numLectures = "num_lectures" in course ? course.num_lectures : undefined;
+  const videoCount = "video_count" in course ? course.video_count : undefined;
+  const schedules = "schedules" in course ? course.schedules : undefined;
+
   return (
     <ItemCard
       index={index}
       cardHeader={
-        <div>
+        <div className="relative w-full h-48 overflow-hidden rounded-t-2xl">
           <Image
-            src={course.image || course.thumbnail || CourseImage}
+            src={imageSrc}
             alt="Course Image"
             fill
             className="object-cover"
@@ -64,9 +74,9 @@ export default function StudentCourseCard({
       </div>
       <p className="mb-5 line-clamp-2">{course.description}</p>
 
-      {course.tags && course.tags.length > 0 && (
+      {tags && tags.length > 0 && (
         <div className="courses-center mb-5 grid grid-cols-[repeat(auto-fill,minmax(5rem,auto))] gap-2">
-          {course.tags.map((tag: any, i: number) => (
+          {tags.map((tag: { name: string }, i: number) => (
             <span
               className={cn(
                 "inline-block bg-gray-100 px-4 py-2 text-center text-xl",
@@ -81,21 +91,21 @@ export default function StudentCourseCard({
       )}
 
       <ul className="[&_svg]:text-olive-500 [&>li]:courses-center mb-7 flex flex-col gap-3 [&_svg]:h-auto [&_svg]:w-[1.525rem] [&>li]:flex [&>li]:gap-2">
-        {course.start_date && (
+        {startDate && (
           <li>
             <CalendarIcon />
             <span>
-              يبدأ: {formatDate(parseISO(course.start_date)).replaceAll("-", "/")}
+              يبدأ: {formatDate(parseISO(startDate)).replaceAll("-", "/")}
             </span>
           </li>
         )}
 
-        {course.num_lectures !== undefined && (
+        {numLectures !== undefined && (
           <li>
             <BookIcon />
             <span>
-              {toHindiDigits(course.num_lectures)}{" "}
-              {getArabicPlural(course.num_lectures, {
+              {toHindiDigits(numLectures)}{" "}
+              {getArabicPlural(numLectures, {
                 singular: "محاضرة",
                 twofer: "محاضرتان",
                 plural: "محاضرات",
@@ -104,12 +114,12 @@ export default function StudentCourseCard({
           </li>
         )}
 
-        {isOnline && course.video_count !== undefined && (
+        {isOnline && videoCount !== undefined && (
           <li>
             <BookIcon />
             <span>
-              {toHindiDigits(course.video_count)}{" "}
-              {getArabicPlural(course.video_count, {
+              {toHindiDigits(videoCount)}{" "}
+              {getArabicPlural(videoCount, {
                 singular: "فيديو",
                 twofer: "فيديوهان",
                 plural: "فيديوهات",
@@ -118,11 +128,11 @@ export default function StudentCourseCard({
           </li>
         )}
 
-        {course.schedules && (
+        {schedules && (
           <li>
             <CalendarIcon />
             <span>
-              {course.schedules.map((s: any) => s.weekday_display).join(" \\ ")}
+              {schedules.map((s: { weekday_display: string }) => s.weekday_display).join(" \\ ")}
             </span>
           </li>
         )}

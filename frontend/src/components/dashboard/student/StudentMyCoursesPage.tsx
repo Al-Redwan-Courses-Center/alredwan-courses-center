@@ -4,7 +4,7 @@ import { getStudentCourses } from "@/actions/courses";
 import { getChildCourses, getChildById } from "@/actions/user";
 import StudentMyCoursesView from "@/components/dashboard/student/StudentMyCoursesView";
 import { notFound, redirect } from "next/navigation";
-import { CourseDetail } from "@/types/entities";
+import type { StudentCourseItem } from "@/types/entities";
 
 export default async function StudentMyCoursesPage({
   childId = "",
@@ -12,7 +12,7 @@ export default async function StudentMyCoursesPage({
   childId?: string;
 }) {
   const { first_name, role } = await getUser();
-  let myActiveCourses: CourseDetail[];
+  let myActiveCourses: StudentCourseItem[];
   let name: string;
 
   if (role === "parent") {

@@ -112,7 +112,7 @@ export default async function Page({
                     </div>
                 </div>
 
-                <Button href="/login" className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-olive-500/20">
+                <Button href="/?login=true" className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-olive-500/20">
                   سجل الآن في الدورة
                 </Button>
                 

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getUser } from "@/actions/auth";
 import { getAllCourses } from "@/actions/courses";
 import { getAllOnlineCourses } from "@/actions/online-courses";
@@ -17,11 +18,13 @@ export default async function Page() {
       </h1>
 
       <div className="w-full">
-        <PublicCourseCatalog
-          physical={physicalCourses}
-          online={onlineCourses}
-          linkTo="dashboard"
-        />
+        <Suspense fallback={<div className="h-64 flex items-center justify-center text-xl text-gray-500">جاري التحميل...</div>}>
+          <PublicCourseCatalog
+            physical={physicalCourses}
+            online={onlineCourses}
+            linkTo="dashboard"
+          />
+        </Suspense>
       </div>
     </div>
   );

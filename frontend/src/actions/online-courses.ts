@@ -14,8 +14,15 @@ export async function getPublicOnlineCourses(): Promise<OnlineCourseListItem[]> 
     >("/api/online-courses/courses/?page_size=100");
 
     return Array.isArray(data) ? data : data.results;
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Failed to load public online courses:", error);
     return [];
   }
@@ -29,8 +36,15 @@ export async function getPublicOnlineCourseById(
       `/api/online-courses/courses/${courseId}/`,
     );
     return data;
-  } catch (error: any) {
-    if (error?.digest === 'DYNAMIC_SERVER_USAGE') throw error;
+  } catch (error: unknown) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      error.digest === "DYNAMIC_SERVER_USAGE"
+    ) {
+      throw error;
+    }
     console.error("Failed to load public online course details:", error);
     return null;
   }
@@ -40,8 +54,11 @@ export async function getAllOnlineCourses(): Promise<OnlineCourseListItem[]> {
   return apiRequest(
     "Failed to load online courses:",
     async () => {
-      const user = await getUser();
-      const apiClient = await getAuthApiClient();
+      const [user, apiClient, myEnrollments] = await Promise.all([
+        getUser(),
+        getAuthApiClient(),
+        getMyEnrollments().catch(() => []),
+      ]);
 
       const { data } = await apiClient.get<
         PaginatedResponse<OnlineCourseListItem> | OnlineCourseListItem[]
@@ -53,11 +70,10 @@ export async function getAllOnlineCourses(): Promise<OnlineCourseListItem[]> {
         return courses;
       }
 
-      const myEnrollments = await getMyEnrollments();
       const enrolledCourseIds = new Set(
         myEnrollments
           .filter((e) => e.online_course !== null)
-          .map((e) => String(e.online_course))
+          .map((e) => String(e.online_course)),
       );
 
       return courses.map((c) => ({

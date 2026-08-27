@@ -94,6 +94,7 @@ export default function MemoryUploadModal({
     if (debouncedSearch.length >= 2) {
       searchParticipants(debouncedSearch).then(setSearchResults);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchResults([]);
     }
   }, [debouncedSearch]);

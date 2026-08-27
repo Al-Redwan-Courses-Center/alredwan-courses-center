@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { OnlineCourseDetail } from "@/types/entities";
+import { OnlineCourseDetail, OnlineLectureMaterialItem } from "@/types/entities";
 import { PlayCircle, FileText, CheckCircle2, ChevronRight, Menu, X } from "lucide-react";
 import { cn, toHindiDigits } from "@/lib/utils";
 import { getFullImageUrl } from "@/lib/image-utils";
 import Button from "@/components/ui/Button";
+import VideoPlayer from "./VideoPlayer";
 import { updateVideoWatchProgress } from "@/actions/online-courses";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -38,12 +39,16 @@ export default function StudentOnlineCourseViewer({
 
   const handleMarkAsCompleted = async () => {
     if (!activeLecture) return;
-    setIsSubmitting(true);
     
-    // Optimistic UI update
-    setOptimisticCompletedIds(prev => new Set([...prev, activeLecture.id]));
+    // Save previous state for rollback
+    const previousCompletedIds = new Set(optimisticCompletedIds);
+    
+    // 1. Optimistically mark as completed in UI immediately
+    setOptimisticCompletedIds((prev) => new Set([...prev, activeLecture.id]));
+    setIsSubmitting(true);
 
     try {
+      // 2. Call server action to persist progress to DB
       await updateVideoWatchProgress(
         course.id,
         activeLecture.id,
@@ -52,31 +57,26 @@ export default function StudentOnlineCourseViewer({
           total_seconds: activeLecture.duration_seconds || 1,
           last_position_seconds: activeLecture.duration_seconds || 1,
         },
-        childId,
+        childId
       );
-      router.refresh();
-    } catch (error) {
-      console.error("Failed to mark as completed:", error);
-      // Revert on error
-      setOptimisticCompletedIds(prev => {
-        const next = new Set(prev);
-        next.delete(activeLecture.id);
-        return next;
-      });
+    } catch (err) {
+      console.error("Failed to mark lecture as completed:", err);
+      // 3. Rollback state if server action fails
+      setOptimisticCompletedIds(previousCompletedIds);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex h-full w-full flex-col min-[1000px]:flex-row overflow-hidden bg-gray-50 relative">
-      
-      {/* Sidebar: Lectures List */}
+    <div className="flex h-[calc(100dvh-6rem)] w-full overflow-hidden bg-white relative">
+      {/* Sidebar with Lecture List */}
       <div 
         className={cn(
-          "flex flex-col bg-white border-l border-gray-200 overflow-y-auto transition-[width] duration-300 shrink-0",
+          "bg-white border-l border-gray-200 flex flex-col shrink-0 transition-all duration-300 z-30",
+          "absolute right-0 top-0 bottom-0 min-[1000px]:relative min-[1000px]:z-0",
           isSidebarOpen 
-            ? "w-full min-[1000px]:w-80 lg:w-96 min-[1000px]:h-full border-l" 
+            ? "w-80 md:w-96 shadow-2xl min-[1000px]:shadow-none" 
             : "w-0 h-0 min-[1000px]:h-full border-none pointer-events-none invisible"
         )}
         aria-hidden={!isSidebarOpen}
@@ -90,6 +90,7 @@ export default function StudentOnlineCourseViewer({
             <button 
               onClick={() => setIsSidebarOpen(false)}
               className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+              aria-label="إغلاق قائمة المحاضرات"
             >
               <X className="w-5 h-5" />
             </button>
@@ -174,6 +175,7 @@ export default function StudentOnlineCourseViewer({
             onClick={() => setIsSidebarOpen(true)}
             className="absolute top-6 right-6 z-20 bg-white p-3 rounded-full shadow-md border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
             title="إظهار القائمة"
+            aria-label="فتح قائمة المحاضرات"
           >
             <Menu className="w-6 h-6" />
           </button>
@@ -195,28 +197,12 @@ export default function StudentOnlineCourseViewer({
               </Button>
             </div>
 
-            {/* Video Player Container - Only render if video_url exists */}
-            {activeLecture.video_url && (
-              <div className="w-full bg-black rounded-2xl overflow-hidden shadow-soft aspect-video relative">
-                <iframe
-                  src={
-                    activeLecture.video_platform === "youtube"
-                      ? `https://www.youtube.com/embed/${activeLecture.video_url.split("v=")[1] || activeLecture.video_url.split("/").pop()}?rel=0`
-                      : activeLecture.video_platform === "vimeo"
-                      ? `https://player.vimeo.com/video/${activeLecture.video_url.split("/").pop()}`
-                      : activeLecture.video_url
-                  }
-                  title={activeLecture.title}
-                  className="absolute top-0 left-0 w-full h-full border-0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
-              </div>
-            )}
+            {/* Video Player Component */}
+            <VideoPlayer lecture={activeLecture} />
 
             {/* Lecture Info & Description */}
             {/* Image Materials */}
-            {activeLecture.materials?.filter((m: any) => m.file_type === 'image' || m.file_type === 'IMAGE').map((img: any) => (
+            {activeLecture.materials?.filter((m: OnlineLectureMaterialItem) => m.file_type === 'image').map((img: OnlineLectureMaterialItem) => (
               <div key={img.id} className="w-full bg-white rounded-[2.5rem] p-4 shadow-soft border border-gray-100 flex justify-center">
                 <img src={getFullImageUrl(img.file) || ""} alt={img.title} className="max-w-full max-h-[70vh] rounded-[2rem] object-contain" />
               </div>
@@ -232,14 +218,14 @@ export default function StudentOnlineCourseViewer({
             </div>
 
             {/* Other Materials Section */}
-            {activeLecture.materials && activeLecture.materials.filter((m: any) => m.file_type !== 'image' && m.file_type !== 'IMAGE').length > 0 && (
+            {activeLecture.materials && activeLecture.materials.filter((m: OnlineLectureMaterialItem) => m.file_type !== 'image').length > 0 && (
               <div className="bg-white rounded-[2.5rem] p-10 shadow-soft border border-gray-100 flex flex-col gap-6">
                 <h3 className="text-2xl font-bold text-olive-700 flex items-center gap-3">
                   <FileText className="w-6 h-6" />
                   المرفقات والملفات
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {activeLecture.materials.filter((m: any) => m.file_type !== 'image' && m.file_type !== 'IMAGE').map((material) => (
+                  {activeLecture.materials.filter((m: OnlineLectureMaterialItem) => m.file_type !== 'image').map((material) => (
                     <a
                       key={material.id}
                       href={material.external_url || getFullImageUrl(material.file) || "#"}
@@ -262,12 +248,11 @@ export default function StudentOnlineCourseViewer({
 
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500 text-xl">
-            يرجى اختيار محاضرة من القائمة الجانبية للبدء
+          <div className="flex-1 flex items-center justify-center">
+            <p className="text-gray-500 text-xl font-bold">يرجى اختيار محاضرة لعرضها</p>
           </div>
         )}
       </div>
-      
     </div>
   );
 }

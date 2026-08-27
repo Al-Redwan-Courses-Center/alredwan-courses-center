@@ -15,6 +15,7 @@ import {
   ModalTrigger,
 } from "@/components/ui/Modal";
 import type { EnrollmentRequestCreateBody } from "@/types/entities";
+import { toHindiDigits } from "@/lib/utils";
 
 type PaymentMethod = NonNullable<EnrollmentRequestCreateBody["payment_method"]>;
 
@@ -190,7 +191,12 @@ export default function CoursePurchaseModal({
             </p>
           )}
 
-
+          <div className="flex items-center justify-between rounded-[1.2rem_0] bg-gray-50 px-6 py-4">
+            <span className="text-2xl font-bold text-gray-700">رسوم الدورة:</span>
+            <span className="text-2xl font-bold text-olive-700">
+              {toHindiDigits(coursePrice)} جنيه مصري
+            </span>
+          </div>
 
           <div className="space-y-3">
             <p className="block text-2xl font-bold text-gray-900">

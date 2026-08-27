@@ -91,12 +91,6 @@ export interface EnrollmentRequestCreateBody {
   online_course?: string;
   child?: string;
   price?: number;
-  payment_method?:
-    | "cash"
-    | "card"
-    | "bank_transfer"
-    | "instapay"
-    | "vodafone_cash"
-    | "other";
+  payment_method?: "cash" | "instapay" | "vodafone_cash";
   notes?: string;
 }

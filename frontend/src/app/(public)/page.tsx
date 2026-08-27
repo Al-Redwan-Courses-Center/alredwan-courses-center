@@ -24,6 +24,7 @@ export default async function Home() {
       <GoalsSection />
       <ActivitiesSection />
       <CoursesSection />
+      <OnlineCoursesSection />
       <TestimonialsSection />
       <CallToActionSection />
       <WhatsAppWidget />

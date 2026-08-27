@@ -13,7 +13,13 @@ import {
   unwrapPaginated,
 } from "@/lib/api";
 import type { PaginatedResponse } from "@/types/config";
-import type { CourseDetail, CourseListItem } from "@/types/entities";
+import type {
+  CourseDetail,
+  CourseListItem,
+  OnlineCourseDetail,
+  StudentCourseItem,
+  VideoLectureItem,
+} from "@/types/entities";
 
 export async function getPublicCourses(): Promise<CourseListItem[]> {
   try {
@@ -111,7 +117,7 @@ export async function getCourseById(
   );
 }
 
-export async function getStudentCourses(): Promise<(CourseDetail & { course_progress: number })[]> {
+export async function getStudentCourses(): Promise<StudentCourseItem[]> {
   return apiRequest(
     "Failed to load student courses:",
     async () => {
@@ -128,26 +134,35 @@ export async function getStudentCourses(): Promise<(CourseDetail & { course_prog
       const physicalRequests = pendingRequests.filter((r) => r.course !== null);
       const onlineRequests = pendingRequests.filter((r) => r.online_course !== null);
 
-      const getUniqueIds = (arr: any[], key: string) =>
-        Array.from(new Set(arr.map((item) => item[key]!)));
+      const getUniqueIds = <T, K extends keyof T>(
+        arr: T[],
+        key: K,
+      ): NonNullable<T[K]>[] =>
+        Array.from(
+          new Set(
+            arr
+              .map((item) => item[key])
+              .filter((val): val is NonNullable<T[K]> => val !== null && val !== undefined),
+          ),
+        );
 
       const physicalCourseIds = getUniqueIds(
         [...physicalEnrollments, ...physicalRequests],
-        "course"
+        "course",
       );
       const onlineCourseIds = getUniqueIds(
         [...onlineEnrollments, ...onlineRequests],
-        "online_course"
+        "online_course",
       );
 
       const [myCoursesInitial, myEnrollmentsProgresses] = await Promise.all([
-        Promise.all(physicalCourseIds.map((id) => getCourseById(id))),
+        Promise.all(physicalCourseIds.map((id) => getCourseById(id as number))),
         Promise.all(physicalEnrollments.map((e) => getEnrollmentProgressById(e.id))),
       ]);
 
       const physical = myCoursesInitial
-        .filter((c) => c !== null)
-        .map((c, i) => {
+        .filter((c): c is NonNullable<typeof c> => c !== null)
+        .map((c) => {
           const isPending = !physicalEnrollments.find((e) => e.course === c?.id);
           const req = physicalRequests.find((r) => r.course === c?.id);
           const activeIndex = physicalEnrollments.findIndex((e) => e.course === c?.id);
@@ -162,10 +177,10 @@ export async function getStudentCourses(): Promise<(CourseDetail & { course_prog
         });
 
       const apiClient = await getAuthApiClient();
-      let onlineCoursesInitial: any[] = [];
+      let onlineCoursesInitial: OnlineCourseDetail[] = [];
       if (onlineCourseIds.length > 0) {
         const res = await apiClient
-          .get(`/api/online-courses/courses/batch/`, {
+          .get<OnlineCourseDetail[]>(`/api/online-courses/courses/batch/`, {
             params: { ids: onlineCourseIds.join(",") },
           })
           .catch(() => ({ data: [] }));
@@ -173,15 +188,17 @@ export async function getStudentCourses(): Promise<(CourseDetail & { course_prog
       }
 
       const online = onlineCoursesInitial
-        .filter((c) => c !== null)
-        .map((c: any) => {
+        .filter((c): c is OnlineCourseDetail => c !== null)
+        .map((c: OnlineCourseDetail) => {
           const isPending = !onlineEnrollments.find((e) => e.online_course === c?.id);
           const req = onlineRequests.find((r) => r.online_course === c?.id);
 
-          const completedLecturesCount = c.video_lectures?.filter((l: any) => l.watch_progress?.is_completed).length || 0;
-          const progressPercentage = c.video_lectures?.length > 0 
-            ? Math.round((completedLecturesCount / c.video_lectures.length) * 100) 
-            : 0;
+          const completedLecturesCount =
+            c.video_lectures?.filter((l: VideoLectureItem) => l.watch_progress?.is_completed).length || 0;
+          const progressPercentage =
+            c.video_lectures && c.video_lectures.length > 0
+              ? Math.round((completedLecturesCount / c.video_lectures.length) * 100)
+              : 0;
 
           return {
             ...c,

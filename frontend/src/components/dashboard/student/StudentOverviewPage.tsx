@@ -5,7 +5,7 @@ import StudentOverviewEnrollmentRequestsAccordion from "@/components/dashboard/s
 import StudentOverviewHeader from "@/components/dashboard/student/StudentOverviewHeader";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
-import type { CourseDetail, EnrollmentRequestListItem } from "@/types/entities";
+import type { EnrollmentRequestListItem, StudentCourseItem } from "@/types/entities";
 
 const emptyActionClassName =
   "!shadow-[0_4px_14px_rgba(47,61,56,0.2)] hover:!shadow-[0_6px_18px_rgba(47,61,56,0.24)]";
@@ -31,7 +31,7 @@ export default function StudentOverviewPage({
   attendanceRate = 0,
 }: {
   name: string;
-  activeCourses: (CourseDetail & { course_progress: number })[];
+  activeCourses: StudentCourseItem[];
   enrollmentRequests: EnrollmentRequestListItem[];
   activeCoursesCount: number;
   pendingRequestsCount: number;

@@ -12,10 +12,12 @@ interface OnlineCourseCardProps {
 }
 
 function formatDuration(seconds: number) {
+  if (!seconds || seconds < 60) return "أقل من دقيقة";
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
-  if (h > 0) return `${h} ساعة ${m} دقيقة`;
-  return `${m} دقيقة`;
+  if (h > 0 && m > 0) return `${toHindiDigits(h)} ساعة ${toHindiDigits(m)} دقيقة`;
+  if (h > 0) return `${toHindiDigits(h)} ساعة`;
+  return `${toHindiDigits(m)} دقيقة`;
 }
 
 export default function OnlineCourseCard({ course, index = 0, linkTo = "landing" }: OnlineCourseCardProps) {
