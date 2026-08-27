@@ -41,7 +41,7 @@ export default function StudentOverviewPage({
 
   return (
     <div className="px-16 pt-15 max-[1000px]:px-8">
-      <h1 className="dashboard-greeting mb-8">السلام عليكم يا {name}</h1>
+      <h1 className="dashboard-greeting mb-8">لوحة تحكم {name}</h1>
 
       <StudentOverviewHeader
         activeCoursesCount={activeCoursesCount}
