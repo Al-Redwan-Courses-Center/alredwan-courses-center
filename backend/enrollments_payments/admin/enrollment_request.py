@@ -8,7 +8,7 @@ from django.db.models import Count
 from django import forms
 from courses.models import Course
 from courses_online.models import OnlineCourse
-from payments.models import Payment
+from enrollments_payments.models import Payment
 
 from core.utils import ExcelExportMixin
 from enrollments_payments.models.enrollment_request import (
