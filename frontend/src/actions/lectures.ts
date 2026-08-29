@@ -3,6 +3,8 @@
 import { apiRequest, getAuthApiClient, unwrapPaginated } from "@/lib/api";
 import type { PaginatedResponse, TodaysLecturesResponse } from "@/types/config";
 import type { LectureDetail, LectureListItem } from "@/types/entities";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export async function getLecturesByCourseId(courseId: string) {
   return apiRequest("Failed to get lectures: ", async () => {
@@ -45,4 +47,50 @@ export async function getInstructorTodaysLectures() {
     },
     null,
   );
+}
+
+export async function updateLecture(lectureId: number, payload: Record<string, any>) {
+  try {
+    const client = await getAuthApiClient();
+
+    const response = await client.patch(
+      `/api/courses/lectures/${lectureId}/edit/`,
+      payload,
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    revalidatePath(`/dashboard/lectures/${lectureId}`);
+    revalidatePath("/dashboard/(instructor)/todays-schedule");
+    revalidatePath("/dashboard/courses");
+    revalidatePath("/dashboard/my-courses");
+
+    return { success: true, data: response.data };
+  } catch (error: any) {
+    console.error("❌ Lecture Update Error:", error);
+
+    let message = "حدث خطأ أثناء تعديل المحاضرة";
+    if (error.response) {
+      console.error("📦 Response data:", error.response.data);
+      const data = error.response.data;
+
+      if (typeof data === 'string') {
+        message = data;
+      } else if (data.detail) {
+        message = data.detail;
+      } else if (data.message) {
+        message = data.message;
+      } else if (data.non_field_errors) {
+        message = data.non_field_errors[0];
+      } else {
+        // البحث عن أول حقل به خطأ
+        for (const field of ['title', 'day', 'start_time', 'end_time', 'status']) {
+          if (data[field] && Array.isArray(data[field]) && data[field].length > 0) {
+            message = data[field][0];
+            break;
+          }
+        }
+      }
+    }
+    return { success: false, message };
+  }
 }
