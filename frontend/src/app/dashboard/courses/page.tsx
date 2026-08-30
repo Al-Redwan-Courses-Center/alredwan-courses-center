@@ -21,11 +21,7 @@ export default async function Page() {
             </div>
           }
         >
-          <PublicCourseCatalog
-            physical={physicalCourses}
-            online={onlineCourses}
-            linkTo="dashboard"
-          />
+          <DashboardAllCoursesView courses={courses} />
         </Suspense>
       </div>
     </div>

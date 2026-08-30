@@ -10,7 +10,6 @@ from users.models import CustomUser, Instructor
 from parents.models import Parent, Child
 from courses.models import Course, Season, Lecture
 from courses.models.lecture import LectureStatus
-from courses_online.models import OnlineCourse
 from enrollments_payments.models import (
     Enrollment, EnrollmentStatus,
     EnrollmentRequest, EnrollmentRequestStatus,
@@ -111,28 +110,32 @@ class Milestone5PolymorphicRemediationTests(TestCase):
             is_active=True
         )
 
-        # Online Course
-        self.online_course = OnlineCourse.objects.create(
+        # Online Course (now physical_course2)
+        self.physical_course2 = Course.objects.create(
             name='Fullstack Web Development',
             description='Complete web development curriculum',
             instructor=self.instructor,
+            season=self.season,
             price=950.00,
-            is_active=True,
-            is_published=True
+            capacity=25,
+            num_lectures=4,
+            start_date=self.today,
+            end_date=self.today + timedelta(days=120),
+            is_active=True
         )
 
     def test_polymorphic_request_creation_for_online_course(self):
-        """Student submits an enrollment request for an online course with auto price."""
+        """Student submits an enrollment request for course 2 with auto price."""
         self.client.force_authenticate(user=self.student_user)
 
         response = self.client.post('/api/enrollment-requests/', {
-            'online_course': str(self.online_course.id),
+            'course': self.physical_course2.id,
             'payment_method': PaymentMethod.VODAFONE_CASH,
             'notes': 'Online registration with vodafone cash'
         })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = response.json()
-        self.assertEqual(data['online_course'], str(self.online_course.id))
+        self.assertEqual(data['course'], self.physical_course2.id)
         self.assertEqual(float(data['price']), 950.00)
 
         # Retrieve request detail
@@ -140,15 +143,15 @@ class Milestone5PolymorphicRemediationTests(TestCase):
         detail_resp = self.client.get(f'/api/enrollment-requests/{req_id}/')
         self.assertEqual(detail_resp.status_code, status.HTTP_200_OK)
         detail_data = detail_resp.json()
-        self.assertEqual(detail_data['course_name'], self.online_course.name)
+        self.assertEqual(detail_data['course_name'], self.physical_course2.name)
         self.assertEqual(float(detail_data['course_price']), 950.00)
 
     def test_polymorphic_request_creation_for_child_online_course(self):
-        """Parent submits an enrollment request for their child in an online course."""
+        """Parent submits an enrollment request for their child in a course."""
         self.client.force_authenticate(user=self.parent_user)
 
         response = self.client.post('/api/enrollment-requests/', {
-            'online_course': str(self.online_course.id),
+            'course': self.physical_course2.id,
             'child': str(self.child.id),
             'payment_method': PaymentMethod.INSTAPAY,
             'notes': 'Child online registration'
@@ -166,16 +169,8 @@ class Milestone5PolymorphicRemediationTests(TestCase):
         self.assertEqual(detail_data['participant_name'], f"{self.child.first_name} {self.child.last_name}")
 
     def test_polymorphic_request_rejection_on_invalid_combinations(self):
-        """Reject requests with both physical and online courses, or neither."""
+        """Reject requests with neither course provided."""
         self.client.force_authenticate(user=self.student_user)
-
-        # Both courses provided
-        res_both = self.client.post('/api/enrollment-requests/', {
-            'course': self.physical_course.id,
-            'online_course': str(self.online_course.id),
-            'payment_method': PaymentMethod.CASH
-        })
-        self.assertEqual(res_both.status_code, status.HTTP_400_BAD_REQUEST)
 
         # Neither course provided
         res_neither = self.client.post('/api/enrollment-requests/', {
@@ -194,15 +189,19 @@ class Milestone5PolymorphicRemediationTests(TestCase):
         self.client.force_authenticate(user=self.student_user)
 
         for i, method in enumerate(valid_methods):
-            course = OnlineCourse.objects.create(
+            course = Course.objects.create(
                 name=f'Course Method {i}',
                 instructor=self.instructor,
+                season=self.season,
                 price=100.00 + (i * 10),
-                is_active=True,
-                is_published=True
+                capacity=25,
+                num_lectures=4,
+                start_date=self.today,
+                end_date=self.today + timedelta(days=120),
+                is_active=True
             )
             response = self.client.post('/api/enrollment-requests/', {
-                'online_course': str(course.id),
+                'course': course.id,
                 'payment_method': method,
                 'price': str(course.price)
             })
@@ -213,10 +212,10 @@ class Milestone5PolymorphicRemediationTests(TestCase):
             )
 
     def test_admin_single_approval_for_online_course_request(self):
-        """Admin approves an online course request, creating an active online enrollment and payment."""
+        """Admin approves a course 2 request, creating an active enrollment and payment."""
         req = EnrollmentRequest.objects.create(
             student=self.student,
-            online_course=self.online_course,
+            course=self.physical_course2,
             price=Decimal('950.00'),
             payment_method=PaymentMethod.INSTAPAY,
             status=EnrollmentRequestStatus.PENDING
@@ -234,9 +233,8 @@ class Milestone5PolymorphicRemediationTests(TestCase):
         self.assertEqual(req.status, EnrollmentRequestStatus.ACCEPTED)
 
         # Active enrollment created
-        enrollment = Enrollment.objects.get(student=self.student, online_course=self.online_course)
+        enrollment = Enrollment.objects.get(student=self.student, course=self.physical_course2)
         self.assertEqual(enrollment.status, EnrollmentStatus.ACTIVE)
-        self.assertIsNone(enrollment.course)
 
         # Payment record created
         payment = Payment.objects.get(enrollment=enrollment)
@@ -246,7 +244,7 @@ class Milestone5PolymorphicRemediationTests(TestCase):
         self.assertEqual(payment.payer_student, self.student)
 
     def test_admin_bulk_approval_for_mixed_requests(self):
-        """Admin bulk-approves physical and online course requests simultaneously."""
+        """Admin bulk-approves physical course requests simultaneously."""
         req_phys = EnrollmentRequest.objects.create(
             student=self.student,
             course=self.physical_course,
@@ -256,7 +254,7 @@ class Milestone5PolymorphicRemediationTests(TestCase):
         )
         req_online = EnrollmentRequest.objects.create(
             child=self.child,
-            online_course=self.online_course,
+            course=self.physical_course2,
             price=Decimal('950.00'),
             payment_method=PaymentMethod.VODAFONE_CASH,
             status=EnrollmentRequestStatus.PENDING
@@ -276,7 +274,7 @@ class Milestone5PolymorphicRemediationTests(TestCase):
         self.assertEqual(req_online.status, EnrollmentRequestStatus.ACCEPTED)
 
         self.assertTrue(Enrollment.objects.filter(student=self.student, course=self.physical_course, status=EnrollmentStatus.ACTIVE).exists())
-        self.assertTrue(Enrollment.objects.filter(child=self.child, online_course=self.online_course, status=EnrollmentStatus.ACTIVE).exists())
+        self.assertTrue(Enrollment.objects.filter(child=self.child, course=self.physical_course2, status=EnrollmentStatus.ACTIVE).exists())
 
     def test_amount_paid_optimization_with_prefetched_payments(self):
         """Enrollment.amount_paid() uses prefetched payments relation without extra queries."""

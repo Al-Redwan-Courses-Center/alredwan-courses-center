@@ -117,7 +117,7 @@ class Enrollment(models.Model):
         verbose_name_plural = "الإلتحاقات"
         constraints = [
             models.CheckConstraint(
-                check=Q(child__isnull=False, student__isnull=True)
+                condition=Q(child__isnull=False, student__isnull=True)
                 | Q(child__isnull=True, student__isnull=False),
                 name="child_or_student_enrollment",
             ),

@@ -57,7 +57,6 @@ class PaymentStatusFilter(admin.SimpleListFilter):
             Max(
                 Case(
                     When(course__isnull=False, then=F('course__price')),
-                    When(online_course__isnull=False, then=F('online_course__price')),
                     default=Value(Decimal('0')),
                     output_field=DecimalField()
                 )
@@ -472,13 +471,6 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
                 '📚 {}</a>',
                 url, obj.course.name
             )
-        elif obj.online_course:
-            url = reverse('admin:courses_online_onlinecourse_change', args=[obj.online_course.pk])
-            return format_html(
-                '<a href="{}" style="color: #2980b9; text-decoration: none;">'
-                '💻 {}</a>',
-                url, obj.online_course.name
-            )
         return '-'
 
     @admin.display(description=_('الحالة'), ordering='status')
@@ -693,10 +685,10 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
     @admin.display(description=_('معلومات الدورة'))
     def get_course_info(self, obj):
         """Display detailed course info in edit form."""
-        target = obj.get_course_instance()
+        target = obj.course
         if not target:
             return '-'
-        prefix = '💻 الدورة الإلكترونية' if obj.online_course else '📚 الدورة'
+        prefix = '📚 الدورة'
         instructor = getattr(target, 'instructor', None) or '-'
         price = getattr(target, 'price', None) or 'مجاني'
         enrolled = getattr(target, 'enrolled_count', 0)
@@ -720,7 +712,7 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
     def get_payment_summary(self, obj):
         """Display payment summary with visual progress."""
         paid = obj.amount_paid()
-        target = obj.get_course_instance()
+        target = obj.course
         course_price = target.price if (target and target.price) else 0
         remaining = obj.remaining_amount()
         payments_count = obj.payments.count()

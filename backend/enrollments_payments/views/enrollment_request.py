@@ -84,7 +84,6 @@ class EnrollmentRequestListView(generics.ListAPIView):
         user = self.request.user
         queryset = EnrollmentRequest.objects.select_related(
             'course', 'course__instructor', 'course__instructor__user',
-            'online_course', 'online_course__instructor', 'online_course__instructor__user',
             'child', 'student', 'student__user'
         ).order_by('-created_at')
 
@@ -117,7 +116,6 @@ class EnrollmentRequestDetailView(generics.RetrieveAPIView):
         """Get queryset with related objects"""
         return EnrollmentRequest.objects.select_related(
             'course', 'course__instructor', 'course__instructor__user',
-            'online_course', 'online_course__instructor', 'online_course__instructor__user',
             'child', 'student', 'student__user',
             'parent', 'parent__user', 'processed_by'
         )

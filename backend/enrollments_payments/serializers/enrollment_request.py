@@ -171,7 +171,6 @@ class EnrollmentRequestListSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "course",
-            "online_course",
             "course_name",
             "course_price",
             "child_id",
@@ -227,7 +226,6 @@ class EnrollmentRequestDetailSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "course",
-            "online_course",
             "course_name",
             "course_description",
             "course_price",
@@ -317,7 +315,6 @@ class AdminEnrollmentRequestListSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "course",
-            "online_course",
             "course_name",
             "course_price",
             "season_name",

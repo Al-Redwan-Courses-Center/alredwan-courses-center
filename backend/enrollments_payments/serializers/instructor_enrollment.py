@@ -11,8 +11,6 @@ class InstructorEnrollmentListSerializer(serializers.ModelSerializer):
     course_name = serializers.SerializerMethodField()
     course_start_date = serializers.SerializerMethodField()
     course_end_date = serializers.SerializerMethodField()
-    online_course = serializers.PrimaryKeyRelatedField(read_only=True)
-    
     # Participant info
     participant_name = serializers.SerializerMethodField()
     participant_type = serializers.SerializerMethodField()
@@ -27,7 +25,7 @@ class InstructorEnrollmentListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enrollment
         fields = [
-            'id', 'course', 'online_course', 'course_name', 'course_start_date', 'course_end_date',
+            'id', 'course', 'course_name', 'course_start_date', 'course_end_date',
             'participant_name', 'participant_type', 'participant_phone',
             'status', 'status_display',
             'enrolled_at', 'completed_at',

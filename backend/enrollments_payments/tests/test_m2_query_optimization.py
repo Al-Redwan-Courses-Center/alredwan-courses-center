@@ -9,7 +9,6 @@ from users.models import CustomUser, Instructor
 from parents.models import Parent, Child
 from courses.models import Course, Season, Lecture
 from courses.models.lecture import LectureStatus
-from courses_online.models import OnlineCourse
 from enrollments_payments.models import Enrollment, EnrollmentStatus, Payment
 from enrollments_payments.admin.enrollment import PaymentStatusFilter
 
@@ -83,13 +82,16 @@ class Milestone2EnrollmentQueryOptimizationTests(TestCase):
             is_active=True
         )
 
-        self.online_course = OnlineCourse.objects.create(
+        self.physical_course2 = Course.objects.create(
             name='Python Bootcamp',
-            description='Online Python Course',
+            season=self.season,
             instructor=self.instructor,
-            price=600.00,
-            is_active=True,
-            is_published=True
+            price=Decimal('600.00'),
+            capacity=20,
+            num_lectures=4,
+            start_date=date(2026, 9, 1),
+            end_date=date(2026, 12, 31),
+            is_active=True
         )
 
         # Enrollments
@@ -99,8 +101,8 @@ class Milestone2EnrollmentQueryOptimizationTests(TestCase):
             status=EnrollmentStatus.ACTIVE
         )
 
-        self.online_enrollment = Enrollment.objects.create(
-            online_course=self.online_course,
+        self.phys_enrollment2 = Enrollment.objects.create(
+            course=self.physical_course2,
             child=self.child,
             status=EnrollmentStatus.ACTIVE
         )
@@ -121,7 +123,7 @@ class Milestone2EnrollmentQueryOptimizationTests(TestCase):
             processed_at=timezone.now()
         )
         self.payment3 = Payment.objects.create(
-            enrollment=self.online_enrollment,
+            enrollment=self.phys_enrollment2,
             payer_parent=self.parent,
             amount=Decimal('300.00'),
             status='paid',
@@ -167,7 +169,7 @@ class Milestone2EnrollmentQueryOptimizationTests(TestCase):
 
     def test_payment_status_filter_sql_annotations(self):
         # phys_enrollment is fully paid (1000/1000)
-        # online_enrollment is partial paid (300/600)
+        # phys_enrollment2 is partial paid (300/600)
         from django.test import RequestFactory
         factory = RequestFactory()
         
@@ -176,13 +178,13 @@ class Milestone2EnrollmentQueryOptimizationTests(TestCase):
         qs = filter_instance.queryset(request, Enrollment.objects.all())
         fully_paid_ids = list(qs.values_list('id', flat=True))
         self.assertIn(self.phys_enrollment.id, fully_paid_ids)
-        self.assertNotIn(self.online_enrollment.id, fully_paid_ids)
+        self.assertNotIn(self.phys_enrollment2.id, fully_paid_ids)
 
         request_partial = factory.get('/admin/enrollment/?payment_status=partial')
         filter_partial = PaymentStatusFilter(request_partial, request_partial.GET.copy(), Enrollment, None)
         qs_partial = filter_partial.queryset(request_partial, Enrollment.objects.all())
         partial_ids = list(qs_partial.values_list('id', flat=True))
-        self.assertIn(self.online_enrollment.id, partial_ids)
+        self.assertIn(self.phys_enrollment2.id, partial_ids)
         self.assertNotIn(self.phys_enrollment.id, partial_ids)
 
     def test_instructor_endpoints_polymorphic_integer_and_uuid_lookups(self):
@@ -195,24 +197,24 @@ class Milestone2EnrollmentQueryOptimizationTests(TestCase):
         self.assertEqual(len(phys_data['results']), 1)
         self.assertEqual(phys_data['results'][0]['course_name'], self.physical_course.name)
 
-        # 2. Online course enrollment list by UUID
-        resp_online = self.client.get(f'/api/instructor/courses/{self.online_course.id}/enrollments/')
+        # 2. Online course enrollment list by UUID (now physical_course2)
+        resp_online = self.client.get(f'/api/instructor/courses/{self.physical_course2.id}/enrollments/')
         self.assertEqual(resp_online.status_code, status.HTTP_200_OK)
         online_data = resp_online.json()
         self.assertEqual(len(online_data['results']), 1)
-        self.assertEqual(online_data['results'][0]['course_name'], self.online_course.name)
+        self.assertEqual(online_data['results'][0]['course_name'], self.physical_course2.name)
 
         # 3. Physical course stats
         resp_phys_stats = self.client.get(f'/api/instructor/courses/{self.physical_course.id}/enrollment-stats/')
         self.assertEqual(resp_phys_stats.status_code, status.HTTP_200_OK)
         self.assertEqual(resp_phys_stats.json()['course_id'], str(self.physical_course.id))
 
-        # 4. Online course stats
-        resp_online_stats = self.client.get(f'/api/instructor/courses/{self.online_course.id}/enrollment-stats/')
+        # 4. Online course stats (now physical_course2)
+        resp_online_stats = self.client.get(f'/api/instructor/courses/{self.physical_course2.id}/enrollment-stats/')
         self.assertEqual(resp_online_stats.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp_online_stats.json()['course_id'], str(self.online_course.id))
+        self.assertEqual(resp_online_stats.json()['course_id'], str(self.physical_course2.id))
 
-        # 5. All instructor enrollments across physical and online
+        # 5. All instructor enrollments across physical and online (now physical_course2)
         resp_all = self.client.get('/api/instructor/enrollments/')
         self.assertEqual(resp_all.status_code, status.HTTP_200_OK)
         all_data = resp_all.json()

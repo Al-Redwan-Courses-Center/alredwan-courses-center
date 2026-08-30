@@ -81,8 +81,6 @@ class AdminEnrollmentRequestListView(generics.ListAPIView):
         return EnrollmentRequest.objects.select_related(
             'course', 'course__season', 'course__instructor', 
             'course__instructor__user',
-            'online_course', 'online_course__instructor',
-            'online_course__instructor__user',
             'parent', 'parent__user',
             'student', 'student__user',
             'child', 'processed_by'
@@ -103,8 +101,6 @@ class AdminEnrollmentRequestDetailView(generics.RetrieveAPIView):
         return EnrollmentRequest.objects.select_related(
             'course', 'course__season', 'course__instructor',
             'course__instructor__user',
-            'online_course', 'online_course__instructor',
-            'online_course__instructor__user',
             'parent', 'parent__user',
             'student', 'student__user',
             'child', 'processed_by'
@@ -123,7 +119,7 @@ class AdminEnrollmentRequestUpdateView(generics.UpdateAPIView):
     http_method_names = ['patch']  # Only allow PATCH, not PUT
 
     def get_queryset(self):
-        return EnrollmentRequest.objects.select_related('course', 'online_course')
+        return EnrollmentRequest.objects.select_related('course')
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -142,7 +138,7 @@ class AdminEnrollmentRequestApproveView(APIView):
     def get_object(self, id):
         try:
             return EnrollmentRequest.objects.select_related(
-                'course', 'online_course', 'parent', 'student', 'child'
+                'course', 'parent', 'student', 'child'
             ).get(id=id)
         except EnrollmentRequest.DoesNotExist:
             return None
@@ -261,7 +257,7 @@ class AdminBulkApproveView(APIView):
 
         enrollment_requests = EnrollmentRequest.objects.filter(
             id__in=request_ids
-        ).select_related('course', 'online_course', 'parent', 'student', 'child')
+        ).select_related('course', 'parent', 'student', 'child')
 
         for er in enrollment_requests:
             # Skip if not in valid status
