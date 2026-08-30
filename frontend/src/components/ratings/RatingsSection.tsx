@@ -36,8 +36,18 @@ interface RatingsStatistics {
 
 interface RatingsData {
   ratings: {
-    student_ratings: RatingItem[];
-    parent_ratings: RatingItem[];
+    student_ratings: {
+      count: number;
+      next: string | null;
+      previous: string | null;
+      results: RatingItem[];
+    };
+    parent_ratings: {
+      count: number;
+      next: string | null;
+      previous: string | null;
+      results: RatingItem[];
+    };
   };
   statistics: RatingsStatistics;
 }
@@ -82,13 +92,14 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
   }
 
   if (!data) return null;
+  console.log(data.ratings.student_ratings);
 
   const allReviews: DisplayReview[] = [
-    ...data.ratings.student_ratings.map((r: RatingItem) => ({
+    ...data.ratings.student_ratings.results.map((r: RatingItem) => ({
       ...r,
       type: "student" as const,
     })),
-    ...data.ratings.parent_ratings.map((r: RatingItem) => ({
+    ...data.ratings.parent_ratings.results.map((r: RatingItem) => ({
       ...r,
       type: "parent" as const,
     })),

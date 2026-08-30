@@ -4,14 +4,16 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('attendance', '0008_websocket_ticket'),
+        ("attendance", "0008_websocket_ticket"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='supervisorschedule',
-            options={'verbose_name': 'سجل حضور مدرس/مشرف', 'verbose_name_plural': 'جداول حضور المدرسين/المشرفين'},
+            name="supervisorschedule",
+            options={
+                "verbose_name": "سجل حضور مدرس/مشرف",
+                "verbose_name_plural": "جداول حضور المدرسين/المشرفين",
+            },
         ),
     ]
