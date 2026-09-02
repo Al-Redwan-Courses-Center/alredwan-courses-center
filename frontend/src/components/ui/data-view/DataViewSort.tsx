@@ -59,6 +59,23 @@ export default function DataViewSortLegacy() {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="bg-white rounded-12 shadow-xl border border-stone-100 py-4 min-w-[160px] z-150">
+        {currentSort && (
+          <DropdownMenuItem
+            onClick={() =>
+              mutateSearchParams([
+                {
+                  key: "sort-by",
+                  val: "",
+                },
+              ])
+            }
+            className={cn(dropdownItemStyles, "text-red-500 font-bold border-b border-stone-100")}
+          >
+            <div className="flex items-center justify-between w-full gap-8">
+              <span>إلغاء الترتيب (الافتراضي)</span>
+            </div>
+          </DropdownMenuItem>
+        )}
         {sortOptions.map((option, i) => {
           const isActive =
             currentSort && currentSort.startsWith(option.fieldName);

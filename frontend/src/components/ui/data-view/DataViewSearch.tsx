@@ -9,73 +9,97 @@ import { cn, debounceFn } from "@/lib/utils";
 interface DataViewSearchLegacyProps {
   isFocused?: boolean;
   setIsFocused?: (focused: boolean) => void;
+  placeholder?: string;
 }
 
 export default function DataViewSearchLegacy({
   isFocused,
   setIsFocused,
+  placeholder = "ابحث عن دورة أو محاضرة...",
 }: DataViewSearchLegacyProps) {
   const { searchParams, mutateSearchParams } = useMutateSearchParams();
-  const [searchQuery, setSearchQuery] = useState(
-    searchParams.get("search") || "",
-  );
+  const currentSearchParam = searchParams.get("search") || "";
+  const [searchQuery, setSearchQuery] = useState(currentSearchParam);
+  const [prevSearchParam, setPrevSearchParam] = useState(currentSearchParam);
+
+  const [internalFocused, setInternalFocused] = useState(false);
+  const focused = isFocused !== undefined ? isFocused : internalFocused;
+  const setFocused = setIsFocused || setInternalFocused;
+
+  if (prevSearchParam !== currentSearchParam) {
+    setPrevSearchParam(currentSearchParam);
+    setSearchQuery(currentSearchParam);
+  }
 
   const debouncedSearch = useMemo(
     () =>
       debounceFn(
-        (val: string) => mutateSearchParams([{ key: "search", val }]),
-        500,
+        (val: string) =>
+          mutateSearchParams(
+            [
+              { key: "search", val },
+              { key: "page", val: 1 },
+            ],
+            true,
+          ),
+        300,
       ),
     [mutateSearchParams],
   );
 
-  return (
-    <>
-      {/* 1. الظل الخلفي اللطيف (Soft Dark Backdrop) */}
-      {isFocused && (
-        <div
-          onClick={() => setIsFocused?.(false)}
-          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px] transition-all duration-300"
-        />
-      )}
+  const handleExecuteSearch = (val: string) => {
+    mutateSearchParams(
+      [
+        { key: "search", val },
+        { key: "page", val: 1 },
+      ],
+      true,
+    );
+  };
 
-      {/* 2. حقل البحث مع تأثير التوهج والتوسع */}
-      <div
-        className={cn(
-          "relative z-50 transition-all duration-300 ease-out origin-right",
-          isFocused ? "max-w-full flex-1" : "max-w-[400px] flex-1",
+  return (
+    <form
+      className="relative w-full"
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleExecuteSearch(searchQuery);
+      }}
+    >
+      <Input
+        id="searchbar"
+        unstyled
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        icon={
+          <button
+            type="submit"
+            aria-label="البحث"
+            onClick={() => handleExecuteSearch(searchQuery)}
+            className="absolute top-1/2 left-6 z-10 flex -translate-y-1/2 cursor-pointer items-center justify-center p-2 transition-opacity hover:opacity-80"
+          >
+            <SearchIcon
+              className={cn(
+                "h-[20px] w-[20px] transition-colors duration-200",
+                focused ? "text-olive-600" : "text-stone-400",
+              )}
+            />
+          </button>
+        }
+        iconAlignment="end"
+        placeholder={placeholder}
+        inputStyles={cn(
+          "h-[48px] w-full rounded-full border border-stone-200 bg-white pr-6 pl-14 text-[1.5rem] text-stone-800 shadow-sm transition-all duration-200 placeholder:text-[1.4rem] placeholder:text-stone-400 focus:outline-none md:text-[1.6rem]",
+          focused
+            ? "border-olive-500 shadow-md ring-2 ring-olive-400/25"
+            : "hover:border-stone-300",
         )}
-      >
-        <Input
-          id="searchbar"
-          unstyled
-          onFocus={() => setIsFocused?.(true)}
-          icon={
-            <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center justify-center">
-              <SearchIcon
-                className={cn(
-                  "w-[24px] h-[24px] transition-colors duration-300",
-                  isFocused ? "text-olive-600" : "text-stone-400",
-                )}
-              />
-            </div>
-          }
-          iconAlignment="end"
-          placeholder="ابحث عن دورة أو محاضرة..."
-          inputStyles={cn(
-            "w-full h-[50px] rounded-full bg-white border transition-all duration-300 text-[1.2rem] mobile-lg:text-[1.6rem] mobile:text-[2rem] px-20 flex-1 pl-14",
-            isFocused
-              ? "border-olive-500 shadow-[0_0_20px_rgba(128,128,0,0.35)] ring-2 ring-olive-400/40"
-              : "border-stone-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)]",
-          )}
-          wrapperStyles="w-full relative"
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            debouncedSearch(e.target.value);
-          }}
-          value={searchQuery}
-        />
-      </div>
-    </>
+        wrapperStyles="w-full relative"
+        onChange={(e) => {
+          setSearchQuery(e.target.value);
+          debouncedSearch(e.target.value);
+        }}
+        value={searchQuery}
+      />
+    </form>
   );
 }

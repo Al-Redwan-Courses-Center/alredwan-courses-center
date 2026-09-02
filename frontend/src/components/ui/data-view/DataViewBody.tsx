@@ -27,7 +27,7 @@ export default function DataViewBodyLegacy<T>({
     return (
       <div
         className={cn(
-          "grid grid-cols-4 laptop-sm:grid-cols-3 tablet:grid-cols-2 mobile-lg:grid-cols-1 gap-20 tablet:gap-10 p-16 mobile-lg:p-8 tablet:pe-8",
+          "grid grid-cols-4 laptop-sm:grid-cols-3 tablet:grid-cols-2 max-sm:flex max-sm:w-full max-sm:overflow-x-auto max-sm:touch-pan-x max-sm:pb-4 gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-8",
           className,
         )}
       >
@@ -36,7 +36,7 @@ export default function DataViewBodyLegacy<T>({
     );
 
   return (
-    <div className={cn("flex flex-col gap-6", className)}>
+    <div className={cn("flex w-full min-w-max flex-col gap-6", className)}>
       {data.map(render[layout])}
     </div>
   );
