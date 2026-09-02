@@ -16,7 +16,6 @@ export const authConfig: AuthOptions = {
         password: {},
       },
       async authorize(credentials) {
-        console.log("NextAuth Authorize started with credentials:", JSON.stringify(credentials));
         try {
           const tokenRes = await publicApiClient.post<{
             access: string;
@@ -27,7 +26,6 @@ export const authConfig: AuthOptions = {
             data: { access, refresh },
           } = tokenRes;
 
-          console.log("Token response success. Access token exists:", !!access);
           if (!access || !refresh) return null;
 
           const userRes = await publicApiClient.get<UserEntity>(
@@ -40,7 +38,6 @@ export const authConfig: AuthOptions = {
           );
 
           const user: UserEntity = userRes.data;
-          console.log("Fetched user data successfully:", JSON.stringify(user));
 
           const { exp } = jwtDecode(access);
 
@@ -76,9 +73,15 @@ export const authConfig: AuthOptions = {
           user.exp = exp || Date.now();
           return user;
         } catch (error: any) {
-          console.error("NextAuth authorize failed. Error message:", error.message);
+          console.error(
+            "NextAuth authorize failed. Error message:",
+            error.message,
+          );
           if (error.response) {
-            console.error("Response error data:", JSON.stringify(error.response.data));
+            console.error(
+              "Response error data:",
+              JSON.stringify(error.response.data),
+            );
             console.error("Response error status:", error.response.status);
           }
           return null;
