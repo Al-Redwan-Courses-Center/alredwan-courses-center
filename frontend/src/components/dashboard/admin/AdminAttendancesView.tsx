@@ -345,14 +345,16 @@ function FilterBar({
   const dateParam =
     searchParams.get("date") || format(new Date(), "yyyy-MM-dd");
   const [localDate, setLocalDate] = useState(dateParam);
+  const [prevDateParam, setPrevDateParam] = useState(dateParam);
+
+  if (prevDateParam !== dateParam) {
+    setPrevDateParam(dateParam);
+    setLocalDate(dateParam);
+  }
 
   const status = searchParams.get("status") || "";
   const attendanceType = searchParams.get("attendance_type") || "";
   const season = searchParams.get("season") || "";
-
-  useEffect(() => {
-    setLocalDate(dateParam);
-  }, [dateParam]);
 
   return (
     <div className="mb-14 flex flex-wrap items-center gap-6 max-[1000px]:flex-col max-[1000px]:items-stretch">
@@ -363,7 +365,10 @@ function FilterBar({
           placeholder="ابحث هنا..."
           defaultValue={searchParams.get("search") || ""}
           onChange={(e) =>
-            mutateSearchParams([{ key: "search", val: e.target.value }])
+            mutateSearchParams([
+              { key: "search", val: e.target.value },
+              { key: "page", val: 1 },
+            ])
           }
           className="flex-1 bg-transparent text-[1.8rem] placeholder:font-semibold placeholder:text-gray-500 focus:outline-none"
         />
@@ -597,12 +602,15 @@ export default function AdminAttendancesView({
 }) {
   const [attendances, setAttendances] =
     useState<StaffAttendanceListItem[]>(initialAttendances);
+  const [prevInitial, setPrevInitial] =
+    useState<StaffAttendanceListItem[]>(initialAttendances);
 
-  useEffect(() => {
+  if (prevInitial !== initialAttendances) {
+    setPrevInitial(initialAttendances);
     setAttendances(initialAttendances);
-  }, [initialAttendances]);
+  }
+
   const searchParamsHook = useSearchParams();
-  const searchQuery = searchParamsHook.get("search")?.toLowerCase() || "";
   const [ratingModal, setRatingModal] = useState<{
     isOpen: boolean;
     attendance?: StaffAttendanceListItem;

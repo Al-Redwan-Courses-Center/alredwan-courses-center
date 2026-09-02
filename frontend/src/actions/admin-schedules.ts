@@ -105,8 +105,8 @@ export async function getAllSchedules(params?: {
 
     // We fetch courses and supervisor schedules
     const [coursesRes, supervisorRes] = await Promise.all([
-      apiClient.get("/api/courses/?page_size=100", { params }),
-      apiClient.get("/api/attendance/schedules/?page_size=100", { params }),
+      apiClient.get("/api/courses/?page_size=1000", { params }),
+      apiClient.get("/api/attendance/schedules/?page_size=1000", { params }),
     ]);
 
     const coursesData = unwrapPaginated<CourseListItem>(coursesRes.data);
@@ -297,7 +297,7 @@ export async function deleteSupervisionSchedule(scheduleId: number) {
 export async function getOnlySupervisorSchedules(params?: { instructor?: number; day_of_week?: number }) {
   try {
     const apiClient = await getAuthApiClient();
-    const response = await apiClient.get("/api/attendance/schedules/?page_size=100", { params });
+    const response = await apiClient.get("/api/attendance/schedules/?page_size=1000", { params });
     return unwrapPaginated<SupervisorSchedule>(response.data);
   } catch (error: unknown) {
     if (

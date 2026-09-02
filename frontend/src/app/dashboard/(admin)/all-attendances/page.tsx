@@ -20,6 +20,7 @@ export default async function Page(props: {
       status: searchParams.status as string,
       attendance_type: searchParams.attendance_type as string,
       season: searchParams.season ? Number(searchParams.season) : undefined,
+      search: typeof searchParams.search === "string" ? searchParams.search : undefined,
     }),
   ]);
 
