@@ -4,5 +4,5 @@ export {
   logApiError,
   parseApiFieldErrors,
 } from "@/lib/api/errors";
-export { unwrapPaginated } from "@/lib/api/pagination";
+export { toPaginatedResponse, unwrapPaginated } from "@/lib/api/pagination";
 export { apiRequest } from "@/lib/api/request";
