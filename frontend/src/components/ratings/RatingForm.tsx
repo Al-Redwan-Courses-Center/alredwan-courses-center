@@ -39,10 +39,12 @@ const RatingForm: React.FC<RatingFormProps> = ({
       const fetchCourses = async () => {
         setLoadingCourses(true);
         try {
-          const fetchedCourses = await getInstructorCourses(String(id));
-          setCourses(fetchedCourses);
-          if (fetchedCourses.length > 0) {
-            setSelectedCourseId(fetchedCourses[0].id);
+          const fetchedCourses = await getInstructorCourses(String(id), {
+            page_size: 100,
+          });
+          setCourses(fetchedCourses.results);
+          if (fetchedCourses.results.length > 0) {
+            setSelectedCourseId(fetchedCourses.results[0].id);
           }
         } catch (error) {
           console.error("Error fetching instructor courses:", error);

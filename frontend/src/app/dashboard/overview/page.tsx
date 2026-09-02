@@ -53,6 +53,7 @@ export default async function Page() {
         activeCoursesCount={activeCoursesCount}
         pendingRequestsCount={pendingRequestsCount}
         attendanceRate={attendanceRate}
+        role={"student"}
       />
     );
   }

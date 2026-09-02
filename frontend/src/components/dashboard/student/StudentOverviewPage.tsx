@@ -5,7 +5,11 @@ import StudentOverviewEnrollmentRequestsAccordion from "@/components/dashboard/s
 import StudentOverviewHeader from "@/components/dashboard/student/StudentOverviewHeader";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
-import type { EnrollmentRequestListItem, StudentCourseItem } from "@/types/entities";
+import type {
+  EnrollmentRequestListItem,
+  StudentCourseItem,
+} from "@/types/entities";
+import type { UserEntity } from "@/types/auth";
 
 const emptyActionClassName =
   "!shadow-[0_4px_14px_rgba(47,61,56,0.2)] hover:!shadow-[0_6px_18px_rgba(47,61,56,0.24)]";
@@ -24,24 +28,32 @@ function BrowseCoursesButton() {
 
 export default function StudentOverviewPage({
   name,
+  parentName,
   activeCourses = [],
   enrollmentRequests = [],
   activeCoursesCount = 0,
   pendingRequestsCount = 0,
   attendanceRate = 0,
+  role,
 }: {
   name: string;
+  parentName?: string;
   activeCourses: StudentCourseItem[];
   enrollmentRequests: EnrollmentRequestListItem[];
   activeCoursesCount: number;
   pendingRequestsCount: number;
   attendanceRate: number;
+  role: UserEntity["role"];
 }) {
   const overviewCourses = activeCourses.slice(0, 2);
 
   return (
-    <div className="px-16 pt-15 max-[1000px]:px-8">
-      <h1 className="dashboard-greeting mb-8">لوحة تحكم {name}</h1>
+    <div className="w-full overflow-x-auto px-16 pt-15 max-[1000px]:px-4 sm:max-[1000px]:px-8">
+      <h1 className="dashboard-greeting mb-8">
+        {role === "parent" && parentName
+          ? `السلام عليكم يا ${parentName} (لوحة متابعة الطالب: ${name})`
+          : `السلام عليكم يا ${name}`}
+      </h1>
 
       <StudentOverviewHeader
         activeCoursesCount={activeCoursesCount}
@@ -49,14 +61,19 @@ export default function StudentOverviewPage({
         attendanceRate={attendanceRate}
       />
 
-      <div className="grid grid-cols-2 gap-x-29 gap-y-12 max-[1000px]:grid-cols-1">
+      <div className="grid min-w-0 grid-cols-2 gap-x-12 gap-y-12 xl:gap-x-29 max-[1000px]:grid-cols-1">
         <div className="flex flex-col gap-6">
           <h2 className="dashboard-section-title">آخر الكورسات المسجلة</h2>
 
           <div className="hidden min-[1000px]:flex min-[1000px]:grow min-[1000px]:items-center min-[1000px]:gap-12">
             {overviewCourses.length > 0 ? (
               overviewCourses.map((c, i) => (
-                <StudentCourseCard key={c.id} course={c} index={i} />
+                <StudentCourseCard
+                  key={c.id}
+                  course={c}
+                  index={i}
+                  role={role}
+                />
               ))
             ) : (
               <EmptyState
@@ -90,7 +107,7 @@ export default function StudentOverviewPage({
           </div>
 
           <div className="flex flex-col ps-0! *:ps-29 max-[1000px]:*:ps-0 min-[1000px]:hidden">
-            <h4 className="text-olive-700 mb-6 text-5xl font-bold">
+            <h4 className="mb-6 text-5xl font-bold text-olive-700">
               آخر الطلبات
             </h4>
             {enrollmentRequests.length > 0 ? (

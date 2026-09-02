@@ -1,3 +1,5 @@
+"use client";
+import { usePathname } from "next/navigation";
 import { parseISO } from "date-fns";
 import Image from "next/image";
 import CourseImage from "@/assets/course-img.jpg";
@@ -8,15 +10,34 @@ import ItemCard from "@/components/ui/ItemCard";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { StudentPhysicalCourse } from "@/types/entities";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
+import type { UserEntity } from "@/types/auth";
 
 export default function StudentCourseCard({
   course,
   index,
+  role,
+  childId,
 }: {
   course: StudentPhysicalCourse;
   index: number;
+  role: UserEntity["role"];
+  childId?: string;
 }) {
-  const targetHref = `/dashboard/my-courses/${course.id}`;
+  const pathname = usePathname();
+  const activeChildId =
+    childId ||
+    (role === "parent" && pathname.startsWith("/dashboard/my-children/")
+      ? pathname.split("/")[3]
+      : undefined);
+
+  let targetHref = `/dashboard/my-courses/${course.id}`;
+  if (role === "parent" && activeChildId) {
+    if (pathname.startsWith("/dashboard/my-children/")) {
+      targetHref = `/dashboard/my-children/${activeChildId}/courses/${course.id}`;
+    } else {
+      targetHref = `/dashboard/my-courses/${course.id}?child=${activeChildId}`;
+    }
+  }
   const imageSrc = course.image || CourseImage;
   const tags = course.tags || [];
   const startDate = course.start_date;
@@ -77,7 +98,7 @@ export default function StudentCourseCard({
         </div>
       )}
 
-      <ul className="[&_svg]:text-olive-500 [&>li]:courses-center mb-7 flex flex-col gap-3 [&_svg]:h-auto [&_svg]:w-[1.525rem] [&>li]:flex [&>li]:gap-2">
+      <ul className="[&>li]:courses-center mb-7 flex flex-col gap-3 [&_svg]:h-auto [&_svg]:w-[1.525rem] [&_svg]:text-olive-500 [&>li]:flex [&>li]:gap-2">
         {startDate && (
           <li>
             <CalendarIcon />
