@@ -4,9 +4,22 @@ import { apiRequest, getAuthApiClient, unwrapPaginated } from "@/lib/api";
 import type { PaginatedResponse, TodaysLecturesResponse } from "@/types/config";
 import type { LectureDetail, LectureListItem } from "@/types/entities";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
-export async function getLecturesByCourseId(courseId: string) {
+export async function getLecturesByCourseId(
+  courseId: string,
+  details: {
+    role: string;
+    childId?: string;
+  },
+  params?: {
+    page?: number;
+    page_size?: number;
+    search?: string;
+  },
+) {
+  if (details.role === "parent" && !details.childId) {
+    return [];
+  }
   return apiRequest(
     "Failed to get lectures: ",
     async () => {
@@ -14,7 +27,15 @@ export async function getLecturesByCourseId(courseId: string) {
 
       const { data } = await apiClient.get<
         PaginatedResponse<LectureListItem> | LectureListItem[]
-      >(`/api/courses/${courseId}/lectures/?page_size=100`);
+      >(
+        `/api/courses/${courseId}/${details.role == "instructor" ? "" : details.role}/${details.childId ? details.childId + "/" : ""}lectures/`,
+        {
+          params: {
+            page_size: params?.page_size ?? 100,
+            ...params,
+          },
+        },
+      );
 
       return unwrapPaginated(data);
     },
