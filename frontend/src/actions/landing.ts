@@ -13,7 +13,7 @@ export async function getLandingPageInstructors(): Promise<
   return apiRequest("Failed to load landing page instructors:", async () => {
     const { data } = await publicApiClient.get<
       PaginatedResponse<LandingPageInstructor> | LandingPageInstructor[]
-    >("/api/users/landingpageinstructors/");
+    >("/api/users/landingpageinstructors/?page_size=100");
 
     return unwrapPaginated(data);
   }, []);
