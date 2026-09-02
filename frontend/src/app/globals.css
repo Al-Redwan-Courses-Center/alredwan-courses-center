@@ -51,7 +51,7 @@
 }
 
 @utility heading-2 {
-  @apply text-olive-500 text-heading-2 text-shadow-soft font-bold;
+  @apply text-heading-2 text-shadow-soft font-bold text-olive-500;
 }
 
 @utility title-block {
@@ -63,11 +63,11 @@
 }
 
 @utility dashboard-greeting {
-  @apply text-olive-700 font-medad text-6xl;
+  @apply font-medad text-6xl text-olive-700;
 }
 
 @utility dashboard-section-title {
-  @apply text-olive-700 text-5xl font-bold;
+  @apply text-5xl font-bold text-olive-700;
 }
 
 @custom-variant desktop-sm (@media (max-width: 1600px));
@@ -90,6 +90,14 @@
 @media only screen and (max-width: 550px) {
   :root {
     font-size: 50%;
+  }
+  #whatsapp-widget {
+    margin-bottom: 50px;
+  }
+}
+@media only screen and (max-width: 900px) {
+  #whatsapp-widget {
+    margin-bottom: 70px;
   }
 }
 
