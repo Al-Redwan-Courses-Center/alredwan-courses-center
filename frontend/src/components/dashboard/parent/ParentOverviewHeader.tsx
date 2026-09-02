@@ -18,17 +18,19 @@ function DataPoint({
   iconClassName?: string;
 }) {
   return (
-    <div className="text-olive-300 not-first:border-olive-200 separators-[4.25rem] grid grid-cols-[auto_1fr] grid-rows-2 gap-x-7 gap-y-4 text-4xl font-bold">
+    <div className="grid grid-cols-[auto_1fr] grid-rows-2 gap-x-5 gap-y-2 text-2xl font-bold text-olive-300 min-[1000px]:gap-x-7 min-[1000px]:gap-y-4 min-[1000px]:text-4xl sm:text-3xl">
       <Icon
         className={cn(
-          "drop-shadow-soft row-span-full h-20 w-auto self-center max-[1000px]:row-span-1 max-[1000px]:row-start-2 max-[1000px]:h-10",
+          "drop-shadow-soft row-span-full h-14 w-auto self-center min-[1000px]:h-20",
           iconClassName,
         )}
       />
-      <span className="self-end max-[1000px]:col-span-2">{label}</span>
-      <span className="text-olive-500 whitespace-nowrap tabular-nums">
+      <span className="self-end text-lg opacity-90 min-[1000px]:text-2xl sm:text-xl">
+        {label}
+      </span>
+      <span className="text-3xl whitespace-nowrap text-olive-500 tabular-nums min-[1000px]:text-5xl sm:text-4xl">
         {value}
-        {suffix && <span className="ms-1">{suffix}</span>}
+        {suffix && <span className="ms-1.5 text-xl sm:text-2xl">{suffix}</span>}
       </span>
     </div>
   );
@@ -50,7 +52,7 @@ export default function ParentOverviewHeader({
       label: "عدد الأطفال",
       icon: PeopleIcon,
       value: myChildrenCount,
-      iconClassName: "h-auto w-28",
+      iconClassName: "h-auto w-20 min-[1000px]:w-28",
     },
     {
       label: "الطلبات المعلقة",
@@ -66,7 +68,7 @@ export default function ParentOverviewHeader({
   ];
 
   return (
-    <div className="mb-14 grid h-auto w-full grid-cols-[repeat(3,minmax(0,auto))] gap-y-8 rounded-[0_0_1.5951rem_1.5951rem] bg-[linear-gradient(164deg,#EDF0ED_12.23%,#F8F9F8_88.43%)] px-8 py-8 shadow-inner min-[1000px]:h-76 min-[1000px]:w-6/10 min-[1000px]:grid-cols-[repeat(3,minmax(0,auto))] min-[1000px]:gap-y-0 min-[1000px]:px-14 min-[1000px]:py-10">
+    <div className="mb-14 grid h-auto w-full max-w-5xl grid-cols-1 gap-y-8 rounded-[0_0_1.5951rem_1.5951rem] bg-[linear-gradient(164deg,#EDF0ED_12.23%,#F8F9F8_88.43%)] px-6 py-8 shadow-inner min-[1000px]:grid-cols-3 min-[1000px]:gap-x-8 min-[1000px]:px-12 min-[1000px]:py-10">
       {dataPoints.map((dataPoint) => (
         <DataPoint
           key={dataPoint.label}
