@@ -107,7 +107,8 @@ class Milestone5PolymorphicRemediationTests(TestCase):
             num_lectures=4,
             start_date=self.today,
             end_date=self.today + timedelta(days=120),
-            is_active=True
+            is_active=True,
+            for_adults=False,
         )
 
         # Online Course (now physical_course2)
@@ -121,7 +122,8 @@ class Milestone5PolymorphicRemediationTests(TestCase):
             num_lectures=4,
             start_date=self.today,
             end_date=self.today + timedelta(days=120),
-            is_active=True
+            is_active=True,
+            for_adults=False,
         )
 
     def test_polymorphic_request_creation_for_online_course(self):

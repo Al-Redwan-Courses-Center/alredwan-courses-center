@@ -156,6 +156,15 @@ class Enrollment(models.Model):
 
     def amount_paid(self):
         """Calculate total amount paid for this enrollment."""
+        if (
+            hasattr(self, "_prefetched_objects_cache")
+            and "payments" in self._prefetched_objects_cache
+        ):
+            paid_payments = [
+                p.amount for p in self.payments.all() if p.status == "paid"
+            ]
+            return sum(paid_payments) if paid_payments else 0
+
         qs = self.get_payments().filter(status="paid")
         total = qs.aggregate(total=models.Sum("amount"))["total"] or 0
         return total
@@ -231,10 +240,20 @@ class Enrollment(models.Model):
         if self.course.num_lectures:
             from courses.models.lecture import LectureStatus
 
-            total_lectures = self.course.lectures.count()
-            completed_lectures = self.course.lectures.filter(
-                status=LectureStatus.COMPLETED
-            ).count()
+            if (
+                hasattr(self.course, "_prefetched_objects_cache")
+                and "lectures" in self.course._prefetched_objects_cache
+            ):
+                lectures = list(self.course.lectures.all())
+                total_lectures = len(lectures)
+                completed_lectures = sum(
+                    1 for l in lectures if l.status == LectureStatus.COMPLETED
+                )
+            else:
+                total_lectures = self.course.lectures.count()
+                completed_lectures = self.course.lectures.filter(
+                    status=LectureStatus.COMPLETED
+                ).count()
 
             # If we have the expected number of lectures and all are completed
             if (
