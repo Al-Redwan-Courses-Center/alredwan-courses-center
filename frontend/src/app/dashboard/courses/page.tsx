@@ -3,9 +3,25 @@ import { getUser } from "@/actions/auth";
 import { getAllCourses } from "@/actions/courses";
 import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
 
-export default async function Page() {
-  const { first_name } = await getUser();
-  const courses = await getAllCourses();
+export default async function Page(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
+  const page = searchParams.page ? Number(searchParams.page) : 1;
+  const search =
+    typeof searchParams.search === "string" ? searchParams.search : undefined;
+  const season =
+    typeof searchParams.season === "string" ? searchParams.season : undefined;
+
+  const [{ first_name }, paginatedCourses] = await Promise.all([
+    getUser(),
+    getAllCourses({
+      page,
+      search,
+      season,
+      page_size: 8,
+    }),
+  ]);
 
   return (
     <div className="flex flex-col pt-15 min-[1000px]:pt-32">
@@ -21,7 +37,13 @@ export default async function Page() {
             </div>
           }
         >
-          <DashboardAllCoursesView courses={courses} />
+          <DashboardAllCoursesView
+            courses={paginatedCourses.results}
+            totalCount={paginatedCourses.count}
+            totalPages={paginatedCourses.total_pages}
+            currentPage={paginatedCourses.current_page}
+            linkTo="dashboard"
+          />
         </Suspense>
       </div>
     </div>
