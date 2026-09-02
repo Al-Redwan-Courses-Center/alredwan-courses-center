@@ -154,7 +154,7 @@ export default function CoursePurchaseModal({
         </Button>
       </ModalTrigger>
 
-      <ModalContent className="max-h-[90dvh] w-280 overflow-y-auto rounded-[2rem_0]">
+      <ModalContent className="max-h-[90dvh] w-[90vw] max-w-280 overflow-y-auto rounded-[2rem_0]">
         <ModalTitle className="mb-2">تأكيد طلب الإلتحاق</ModalTitle>
 
         <form
@@ -263,7 +263,7 @@ export default function CoursePurchaseModal({
                     {...register("payment_method", {
                       required: "يرجى اختيار طريقة الدفع.",
                     })}
-                    className="accent-olive-500 h-6 w-6"
+                    className="h-6 w-6 accent-olive-500"
                   />
                   <span>{option.label}</span>
                 </label>

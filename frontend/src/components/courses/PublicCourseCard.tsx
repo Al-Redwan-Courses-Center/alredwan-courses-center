@@ -21,16 +21,26 @@ export default function PublicCourseCard({
   const startDate = parseISO(course.start_date);
   // const endDate = parseISO(course.start_date);
   const lectureCount = course.num_lectures;
-  const isCourseImageValid = course.image?.startsWith("https");
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const imgUrl = course.image?.startsWith("/")
+    ? backendUrl + course.image
+    : course.image;
+
+  const isCourseImageValid =
+    typeof imgUrl === "string" &&
+    imgUrl.trim().length > 0 &&
+    (imgUrl.startsWith("http://") ||
+      imgUrl.startsWith("https://") ||
+      imgUrl.startsWith("data:"));
 
   return (
     <ItemCard
       cardHeader={
-        course.image && isCourseImageValid ? (
+        isCourseImageValid ? (
           <Image
-            src={course.image}
+            src={imgUrl}
             fill
-            alt="Template Course Image"
+            alt="Course Image"
             draggable="false"
             className="object-cover"
           />
