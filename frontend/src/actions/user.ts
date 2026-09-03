@@ -4,7 +4,12 @@ import { isAxiosError } from "axios";
 import { revalidatePath } from "next/cache";
 import { getCourseById } from "@/actions/courses";
 import { getEnrollmentProgressById } from "@/actions/enrollments";
-import { apiRequest, getAuthApiClient, unwrapPaginated } from "@/lib/api";
+import {
+  apiRequest,
+  getAuthApiClient,
+  unwrapPaginated,
+  publicApiClient,
+} from "@/lib/api";
 import type { PaginatedResponse } from "@/types/config";
 import type {
   CourseDetail,
@@ -278,9 +283,10 @@ export async function getChildCourses(
 // }
 export async function getInstructorById(
   id: string | number,
+  publicApi: boolean = false,
 ): Promise<InstructorDetail | null> {
   try {
-    const apiClient = await getAuthApiClient();
+    const apiClient = publicApi ? publicApiClient : await getAuthApiClient();
     const { data } = await apiClient.get<InstructorDetail>(
       `/api/users/instructors/${id}/`,
     );
