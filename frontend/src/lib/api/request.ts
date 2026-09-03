@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { logApiError } from "@/lib/api/errors";
 
 export async function apiRequest<T>(
@@ -9,18 +10,12 @@ export async function apiRequest<T>(
   try {
     return await request();
   } catch (error) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "digest" in error &&
-      error.digest === "DYNAMIC_SERVER_USAGE"
-    ) {
-      throw error;
-    }
-    console.log(JSON.stringify(error, null, 2));
+    unstable_rethrow(error);
+
     if (mapError) {
       return mapError(error);
     }
+
     logApiError(context, error);
     return fallback;
   }
