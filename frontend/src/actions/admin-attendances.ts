@@ -15,7 +15,7 @@ export async function getTodaysAttendances() {
       const apiClient = await getAuthApiClient();
       const { data } = await apiClient.get<
         PaginatedResponse<StaffAttendanceListItem>
-      >("/api/attendance/today/");
+      >("/api/attendance/today/?page_size=1000");
 
       return data.results;
     },
@@ -61,13 +61,15 @@ export async function getAttendances(params?: {
   status?: string;
   attendance_type?: string;
   season?: number;
+  search?: string;
+  page?: number;
+  page_size?: number;
 }) {
   try {
     const apiClient = await getAuthApiClient();
 
     // Map 'date' to 'date_from' and 'date_to' for the backend filter
-    const apiParams: typeof params & { date_from?: string; date_to?: string } =
-      { ...params };
+    const apiParams: Record<string, any> = { page_size: 1000, ...params };
     if (apiParams.date) {
       apiParams.date_from = apiParams.date;
       apiParams.date_to = apiParams.date;
@@ -75,10 +77,10 @@ export async function getAttendances(params?: {
     }
 
     const { data } = await apiClient.get<
-      PaginatedResponse<StaffAttendanceListItem>
+      PaginatedResponse<StaffAttendanceListItem> | StaffAttendanceListItem[]
     >("/api/attendance/all/", { params: apiParams });
 
-    return data.results;
+    return Array.isArray(data) ? data : data.results;
   } catch (error: unknown) {
     if (typeof error === "object" && error !== null && "digest" in error) {
       if (error.digest === "DYNAMIC_SERVER_USAGE") throw error;

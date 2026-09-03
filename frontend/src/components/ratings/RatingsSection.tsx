@@ -36,8 +36,18 @@ interface RatingsStatistics {
 
 interface RatingsData {
   ratings: {
-    student_ratings: RatingItem[];
-    parent_ratings: RatingItem[];
+    student_ratings: {
+      count: number;
+      next: string | null;
+      previous: string | null;
+      results: RatingItem[];
+    };
+    parent_ratings: {
+      count: number;
+      next: string | null;
+      previous: string | null;
+      results: RatingItem[];
+    };
   };
   statistics: RatingsStatistics;
 }
@@ -84,11 +94,11 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
   if (!data) return null;
 
   const allReviews: DisplayReview[] = [
-    ...data.ratings.student_ratings.map((r: RatingItem) => ({
+    ...data.ratings.student_ratings.results.map((r: RatingItem) => ({
       ...r,
       type: "student" as const,
     })),
-    ...data.ratings.parent_ratings.map((r: RatingItem) => ({
+    ...data.ratings.parent_ratings.results.map((r: RatingItem) => ({
       ...r,
       type: "parent" as const,
     })),
@@ -100,8 +110,8 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
   return (
     <section id="ratings" className="space-y-12 py-12">
       <div className="flex items-center gap-3">
-        <div className="bg-olive-500/10 text-olive-500 flex h-10 w-10 items-center justify-center rounded-xl">
-          <Star className="fill-olive-500 h-6 w-6" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-olive-500/10 text-olive-500">
+          <Star className="h-6 w-6 fill-olive-500" />
         </div>
         <h2 className="mobile-lg:text-6xl text-5xl font-black text-gray-900">
           التقييمات والمراجعات
@@ -147,8 +157,8 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
             />
           ) : (
             <div className="border-gray-150 space-y-6 rounded-3xl border bg-white p-8 text-center shadow-md">
-              <div className="bg-olive-500/10 text-olive-500 mx-auto flex h-16 w-16 items-center justify-center rounded-full">
-                <Star className="fill-olive-500 h-8 w-8" />
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-olive-500/10 text-olive-500">
+                <Star className="h-8 w-8 fill-olive-500" />
               </div>
               <div className="space-y-2">
                 <h4 className="text-3xl font-bold text-gray-900">أضف تقييمك</h4>
@@ -159,14 +169,14 @@ const RatingsSection: React.FC<RatingsSectionProps> = ({
               </div>
               <Link
                 href="/?login=true"
-                className="bg-olive-500 hover:bg-olive-400 shadow-olive-500/20 inline-block w-full rounded-2xl py-4 text-center text-2xl font-bold text-white shadow-lg transition-colors"
+                className="inline-block w-full rounded-2xl bg-olive-500 py-4 text-center text-2xl font-bold text-white shadow-lg shadow-olive-500/20 transition-colors hover:bg-olive-400"
               >
                 تسجيل الدخول
               </Link>
             </div>
           )}
 
-          <div className="from-olive-500 to-olive-700 rounded-3xl bg-linear-to-br p-8 text-white shadow-xl">
+          <div className="rounded-3xl bg-linear-to-br from-olive-500 to-olive-700 p-8 text-white shadow-xl">
             <h4 className="mobile-lg:text-4xl mb-4 text-3xl font-bold">
               لماذا تقييمك مهم؟
             </h4>

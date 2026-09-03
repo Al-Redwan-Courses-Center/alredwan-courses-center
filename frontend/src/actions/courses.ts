@@ -10,18 +10,46 @@ import {
   apiRequest,
   getAuthApiClient,
   publicApiClient,
+  toPaginatedResponse,
   unwrapPaginated,
 } from "@/lib/api";
 import type { PaginatedResponse } from "@/types/config";
-import type { CourseDetail, CourseListItem } from "@/types/entities";
+import type {
+  CourseDetail,
+  CourseListItem,
+  StudentCourseItem,
+} from "@/types/entities";
 
-export async function getPublicCourses(): Promise<CourseListItem[]> {
+export interface CourseQueryParams {
+  page?: number;
+  page_size?: number;
+  search?: string;
+  season?: string | number;
+  instructor?: string | number;
+  for_adults?: boolean;
+  tags?: string | number;
+  price__gte?: number;
+  price__lte?: number;
+  start_date__gte?: string;
+  start_date__lte?: string;
+  ordering?: string;
+  is_active?: boolean;
+}
+
+export async function getPublicCourses(
+  params?: CourseQueryParams,
+): Promise<PaginatedResponse<CourseListItem>> {
   try {
     const { data } = await publicApiClient.get<
       PaginatedResponse<CourseListItem> | CourseListItem[]
-    >("/api/courses/?page_size=100");
+    >("/api/courses/", {
+      params: {
+        page_size: params?.page_size ?? 8,
+        ...params,
+      },
+    });
 
-    return Array.isArray(data) ? data : data.results;
+    return toPaginatedResponse(data, params?.page_size ?? 8);
   } catch (error: unknown) {
     if (
       error &&
@@ -32,11 +60,21 @@ export async function getPublicCourses(): Promise<CourseListItem[]> {
       throw error;
     }
     console.error("Failed to load public courses:", error);
-    return [];
+    return {
+      count: 0,
+      next: null,
+      previous: null,
+      total_pages: 0,
+      current_page: 1,
+      page_size: params?.page_size ?? 8,
+      results: [],
+    };
   }
 }
 
-export async function getAllCourses(): Promise<CourseListItem[]> {
+export async function getAllCourses(
+  params?: CourseQueryParams,
+): Promise<PaginatedResponse<CourseListItem>> {
   return apiRequest(
     "Failed to load courses:",
     async () => {
@@ -45,12 +83,17 @@ export async function getAllCourses(): Promise<CourseListItem[]> {
 
       const { data } = await apiClient.get<
         PaginatedResponse<CourseListItem> | CourseListItem[]
-      >("/api/courses/?page_size=100");
+      >("/api/courses/", {
+        params: {
+          page_size: params?.page_size ?? 8,
+          ...params,
+        },
+      });
 
-      const courses = unwrapPaginated(data);
+      const paginated = toPaginatedResponse(data, params?.page_size ?? 8);
 
       if (user.role !== "student") {
-        return courses;
+        return paginated;
       }
 
       const enrollmentsCoursesIds = (await getMyEnrollments()).map(
@@ -63,20 +106,44 @@ export async function getAllCourses(): Promise<CourseListItem[]> {
         .filter((request) => ["pending", "processing"].includes(request.status))
         .map((request) => request.course);
 
-      return courses.filter(
+      const filteredResults = paginated.results.filter(
         (c) =>
           !enrollmentsCoursesIds.includes(c.id) &&
           !pendingOrProcessingRequestCourseIds.includes(c.id),
       );
+
+      return {
+        ...paginated,
+        results: filteredResults,
+      };
     },
-    [],
+    {
+      count: 0,
+      next: null,
+      previous: null,
+      total_pages: 0,
+      current_page: 1,
+      page_size: params?.page_size ?? 8,
+      results: [],
+    },
   );
 }
 
 export async function getInstructorCourses(
   instructorId: string | undefined,
-): Promise<CourseListItem[]> {
-  if (!instructorId) return [];
+  params?: CourseQueryParams,
+): Promise<PaginatedResponse<CourseListItem>> {
+  if (!instructorId) {
+    return {
+      count: 0,
+      next: null,
+      previous: null,
+      total_pages: 0,
+      current_page: 1,
+      page_size: params?.page_size ?? 10,
+      results: [],
+    };
+  }
 
   return apiRequest(
     "Failed to load instructor courses:",
@@ -85,11 +152,25 @@ export async function getInstructorCourses(
 
       const { data } = await apiClient.get<
         PaginatedResponse<CourseListItem> | CourseListItem[]
-      >(`/api/courses/?page_size=100&instructor=${instructorId}`);
+      >("/api/courses/", {
+        params: {
+          instructor: instructorId,
+          page_size: params?.page_size ?? 10,
+          ...params,
+        },
+      });
 
-      return unwrapPaginated(data);
+      return toPaginatedResponse(data, params?.page_size ?? 10);
     },
-    [],
+    {
+      count: 0,
+      next: null,
+      previous: null,
+      total_pages: 0,
+      current_page: 1,
+      page_size: params?.page_size ?? 10,
+      results: [],
+    },
   );
 }
 
@@ -101,17 +182,16 @@ export async function getCourseById(
     async () => {
       const apiClient = await getAuthApiClient();
 
-      const { data } = await apiClient.get<CourseDetail>(
+      const { data } = await publicApiClient.get<CourseDetail>(
         `/api/courses/${courseId}/`,
       );
-
       return data;
     },
     null,
   );
 }
 
-export async function getStudentCourses(): Promise<(CourseDetail & { course_progress: number })[]> {
+export async function getStudentCourses(): Promise<StudentCourseItem[]> {
   return apiRequest(
     "Failed to load student courses:",
     async () => {
@@ -132,7 +212,9 @@ export async function getStudentCourses(): Promise<(CourseDetail & { course_prog
             course_progress: myEnrollmentsProgresses[i]?.percentage ?? 0,
           };
         })
-        .filter((c): c is CourseDetail & { course_progress: number } => c !== null);
+        .filter(
+          (c): c is CourseDetail & { course_progress: number } => c !== null,
+        );
     },
     [],
   );

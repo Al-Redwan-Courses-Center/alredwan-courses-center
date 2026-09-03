@@ -1,29 +1,56 @@
+"use client";
+import { usePathname } from "next/navigation";
 import { parseISO } from "date-fns";
 import Image from "next/image";
 import CourseImage from "@/assets/course-img.jpg";
 import BookIcon from "@/components/icons/BookIcon";
 import CalendarIcon from "@/components/icons/CalendarIcon";
-import ClockIcon from "@/components/icons/ClockIcon";
 import Button from "@/components/ui/Button";
 import ItemCard from "@/components/ui/ItemCard";
 import ProgressBar from "@/components/ui/ProgressBar";
+import { StudentPhysicalCourse } from "@/types/entities";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
-import type { CourseDetail } from "@/types/entities";
+import type { UserEntity } from "@/types/auth";
 
 export default function StudentCourseCard({
   course,
   index,
+  role,
+  childId,
 }: {
-  course: CourseDetail & { course_progress: number };
+  course: StudentPhysicalCourse;
   index: number;
+  role: UserEntity["role"];
+  childId?: string;
 }) {
+  const pathname = usePathname();
+  const activeChildId =
+    childId ||
+    (role === "parent" && pathname.startsWith("/dashboard/my-children/")
+      ? pathname.split("/")[3]
+      : undefined);
+
+  let targetHref = `/dashboard/my-courses/${course.id}`;
+  if (role === "parent" && activeChildId) {
+    if (pathname.startsWith("/dashboard/my-children/")) {
+      targetHref = `/dashboard/my-children/${activeChildId}/courses/${course.id}`;
+    } else {
+      targetHref = `/dashboard/my-courses/${course.id}?child=${activeChildId}`;
+    }
+  }
+  const imageSrc = course.image || CourseImage;
+  const tags = course.tags || [];
+  const startDate = course.start_date;
+  const numLectures = course.num_lectures;
+  const schedules = course.schedules;
+
   return (
     <ItemCard
       index={index}
       cardHeader={
-        <div>
+        <div className="relative h-48 w-full overflow-hidden rounded-t-2xl">
           <Image
-            src={course.image || CourseImage}
+            src={imageSrc}
             alt="Course Image"
             fill
             className="object-cover"
@@ -37,43 +64,56 @@ export default function StudentCourseCard({
             index % 2 === 0 ? "justify-end" : "",
           )}
         >
-          <Button size="small" href={`/dashboard/my-courses/${course.id}/`}>
-            عرض الدورة
-          </Button>
+          {course.enrollment_status === "pending" ||
+          course.enrollment_status === "processing" ? (
+            <span className="rounded-lg bg-orange-50 px-4 py-2 font-bold text-orange-500">
+              {course.enrollment_status_display || "قيد المراجعة"}
+            </span>
+          ) : (
+            <Button size="small" href={targetHref}>
+              عرض الدورة
+            </Button>
+          )}
         </div>
       }
     >
-      <h3 className="mb-3 text-[1.28rem] font-bold">{course.name}</h3>
-      <p className="mb-5">{course.description}</p>
-
-      <div className="courses-center mb-5 grid grid-cols-[repeat(auto-fill,minmax(5rem,auto))] gap-2">
-        {course.tags.map((tag, i) => (
-          <span
-            className={cn(
-              "inline-block bg-gray-100 px-4 py-2 text-center text-xl",
-              i % 2 === 0 ? "rounded-[1rem_0]" : "rounded-[0_1rem]",
-            )}
-            key={i}
-          >
-            {tag.name}
-          </span>
-        ))}
+      <div className="mb-3 flex items-start justify-between">
+        <h3 className="text-[1.28rem] font-bold">{course.name}</h3>
       </div>
+      <p className="mb-5 line-clamp-2">{course.description}</p>
 
-      <ul className="[&_svg]:text-olive-500 [&>li]:courses-center mb-7 flex flex-col gap-3 [&_svg]:h-auto [&_svg]:w-[1.525rem] [&>li]:flex [&>li]:gap-2">
-        <li>
-          <CalendarIcon />
-          <span>
-            يبدأ: {formatDate(parseISO(course.start_date)).replaceAll("-", "/")}
-          </span>
-        </li>
+      {tags && tags.length > 0 && (
+        <div className="courses-center mb-5 grid grid-cols-[repeat(auto-fill,minmax(5rem,auto))] gap-2">
+          {tags.map((tag: { name: string }, i: number) => (
+            <span
+              className={cn(
+                "inline-block bg-gray-100 px-4 py-2 text-center text-xl",
+                i % 2 === 0 ? "rounded-[1rem_0]" : "rounded-[0_1rem]",
+              )}
+              key={i}
+            >
+              {tag.name}
+            </span>
+          ))}
+        </div>
+      )}
 
-        {true && (
+      <ul className="[&>li]:courses-center mb-7 flex flex-col gap-3 [&_svg]:h-auto [&_svg]:w-[1.525rem] [&_svg]:text-olive-500 [&>li]:flex [&>li]:gap-2">
+        {startDate && (
+          <li>
+            <CalendarIcon />
+            <span>
+              يبدأ: {formatDate(parseISO(startDate)).replaceAll("-", "/")}
+            </span>
+          </li>
+        )}
+
+        {numLectures !== undefined && (
           <li>
             <BookIcon />
             <span>
-              {toHindiDigits(course.num_lectures)}{" "}
-              {getArabicPlural(course.num_lectures, {
+              {toHindiDigits(numLectures)}{" "}
+              {getArabicPlural(numLectures, {
                 singular: "محاضرة",
                 twofer: "محاضرتان",
                 plural: "محاضرات",
@@ -82,20 +122,19 @@ export default function StudentCourseCard({
           </li>
         )}
 
-        <li>
-          <CalendarIcon />
-          <span>
-            {course.schedules.map((s) => s.weekday_display).join(" \\ ")}
-          </span>
-        </li>
-
-        <li>
-          <ClockIcon />
-          <span>من الساعة 8 مـ حتى 10 مـ</span>
-        </li>
+        {schedules && schedules.length > 0 && (
+          <li>
+            <CalendarIcon />
+            <span>
+              {schedules
+                .map((s: { weekday_display: string }) => s.weekday_display)
+                .join(" \\ ")}
+            </span>
+          </li>
+        )}
       </ul>
 
-      <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
+      <div className="mt-auto grid grid-cols-[1fr_auto] items-center gap-x-3">
         <ProgressBar className="h-4" progress={course.course_progress} />
         <span className="font-bold">{course.course_progress}% تقدم</span>
       </div>

@@ -1,14 +1,19 @@
 import { Calendar, Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
 import { getUser } from "@/actions/auth";
-import { getMe } from "@/actions/profile";
 import ChangePasswordForm from "@/components/dashboard/profile/ChangePasswordForm";
 import ProfileImageUploader from "@/components/dashboard/profile/ProfileImageUploader";
 import Button from "@/components/ui/Button";
 import { getFullImageUrl } from "@/lib/image-utils";
 
 export default async function ProfilePage() {
-  const sessionUser = await getUser();
-  const user = (await getMe()) || sessionUser;
+  const roleMapping = {
+    parent: "ولي أمر",
+    admin: "مدير",
+    supervisor: "مشرف",
+    instructor: "معلم",
+    student: "طالب",
+  };
+  const user = await getUser();
   return (
     <div className="relative z-20 flex h-full flex-col gap-12 overflow-auto px-16 pt-64 pb-20">
       <div className="flex items-center justify-between">
@@ -37,7 +42,7 @@ export default async function ProfilePage() {
             <div className="text-olive-600 bg-olive-50 mt-2 flex items-center justify-center gap-2 rounded-full px-4 py-1">
               <ShieldCheck size={18} />
               <span className="text-xl font-bold">
-                {user.role === "parent" ? "ولي أمر" : "طالب"}
+                {roleMapping[user.role]}
               </span>
             </div>
           </div>

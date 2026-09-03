@@ -22,25 +22,25 @@ export default function CourseHeader({
   course: CourseDetail | null;
 }) {
   return (
-    <div className="mb-12 relative w-full">
+    <div className="relative mb-6 w-full sm:mb-12">
       {/* Background/Glass Container */}
-      <div className="bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-soft p-10 max-[1000px]:p-6 flex flex-col items-center gap-8 max-[1000px]:gap-6 relative overflow-hidden w-full">
+      <div className="shadow-soft relative flex w-full flex-col items-center gap-4 overflow-hidden rounded-2xl border border-white/60 bg-white/40 p-4 backdrop-blur-md max-[1000px]:gap-6 max-[1000px]:p-4 sm:gap-8 sm:rounded-[2.5rem] sm:p-10">
         {/* Course ID Badge */}
-        <div className="absolute top-6 left-10 max-[1000px]:static max-[1000px]:self-end">
-          <CopyToClipboardButton className="bg-white/80 hover:bg-white shadow-sm border-none px-4 py-1.5 rounded-full text-lg">
+        <div className="self-end sm:absolute sm:top-6 sm:left-10 sm:self-auto">
+          <CopyToClipboardButton className="border-none bg-white/80 px-3 py-1 text-xs shadow-sm hover:bg-white sm:px-4 sm:py-1.5 sm:text-lg">
             {course?.slug || "C1389403"}
           </CopyToClipboardButton>
         </div>
 
         {/* Title Section */}
-        <div className="text-center mt-4">
-          <h2 className="text-olive-700 text-5xl max-[1000px]:text-4xl font-medad font-bold">
+        <div className="mt-2 text-center sm:mt-4">
+          <h2 className="font-medad text-xl font-bold text-olive-700 max-[1000px]:text-2xl sm:text-5xl">
             {course?.name} - مستوى متقدم
           </h2>
         </div>
 
         {/* Info Grid */}
-        <div className="grid grid-cols-4 max-[1000px]:grid-cols-2 max-[1000px]:gap-y-6 max-[1000px]:gap-x-4 gap-x-20 w-full max-w-4xl border-t border-olive-100/50 pt-8">
+        <div className="grid w-full max-w-4xl grid-cols-2 gap-4 border-t border-olive-100/50 pt-4 sm:grid-cols-4 sm:gap-6 sm:pt-8 md:gap-x-20">
           <div className={dataPointWrapperStyles}>
             <InstructorIcon className={dataPointIconStyles} />
             <span className={labelStyles}>المعلمين</span>

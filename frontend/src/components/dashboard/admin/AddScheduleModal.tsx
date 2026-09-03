@@ -85,6 +85,7 @@ export default function AddScheduleModal({
     }
   };
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (editSchedule) {
       setType("supervision");
@@ -104,6 +105,7 @@ export default function AddScheduleModal({
       setAutoAbsent(60);
     }
   }, [editSchedule, isOpen]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const convertTo24HourFormat = (timeStr: string) => {
     if (!timeStr) return "00:00:00";

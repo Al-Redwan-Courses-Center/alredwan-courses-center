@@ -2,7 +2,7 @@ import { parseISO } from "date-fns";
 import { ArrowRight, Book, Calendar, Clock, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { getUser } from "@/actions/auth";
+import { getOptionalUser } from "@/actions/auth";
 import { getCourseById } from "@/actions/courses";
 import CourseImage from "@/assets/course-img.jpg";
 import RatingsSection from "@/components/ratings/RatingsSection";
@@ -16,7 +16,7 @@ export default async function Page({
 }) {
   const { id } = await params;
   const course = await getCourseById(id);
-  const session = await getUser();
+  const session = await getOptionalUser();
 
   if (!course) {
     return (
@@ -59,11 +59,11 @@ export default async function Page({
             </h1>
             <div className="flex flex-wrap gap-8 text-lg font-medium opacity-90">
               <div className="flex items-center gap-2">
-                <Calendar className="text-olive-500 h-5 w-5" />
+                <Calendar className="h-5 w-5 text-olive-500" />
                 <span>تبدأ {formatDate(parseISO(course.start_date))}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Book className="text-olive-500 h-5 w-5" />
+                <Book className="h-5 w-5 text-olive-500" />
                 <span>
                   {toHindiDigits(lectureCount)}{" "}
                   {getArabicPlural(lectureCount, {
@@ -74,7 +74,7 @@ export default async function Page({
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Users className="text-olive-500 h-5 w-5" />
+                <Users className="h-5 w-5 text-olive-500" />
                 <span>{toHindiDigits(course.available_spots)} مكان متاح</span>
               </div>
             </div>
@@ -88,7 +88,7 @@ export default async function Page({
           <div className="space-y-12 lg:col-span-8">
             <div className="space-y-6">
               <h2 className="flex items-center gap-3 text-3xl font-bold">
-                <div className="bg-olive-500 h-8 w-2 rounded-full" />
+                <div className="h-8 w-2 rounded-full bg-olive-500" />
                 عن هذه الدورة
               </h2>
               <p className="text-xl leading-relaxed text-gray-600">
@@ -98,12 +98,12 @@ export default async function Page({
 
             <div className="space-y-6">
               <h2 className="flex items-center gap-3 text-3xl font-bold">
-                <div className="bg-olive-500 h-8 w-2 rounded-full" />
+                <div className="h-8 w-2 rounded-full bg-olive-500" />
                 المعلم
               </h2>
               <Link
                 href={`/instructors/${course.instructor.id}`}
-                className="group hover:bg-olive-500/5 flex items-center gap-6 rounded-3xl bg-gray-50 p-6 transition-colors"
+                className="group flex items-center gap-6 rounded-3xl bg-gray-50 p-6 transition-colors hover:bg-olive-500/5"
               >
                 <div className="relative h-20 w-20 overflow-hidden rounded-2xl shadow-md ring-4 ring-white">
                   <Image
@@ -114,19 +114,21 @@ export default async function Page({
                   />
                 </div>
                 <div className="flex-1">
-                  <h4 className="group-hover:text-olive-500 text-2xl font-bold transition-colors">
+                  <h4 className="text-2xl font-bold transition-colors group-hover:text-olive-500">
                     {course.instructor.name}
                   </h4>
                   <p className="text-gray-500">خبير في التعليم والتدريب</p>
                 </div>
-                <ArrowRight className="group-hover:text-olive-500 h-6 w-6 text-gray-300 transition-all group-hover:translate-x-[-8px]" />
+                <ArrowRight className="h-6 w-6 text-gray-300 transition-all group-hover:translate-x-[-8px] group-hover:text-olive-500" />
               </Link>
             </div>
 
             <RatingsSection
               type="course"
               id={id}
-              showForm={session.role === "student" || session.role === "parent"}
+              showForm={
+                session?.role === "student" || session?.role === "parent"
+              }
             />
           </div>
 
@@ -136,7 +138,7 @@ export default async function Page({
               <div className="space-y-6">
                 <div>
                   <p className="mb-1 text-gray-500">رسوم الاشتراك</p>
-                  <p className="text-olive-500 text-5xl font-black">
+                  <p className="text-5xl font-black text-olive-500">
                     {toHindiDigits(course.price)} جنيه
                   </p>
                 </div>
@@ -160,7 +162,7 @@ export default async function Page({
                   </div>
                 </div>
 
-                <Button className="shadow-olive-500/20 h-14 w-full rounded-2xl text-lg font-bold shadow-lg">
+                <Button className="h-14 w-full rounded-2xl text-lg font-bold shadow-lg shadow-olive-500/20">
                   سجل الآن في الدورة
                 </Button>
 

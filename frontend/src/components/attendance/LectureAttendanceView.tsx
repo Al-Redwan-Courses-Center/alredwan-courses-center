@@ -97,7 +97,16 @@ export default function LectureAttendanceView({
   );
 
   const [attendanceState, setAttendanceState] =
+    useState<LectureAttendanceDetail[]>(() =>
+      getMergedAttendanceState(attendances),
+    );
+  const [prevAttendances, setPrevAttendances] =
     useState<LectureAttendanceDetail[]>(attendances);
+
+  if (prevAttendances !== attendances) {
+    setPrevAttendances(attendances);
+    setAttendanceState(getMergedAttendanceState(attendances));
+  }
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -151,10 +160,6 @@ export default function LectureAttendanceView({
       localStorage.removeItem(localStorageKey);
     }
   }, [canEditAttendance, localStorageKey]);
-
-  useEffect(() => {
-    setAttendanceState(getMergedAttendanceState(attendances));
-  }, [attendances, getMergedAttendanceState]);
 
   if (!lecture) return null;
 

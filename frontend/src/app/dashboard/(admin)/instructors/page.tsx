@@ -8,8 +8,13 @@ import ItemCard from "@/components/ui/ItemCard";
 import { cn } from "@/lib/utils";
 import type { Instructor } from "@/types/entities/instructors";
 
-export default async function Page() {
-  const instructors = await getInstructors();
+export default async function Page(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
+  const search =
+    typeof searchParams.search === "string" ? searchParams.search : undefined;
+  const instructors = await getInstructors({ search, page_size: 100 });
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-16 py-32 flex flex-col gap-32">

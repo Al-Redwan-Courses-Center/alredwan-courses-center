@@ -15,6 +15,7 @@ import {
   ModalTrigger,
 } from "@/components/ui/Modal";
 import type { EnrollmentRequestCreateBody } from "@/types/entities";
+import { useSearchParams } from "next/navigation";
 
 type PaymentMethod = NonNullable<EnrollmentRequestCreateBody["payment_method"]>;
 
@@ -51,7 +52,8 @@ export default function CoursePurchaseModal({
   coursePrice: string;
   childrenOptions?: ParentChildDetail[];
 }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const [isOpen, setIsOpen] = useState(!!searchParams.get("openModal"));
   const {
     register,
     handleSubmit,
@@ -152,7 +154,7 @@ export default function CoursePurchaseModal({
         </Button>
       </ModalTrigger>
 
-      <ModalContent className="max-h-[90dvh] w-280 overflow-y-auto rounded-[2rem_0]">
+      <ModalContent className="max-h-[90dvh] w-[90vw] max-w-280 overflow-y-auto rounded-[2rem_0]">
         <ModalTitle className="mb-2">تأكيد طلب الإلتحاق</ModalTitle>
 
         <form
@@ -203,8 +205,8 @@ export default function CoursePurchaseModal({
 
           {hasNoChildren && (
             <p className="rounded-[1.2rem_0] bg-gray-200 px-5 py-4 text-2xl text-gray-600">
-              لا يوجد أطفال متاحون للإلتحاق بهذه الدورة حاليًا (إما لا يوجد أطفال
-              مرتبطون أو أنهم ملتحقون بالفعل).
+              لا يوجد أطفال متاحون للإلتحاق بهذه الدورة حاليًا (إما لا يوجد
+              أطفال مرتبطون أو أنهم ملتحقون بالفعل).
             </p>
           )}
 
@@ -261,7 +263,7 @@ export default function CoursePurchaseModal({
                     {...register("payment_method", {
                       required: "يرجى اختيار طريقة الدفع.",
                     })}
-                    className="accent-olive-500 h-6 w-6"
+                    className="h-6 w-6 accent-olive-500"
                   />
                   <span>{option.label}</span>
                 </label>

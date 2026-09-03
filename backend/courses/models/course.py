@@ -231,8 +231,6 @@ class Course(models.Model):
             # Check for_adults constraint
             if self.for_adults and age < 15:
                 return False
-            if not self.for_adults and age > 15:
-                return False
             # Check age bounds if specified
             if self.min_age and age < self.min_age:
                 return False

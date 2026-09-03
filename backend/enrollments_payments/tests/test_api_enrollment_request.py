@@ -414,3 +414,4 @@ class TestEnrollmentRequestCancel(EnrollmentAPIBaseTestCase):
         response = self.client.delete(f'/api/enrollment-requests/{self.parent_request.id}/cancel/')
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+

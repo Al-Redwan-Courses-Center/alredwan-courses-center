@@ -20,8 +20,8 @@ export default async function Page() {
   });
 
   const [courses, instructors, user] = await Promise.all([
-    getAllCourses(),
-    getInstructors(),
+    getAllCourses({ page_size: 100 }),
+    getInstructors({ page_size: 100 }),
     getUser(),
   ]);
 
@@ -41,7 +41,7 @@ export default async function Page() {
 
       <SeasonSchedulesView
         initialSchedules={dbSchedules}
-        courses={courses}
+        courses={courses.results}
         instructors={instructors}
       />
     </div>

@@ -42,11 +42,21 @@ export default function InstructorMyCoursesView({
       filterConfig={filterConfig}
       sortConfig={sortConfig}
     >
-      <div className="mb-14 flex items-center gap-32 ps-16">
-        <DataViewSearch />
-        <DataViewSort />
-        <DataViewFilter />
-        <DataViewLayoutToggle />
+      <div className="tablet:flex-col tablet:items-stretch tablet:gap-12 relative z-60 mb-14 flex items-center justify-between gap-16 px-16">
+        <div className="tablet:max-w-full w-full max-w-[400px]">
+          <DataViewSearch />
+        </div>
+        <div className="tablet:w-full flex items-center gap-12">
+          <div className="tablet:flex-1 w-auto">
+            <DataViewSort />
+          </div>
+          <div className="tablet:flex-1 w-auto">
+            <DataViewFilter />
+          </div>
+          <div className="tablet:flex-1 w-auto">
+            <DataViewLayoutToggle />
+          </div>
+        </div>
       </div>
 
       <DataViewHeaderLegacy className="mx-16">

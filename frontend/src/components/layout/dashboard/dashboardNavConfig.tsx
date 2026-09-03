@@ -57,6 +57,12 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       href: "/dashboard/memories",
       icon: <MosqueIcon />,
     },
+    {
+      label: "الملف الشخصي",
+      href: "/dashboard/profile",
+      icon: <PersonIcon />,
+      className: "mb-auto",
+    },
   ],
 
   supervisor: [
@@ -79,6 +85,12 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       label: "ذكريات المسجد",
       href: "/dashboard/memories",
       icon: <MosqueIcon />,
+    },
+    {
+      label: "الملف الشخصي",
+      href: "/dashboard/profile",
+      icon: <PersonIcon />,
+      className: "mb-auto",
     },
   ],
 
@@ -173,20 +185,6 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       label: "دوراتي",
       href: "/dashboard/my-courses",
       icon: <MyCoursesIcon />,
-      nestedNavLinks: [
-        {
-          href: "lectures",
-          label: "المحاضرات",
-        },
-        {
-          href: "",
-          label: "تفاصيل الدورة",
-        },
-        {
-          href: "enrollments",
-          label: "الحجوزات",
-        },
-      ],
     },
     {
       label: "جميع الدورات",

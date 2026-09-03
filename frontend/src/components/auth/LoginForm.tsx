@@ -33,7 +33,7 @@ export default function LoginForm({
   } = useForm<LoginInputs>({
     defaultValues: {
       phone_number1: "",
-      password: "password123",
+      password: "",
     },
   });
 
@@ -181,19 +181,12 @@ export default function LoginForm({
           تسجيل الدخول
         </Button>
 
-        <Link
-          href="/forgot-password"
-          className="text-olive-900 hover:text-olive-300 self-center text-2xl font-bold underline transition-colors"
-        >
-          نسيت كلمة المرور؟
-        </Link>
-
         <div className="flex flex-col">
           <span className="self-center text-2xl">ليس لديك حساب؟</span>
           <button
             type="button"
             onClick={() => onSwitchToSignup?.()}
-            className="text-olive-900 hover:text-olive-300 self-center text-2xl font-bold underline transition-colors"
+            className="self-center text-2xl font-bold text-olive-900 underline transition-colors hover:text-olive-300"
           >
             سجل حساب جديد الآن
           </button>

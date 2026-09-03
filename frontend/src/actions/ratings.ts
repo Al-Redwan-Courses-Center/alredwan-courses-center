@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthApiClient } from "@/lib/auth-api";
+import { publicApiClient } from "@/lib/api";
 import { isAxiosError } from "axios";
 
 /**
@@ -81,7 +82,7 @@ export async function rateInstructor(
         error.response?.data?.non_field_errors?.[0] ||
         error.response?.data?.detail ||
         (typeof error.response?.data === "object" && error.response?.data
-          ? Object.values(error.response.data).flat()[0] as string
+          ? (Object.values(error.response.data).flat()[0] as string)
           : null) ||
         message;
     }
@@ -97,8 +98,9 @@ export async function rateInstructor(
  */
 export async function getCourseRatings(courseId: string | number) {
   try {
-    const client = await getAuthApiClient();
-    const response = await client.get(`/api/courses/${courseId}/ratings/`);
+    const response = await publicApiClient.get(
+      `/api/courses/${courseId}/ratings/`,
+    );
     return { success: true, data: response.data };
   } catch (error: unknown) {
     console.error("Error fetching course ratings:", error);
@@ -111,8 +113,7 @@ export async function getCourseRatings(courseId: string | number) {
  */
 export async function getInstructorRatings(instructorId: number) {
   try {
-    const client = await getAuthApiClient();
-    const response = await client.get(
+    const response = await publicApiClient.get(
       `/api/users/instructors/${instructorId}/ratings/`,
     );
     return { success: true, data: response.data };

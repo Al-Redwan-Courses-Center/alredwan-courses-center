@@ -6,7 +6,7 @@ import InstructorMyCoursesView from "@/components/dashboard/instructor/Instructo
 export default async function InstructorMyCoursesPage() {
   const { first_name, instructor_id } = await getUser();
 
-  const courses = await getInstructorCourses(instructor_id);
+  const courses = await getInstructorCourses(instructor_id, { page_size: 100 });
 
   return (
     <div className="flex h-full max-h-73/100 flex-col pt-15">
@@ -16,7 +16,7 @@ export default async function InstructorMyCoursesPage() {
 
       <div className="max-h-full w-full">
         <Suspense fallback={null}>
-          <InstructorMyCoursesView courses={courses} />
+          <InstructorMyCoursesView courses={courses.results} />
         </Suspense>
       </div>
     </div>

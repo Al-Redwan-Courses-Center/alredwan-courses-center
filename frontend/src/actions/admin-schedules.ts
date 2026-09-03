@@ -105,8 +105,8 @@ export async function getAllSchedules(params?: {
 
     // We fetch courses and supervisor schedules
     const [coursesRes, supervisorRes] = await Promise.all([
-      apiClient.get("/api/courses/?page_size=100", { params }),
-      apiClient.get("/api/attendance/schedules/?page_size=100", { params }),
+      apiClient.get("/api/courses/?page_size=1000", { params }),
+      apiClient.get("/api/attendance/schedules/?page_size=1000", { params }),
     ]);
 
     const coursesData = unwrapPaginated<CourseListItem>(coursesRes.data);
@@ -114,11 +114,20 @@ export async function getAllSchedules(params?: {
 
     const schedules: WeeklySchedule[] = [];
 
-    // Process Course Schedules by fetching them individually
-    const courseSchedulesPromises = coursesData.map(async (course: CourseListItem) => {
+    // Process Course Schedules via bulk batch endpoint
+    const courseMap = new Map<number, CourseListItem>();
+    coursesData.forEach((course) => {
+      courseMap.set(course.id, course);
+    });
+
+    const courseIds = coursesData.map((c) => c.id);
+    let batchSchedules: CourseScheduleDetail[] = [];
+    if (courseIds.length > 0) {
       try {
-        const res = await apiClient.get(`/api/courses/${course.id}/schedules/`);
-        return { course, schedules: unwrapPaginated<CourseScheduleDetail>(res.data) };
+        const schedulesRes = await apiClient.get("/api/courses/schedules/", {
+          params: { course_ids: courseIds.join(",") },
+        });
+        batchSchedules = unwrapPaginated<CourseScheduleDetail>(schedulesRes.data);
       } catch (error: unknown) {
         if (
           error &&
@@ -128,28 +137,27 @@ export async function getAllSchedules(params?: {
         ) {
           throw error;
         }
-        return { course, schedules: [] };
+        batchSchedules = [];
       }
-    });
+    }
 
-    const coursesWithSchedules = await Promise.all(courseSchedulesPromises);
+    batchSchedules.forEach((s: CourseScheduleDetail) => {
+      const course = s.course ? courseMap.get(s.course) : undefined;
+      if (!course) return;
 
-    coursesWithSchedules.forEach(({ course, schedules: courseSchedules }) => {
-      courseSchedules.forEach((s: CourseScheduleDetail) => {
-        const instructorName = course.instructor?.name || "غير محدد";
+      const instructorName = course.instructor?.name || "غير محدد";
 
-        schedules.push({
-          id: s.id,
-          weekday: s.weekday,
-          weekday_display: s.weekday_display,
-          start_time: s.start_time,
-          end_time: s.end_time,
-          instructor_name: instructorName,
-          course_name: course.name,
-          season_name: course.season?.name || "-",
-          student_count: course.enrolled_count || 0,
-          type: "lecture",
-        });
+      schedules.push({
+        id: s.id,
+        weekday: s.weekday,
+        weekday_display: s.weekday_display,
+        start_time: s.start_time,
+        end_time: s.end_time,
+        instructor_name: instructorName,
+        course_name: course.name,
+        season_name: course.season?.name || "-",
+        student_count: course.enrolled_count || 0,
+        type: "lecture",
       });
     });
 
@@ -289,7 +297,7 @@ export async function deleteSupervisionSchedule(scheduleId: number) {
 export async function getOnlySupervisorSchedules(params?: { instructor?: number; day_of_week?: number }) {
   try {
     const apiClient = await getAuthApiClient();
-    const response = await apiClient.get("/api/attendance/schedules/?page_size=100", { params });
+    const response = await apiClient.get("/api/attendance/schedules/?page_size=1000", { params });
     return unwrapPaginated<SupervisorSchedule>(response.data);
   } catch (error: unknown) {
     if (

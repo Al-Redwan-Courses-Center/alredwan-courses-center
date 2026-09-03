@@ -28,7 +28,8 @@ class CourseScheduleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CourseSchedule
-        fields = ['id', 'weekday', 'weekday_display', 'start_time', 'end_time']
+        fields = ['id', 'course', 'weekday', 'weekday_display', 'start_time', 'end_time']
+        read_only_fields = ['course']
 
     def validate(self, data):
         start_time = data.get('start_time', getattr(
