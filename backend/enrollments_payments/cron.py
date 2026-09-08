@@ -11,6 +11,7 @@ Example django-crontab configuration in settings.py:
         ('0 2 * * *', 'enrollments_payments.cron.expire_pending_enrollment_requests'),
     ]
 """
+
 from django.utils import timezone
 from django.db import transaction
 
@@ -20,8 +21,7 @@ def mark_completed_enrollments_daily():
     Cron job to automatically mark enrollments as completed.
 
     This job checks all active enrollments and marks them as completed if:
-    1. The course end_date has passed, OR
-    2. All lectures in the course have been completed
+    1. The course end_date has passed
 
     Should be run daily, preferably during off-peak hours (e.g., 1 AM).
     """
@@ -51,9 +51,10 @@ def mark_completed_enrollments_daily():
     # Optionally create a log record (similar to AttendanceCronLog)
     try:
         from attendance.models.attendance_cron_log import AttendanceCronLog
+
         AttendanceCronLog.objects.create(
             job_name="mark_completed_enrollments_daily",
-            details=f"Completed {completed_count} enrollments. Errors: {len(errors)}"
+            details=f"Completed {completed_count} enrollments. Errors: {len(errors)}",
         )
     except Exception:
         pass  # Log model may not exist
@@ -76,8 +77,7 @@ def expire_pending_enrollment_requests():
 
     # Find expired pending requests
     expired_requests = EnrollmentRequest.objects.filter(
-        status=EnrollmentRequestStatus.PENDING,
-        expires_at__lt=now
+        status=EnrollmentRequestStatus.PENDING, expires_at__lt=now
     )
 
     count = expired_requests.update(status=EnrollmentRequestStatus.EXPIRED)
@@ -88,9 +88,10 @@ def expire_pending_enrollment_requests():
 
     try:
         from attendance.models.attendance_cron_log import AttendanceCronLog
+
         AttendanceCronLog.objects.create(
             job_name="expire_pending_enrollment_requests",
-            details=f"Expired {count} enrollment requests."
+            details=f"Expired {count} enrollment requests.",
         )
     except Exception:
         pass
@@ -112,10 +113,11 @@ def check_and_complete_course_enrollments(course_id):
     """
     from .models.enrollment import Enrollment, EnrollmentStatus
 
-    enrollments = Enrollment.objects.filter(
-        course_id=course_id,
-        status=EnrollmentStatus.ACTIVE
-    ).select_related('course').prefetch_related('course__lectures')
+    enrollments = (
+        Enrollment.objects.filter(course_id=course_id, status=EnrollmentStatus.ACTIVE)
+        .select_related("course")
+        .prefetch_related("course__lectures")
+    )
 
     completed_count = 0
 
