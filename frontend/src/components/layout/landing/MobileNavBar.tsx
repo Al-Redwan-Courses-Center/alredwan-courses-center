@@ -43,7 +43,7 @@ export default async function MobileNavBar() {
     <nav className="shadow-soft tablet:flex sticky bottom-0 z-1000 hidden h-28 w-full items-center justify-between border-t border-gray-200 bg-gray-100/95 px-6 backdrop-blur-md">
       <ul className="text-primary flex h-full w-full items-center justify-around gap-1">
         <li className="flex h-full flex-1 items-center justify-center">
-          <MobileNavLink href="/" label="الرئيسية" icon={Home} />
+          <MobileNavLink href="/#" label="الرئيسية" icon={Home} />
         </li>
         <li className="flex h-full flex-1 items-center justify-center">
           <MobileNavLink
@@ -64,7 +64,7 @@ export default async function MobileNavBar() {
           ) : (
             <AuthModal
               trigger={
-                <button className="text-olive-500 relative flex h-full w-full cursor-pointer flex-col items-center justify-center gap-1.5 text-center hover:font-semibold">
+                <button className="relative flex h-full w-full cursor-pointer flex-col items-center justify-center gap-1.5 text-center text-olive-500 hover:font-semibold">
                   <LogIn className="h-9 w-9 stroke-[1.5]" />
                   <span className="text-[1.3rem] leading-none whitespace-nowrap md:text-[1.4rem]">
                     تسجيل الدخول

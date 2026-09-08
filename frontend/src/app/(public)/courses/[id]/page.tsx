@@ -162,7 +162,10 @@ export default async function Page({
                   </div>
                 </div>
 
-                <Button className="h-14 w-full rounded-2xl text-lg font-bold shadow-lg shadow-olive-500/20">
+                <Button
+                  className="h-14 w-full rounded-2xl text-lg font-bold shadow-lg shadow-olive-500/20"
+                  href={`/dashboard/courses/${course.id}?openModal=1`}
+                >
                   سجل الآن في الدورة
                 </Button>
 
