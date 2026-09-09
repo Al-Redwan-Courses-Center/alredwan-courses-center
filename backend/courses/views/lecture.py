@@ -78,11 +78,7 @@ class LectureListCreateView(generics.ListCreateAPIView):
     pagination_class = CustomPageNumberPagination
     filterset_class = LectureFilter
     filter_backends = [filters.DjangoFilterBackend]
-
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [AllowAny()]
-        return [IsAdminOrCourseInstructor()]
+    permission_classes = [IsAdminOrCourseInstructor]
 
     def get_serializer_class(self):
         """Return appropriate serializer based on request method"""
@@ -447,7 +443,7 @@ class StudentCourseLecturesView(generics.ListAPIView):
             .prefetch_related(attendance_prefetch)
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        queryset = list(self.get_queryset())
         # Set personal_attendance on each object before serialization
         for obj in queryset:
             att_list = getattr(obj, '_personal_attendance_list', [])
@@ -481,9 +477,13 @@ class ParentCourseLecturesView(generics.ListAPIView):
         
         # Verify child belongs to parent
         from parents.models import Child
+        from django.db.models import Q
+        from django.core.exceptions import ValidationError
         try:
-            child = Child.objects.get(id=child_id, primary_parent=parent)
-        except Child.DoesNotExist:
+            child = Child.objects.get(
+                Q(id=child_id) & (Q(primary_parent=parent) | Q(extra_parents__parent=parent))
+            )
+        except (Child.DoesNotExist, ValidationError, ValueError):
             return Lecture.objects.none()
             
         from enrollments_payments.models import Enrollment, EnrollmentStatus
@@ -509,7 +509,7 @@ class ParentCourseLecturesView(generics.ListAPIView):
             .prefetch_related(attendance_prefetch)
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        queryset = list(self.get_queryset())
         for obj in queryset:
             att_list = getattr(obj, '_personal_attendance_list', [])
             obj.personal_attendance = att_list[0] if att_list else None

@@ -23,7 +23,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
         image={userImage}
         role={role}
       />
-      <div className="relative min-h-0 overflow-y-auto overflow-x-hidden bg-[linear-gradient(179deg,#FFF_0.75%,#93A494_480.3%)] max-[1000px]:pb-[120px] no-scrollbar">
+      <div className="relative min-h-0 w-full max-w-full overflow-y-auto bg-[linear-gradient(179deg,#FFF_0.75%,#93A494_480.3%)] max-[1000px]:pb-[120px] no-scrollbar">
         {children}
       </div>
       <DashboardBottomNav role={role} />

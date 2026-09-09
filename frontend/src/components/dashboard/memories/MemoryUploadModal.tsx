@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useDebounceValue } from "usehooks-ts";
-import { getUploadToken, searchParticipants } from "@/actions/memories";
+import {
+  createMemoryAction,
+  getCloudinarySignatureAction,
+  searchParticipants,
+} from "@/actions/memories";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import {
@@ -14,20 +18,6 @@ import {
   ModalTitle,
 } from "@/components/ui/Modal";
 import type { ParticipantSearchResult } from "@/types/entities";
-
-const getApiBaseUrl = () => {
-  const url = process.env.NEXT_PUBLIC_API_URL;
-  if (!url) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("NEXT_PUBLIC_API_URL is missing in production environment!");
-    }
-    return "http://localhost:8000";
-  }
-  return url;
-};
-
-const API_BASE_URL = getApiBaseUrl();
-
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -103,6 +93,7 @@ export default function MemoryUploadModal({
     if (debouncedSearch.length >= 2) {
       searchParticipants(debouncedSearch).then(setSearchResults);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchResults([]);
     }
   }, [debouncedSearch]);
@@ -113,65 +104,51 @@ export default function MemoryUploadModal({
     setIsUploading(true);
     setUploadProgress(0);
 
-    // 1. Get Access Token for Django
-    const tokenResult = await getUploadToken();
-    if (!tokenResult.ok || !tokenResult.token) {
-      setIsUploading(false);
-      return toast.error(tokenResult.message || "فشل في المصادقة");
-    }
-
     try {
-      // 2. Get Cloudinary Signature from Django
-      const sigRes = await fetch(
-        `${API_BASE_URL}/api/memories/cloudinary/signature/`,
-        {
-          headers: { Authorization: `JWT ${tokenResult.token}` },
-        },
-      );
-      if (!sigRes.ok) throw new Error("فشل في الحصول على توقيع الرفع");
-      const { signature, timestamp, cloud_name, api_key } = await sigRes.json();
+      // 1. Get Cloudinary Signature securely via Server Action
+      const sigRes = await getCloudinarySignatureAction();
+      if (!sigRes.ok || !sigRes.data) {
+        setIsUploading(false);
+        return toast.error(sigRes.message || "فشل في الحصول على توقيع الرفع");
+      }
+      const { signature, timestamp, cloud_name, api_key } = sigRes.data;
 
-      // 3. Compress and Upload
+      // 2. Compress and Upload to Cloudinary public endpoint
       const fileToUpload = await compressImage(file);
       const cldFormData = new FormData();
       cldFormData.append("file", fileToUpload);
       cldFormData.append("api_key", api_key);
-      cldFormData.append("timestamp", timestamp);
+      cldFormData.append("timestamp", String(timestamp));
       cldFormData.append("signature", signature);
       cldFormData.append("folder", "memories");
 
-      const cldData = await new Promise<any>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open(
-          "POST",
-          `https://api.cloudinary.com/v1_1/${cloud_name}/auto/upload`,
-        );
+      const cldData = await new Promise<{ public_id: string }>(
+        (resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open(
+            "POST",
+            `https://api.cloudinary.com/v1_1/${cloud_name}/auto/upload`,
+          );
 
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            setUploadProgress(Math.round((e.loaded / e.total) * 100));
-          }
-        };
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              setUploadProgress(Math.round((e.loaded / e.total) * 100));
+            }
+          };
 
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300)
-            resolve(JSON.parse(xhr.responseText));
-          else reject(new Error("فشل رفع الملف إلى الخادم السحابي"));
-        };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300)
+              resolve(JSON.parse(xhr.responseText));
+            else reject(new Error("فشل رفع الملف إلى الخادم السحابي"));
+          };
 
-        xhr.onerror = () => reject(new Error("حدث خطأ في الاتصال بالشبكة"));
-        xhr.send(cldFormData);
-      });
-
-      // 4. Send Cloudinary Public ID to Django
-      setUploadProgress(100);
-      const finalFormData = new FormData();
-      finalFormData.append("file", cldData.public_id);
-      finalFormData.append(
-        "media_type",
-        fileToUpload.type.startsWith("video/") ? "video" : "image",
+          xhr.onerror = () => reject(new Error("حدث خطأ في الاتصال بالشبكة"));
+          xhr.send(cldFormData);
+        },
       );
-      if (caption) finalFormData.append("caption", caption);
+
+      // 3. Save memory via Server Action (no client token exposure)
+      setUploadProgress(100);
 
       const childrenIds = selectedParticipants
         .filter((p) => p.type === "child")
@@ -180,21 +157,17 @@ export default function MemoryUploadModal({
         .filter((p) => p.type === "student")
         .map((p) => p.id);
 
-      childrenIds.forEach((id) => finalFormData.append("children", id));
-      studentIds.forEach((id) => finalFormData.append("students", id));
-
-      const response = await fetch(
-        `${API_BASE_URL}/api/memories/upload/`,
-        {
-          method: "POST",
-          headers: { Authorization: `JWT ${tokenResult.token}` },
-          body: finalFormData,
-        },
-      );
+      const createRes = await createMemoryAction({
+        file: cldData.public_id,
+        media_type: fileToUpload.type.startsWith("video/") ? "video" : "image",
+        caption: caption || undefined,
+        children: childrenIds,
+        students: studentIds,
+      });
 
       setIsUploading(false);
 
-      if (response.ok) {
+      if (createRes.ok) {
         toast.success("تم الرفع بنجاح");
         setFile(null);
         setCaption("");
@@ -202,13 +175,13 @@ export default function MemoryUploadModal({
         setUploadProgress(0);
         onUploadSuccess();
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        toast.error(errorData.detail || "فشل تسجيل الرفع في النظام");
+        toast.error(createRes.message || "فشل تسجيل الرفع في النظام");
       }
     } catch (err: unknown) {
       setIsUploading(false);
       setUploadProgress(0);
-      const errorMessage = err instanceof Error ? err.message : "حدث خطأ في الاتصال";
+      const errorMessage =
+        err instanceof Error ? err.message : "حدث خطأ في الاتصال";
       toast.error(errorMessage);
     }
   };
@@ -230,19 +203,19 @@ export default function MemoryUploadModal({
 
         <div className="space-y-6 py-4">
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="mb-2 block text-sm font-medium">
               الصورة أو الفيديو
             </label>
             <input
               type="file"
               accept="image/*,video/*"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-olive-50 file:text-olive-700 hover:file:bg-olive-100"
+              className="file:bg-olive-50 file:text-olive-700 hover:file:bg-olive-100 w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:px-4 file:py-2 file:text-sm file:font-semibold"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="mb-2 block text-sm font-medium">
               تعليق (اختياري)
             </label>
             <Input
@@ -254,7 +227,7 @@ export default function MemoryUploadModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="mb-2 block text-sm font-medium">
               الإشارة للطلاب/الأطفال (اختياري)
             </label>
             <Input
@@ -265,11 +238,11 @@ export default function MemoryUploadModal({
             />
 
             {searchResults.length > 0 && (
-              <div className="mt-2 max-h-40 overflow-y-auto border rounded-md divide-y">
+              <div className="mt-2 max-h-40 divide-y overflow-y-auto rounded-md border">
                 {searchResults.map((p) => (
                   <div
                     key={p.id}
-                    className="p-2 hover:bg-gray-50 cursor-pointer flex justify-between items-center"
+                    className="flex cursor-pointer items-center justify-between p-2 hover:bg-gray-50"
                     onClick={() => toggleParticipant(p)}
                   >
                     <span>
@@ -289,7 +262,7 @@ export default function MemoryUploadModal({
                 {selectedParticipants.map((p) => (
                   <span
                     key={p.id}
-                    className="bg-olive-100 text-olive-800 text-xs px-2 py-1 rounded-full flex items-center gap-1"
+                    className="bg-olive-100 text-olive-800 flex items-center gap-1 rounded-full px-2 py-1 text-xs"
                   >
                     {p.name}
                     <button
@@ -307,14 +280,14 @@ export default function MemoryUploadModal({
 
         <ModalFooter>
           {isUploading && uploadProgress > 0 && uploadProgress < 100 && (
-            <div className="flex-1 flex items-center gap-3">
-              <div className="flex-1 bg-gray-200 rounded-full h-2">
+            <div className="flex flex-1 items-center gap-3">
+              <div className="h-2 flex-1 rounded-full bg-gray-200">
                 <div
                   className="bg-olive-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
               </div>
-              <span className="text-xs text-gray-500 font-medium">
+              <span className="text-xs font-medium text-gray-500">
                 {uploadProgress}%
               </span>
             </div>

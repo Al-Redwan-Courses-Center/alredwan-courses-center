@@ -39,11 +39,15 @@ services:
       redwan-db:
         condition: service_healthy
     ports:
-      - "8000:8000"   # Gunicorn (HTTP)
-      - "8001:8001"   # Uvicorn (WebSocket/ASGI)  ← ADD THIS
+      - "8000:8000" # Gunicorn (HTTP)
+      - "8001:8001" # Uvicorn (WebSocket/ASGI)  ← ADD THIS
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "python3 -c \"import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health/').getcode() == 200 else 1)\""]
+      test:
+        [
+          "CMD-SHELL",
+          'python3 -c "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen(''http://localhost:8000/health/'').getcode() == 200 else 1)"',
+        ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -53,7 +57,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      target: final   # ← production stage, not dev
+      target: final # ← production stage, not dev
     container_name: redwan-frontend
     depends_on:
       redwan-backend:

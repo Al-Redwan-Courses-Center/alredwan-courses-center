@@ -1,28 +1,48 @@
 import { Suspense } from "react";
 import { getUser } from "@/actions/auth";
-import { getChildById } from "@/actions/user";
+import { getChildById, getChildCourses, getParentChildren } from "@/actions/user";
 import { getStudentCourses } from "@/actions/courses";
 import StudentMyCoursesView from "@/components/dashboard/student/StudentMyCoursesView";
-import { CourseDetail } from "@/types/entities";
+import { notFound, redirect } from "next/navigation";
+import type { StudentCourseItem } from "@/types/entities";
 
 export default async function StudentMyCoursesPage({
   childId = "",
 }: {
   childId?: string;
 }) {
-  const { first_name } = await getUser();
-  const myActiveCourses: CourseDetail[] = await getStudentCourses();
-  const name: string = childId
-    ? ((await getChildById(childId))?.first_name ?? "Unknown")
-    : first_name;
+  const { first_name: name, role } = await getUser();
+  let myActiveCourses: StudentCourseItem[];
+  let activeChildId = childId;
+
+  if (role === "parent") {
+    if (!activeChildId) {
+      const children = await getParentChildren();
+      activeChildId = children[0]?.id || "";
+    }
+    if (!activeChildId) return notFound();
+
+    const child = await getChildById(activeChildId);
+    if (!child) return notFound();
+
+    myActiveCourses = await getChildCourses(activeChildId);
+  } else if (role === "student") {
+    myActiveCourses = await getStudentCourses();
+  } else {
+    redirect("/dashboard");
+  }
 
   return (
-    <div className="flex h-full max-h-73/100 flex-col pt-15">
-      <h1 className="dashboard-greeting mb-14 ps-16">السلام عليكم يا {name}</h1>
+    <div className="flex h-full max-h-73/100 flex-col pt-15 w-full overflow-x-auto">
+      <h1 className="dashboard-greeting mb-6 sm:mb-14 px-4 sm:px-8 xl:px-16">لوحة تحكم {name}</h1>
 
       <div className="max-h-full w-full">
         <Suspense fallback={null}>
-          <StudentMyCoursesView courses={myActiveCourses} />
+          <StudentMyCoursesView
+            courses={myActiveCourses}
+            role={role}
+            childId={activeChildId}
+          />
         </Suspense>
       </div>
     </div>

@@ -272,13 +272,30 @@ class Child(ImageOptimizationMixin, models.Model):
         result = uploader.upload(buffer, folder="child_cards")
         self.card_image = result['public_id']
 
-    def get_age_on_date(self, date=timezone.now().date()):
+    def get_age_on_date(self, date=None):
         """Calculate age of the user on a given date."""
         if not self.dob:
             return None
+        if date is None:
+            date = timezone.now().date()
+        elif isinstance(date, str):
+            from datetime import date as date_cls
+            date = date_cls.fromisoformat(date)
+        elif hasattr(date, "date") and callable(getattr(date, "date")):
+            date = date.date()
+
         born = self.dob
-        age = date.year - born.year - \
-            ((date.month, date.day) < (born.month, born.day))
+        if isinstance(born, str):
+            from datetime import date as date_cls
+            born = date_cls.fromisoformat(born)
+        elif hasattr(born, "date") and callable(getattr(born, "date")):
+            born = born.date()
+
+        age = (
+            date.year
+            - born.year
+            - ((date.month, date.day) < (born.month, born.day))
+        )
         return age
 
     def save(self, *args, **kwargs):

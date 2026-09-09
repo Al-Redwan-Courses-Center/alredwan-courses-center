@@ -18,9 +18,10 @@ export function useFilterData<T>(
 
     filters.forEach((filter) => {
       const filterOption = filterConfig[filter];
+      if (!filterOption || !filterOption.key) return;
 
       filtered = filtered.filter(
-        (item: T) => (item as Record<string, any>)[filterOption.key] === filter,
+        (item: T) => (item as Record<string, unknown>)[filterOption.key] === filter,
       );
     });
 

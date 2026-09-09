@@ -22,7 +22,7 @@ export default async function NavBar() {
       )}
 
       <ul className="text-primary tablet:hidden absolute left-1/2 flex transform-[translateX(-50%)] items-center gap-8 text-[14px]">
-        <NavLink variant="landing" href="/">
+        <NavLink variant="landing" href="/#">
           الرئيسية
         </NavLink>
         <NavLink variant="landing" href="/#courses">

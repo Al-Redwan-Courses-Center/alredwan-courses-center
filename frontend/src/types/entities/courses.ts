@@ -47,17 +47,27 @@ export interface CourseListItem {
 
 export interface CourseScheduleDetail {
   id: number;
+  course?: number;
   weekday: number;
   weekday_display: string;
   start_time: string;
   end_time: string;
 }
 
-export interface CourseDetail
-  extends Omit<CourseListItem, "average_rating" | "rating_count"> {
+export interface CourseDetail extends Omit<
+  CourseListItem,
+  "average_rating" | "rating_count"
+> {
   schedules: CourseScheduleDetail[];
 }
 
+export type StudentPhysicalCourse = CourseDetail & {
+  course_progress: number;
+  enrollment_status?: string;
+  enrollment_status_display?: string;
+};
+
+export type StudentCourseItem = StudentPhysicalCourse;
 export interface LandingPageCourse {
   id: number;
   order: number;

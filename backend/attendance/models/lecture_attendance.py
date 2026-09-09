@@ -45,19 +45,19 @@ class LectureAttendance(models.Model):
         constraints = [
             # exactly one of child or student (enforced in clean() too)
             models.CheckConstraint(
-                check=Q(child__isnull=False, student__isnull=True) | Q(
+                condition=Q(child__isnull=False, student__isnull=True) | Q(
                     child__isnull=True, student__isnull=False),
                 name='child_or_student'
             ),
             # rating range when set
             models.CheckConstraint(
-                check=Q(rating__gte=1.00, rating__lte=10.00) | Q(
+                condition=Q(rating__gte=1.00, rating__lte=10.00) | Q(
                     rating__isnull=True),
                 name='lecture_attendance_rating_range'
             ),
             # ensure rating is set when present is not null (API also enforces)
             models.CheckConstraint(
-                check=Q(present__isnull=True) | Q(rating__isnull=False),
+                condition=Q(present__isnull=True) | Q(rating__isnull=False),
                 name='present_requires_rating'
             ),
             # conditional unique constraints per participant type

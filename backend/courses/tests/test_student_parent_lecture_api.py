@@ -159,3 +159,37 @@ class StudentParentLectureAPITestCase(TestCase):
         response = self.client.get(f'/api/courses/{self.course.id}/parent/{random_uuid}/lectures/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()), 0)
+
+    def test_secondary_parent_get_child_lectures(self):
+        from parents.models import ChildParents
+        sec_parent_user = CustomUser.objects.create_user(
+            phone_number1='+201000000005', password='pass',
+            first_name='SecParent', role='parent',
+            dob='1982-01-01', gender='male'
+        )
+        sec_parent = sec_parent_user.parent_profile
+        ChildParents.objects.create(child=self.child, parent=sec_parent)
+
+        self.client.force_authenticate(user=sec_parent_user)
+        response = self.client.get(f'/api/courses/{self.course.id}/parent/{self.child.id}/lectures/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['id'], self.lecture.id)
+
+    def test_age_16_eligible_for_general_course(self):
+        # Student born 16 years before course start date
+        sixteen_user = CustomUser.objects.create_user(
+            phone_number1='+201000000006', password='pass',
+            first_name='Teen', role='student',
+            dob=self.course.start_date - timedelta(days=365 * 16 + 5),
+            gender='male'
+        )
+        sixteen_user.refresh_from_db()
+        teen_student = sixteen_user.student_profile
+        # Course is for_adults=False, min_age=14, max_age=18
+        self.course.for_adults = False
+        self.course.min_age = 14
+        self.course.max_age = 18
+        self.course.save()
+        self.assertTrue(self.course.is_participant_eligible(teen_student))

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import type { LandingPageCourse } from "@/types/entities";
 
 const navigationButtonStyles = cn(
-  "font-medad absolute top-1/2 transform-[translateY(-50%)] text-7xl font-bold text-gray-900",
+  "font-medad text-5xl mobile-lg:text-4xl tablet-sm:text-5xl font-bold text-gray-900 hover:text-olive-500 transition-colors duration-200",
 );
 
 export default function PublicCoursesList({
@@ -17,7 +17,6 @@ export default function PublicCoursesList({
 }: {
   courses: LandingPageCourse[];
 }) {
-  const showSlider = useMediaQuery("(max-width: 600px)");
   const isClient = useIsClient();
 
   if (!isClient)
@@ -27,58 +26,51 @@ export default function PublicCoursesList({
       </div>
     );
 
-  if (showSlider) {
-    return (
-      <div className="tablet-sm:px-20 relative grid px-40">
-        <button
-          className={cn(
-            navigationButtonStyles,
-            "swiper-next tablet-sm:-left-10",
-          )}
-        >
-          {">"}
-        </button>
+  const displayCourses = courses.length === 2 ? [...courses, ...courses] : courses;
 
+  return (
+    <div className="w-full">
+      {/* Desktop Grid Layout: Visible on screens > 900px */}
+      <div className="grid tablet:hidden w-full grid-cols-2 laptop:grid-cols-2 gap-10 mb-17">
+        {courses.map(({ course }, i) => (
+          <PublicCourseCard key={course.id} course={course} index={i} />
+        ))}
+      </div>
+
+      {/* Mobile/Tablet Slider Layout: Visible on screens <= 900px */}
+      <div className="hidden tablet:flex w-full flex-col items-center">
         <Swiper
-          modules={[Autoplay, Navigation]}
+          dir="rtl"
+          key={displayCourses.length}
+          modules={[Navigation]}
           slidesPerView={1}
-          spaceBetween={30}
-          loop
-          autoplay={{
-            delay: 3000,
-          }}
+          spaceBetween={20}
+          loop={displayCourses.length >= 3}
           speed={1200}
           navigation={{
             enabled: true,
-            nextEl: ".swiper-next",
-            prevEl: ".swiper-prev",
+            nextEl: ".course-swiper-next",
+            prevEl: ".course-swiper-prev",
           }}
-          className="w-full p-5!"
+          className="w-full"
         >
-          {courses.map(({ course }, i) => (
-            <SwiperSlide key={course.id} className="px-10 py-5">
+          {displayCourses.map(({ course }, i) => (
+            <SwiperSlide key={`${course.id}-${i}`} className="px-4 py-5">
               <PublicCourseCard key={course.id} course={course} index={i} />
             </SwiperSlide>
           ))}
         </Swiper>
 
-        <button
-          className={cn(
-            navigationButtonStyles,
-            "swiper-prev tablet-sm:-right-10",
-          )}
-        >
-          {"<"}
-        </button>
+        {/* Navigation Buttons below the Slider to prevent overlapping */}
+        <div className="flex items-center gap-16 mt-6">
+          <button className={cn(navigationButtonStyles, "course-swiper-prev")}>
+            {"<"}
+          </button>
+          <button className={cn(navigationButtonStyles, "course-swiper-next")}>
+            {">"}
+          </button>
+        </div>
       </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 lg:gap-20 mb-17">
-      {courses.map(({ course }, i) => (
-        <PublicCourseCard key={course.id} course={course} index={i} />
-      ))}
     </div>
   );
 }

@@ -4,66 +4,70 @@
 @plugin "../tailwind-plugins/separate.ts";
 
 :root {
-    font-size: 62.5%;
+  font-size: 62.5%;
 }
 
 @theme inline {
-    --color-olive-100: #c8d0cb;
-    --color-olive-200: #b0c5b1;
-    --color-olive-300: #93a494;
-    --color-olive-400: #758a7c;
-    --color-olive-500: #59695e;
-    --color-olive-700: #5f6d64;
-    --color-olive-900: #2e3d38;
+  --color-olive-100: #c8d0cb;
+  --color-olive-200: #b0c5b1;
+  --color-olive-300: #93a494;
+  --color-olive-400: #758a7c;
+  --color-olive-500: #59695e;
+  --color-olive-700: #5f6d64;
+  --color-olive-900: #2e3d38;
 
-    --color-beige-500: #c9a878;
+  --color-beige-500: #c9a878;
 
-    --color-gray-50: #fbfbfb;
-    --color-gray-100: #efefef;
-    --color-gray-200: #d9d9d9;
-    --color-gray-300: #d0d0d0;
-    --color-gray-400: #cccccc;
-    --color-gray-450: #bbbbbb;
-    --color-gray-500: #535862;
-    --color-gray-600: #6b6b6b;
-    --color-gray-900: #1f1f1f;
+  --color-gray-50: #fbfbfb;
+  --color-gray-100: #efefef;
+  --color-gray-200: #d9d9d9;
+  --color-gray-300: #d0d0d0;
+  --color-gray-400: #cccccc;
+  --color-gray-450: #bbbbbb;
+  --color-gray-500: #535862;
+  --color-gray-600: #6b6b6b;
+  --color-gray-900: #1f1f1f;
 
-    --shadow-primary: 0 2.542px 2.542px 0 rgba(0, 0, 0, 0.25),
+  --shadow-primary:
+    0 2.542px 2.542px 0 rgba(0, 0, 0, 0.25),
     4.448px 3.813px 9.277px 0 rgba(0, 0, 0, 0.25);
-    --shadow-soft: 7px 6px 14.6px rgba(0, 0, 0, 0.25);
-    --shadow-inner: 0 4px 4px 0 rgba(0, 0, 0, 0.25) inset;
-    --text-shadow-primary: 0 4px 4px rgba(0, 0, 0, 0.25), 7px 6px 14.6px rgba(0, 0, 0, 0.25);
-    --text-shadow-soft: 7px 6px 14.6px rgba(0, 0, 0, 0.25);
-    --drop-shadow-primary: 3.824px 3.278px 7.976px rgba(0, 0, 0, 0.25),
+  --shadow-soft: 7px 6px 14.6px rgba(0, 0, 0, 0.25);
+  --shadow-inner: 0 4px 4px 0 rgba(0, 0, 0, 0.25) inset;
+  --text-shadow-primary:
+    0 4px 4px rgba(0, 0, 0, 0.25), 7px 6px 14.6px rgba(0, 0, 0, 0.25);
+  --text-shadow-soft: 7px 6px 14.6px rgba(0, 0, 0, 0.25);
+  --drop-shadow-primary:
+    3.824px 3.278px 7.976px rgba(0, 0, 0, 0.25),
     0 2.185px 2.185px rgba(0, 0, 0, 0.25);
-    --drop-shadow-soft: drop-shadow(2.04px 1.748px 4.254px rgba(0, 0, 0, 0.25)) drop-shadow(0 1.165px 1.165px rgba(0, 0, 0, 0.25));
+  --drop-shadow-soft: drop-shadow(2.04px 1.748px 4.254px rgba(0, 0, 0, 0.25))
+    drop-shadow(0 1.165px 1.165px rgba(0, 0, 0, 0.25));
 
-    --font-medad: var(--font-medad);
-    --font-messiri: var(--font-messiri);
+  --font-medad: var(--font-medad);
+  --font-messiri: var(--font-messiri);
 
-    --text-heading-2: 3.8rem;
+  --text-heading-2: 3.8rem;
 
-    --breakpoint-*: initial;
+  --breakpoint-*: initial;
 }
 
 @utility heading-2 {
-    @apply text-olive-500 text-heading-2 text-shadow-soft font-bold;
+  @apply text-heading-2 text-shadow-soft font-bold text-olive-500;
 }
 
 @utility title-block {
-    @apply [&>h2]:heading-2 text-center [&>p]:mb-22 [&>p]:max-w-3xl [&>p]:text-[2rem] [&>p]:text-gray-600;
+  @apply [&>h2]:heading-2 text-center [&>p]:mb-22 [&>p]:max-w-3xl [&>p]:text-[2rem] [&>p]:text-gray-600;
 }
 
 @utility container-wide {
-    @apply relative flex flex-col items-center px-53!;
+  @apply relative flex flex-col items-center px-53!;
 }
 
 @utility dashboard-greeting {
-    @apply text-olive-700 font-medad text-6xl;
+  @apply font-medad text-6xl text-olive-700;
 }
 
 @utility dashboard-section-title {
-    @apply text-olive-700 text-5xl font-bold;
+  @apply text-5xl font-bold text-olive-700;
 }
 
 @custom-variant desktop-sm (@media (max-width: 1600px));
@@ -78,71 +82,80 @@
 @custom-variant mobile (@media (max-width: 360px));
 
 @media only screen and (max-width: 1200px) {
-    :root {
-        font-size: 55%;
-    }
+  :root {
+    font-size: 55%;
+  }
 }
 
 @media only screen and (max-width: 550px) {
-    :root {
-        font-size: 50%;
-    }
+  :root {
+    font-size: 50%;
+  }
+  #whatsapp-widget {
+    margin-bottom: 50px;
+  }
+}
+@media only screen and (max-width: 900px) {
+  #whatsapp-widget {
+    margin-bottom: 70px;
+  }
 }
 
 @media only screen and (max-width: 400px) {
-    :root {
-        font-size: 40%;
-    }
+  :root {
+    font-size: 40%;
+  }
 }
 
 html {
-    scroll-behavior: smooth;
+  scroll-behavior: smooth;
 }
 
 body {
-    font-family: var(--font-messiri), Arial, Helvetica, sans-serif;
+  font-family: var(--font-messiri), Arial, Helvetica, sans-serif;
 }
 
 button,
 a,
 img,
 svg {
-    user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 button,
 a {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 ::-webkit-scrollbar {
-    width: 10px; /* for vertical scrollbars */
-    height: 10px; /* for horizontal scrollbars */
+  width: 10px; /* for vertical scrollbars */
+  height: 10px; /* for horizontal scrollbars */
 }
 
 /* Style the track (background) */
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 5px;
+  background: #f1f1f1;
+  border-radius: 5px;
 }
 
 /* Style the thumb (draggable handle) */
 ::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
+  background: #888;
+  border-radius: 5px;
 }
 
 /* Change thumb color on hover */
 ::-webkit-scrollbar-thumb:hover {
-    background: #555;
+  background: #555;
 }
 
 .group\/day:last-child
-button[data-range-middle="true"][data-range-start="false"][data-range-end="false"] {
-    border-radius: 0 9999px 9999px 0;
+  button[data-range-middle="true"][data-range-start="false"][data-range-end="false"] {
+  border-radius: 0 9999px 9999px 0;
 }
 
 .group\/day:first-child
-button[data-range-middle="true"][data-range-start="false"][data-range-end="false"] {
-    border-radius: 9999px 0 0 9999px;
+  button[data-range-middle="true"][data-range-start="false"][data-range-end="false"] {
+  border-radius: 9999px 0 0 9999px;
 }

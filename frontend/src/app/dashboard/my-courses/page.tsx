@@ -7,11 +7,18 @@ export const metadata: Metadata = {
   title: "جميع الدورات",
 };
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams?: Promise<{ child?: string }>;
+}) {
   const { role } = await getUser();
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const childId = resolvedSearchParams.child;
 
   if (role === "instructor") return <InstructorMyCoursesPage />;
-  if (role === "student") return <StudentMyCoursesPage />;
+  if (role === "student" || role === "parent")
+    return <StudentMyCoursesPage childId={childId} />;
 
   return null;
 }

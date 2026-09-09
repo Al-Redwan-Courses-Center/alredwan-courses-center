@@ -30,7 +30,9 @@ export default function EnrollmentRequestsList({
         .filter(Boolean),
     ),
   ];
-
+  const hasWaitingEnrollments = !!enrollments.find(
+    (e) => e.status == "pending" || e.status == "processing",
+  );
   return (
     <div className={cn("flex flex-col ps-0! pb-10 *:ps-29", wrapperStyles)}>
       <div className="mb-6 flex items-center justify-between">
@@ -39,7 +41,9 @@ export default function EnrollmentRequestsList({
         </h2>
         <div className="flex items-center gap-4 text-white">
           <Refresh />
-          <InfoTooltip content="طلبات الاشتراك قيد الانتظار يتم معالجتها حالياً من قبل إدارة المسجد. للاستفسار، يرجى التواصل مع إدارة المسجد مباشرة." />
+          {hasWaitingEnrollments && (
+            <InfoTooltip content="طلبات الاشتراك قيد الانتظار يتم معالجتها حالياً من قبل إدارة المسجد. للاستفسار، يرجى التواصل مع إدارة المسجد مباشرة." />
+          )}
         </div>
       </div>
 

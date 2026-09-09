@@ -34,23 +34,19 @@ export default async function Page({
       isParent ? getParentChildren() : Promise.resolve([]),
     ]);
 
-  const normalizeName = (name: string) => name.trim().replace(/\s+/g, " ");
-
-  const enrolledChildNamesInCourse = new Set(
+  const enrolledChildIdsInCourse = new Set(
     myEnrollments
       .filter(
         (enrollment) =>
           String(enrollment.course) === String(courseId) &&
-          enrollment.participant_type === "child" &&
-          !!enrollment.participant_name,
+          (enrollment.participant_type === "child" || Boolean(enrollment.child_id)) &&
+          Boolean(enrollment.child_id),
       )
-      .map((enrollment) => normalizeName(enrollment.participant_name!)),
+      .map((enrollment) => String(enrollment.child_id)),
   );
 
   const childrenOptions = parentChildren.filter((child) => {
-    const fullName = normalizeName(`${child.first_name} ${child.last_name}`);
-
-    return !enrolledChildNamesInCourse.has(fullName);
+    return !enrolledChildIdsInCourse.has(String(child.id));
   });
 
   const hasActiveEnrollment = myEnrollments.some(

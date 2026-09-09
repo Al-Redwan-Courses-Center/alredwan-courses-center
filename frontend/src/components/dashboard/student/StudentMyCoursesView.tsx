@@ -10,14 +10,17 @@ import { DataViewHeaderLegacy } from "@/components/ui/data-view/DataViewRow";
 import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
 import DataViewSortLegacy from "@/components/ui/data-view/DataViewSort";
 import { cn } from "@/lib/utils";
-import type { CourseDetail } from "@/types/entities";
+import type { StudentCourseItem } from "@/types/entities";
+import type { UserEntity } from "@/types/auth";
 
 export default function StudentMyCoursesView({
   courses,
+  role,
+  childId,
 }: {
-  courses: CourseDetail[];
+  courses: StudentCourseItem[];
   childId?: string;
-  role?: string;
+  role: UserEntity["role"];
 }) {
   return (
     <DataViewLegacy
@@ -40,13 +43,13 @@ export default function StudentMyCoursesView({
       }}
       viewLayout="cards"
     >
-      <div className="mb-14 flex items-center gap-32 ps-16">
+      <div className="mb-14 flex flex-wrap items-center gap-6 sm:gap-12 xl:gap-32 px-4 sm:px-8 xl:px-16">
         <DataViewSearchLegacy />
         <DataViewSortLegacy />
         <DataViewFilterLegacy />
       </div>
 
-      <DataViewHeaderLegacy className="mx-16">
+      <DataViewHeaderLegacy className="mx-4 sm:mx-8 xl:mx-16 hidden lg:grid">
         <DataViewCellLegacy>م</DataViewCellLegacy>
         <DataViewCellLegacy>الدورة</DataViewCellLegacy>
         <DataViewCellLegacy>الموسم</DataViewCellLegacy>
@@ -56,16 +59,19 @@ export default function StudentMyCoursesView({
       </DataViewHeaderLegacy>
 
       <DataViewBodyLegacy
-        className="px-16"
+        className="px-4 sm:px-8 xl:px-16"
         render={{
           table: () => null,
 
-          cards: (
-            item: CourseDetail & {
-              course_progress: number;
-            },
-            index,
-          ) => <StudentCourseCard course={item} index={index} key={item.id} />,
+          cards: (item: StudentCourseItem, index) => (
+            <StudentCourseCard
+              course={item}
+              index={index}
+              key={item.id}
+              role={role}
+              childId={childId}
+            />
+          ),
         }}
       />
 

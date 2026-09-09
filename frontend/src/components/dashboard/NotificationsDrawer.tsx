@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import NotificationWithBadgeIcon from "@/components/icons/NotificationWithBadgeIcon";
+//import NotificationBellIcon from "@/components/icons/NotificationWithBadgeIcon";
+import NotificationBellIcon from "@/components/icons/NotificationBellIcon";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +23,7 @@ export default function NotificationsDrawer({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className={cn(className)}>
-        <NotificationWithBadgeIcon className="text-olive-500 hover:text-olive-300 transition-colors" />
+        <NotificationBellIcon className="text-olive-500 transition-colors hover:text-olive-300" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         className={cn(baseStyles, "relative top-8 rounded-none border-none")}

@@ -16,39 +16,20 @@ export const authConfig: AuthOptions = {
         password: {},
       },
       async authorize(credentials) {
-        const tokenRes = await publicApiClient.post<{
-          access: string;
-          refresh: string;
-        }>("/auth/jwt/create/", credentials);
+        try {
+          const tokenRes = await publicApiClient.post<{
+            access: string;
+            refresh: string;
+          }>("/auth/jwt/create/", credentials);
 
-        const {
-          data: { access, refresh },
-        } = tokenRes;
-
-        if (!access || !refresh) return null;
-
-        const userRes = await publicApiClient.get<UserEntity>(
-          "/auth/users/me/",
-          {
-            headers: {
-              Authorization: `JWT ${access}`,
-            },
-          },
-        );
-
-        const user: UserEntity = userRes.data;
-
-        const { exp } = jwtDecode(access);
-
-        if (!user) return null;
-
-        if (user.role === "instructor") {
           const {
-            data: {
-              results: [{ id }],
-            },
-          } = await publicApiClient.get<PaginatedResponse<Instructor>>(
-            `/api/users/instructors/?user__phone_number1__icontains=${user.phone_number1}`,
+            data: { access, refresh },
+          } = tokenRes;
+
+          if (!access || !refresh) return null;
+
+          const userRes = await publicApiClient.get<UserEntity>(
+            "/auth/users/me/",
             {
               headers: {
                 Authorization: `JWT ${access}`,
@@ -56,14 +37,55 @@ export const authConfig: AuthOptions = {
             },
           );
 
-          user.instructor_id = String(id);
+          const user: UserEntity = userRes.data;
+
+          const { exp } = jwtDecode(access);
+
+          if (user.role === "instructor" && !user.instructor_id) {
+            try {
+              const instructorRes = await publicApiClient.get<
+                PaginatedResponse<Instructor>
+              >(
+                `/api/users/instructors/?user__phone_number1__exact=${encodeURIComponent(user.phone_number1)}`,
+                {
+                  headers: {
+                    Authorization: `JWT ${access}`,
+                  },
+                },
+              );
+
+              if (
+                instructorRes.data?.results &&
+                instructorRes.data.results.length > 0
+              ) {
+                const matchedInstructor = instructorRes.data.results[0];
+                if (matchedInstructor?.id) {
+                  user.instructor_id = String(matchedInstructor.id);
+                }
+              }
+            } catch (err) {
+              logApiError("Error fetching instructor profile:", err);
+            }
+          }
+
+          user.jwt_access_token = access;
+          user.jwt_refresh_token = refresh;
+          user.exp = exp || Date.now();
+          return user;
+        } catch (error: any) {
+          console.error(
+            "NextAuth authorize failed. Error message:",
+            error.message,
+          );
+          if (error.response) {
+            console.error(
+              "Response error data:",
+              JSON.stringify(error.response.data),
+            );
+            console.error("Response error status:", error.response.status);
+          }
+          return null;
         }
-
-        user.jwt_access_token = access;
-        user.jwt_refresh_token = refresh;
-        user.exp = exp || Date.now();
-
-        return user;
       },
     }),
   ],

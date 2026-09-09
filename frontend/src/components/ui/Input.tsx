@@ -37,6 +37,8 @@ interface BaseInput {
   wrapperStyles?: string;
   type?: InputHTMLAttributes<HTMLInputElement>["type"];
   unstyled?: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 interface UncontrolledInput extends BaseInput {
@@ -65,6 +67,8 @@ export default function Input({
   value,
   registerReturn,
   unstyled = false,
+  onFocus,
+  onBlur,
 }: UncontrolledInput | ControlledInput) {
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === "password";
@@ -85,6 +89,8 @@ export default function Input({
         value={value}
         {...registerReturn}
         placeholder={placeholder}
+        onFocus={onFocus}
+        onBlur={onBlur}
         className={cn(
           !unstyled && !icon && containerStyles({ shape }),
           "focus:outline-none w-full",
