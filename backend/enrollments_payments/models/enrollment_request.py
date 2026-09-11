@@ -68,7 +68,8 @@ class EnrollmentRequest(models.Model):
         default=EnrollmentRequestStatus.PENDING,
     )
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
     processed_at = models.DateTimeField(null=True, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True)
 
@@ -114,9 +115,9 @@ class EnrollmentRequest(models.Model):
                 ),
                 name="parent_child_or_student",
             ),
-            # price must be positive (only when price not null)
+            # price must be non-negative (only when price not null); 0 allowed for free courses
             models.CheckConstraint(
-                condition=Q(price__gt=0) | Q(price__isnull=True), name="positive_price"
+                condition=Q(price__gte=0) | Q(price__isnull=True), name="positive_price"
             ),
             # Unique constraint when child is not null
             models.UniqueConstraint(
@@ -238,12 +239,14 @@ class EnrollmentRequest(models.Model):
             else:
                 target = self.course
                 final_amount = (
-                    target.price if (target and target.price is not None) else 0
+                    target.price if (
+                        target and target.price is not None) else 0
                 )
 
             # Determine payment method
             final_method = (
-                payment_method if payment_method else (self.payment_method or "cash")
+                payment_method if payment_method else (
+                    self.payment_method or "cash")
             )
 
             # Build payment notes to track partial payments
@@ -299,7 +302,8 @@ class EnrollmentRequest(models.Model):
         self.processed_at = timezone.now()
         if reason:
             self.notes = (self.notes or "") + f"\n[سبب الرفض] {reason}"
-        self.save(update_fields=["status", "processed_by", "processed_at", "notes"])
+        self.save(update_fields=[
+                  "status", "processed_by", "processed_at", "notes"])
 
     def __str__(self):
         participant = self.student or self.child or "Unknown"
