@@ -25,15 +25,18 @@ export function useMutateSearchParams() {
     [searchParams],
   );
 
-  function mutateSearchParams(
-    queryParams: { key: string; val: unknown }[],
-    replace: boolean = false,
-  ) {
-    const newUrl = `${pathname}?${generateQueryString(queryParams)}`;
+  const mutateSearchParams = useCallback(
+    (
+      queryParams: { key: string; val: unknown }[],
+      replace: boolean = false,
+    ) => {
+      const newUrl = `${pathname}?${generateQueryString(queryParams)}`;
 
-    if (replace) router.replace(newUrl);
-    else router.push(newUrl);
-  }
+      if (replace) router.replace(newUrl);
+      else router.push(newUrl);
+    },
+    [pathname, generateQueryString, router],
+  );
 
   return { mutateSearchParams, searchParams };
 }

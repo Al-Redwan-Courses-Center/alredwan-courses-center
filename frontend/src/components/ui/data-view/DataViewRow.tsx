@@ -30,7 +30,7 @@ export function DataViewRowLegacy({
   return (
     <div
       className={cn(
-        "grid overflow-hidden",
+        "grid",
         columnSizing,
         rowStyles({
           intent:

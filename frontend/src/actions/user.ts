@@ -4,7 +4,12 @@ import { isAxiosError } from "axios";
 import { revalidatePath } from "next/cache";
 import { getCourseById } from "@/actions/courses";
 import { getEnrollmentProgressById } from "@/actions/enrollments";
-import { apiRequest, getAuthApiClient, unwrapPaginated } from "@/lib/api";
+import {
+  apiRequest,
+  getAuthApiClient,
+  unwrapPaginated,
+  publicApiClient,
+} from "@/lib/api";
 import type { PaginatedResponse } from "@/types/config";
 import type {
   CourseDetail,
@@ -213,7 +218,9 @@ export async function getChildEnrollmentRequests(
   }
 }
 
-export async function getChildCourses(childId: string): Promise<StudentCourseItem[]> {
+export async function getChildCourses(
+  childId: string,
+): Promise<StudentCourseItem[]> {
   try {
     const myEnrollments = await getChildEnrollments(childId);
     const myRequests = await getChildEnrollmentRequests(childId);
@@ -268,7 +275,10 @@ export async function getChildCourses(childId: string): Promise<StudentCourseIte
           enrollment_status: isPending ? req?.status : "active",
           enrollment_status_display: isPending ? req?.status_display : "نشط",
         };
-      });
+      })
+      .filter(
+        (c): c is NonNullable<typeof c> & { course_progress: number } => c !== null,
+      );
 
     const apiClient = await getAuthApiClient();
     let onlineCoursesInitial: OnlineCourseDetail[] = [];
@@ -343,10 +353,15 @@ export async function getChildCourses(childId: string): Promise<StudentCourseIte
 //     return null;
 //   }
 // }
-export async function getInstructorById(id: string | number): Promise<InstructorDetail | null> {
+export async function getInstructorById(
+  id: string | number,
+  publicApi: boolean = false,
+): Promise<InstructorDetail | null> {
   try {
-    const apiClient = await getAuthApiClient();
-    const { data } = await apiClient.get<InstructorDetail>(`/api/users/instructors/${id}/`);
+    const apiClient = publicApi ? publicApiClient : await getAuthApiClient();
+    const { data } = await apiClient.get<InstructorDetail>(
+      `/api/users/instructors/${id}/`,
+    );
     return data;
   } catch (error: unknown) {
     if (

@@ -41,13 +41,13 @@ export default function DashboardHeader({
           className="h-14 w-14 shrink-0 min-[1000px]:h-20 min-[1000px]:w-20"
           fallbackClassName="border-olive-300 border-3"
         />
-        <span className="text-olive-700 text-3xl min-[1000px]:text-4xl">
+        <span className="text-3xl text-olive-700 min-[1000px]:text-4xl">
           {role === "instructor" && "أخ"} {firstName}
         </span>
       </div>
 
       <NotificationsDrawer className="me-8 min-[1000px]:me-18">
-        <span className="text-right">+1 إشعار</span>
+        <></>
       </NotificationsDrawer>
 
       <NavLink

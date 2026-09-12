@@ -5,9 +5,11 @@ import { CourseListItem, OnlineCourseListItem } from "@/types/entities";
 import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
 import DashboardOnlineCoursesView from "@/components/dashboard/DashboardOnlineCoursesView";
 
+import { PaginatedResponse } from "@/types/config";
+
 interface PublicCourseCatalogProps {
-  physical: CourseListItem[];
-  online: OnlineCourseListItem[];
+  physical: PaginatedResponse<CourseListItem>;
+  online: PaginatedResponse<OnlineCourseListItem>;
 }
 
 export default function PublicCourseCatalog({
@@ -59,13 +61,25 @@ export default function PublicCourseCatalog({
 
       {activeTab === "physical" && (
         <div className="w-full">
-          <DashboardAllCoursesView courses={physical} linkTo={linkTo} />
+          <DashboardAllCoursesView 
+            courses={physical.results}
+            totalCount={physical.count}
+            totalPages={physical.total_pages}
+            currentPage={physical.current_page}
+            linkTo={linkTo} 
+          />
         </div>
       )}
 
       {activeTab === "online" && (
         <div className="w-full">
-          <DashboardOnlineCoursesView courses={online} linkTo={linkTo} />
+          <DashboardOnlineCoursesView 
+            courses={online.results} 
+            totalCount={online.count}
+            totalPages={online.total_pages}
+            currentPage={online.current_page}
+            linkTo={linkTo} 
+          />
         </div>
       )}
     </div>

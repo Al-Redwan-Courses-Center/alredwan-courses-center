@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { getUser } from "@/actions/auth";
+import { getChildById, getChildCourses, getParentChildren } from "@/actions/user";
 import { getStudentCourses } from "@/actions/courses";
-import { getChildCourses, getChildById } from "@/actions/user";
 import StudentMyCoursesView from "@/components/dashboard/student/StudentMyCoursesView";
 import { notFound, redirect } from "next/navigation";
 import type { StudentCourseItem } from "@/types/entities";
@@ -13,28 +13,38 @@ export default async function StudentMyCoursesPage({
 }) {
   const { first_name, role } = await getUser();
   let myActiveCourses: StudentCourseItem[];
-  let name: string;
+  let name = first_name;
+  let activeChildId = childId;
 
   if (role === "parent") {
-    const child = await getChildById(childId);
+    if (!activeChildId) {
+      const children = await getParentChildren();
+      activeChildId = children[0]?.id || "";
+    }
+    if (!activeChildId) return notFound();
+
+    const child = await getChildById(activeChildId);
     if (!child) return notFound();
 
-    myActiveCourses = await getChildCourses(childId);
+    myActiveCourses = await getChildCourses(activeChildId);
     name = child.first_name;
   } else if (role === "student") {
     myActiveCourses = await getStudentCourses();
-    name = first_name;
   } else {
     redirect("/dashboard");
   }
 
   return (
-    <div className="flex h-full max-h-73/100 flex-col pt-15">
-      <h1 className="dashboard-greeting mb-14 ps-16">السلام عليكم يا {name}</h1>
+    <div className="flex h-full max-h-73/100 flex-col pt-15 w-full overflow-x-auto">
+      <h1 className="dashboard-greeting mb-6 sm:mb-14 px-4 sm:px-8 xl:px-16">لوحة تحكم {name}</h1>
 
       <div className="max-h-full w-full">
         <Suspense fallback={null}>
-          <StudentMyCoursesView courses={myActiveCourses} />
+          <StudentMyCoursesView
+            courses={myActiveCourses}
+            role={role}
+            childId={activeChildId}
+          />
         </Suspense>
       </div>
     </div>

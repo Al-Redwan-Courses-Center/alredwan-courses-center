@@ -20,16 +20,17 @@ export default async function Page(props: {
       status: searchParams.status as string,
       attendance_type: searchParams.attendance_type as string,
       season: searchParams.season ? Number(searchParams.season) : undefined,
+      search: typeof searchParams.search === "string" ? searchParams.search : undefined,
     }),
   ]);
 
   const greetingName = user.first_name || "Admin";
 
   return (
-    <div className="px-16 py-26 flex flex-col max-[1000px]:px-6 max-[1000px]:py-10">
-      <div className="font-medad text-olive-300 mb-15 flex flex-col gap-10 text-6xl max-[1000px]:text-4xl max-[1000px]:mb-8 max-[1000px]:gap-6">
+    <div className="flex flex-col px-16 py-26 max-[1000px]:px-6 max-[1000px]:py-10">
+      <div className="font-medad text-olive-300 mb-15 flex flex-col gap-10 text-6xl max-[1000px]:mb-8 max-[1000px]:gap-6 max-[1000px]:text-4xl">
         <span className="text-olive-700">السلام عليكم يا {greetingName}</span>
-        <div className="flex justify-between items-end max-[1000px]:flex-col max-[1000px]:items-start max-[1000px]:gap-2">
+        <div className="flex items-end justify-between max-[1000px]:flex-col max-[1000px]:items-start max-[1000px]:gap-2">
           <span>سجل الحضور والغياب</span>
           <span className="text-2xl text-gray-400 max-[1000px]:text-lg">
             التاريخ: {date}

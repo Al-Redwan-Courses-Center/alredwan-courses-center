@@ -375,7 +375,7 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
             # ADD PAGE - Simplified
             return (
                 (_('معلومات الدورة'), {
-                    'fields': ('course',),
+                    'fields': ('course', 'online_course'),
                     'description': _('اختر الدورة المراد التسجيل فيها')
                 }),
                 (_('معلومات المشترك'), {
@@ -394,7 +394,7 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
                     'fields': ('get_participant_info',),
                 }),
                 (_('معلومات الدورة'), {
-                    'fields': ('course', 'get_course_info'),
+                    'fields': ('course', 'online_course', 'get_course_info'),
                 }),
                 (_('حالة الإلتحاق'), {
                     'fields': ('status', 'enrolled_at'),
@@ -417,7 +417,7 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
             return (
                 'id', 'enrolled_at', 'updated_at', 'completed_at', 'dropped_at',
                 'get_participant_info', 'get_course_info', 'get_payment_summary',
-                'course', 'student', 'child'  # Lock after creation
+                'course', 'online_course', 'student', 'child'  # Lock after creation
             )
 
     # =========================================================================
@@ -430,6 +430,7 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
             'course',
             'course__season',
             'course__instructor',
+            'online_course',
             'student',
             'student__user',
             'child',
@@ -698,7 +699,7 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
         target = obj.get_course_instance()
         if not target:
             return '-'
-        prefix = '💻 الدورة الإلكترونية' if obj.online_course else '📚 الدورة'
+        prefix = '💻 الدورة الإلكترونية' if getattr(obj, "online_course", None) else '📚 الدورة'
         instructor = getattr(target, 'instructor', None) or '-'
         price = getattr(target, 'price', None) or 'مجاني'
         enrolled = getattr(target, 'enrolled_count', 0)
@@ -781,52 +782,20 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
 
         labels = {
             'course': 'الدورة',
+            'online_course': 'الدورة الإلكترونية',
             'student': 'الطالب',
             'child': 'الطفل',
             'status': 'الحالة',
-            'enrolled_at': 'تاريخ التسجيل',
-            'created_by': 'تم الإنشاء بواسطة',
-            'updated_at': 'تاريخ التحديث',
-            'completed_at': 'تاريخ الإكمال',
-            'dropped_at': 'تاريخ الإلغاء',
+            'created_by': 'تم بواسطة',
         }
-
-        help_texts = {
-            'student': 'اختر الطالب إذا كان بالغاً',
-            'child': 'اختر الطفل إذا كان قاصراً',
-        }
-
-        for field_name, label in labels.items():
-            if field_name in form.base_fields:
-                form.base_fields[field_name].label = label
-
-        if obj is None:
-            for field_name, help_text in help_texts.items():
-                if field_name in form.base_fields:
-                    form.base_fields[field_name].help_text = help_text
-
-            # Make student and child not required (one or the other)
-            if 'student' in form.base_fields:
-                form.base_fields['student'].required = False
-            if 'child' in form.base_fields:
-                form.base_fields['child'].required = False
+        for field, label in labels.items():
+            if field in form.base_fields:
+                form.base_fields[field].label = label
 
         return form
 
-    def add_view(self, request, form_url='', extra_context=None):
-        """Add extra context for add view."""
-        extra_context = extra_context or {}
-        extra_context['title'] = _('إضافة إلتحاق جديد')
-        return super().add_view(request, form_url, extra_context)
-
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        """Add extra context for change view."""
-        extra_context = extra_context or {}
-        extra_context['title'] = _('تفاصيل الإلتحاق')
-        return super().change_view(request, object_id, form_url, extra_context)
-
     def save_model(self, request, obj, form, change):
-        """Auto-set created_by when creating new enrollment."""
+        """Set created_by on creation."""
         if not change and not obj.created_by:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)

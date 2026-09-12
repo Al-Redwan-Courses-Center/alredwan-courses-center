@@ -19,9 +19,15 @@ import DataViewSortLegacy from "../ui/data-view/DataViewSort";
 
 export default function DashboardAllCoursesView({
   courses: inputCourses = [],
+  totalCount,
+  totalPages,
+  currentPage,
   linkTo = "dashboard",
 }: {
   courses?: CourseListItem[];
+  totalCount?: number;
+  totalPages?: number;
+  currentPage?: number;
   linkTo?: "dashboard" | "landing";
 }) {
   const courses = buildAllCoursesView(inputCourses);
@@ -37,12 +43,16 @@ export default function DashboardAllCoursesView({
       filterConfig={filterConfig}
       sortConfig={sortConfig}
       viewLayout="cards"
+      totalCount={totalCount}
+      totalPages={totalPages}
+      currentPage={currentPage}
+      manualPagination={totalPages !== undefined || totalCount !== undefined}
     >
-      <div className="relative z-60 mb-14 flex items-center justify-between gap-16 px-16 tablet:flex-col tablet:items-stretch tablet:gap-12">
-        <div className="w-full max-w-[400px] tablet:max-w-full">
+      <div className="tablet:flex-col tablet:items-stretch tablet:gap-12 relative z-60 mb-14 flex items-center justify-between gap-16 px-4 tablet:px-16 tablet-sm:px-4">
+        <div className="tablet:max-w-full w-full max-w-[400px]">
           <DataViewSearchLegacy />
         </div>
-        <div className="flex items-center gap-12 tablet:w-full">
+        <div className="tablet:w-full flex items-center gap-12">
           <div className="tablet:flex-1 w-auto">
             <DataViewSortLegacy />
           </div>
@@ -52,7 +62,7 @@ export default function DashboardAllCoursesView({
         </div>
       </div>
 
-      <DataViewHeaderLegacy className="mx-16">
+      <DataViewHeaderLegacy className="mx-4 tablet:mx-16 tablet-sm:mx-4">
         <DataViewCellLegacy>م</DataViewCellLegacy>
         <DataViewCellLegacy>الدورة</DataViewCellLegacy>
         <DataViewCellLegacy>الموسم</DataViewCellLegacy>
@@ -62,7 +72,7 @@ export default function DashboardAllCoursesView({
       </DataViewHeaderLegacy>
 
       <DataViewBodyLegacy
-        className="px-16"
+        className="px-4 tablet:px-16 tablet-sm:px-4 tablet-sm:!grid tablet-sm:!grid-cols-1 tablet-sm:!overflow-hidden w-full [&_>_div]:!min-w-0"
         render={{
           table: () => null,
 

@@ -1,13 +1,13 @@
 import Image from "next/image";
-import Image1 from "@/assets/image-grid/image-1.jpg";
-import Image2 from "@/assets/image-grid/image-2.jpg";
-import Image3 from "@/assets/image-grid/image-3.jpg";
-import Image4 from "@/assets/image-grid/image-4.jpg";
-import Image5 from "@/assets/image-grid/image-5.jpg";
-import Image6 from "@/assets/image-grid/image-6.jpg";
-import Image7 from "@/assets/image-grid/image-7.jpg";
-import Image8 from "@/assets/image-grid/image-8.jpg";
-import Image9 from "@/assets/image-grid/image-9.jpg";
+import Image1 from "@/assets/image-grid/image-1.webp";
+import Image2 from "@/assets/image-grid/image-2.webp";
+import Image3 from "@/assets/image-grid/image-3.webp";
+import Image4 from "@/assets/image-grid/image-4.webp";
+import Image5 from "@/assets/image-grid/image-5.webp";
+import Image6 from "@/assets/image-grid/image-6.webp";
+import Image7 from "@/assets/image-grid/image-7.webp";
+import Image8 from "@/assets/image-grid/image-8.webp";
+import Image9 from "@/assets/image-grid/image-9.webp";
 import { cn } from "@/lib/utils";
 
 const baseStyles = cn("tablet:border-6 border-[2rem] border-white");

@@ -16,6 +16,12 @@ export default withAuth(
           );
         }
 
+        case "supervisor": {
+          return NextResponse.redirect(
+            new URL("/dashboard/todays-staff-attendances", req.url),
+          );
+        }
+
         case "instructor": {
           return NextResponse.redirect(
             new URL("/dashboard/todays-schedule", req.url),

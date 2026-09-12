@@ -1,3 +1,5 @@
+"use client";
+import { usePathname } from "next/navigation";
 import { parseISO } from "date-fns";
 import Image from "next/image";
 import CourseImage from "@/assets/course-img.jpg";
@@ -7,24 +9,49 @@ import Button from "@/components/ui/Button";
 import ItemCard from "@/components/ui/ItemCard";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
-
-import type { StudentCourseItem } from "@/types/entities";
+import type { StudentCourseItem } from "@/types/entities/courses";
+import type { UserEntity } from "@/types/auth";
 
 export default function StudentCourseCard({
   course,
   index,
+  role,
+  childId,
 }: {
   course: StudentCourseItem;
   index: number;
+  role: UserEntity["role"];
+  childId?: string;
 }) {
+  const pathname = usePathname();
+  const activeChildId =
+    childId ||
+    (role === "parent" && pathname.startsWith("/dashboard/my-children/")
+      ? pathname.split("/")[3]
+      : undefined);
+
   const isOnline = course.type === "online";
-  const targetHref = isOnline
+  let targetHref = isOnline
     ? `/dashboard/online-courses/${course.id}/learn`
     : `/dashboard/my-courses/${course.id}`;
 
-  const imageSrc =
-    (isOnline ? ("thumbnail" in course ? course.thumbnail : null) : ("image" in course ? course.image : null)) ||
-    CourseImage;
+  if (role === "parent" && activeChildId) {
+    if (pathname.startsWith("/dashboard/my-children/")) {
+      targetHref = isOnline
+        ? `/dashboard/my-children/${activeChildId}/online-courses/${course.id}/learn`
+        : `/dashboard/my-children/${activeChildId}/courses/${course.id}`;
+    } else {
+      targetHref = isOnline
+        ? `/dashboard/online-courses/${course.id}/learn?child=${activeChildId}`
+        : `/dashboard/my-courses/${course.id}?child=${activeChildId}`;
+    }
+  }
+
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const courseImage = isOnline ? ("thumbnail" in course ? course.thumbnail : null) : ("image" in course ? course.image : null);
+  const imageSrc = courseImage?.startsWith("/")
+    ? backendUrl + courseImage
+    : courseImage || "/images/placeholder.png";
 
   const tags = "tags" in course ? course.tags : [];
   const startDate = "start_date" in course ? course.start_date : null;
@@ -36,7 +63,7 @@ export default function StudentCourseCard({
     <ItemCard
       index={index}
       cardHeader={
-        <div className="relative w-full h-48 overflow-hidden rounded-t-2xl">
+        <div className="relative h-48 w-full overflow-hidden rounded-t-2xl">
           <Image
             src={imageSrc}
             alt="Course Image"
@@ -52,8 +79,9 @@ export default function StudentCourseCard({
             index % 2 === 0 ? "justify-end" : "",
           )}
         >
-          {course.enrollment_status === "pending" || course.enrollment_status === "processing" ? (
-            <span className="text-orange-500 font-bold px-4 py-2 bg-orange-50 rounded-lg">
+          {course.enrollment_status === "pending" ||
+          course.enrollment_status === "processing" ? (
+            <span className="rounded-lg bg-orange-50 px-4 py-2 font-bold text-orange-500">
               {course.enrollment_status_display || "قيد المراجعة"}
             </span>
           ) : (
@@ -64,10 +92,10 @@ export default function StudentCourseCard({
         </div>
       }
     >
-      <div className="flex justify-between items-start mb-3">
+      <div className="mb-3 flex items-start justify-between">
         <h3 className="text-[1.28rem] font-bold">{course.name}</h3>
         {isOnline && (
-          <span className="text-sm bg-blue-100 text-blue-700 px-2 py-1 rounded">
+          <span className="rounded bg-blue-100 px-2 py-1 text-sm text-blue-700">
             أونلاين
           </span>
         )}
@@ -90,7 +118,7 @@ export default function StudentCourseCard({
         </div>
       )}
 
-      <ul className="[&_svg]:text-olive-500 [&>li]:courses-center mb-7 flex flex-col gap-3 [&_svg]:h-auto [&_svg]:w-[1.525rem] [&>li]:flex [&>li]:gap-2">
+      <ul className="[&>li]:courses-center mb-7 flex flex-col gap-3 [&_svg]:h-auto [&_svg]:w-[1.525rem] [&_svg]:text-olive-500 [&>li]:flex [&>li]:gap-2">
         {startDate && (
           <li>
             <CalendarIcon />
@@ -128,17 +156,19 @@ export default function StudentCourseCard({
           </li>
         )}
 
-        {schedules && (
+        {schedules && schedules.length > 0 && (
           <li>
             <CalendarIcon />
             <span>
-              {schedules.map((s: { weekday_display: string }) => s.weekday_display).join(" \\ ")}
+              {schedules
+                .map((s: { weekday_display: string }) => s.weekday_display)
+                .join(" \\ ")}
             </span>
           </li>
         )}
       </ul>
 
-      <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 mt-auto">
+      <div className="mt-auto grid grid-cols-[1fr_auto] items-center gap-x-3">
         <ProgressBar className="h-4" progress={course.course_progress} />
         <span className="font-bold">{course.course_progress}% تقدم</span>
       </div>

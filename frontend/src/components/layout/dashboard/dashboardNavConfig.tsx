@@ -57,6 +57,12 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       href: "/dashboard/memories",
       icon: <MosqueIcon />,
     },
+    {
+      label: "الملف الشخصي",
+      href: "/dashboard/profile",
+      icon: <PersonIcon />,
+      className: "mb-auto",
+    },
   ],
 
   supervisor: [
@@ -79,6 +85,12 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       label: "ذكريات المسجد",
       href: "/dashboard/memories",
       icon: <MosqueIcon />,
+    },
+    {
+      label: "الملف الشخصي",
+      href: "/dashboard/profile",
+      icon: <PersonIcon />,
+      className: "mb-auto",
     },
   ],
 

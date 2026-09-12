@@ -2,8 +2,13 @@
 """Serializer for EnrollmentRequest model in enrollments_payments app.
 Handles validation and serialization of enrollment request data.
 """
+
 from rest_framework import serializers
-from ..models.enrollment_request import EnrollmentRequest, EnrollmentRequestStatus, PaymentMethod
+from ..models.enrollment_request import (
+    EnrollmentRequest,
+    EnrollmentRequestStatus,
+    PaymentMethod,
+)
 from ..models.enrollment import Enrollment, EnrollmentStatus
 
 
@@ -12,8 +17,8 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EnrollmentRequest
-        fields = ['id', 'course', 'online_course', 'child', 'price', 'payment_method', 'notes']
-        read_only_fields = ['id']
+        fields = ["id", "course", "online_course", "child", "price", "payment_method", "notes"]
+        read_only_fields = ["id"]
 
     def validate_course(self, course):
         """Validate course is active and has capacity"""
@@ -22,7 +27,8 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("هذه الدورة غير متاحة حالياً.")
             if course.enrolled_count >= course.capacity:
                 raise serializers.ValidationError(
-                    "لا يمكن الإنضمام، تم الوصول إلى الحد الأقصى للمشاركين.")
+                    "لا يمكن الإنضمام، تم الوصول إلى الحد الأقصى للمشاركين."
+                )
         return course
 
     def validate_online_course(self, online_course):
@@ -34,18 +40,20 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
 
     def validate_child(self, child):
         """Validate child belongs to the requesting parent"""
-        request = self.context.get('request')
-        if child and request.user.role == 'parent':
-            parent = getattr(request.user, 'parent_profile', None)
+        request = self.context.get("request")
+        if child and request.user.role == "parent":
+            parent = getattr(request.user, "parent_profile", None)
             if not parent:
-                raise serializers.ValidationError(
-                    "لم يتم العثور على ملف ولي الأمر.")
+                raise serializers.ValidationError("لم يتم العثور على ملف ولي الأمر.")
             # Check primary_parent OR extra_parents
-            is_linked = (child.primary_parent_id == parent.id or
-                         child.extra_parents.filter(parent=parent).exists())
+            is_linked = (
+                child.primary_parent_id == parent.id
+                or child.extra_parents.filter(parent=parent).exists()
+            )
             if not is_linked:
                 raise serializers.ValidationError(
-                    "الطفل المحدد لا ينتمي إلى هذا المستخدم.")
+                    "الطفل المحدد لا ينتمي إلى هذا المستخدم."
+                )
         return child
 
     def validate_price(self, price):
@@ -56,12 +64,12 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """Cross-field validation"""
-        request = self.context.get('request')
+        request = self.context.get("request")
         user = request.user
-        course = data.get('course')
-        online_course = data.get('online_course')
-        child = data.get('child')
-        price = data.get('price')
+        course = data.get("course")
+        online_course = data.get("online_course")
+        child = data.get("child")
+        price = data.get("price")
         
         if (course is None and online_course is None) or (course is not None and online_course is not None):
             raise serializers.ValidationError("يجب تحديد إما الدورة الحضورية أو الدورة الإلكترونية فقط.")
@@ -69,47 +77,50 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
         target_course = course or online_course
 
         # Role-based validation
-        if user.role not in ['parent', 'student']:
+        if user.role not in ["parent", "student"]:
             raise serializers.ValidationError(
-                "فقط أولياء الأمور والطلاب يمكنهم تقديم طلبات إلتحاق.")
+                "فقط أولياء الأمور والطلاب يمكنهم تقديم طلبات إلتحاق."
+            )
 
-        def get_age_requirements_msg(course):
+        def get_age_requirements_msg(c):
             msg = "تحقق من متطلبات العمر"
-            if course.min_age and course.max_age:
-                msg = f"العمر المطلوب من {course.min_age} إلى {course.max_age} سنة"
-            elif course.min_age:
-                msg = f"العمر المطلوب {course.min_age} سنة فأكثر"
-            elif course.max_age:
-                msg = f"العمر المطلوب {course.max_age} سنة كحد أقصى"
-            elif course.for_adults:
+            if getattr(c, "min_age", None) and getattr(c, "max_age", None):
+                msg = f"العمر المطلوب من {c.min_age} إلى {c.max_age} سنة"
+            elif getattr(c, "min_age", None):
+                msg = f"العمر المطلوب {c.min_age} سنة فأكثر"
+            elif getattr(c, "max_age", None):
+                msg = f"العمر المطلوب {c.max_age} سنة كحد أقصى"
+            elif getattr(c, "for_adults", None):
                 msg = "هذه الدورة مخصصة للبالغين فقط"
             return msg
 
-        if user.role == 'parent':
+        if user.role == "parent":
             if not child:
                 raise serializers.ValidationError(
-                    {"child": "يجب تحديد الطفل عند تقديم طلب إلتحاق كولي أمر."})
+                    {"child": "يجب تحديد الطفل عند تقديم طلب إلتحاق كولي أمر."}
+                )
             # Eligibility check for child
-            if hasattr(target_course, 'is_participant_eligible') and not target_course.is_participant_eligible(child):
+            if hasattr(target_course, "is_participant_eligible") and not target_course.is_participant_eligible(child):
                 req_msg = get_age_requirements_msg(target_course)
                 raise serializers.ValidationError(f"الطفل غير مؤهل لهذه الدورة ({req_msg}).")
 
-        if user.role == 'student':
+        if user.role == "student":
             if child:
                 raise serializers.ValidationError(
-                    {"child": "لا يمكن للطالب تقديم طلب إلتحاق لطفل."})
-            student = getattr(user, 'student_profile', None)
+                    {"child": "لا يمكن للطالب تقديم طلب إلتحاق لطفل."}
+                )
+            student = getattr(user, "student_profile", None)
             if not student:
-                raise serializers.ValidationError(
-                    "لم يتم العثور على ملف الطالب.")
-            if hasattr(target_course, 'is_participant_eligible') and not target_course.is_participant_eligible(student):
+                raise serializers.ValidationError("لم يتم العثور على ملف الطالب.")
+            if hasattr(target_course, "is_participant_eligible") and not target_course.is_participant_eligible(student):
                 req_msg = get_age_requirements_msg(target_course)
                 raise serializers.ValidationError(f"أنت غير مؤهل لهذه الدورة ({req_msg}).")
 
         # Price validation against course price
         if price and target_course and price > target_course.price:
             raise serializers.ValidationError(
-                {"price": "السعر المدخل لا يمكن أن يكون أكبر من سعر الدورة."})
+                {"price": "السعر المدخل لا يمكن أن يكون أكبر من سعر الدورة."}
+            )
 
         # Check for duplicate pending/processing requests
         self._check_duplicate_request(user, course, online_course, child)
@@ -123,10 +134,10 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
         """Check for existing pending/processing requests"""
         active_statuses = [
             EnrollmentRequestStatus.PENDING,
-            EnrollmentRequestStatus.PROCESSING
+            EnrollmentRequestStatus.PROCESSING,
         ]
 
-        if user.role == 'student':
+        if user.role == "student":
             exists = EnrollmentRequest.objects.filter(
                 course=course,
                 online_course=online_course,
@@ -143,13 +154,14 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
 
         if exists:
             raise serializers.ValidationError(
-                "يوجد طلب إلتحاق معلق لهذه الدورة بالفعل.")
+                "يوجد طلب إلتحاق معلق لهذه الدورة بالفعل."
+            )
 
     def _check_existing_enrollment(self, user, course, online_course, child):
         """Check for existing active enrollment"""
         active_statuses = [EnrollmentStatus.ACTIVE, EnrollmentStatus.SUSPENDED]
 
-        if user.role == 'student':
+        if user.role == "student":
             exists = Enrollment.objects.filter(
                 course=course,
                 online_course=online_course,
@@ -165,19 +177,18 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
             ).exists()
 
         if exists:
-            raise serializers.ValidationError(
-                "هذا المشترك مسجل بالفعل في هذه الدورة.")
+            raise serializers.ValidationError("هذا المشترك مسجل بالفعل في هذه الدورة.")
 
     def create(self, validated_data):
         """Create EnrollmentRequest with proper parent/student assignment"""
-        user = self.context.get('request').user
+        user = self.context.get("request").user
 
-        if user.role == 'student':
-            validated_data['student'] = user.student_profile
-            validated_data['parent'] = None
-            validated_data['child'] = None
-        elif user.role == 'parent':
-            validated_data['parent'] = user.parent_profile
+        if user.role == "student":
+            validated_data["student"] = user.student_profile
+            validated_data["parent"] = None
+            validated_data["child"] = None
+        elif user.role == "parent":
+            validated_data["parent"] = user.parent_profile
             # child is already in validated_data
 
         return EnrollmentRequest.objects.create(**validated_data)
@@ -185,20 +196,30 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
 
 class EnrollmentRequestListSerializer(serializers.ModelSerializer):
     """Serializer for listing EnrollmentRequests with minimal course info"""
+
     course_name = serializers.SerializerMethodField()
     course_price = serializers.SerializerMethodField()
-    child_id = serializers.UUIDField(
-        source='child.id', read_only=True, default=None)
+    child_id = serializers.UUIDField(source="child.id", read_only=True, default=None)
     participant_name = serializers.SerializerMethodField()
-    status_display = serializers.CharField(
-        source='get_status_display', read_only=True)
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
 
     class Meta:
         model = EnrollmentRequest
         fields = [
-            'id', 'course', 'online_course', 'course_name', 'course_price',
-            'child_id', 'participant_name', 'price', 'status', 'status_display',
-            'payment_method', 'created_at', 'expires_at', 'notes'
+            "id",
+            "course",
+            "online_course",
+            "course_name",
+            "course_price",
+            "child_id",
+            "participant_name",
+            "price",
+            "status",
+            "status_display",
+            "payment_method",
+            "created_at",
+            "expires_at",
+            "notes",
         ]
         read_only_fields = fields
 
@@ -221,6 +242,7 @@ class EnrollmentRequestListSerializer(serializers.ModelSerializer):
 
 class EnrollmentRequestDetailSerializer(serializers.ModelSerializer):
     """Serializer for detailed view of EnrollmentRequest"""
+
     course_name = serializers.SerializerMethodField()
     course_description = serializers.SerializerMethodField()
     course_price = serializers.SerializerMethodField()
@@ -230,23 +252,36 @@ class EnrollmentRequestDetailSerializer(serializers.ModelSerializer):
     participant_name = serializers.SerializerMethodField()
     participant_type = serializers.SerializerMethodField()
 
-    status_display = serializers.CharField(
-        source='get_status_display', read_only=True)
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
     payment_method_display = serializers.CharField(
-        source='get_payment_method_display', read_only=True)
+        source="get_payment_method_display", read_only=True
+    )
 
     processed_by_name = serializers.SerializerMethodField()
 
     class Meta:
         model = EnrollmentRequest
         fields = [
-            'id', 'course', 'online_course', 'course_name', 'course_description',
-            'course_price', 'course_start_date', 'course_instructor',
-            'participant_name', 'participant_type',
-            'price', 'status', 'status_display',
-            'payment_method', 'payment_method_display',
-            'created_at', 'processed_at', 'expires_at',
-            'notes', 'processed_by_name'
+            "id",
+            "course",
+            "online_course",
+            "course_name",
+            "course_description",
+            "course_price",
+            "course_start_date",
+            "course_instructor",
+            "participant_name",
+            "participant_type",
+            "price",
+            "status",
+            "status_display",
+            "payment_method",
+            "payment_method_display",
+            "created_at",
+            "processed_at",
+            "expires_at",
+            "notes",
+            "processed_by_name",
         ]
         read_only_fields = fields
 
@@ -285,9 +320,9 @@ class EnrollmentRequestDetailSerializer(serializers.ModelSerializer):
     def get_participant_type(self, obj):
         """Get the type of participant"""
         if obj.child:
-            return 'child'
+            return "child"
         elif obj.student:
-            return 'student'
+            return "student"
         return None
 
     def get_processed_by_name(self, obj):
@@ -299,28 +334,45 @@ class EnrollmentRequestDetailSerializer(serializers.ModelSerializer):
 
 # ============== Admin Serializers ==============
 
+
 class AdminEnrollmentRequestListSerializer(serializers.ModelSerializer):
     """Serializer for admin listing of EnrollmentRequests with full info"""
+
     course_name = serializers.SerializerMethodField()
     course_price = serializers.SerializerMethodField()
     season_name = serializers.SerializerMethodField()
     participant_name = serializers.SerializerMethodField()
     participant_type = serializers.SerializerMethodField()
     parent_name = serializers.SerializerMethodField()
-    status_display = serializers.CharField(
-        source='get_status_display', read_only=True)
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
     payment_method_display = serializers.CharField(
-        source='get_payment_method_display', read_only=True)
+        source="get_payment_method_display", read_only=True
+    )
 
     class Meta:
         model = EnrollmentRequest
         fields = [
-            'id', 'course', 'online_course', 'course_name', 'course_price', 'season_name',
-            'parent', 'parent_name', 'student', 'child',
-            'participant_name', 'participant_type',
-            'price', 'status', 'status_display',
-            'payment_method', 'payment_method_display',
-            'created_at', 'processed_at', 'expires_at', 'notes'
+            "id",
+            "course",
+            "online_course",
+            "course_name",
+            "course_price",
+            "season_name",
+            "parent",
+            "parent_name",
+            "student",
+            "child",
+            "participant_name",
+            "participant_type",
+            "price",
+            "status",
+            "status_display",
+            "payment_method",
+            "payment_method_display",
+            "created_at",
+            "processed_at",
+            "expires_at",
+            "notes",
         ]
         read_only_fields = fields
 
@@ -345,7 +397,7 @@ class AdminEnrollmentRequestListSerializer(serializers.ModelSerializer):
         return None
 
     def get_participant_type(self, obj):
-        return 'child' if obj.child else 'student' if obj.student else None
+        return "child" if obj.child else "student" if obj.student else None
 
     def get_parent_name(self, obj):
         if obj.parent:
@@ -358,50 +410,57 @@ class AdminEnrollmentRequestUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EnrollmentRequest
-        fields = ['status', 'price', 'payment_method', 'notes', 'expires_at']
+        fields = ["status", "price", "payment_method", "notes", "expires_at"]
 
     def validate_status(self, value):
         """Only allow transitioning to 'processing' via this endpoint"""
         instance = self.instance
         if instance and value != EnrollmentRequestStatus.PROCESSING:
-            if value in [EnrollmentRequestStatus.ACCEPTED, EnrollmentRequestStatus.REJECTED]:
+            if value in [
+                EnrollmentRequestStatus.ACCEPTED,
+                EnrollmentRequestStatus.REJECTED,
+            ]:
                 raise serializers.ValidationError(
-                    "استخدم نقاط النهاية المخصصة للموافقة أو الرفض.")
+                    "استخدم نقاط النهاية المخصصة للموافقة أو الرفض."
+                )
         return value
 
     def validate_price(self, value):
         """Validate price is positive and not greater than course price"""
         if value is not None:
             if value < 0:
-                raise serializers.ValidationError(
-                    "السعر يجب أن يكون قيمة موجبة.")
+                raise serializers.ValidationError("السعر يجب أن يكون قيمة موجبة.")
             target = self.instance.course_instance if self.instance else None
             if target and target.price is not None and value > target.price:
                 raise serializers.ValidationError(
-                    "السعر لا يمكن أن يكون أكبر من سعر الدورة.")
+                    "السعر لا يمكن أن يكون أكبر من سعر الدورة."
+                )
         return value
 
     def validate_expires_at(self, value):
         """Validate expires_at is in the future"""
         from django.utils import timezone
+
         if value and value <= timezone.now():
-            raise serializers.ValidationError(
-                "تاريخ الانتهاء يجب أن يكون في المستقبل.")
+            raise serializers.ValidationError("تاريخ الانتهاء يجب أن يكون في المستقبل.")
         return value
 
     def validate(self, data):
         """Validate the request can be updated"""
         instance = self.instance
-        if instance.status in [EnrollmentRequestStatus.ACCEPTED,
-                               EnrollmentRequestStatus.REJECTED,
-                               EnrollmentRequestStatus.EXPIRED]:
+        if instance.status in [
+            EnrollmentRequestStatus.ACCEPTED,
+            EnrollmentRequestStatus.REJECTED,
+            EnrollmentRequestStatus.EXPIRED,
+        ]:
             raise serializers.ValidationError(
-                "لا يمكن تعديل طلب تم قبوله أو رفضه أو انتهت صلاحيته.")
+                "لا يمكن تعديل طلب تم قبوله أو رفضه أو انتهت صلاحيته."
+            )
         return data
 
     def update(self, instance, validated_data):
         """Update the enrollment request"""
-        request = self.context.get('request')
+        request = self.context.get("request")
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
@@ -410,103 +469,112 @@ class AdminEnrollmentRequestUpdateSerializer(serializers.ModelSerializer):
 
 class EnrollmentRequestApproveSerializer(serializers.Serializer):
     """Serializer for approving an enrollment request"""
+
     paid_amount = serializers.DecimalField(
-        max_digits=10, decimal_places=2, required=False, allow_null=True)
+        max_digits=10, decimal_places=2, required=False, allow_null=True
+    )
     payment_method = serializers.ChoiceField(
-        choices=PaymentMethod.values,
-        required=False)
+        choices=PaymentMethod.values, required=False
+    )
     payment_notes = serializers.CharField(required=False, allow_blank=True)
 
     def validate_paid_amount(self, value):
         """Validate paid amount is positive"""
         if value is not None and value < 0:
-            raise serializers.ValidationError(
-                "المبلغ المدفوع يجب أن يكون قيمة موجبة.")
+            raise serializers.ValidationError("المبلغ المدفوع يجب أن يكون قيمة موجبة.")
         return value
 
     def validate(self, data):
         """Validate the request can be approved"""
-        instance = self.context.get('enrollment_request')
+        instance = self.context.get("enrollment_request")
         if not instance:
             raise serializers.ValidationError("طلب الإلتحاق غير موجود.")
 
-        if instance.status not in [EnrollmentRequestStatus.PENDING,
-                                   EnrollmentRequestStatus.PROCESSING]:
+        if instance.status not in [
+            EnrollmentRequestStatus.PENDING,
+            EnrollmentRequestStatus.PROCESSING,
+        ]:
             raise serializers.ValidationError(
-                f"لا يمكن الموافقة على طلب بحالة: {instance.get_status_display()}")
+                f"لا يمكن الموافقة على طلب بحالة: {instance.get_status_display()}"
+            )
 
         # Check course capacity
-        if instance.course and instance.course.enrolled_count >= instance.course.capacity:
+        target = instance.course_instance
+        if target and hasattr(target, "enrolled_count") and hasattr(target, "capacity") and target.enrolled_count >= target.capacity:
             raise serializers.ValidationError(
-                "لا يمكن الموافقة - تم الوصول إلى الحد الأقصى للمشاركين في الدورة.")
+                "لا يمكن الموافقة - تم الوصول إلى الحد الأقصى للمشاركين في الدورة."
+            )
 
         return data
 
 
 class EnrollmentRequestRejectSerializer(serializers.Serializer):
     """Serializer for rejecting an enrollment request"""
+
     reason = serializers.CharField(required=True, min_length=5)
 
     def validate(self, data):
         """Validate the request can be rejected"""
-        instance = self.context.get('enrollment_request')
+        instance = self.context.get("enrollment_request")
         if not instance:
             raise serializers.ValidationError("طلب الإلتحاق غير موجود.")
 
-        if instance.status not in [EnrollmentRequestStatus.PENDING,
-                                   EnrollmentRequestStatus.PROCESSING]:
+        if instance.status not in [
+            EnrollmentRequestStatus.PENDING,
+            EnrollmentRequestStatus.PROCESSING,
+        ]:
             raise serializers.ValidationError(
-                f"لا يمكن رفض طلب بحالة: {instance.get_status_display()}")
+                f"لا يمكن رفض طلب بحالة: {instance.get_status_display()}"
+            )
 
         return data
 
 
 class BulkApproveSerializer(serializers.Serializer):
     """Serializer for bulk approving enrollment requests"""
+
     request_ids = serializers.ListField(
         child=serializers.UUIDField(),
         min_length=1,
-        max_length=50  # Limit to prevent performance issues
+        max_length=50,  # Limit to prevent performance issues
     )
     payment_method = serializers.ChoiceField(
-        choices=PaymentMethod.values,
-        default=PaymentMethod.CASH
+        choices=PaymentMethod.values, default=PaymentMethod.CASH
     )
 
     def validate_request_ids(self, value):
         """Validate all request IDs exist and are in valid status"""
-        existing = EnrollmentRequest.objects.filter(
-            id__in=value).values_list('id', flat=True)
+        existing = EnrollmentRequest.objects.filter(id__in=value).values_list(
+            "id", flat=True
+        )
         existing_set = set(str(id) for id in existing)
         provided_set = set(str(id) for id in value)
 
         missing = provided_set - existing_set
         if missing:
-            raise serializers.ValidationError(
-                f"طلبات غير موجودة: {', '.join(missing)}")
+            raise serializers.ValidationError(f"طلبات غير موجودة: {', '.join(missing)}")
 
         return value
 
 
 class BulkRejectSerializer(serializers.Serializer):
     """Serializer for bulk rejecting enrollment requests"""
+
     request_ids = serializers.ListField(
-        child=serializers.UUIDField(),
-        min_length=1,
-        max_length=50
+        child=serializers.UUIDField(), min_length=1, max_length=50
     )
     reason = serializers.CharField(required=True, min_length=5)
 
     def validate_request_ids(self, value):
         """Validate all request IDs exist"""
-        existing = EnrollmentRequest.objects.filter(
-            id__in=value).values_list('id', flat=True)
+        existing = EnrollmentRequest.objects.filter(id__in=value).values_list(
+            "id", flat=True
+        )
         existing_set = set(str(id) for id in existing)
         provided_set = set(str(id) for id in value)
 
         missing = provided_set - existing_set
         if missing:
-            raise serializers.ValidationError(
-                f"طلبات غير موجودة: {', '.join(missing)}")
+            raise serializers.ValidationError(f"طلبات غير موجودة: {', '.join(missing)}")
 
         return value

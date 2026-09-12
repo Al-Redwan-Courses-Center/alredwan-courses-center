@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Serializers for instructor enrollment views."""
+
 from rest_framework import serializers
 from ..models import Enrollment
 from ..models.enrollment import EnrollmentStatus
@@ -7,6 +8,7 @@ from ..models.enrollment import EnrollmentStatus
 
 class InstructorEnrollmentListSerializer(serializers.ModelSerializer):
     """Serializer for instructor viewing enrollments - no financial data"""
+
     # Course info
     course_name = serializers.SerializerMethodField()
     course_start_date = serializers.SerializerMethodField()
@@ -17,21 +19,30 @@ class InstructorEnrollmentListSerializer(serializers.ModelSerializer):
     participant_name = serializers.SerializerMethodField()
     participant_type = serializers.SerializerMethodField()
     participant_phone = serializers.SerializerMethodField()
-    
+
     # Status
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
-    
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+
     # Progress (no payment info)
     completion_percentage = serializers.SerializerMethodField()
 
     class Meta:
         model = Enrollment
         fields = [
-            'id', 'course', 'online_course', 'course_name', 'course_start_date', 'course_end_date',
-            'participant_name', 'participant_type', 'participant_phone',
-            'status', 'status_display',
-            'enrolled_at', 'completed_at',
-            'completion_percentage'
+            "id",
+            "course",
+            "online_course",
+            "course_name",
+            "course_start_date",
+            "course_end_date",
+            "participant_name",
+            "participant_type",
+            "participant_phone",
+            "status",
+            "status_display",
+            "enrolled_at",
+            "completed_at",
+            "completion_percentage",
         ]
         read_only_fields = fields
 
@@ -57,7 +68,7 @@ class InstructorEnrollmentListSerializer(serializers.ModelSerializer):
         return None
 
     def get_participant_type(self, obj):
-        return 'child' if obj.child else 'student' if obj.student else None
+        return "child" if obj.child else "student" if obj.student else None
 
     def get_participant_phone(self, obj):
         """Get contact phone for the participant"""
@@ -72,11 +83,12 @@ class InstructorEnrollmentListSerializer(serializers.ModelSerializer):
 
     def get_completion_percentage(self, obj):
         progress = obj.get_completion_progress()
-        return progress.get('percentage', 0)
+        return progress.get("percentage", 0)
 
 
 class CourseEnrollmentStatsSerializer(serializers.Serializer):
     """Serializer for course enrollment statistics"""
+
     course_id = serializers.CharField()
     course_name = serializers.CharField()
     capacity = serializers.IntegerField(required=False, allow_null=True)

@@ -16,7 +16,9 @@ import { cn } from "@/lib/utils";
 export default function DataViewFilterLegacy() {
   const { filterConfig } = useContext(DataViewContext);
   const { searchParams, mutateSearchParams } = useMutateSearchParams();
-  const filters = searchParams.get("filter")?.split(",") || [];
+  
+  // جلب الفلتر المختار حالياً كقيمة واحدة فقط بدلاً من مصفوفة
+  const currentFilter = searchParams.get("filter") || "";
 
   return (
     <DropdownMenu>
@@ -31,35 +33,37 @@ export default function DataViewFilterLegacy() {
       <DropdownMenuContent
         className={cn(
           dropdownMenuContentStyles,
-          "relative z-150 rounded-none border-none",
+          "relative z-150 rounded-none border-none"
         )}
       >
-        {Object.entries(filterConfig).map(([key, config]) => (
-          <DropdownMenuCheckboxItem
-            key={key}
-            className={cn(
-              "mobile-lg:text-[1.8rem] mobile:text-[2.2rem] cursor-pointer px-10 text-[1.4rem] hover:bg-gray-400",
-              filters.includes(key) && "bg-olive-100",
-            )}
-            checked={filters.includes(key)}
-            onClick={() =>
-              mutateSearchParams([
-                {
-                  key: "filter",
-                  val: filters.includes(key)
-                    ? filters.filter((filter) => filter !== key).join(",")
-                    : [...filters, key].join(","),
-                },
-                {
-                  key: "page",
-                  val: "",
-                },
-              ])
-            }
-          >
-            {(config as { key: string; label: string }).label}
-          </DropdownMenuCheckboxItem>
-        ))}
+        {Object.entries(filterConfig).map(([key, config]) => {
+          const isSelected = currentFilter === key;
+
+          return (
+            <DropdownMenuCheckboxItem
+              key={key}
+              className={cn(
+                "mobile-lg:text-[1.8rem] mobile:text-[2.2rem] cursor-pointer px-10 text-[1.4rem] hover:bg-gray-400",
+                isSelected && "bg-olive-100"
+              )}
+              checked={isSelected}
+              onClick={() =>
+                mutateSearchParams([
+                  {
+                    key: "filter",
+                    val: isSelected ? "" : key,
+                  },
+                  {
+                    key: "page",
+                    val: "",
+                  },
+                ])
+              }
+            >
+              {(config as { key: string; label: string }).label}
+            </DropdownMenuCheckboxItem>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );

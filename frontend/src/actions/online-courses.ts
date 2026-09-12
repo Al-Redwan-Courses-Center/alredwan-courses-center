@@ -1,19 +1,28 @@
 "use server";
 
-import { apiRequest, getAuthApiClient, publicApiClient, unwrapPaginated } from "@/lib/api";
+import { apiRequest, getAuthApiClient, publicApiClient, unwrapPaginated, toPaginatedResponse } from "@/lib/api";
 import { PaginatedResponse } from "@/types/config";
 import { OnlineCourseListItem, OnlineCourseDetail, VideoWatchProgressItem } from "@/types/entities";
 import { getMyEnrollments } from "@/actions/enrollments";
 import { getUser } from "@/actions/auth";
 import { revalidatePath } from "next/cache";
 
-export async function getPublicOnlineCourses(): Promise<OnlineCourseListItem[]> {
+import { CourseQueryParams } from "@/actions/courses";
+
+export async function getPublicOnlineCourses(
+  params?: CourseQueryParams,
+): Promise<PaginatedResponse<OnlineCourseListItem>> {
   try {
     const { data } = await publicApiClient.get<
       PaginatedResponse<OnlineCourseListItem> | OnlineCourseListItem[]
-    >("/api/online-courses/courses/?page_size=100");
+    >("/api/online-courses/courses/", {
+      params: {
+        page_size: params?.page_size ?? 8,
+        ...params,
+      },
+    });
 
-    return Array.isArray(data) ? data : data.results;
+    return toPaginatedResponse(data, params?.page_size ?? 8);
   } catch (error: unknown) {
     if (
       error &&
@@ -24,7 +33,15 @@ export async function getPublicOnlineCourses(): Promise<OnlineCourseListItem[]> 
       throw error;
     }
     console.error("Failed to load public online courses:", error);
-    return [];
+    return {
+      count: 0,
+      next: null,
+      previous: null,
+      total_pages: 0,
+      current_page: 1,
+      page_size: params?.page_size ?? 8,
+      results: [],
+    };
   }
 }
 
@@ -50,7 +67,9 @@ export async function getPublicOnlineCourseById(
   }
 }
 
-export async function getAllOnlineCourses(): Promise<OnlineCourseListItem[]> {
+export async function getAllOnlineCourses(
+  params?: CourseQueryParams,
+): Promise<PaginatedResponse<OnlineCourseListItem>> {
   return apiRequest(
     "Failed to load online courses:",
     async () => {
@@ -62,12 +81,17 @@ export async function getAllOnlineCourses(): Promise<OnlineCourseListItem[]> {
 
       const { data } = await apiClient.get<
         PaginatedResponse<OnlineCourseListItem> | OnlineCourseListItem[]
-      >("/api/online-courses/courses/?page_size=100");
+      >("/api/online-courses/courses/", {
+        params: {
+          page_size: params?.page_size ?? 8,
+          ...params,
+        },
+      });
 
-      const courses = unwrapPaginated(data);
+      const paginated = toPaginatedResponse(data, params?.page_size ?? 8);
 
       if (user.role !== "student") {
-        return courses;
+        return paginated;
       }
 
       const enrolledCourseIds = new Set(
@@ -76,12 +100,23 @@ export async function getAllOnlineCourses(): Promise<OnlineCourseListItem[]> {
           .map((e) => String(e.online_course)),
       );
 
-      return courses.map((c) => ({
-        ...c,
-        is_enrolled: enrolledCourseIds.has(String(c.id)),
-      }));
+      return {
+        ...paginated,
+        results: paginated.results.map((c) => ({
+          ...c,
+          is_enrolled: enrolledCourseIds.has(String(c.id)),
+        })),
+      };
     },
-    [],
+    {
+      count: 0,
+      next: null,
+      previous: null,
+      total_pages: 0,
+      current_page: 1,
+      page_size: params?.page_size ?? 8,
+      results: [],
+    },
   );
 }
 

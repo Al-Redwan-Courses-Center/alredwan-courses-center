@@ -9,12 +9,32 @@ export const metadata: Metadata = {
   title: "الدورات | واحة الرضوان",
 };
 
-export default async function Page() {
+export default async function Page(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await props.searchParams;
+  const page = searchParams.page ? Number(searchParams.page) : 1;
+  const search =
+    typeof searchParams.search === "string" ? searchParams.search : undefined;
+  const season =
+    typeof searchParams.season === "string" ? searchParams.season : undefined;
+
   const [physicalCourses, onlineCourses] = await Promise.all([
-    getPublicCourses(),
-    getPublicOnlineCourses()
+    getPublicCourses({
+      page,
+      search,
+      season,
+      page_size: 8,
+    }),
+    getPublicOnlineCourses({
+      page,
+      search,
+      season,
+      page_size: 8,
+    })
   ]);
-    return (
+
+  return (
     <div className="mx-auto max-h-full w-full max-w-[1400px] px-4 md:px-10 pt-10 pb-50">
       <Suspense fallback={<div className="h-64 flex items-center justify-center">جاري التحميل...</div>}>
         <PublicCourseCatalog physical={physicalCourses} online={onlineCourses} />

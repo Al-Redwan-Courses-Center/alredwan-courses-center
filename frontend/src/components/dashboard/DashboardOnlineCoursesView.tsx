@@ -21,9 +21,15 @@ import DataViewFilterLegacy from "@/components/ui/data-view/DataViewFilter";
 
 export default function DashboardOnlineCoursesView({
   courses: inputCourses = [],
+  totalCount,
+  totalPages,
+  currentPage,
   linkTo = "dashboard",
 }: {
   courses?: OnlineCourseListItem[];
+  totalCount?: number;
+  totalPages?: number;
+  currentPage?: number;
   linkTo?: "dashboard" | "landing";
 }) {
   const courses = buildOnlineCoursesView(inputCourses);
@@ -39,6 +45,10 @@ export default function DashboardOnlineCoursesView({
       filterConfig={filterConfig}
       sortConfig={sortOnlineCoursesConfig}
       viewLayout="cards"
+      totalCount={totalCount}
+      totalPages={totalPages}
+      currentPage={currentPage}
+      manualPagination={totalPages !== undefined || totalCount !== undefined}
     >
       <div className="relative z-60 mb-14 flex items-center justify-between gap-16 px-16 tablet:flex-col tablet:items-stretch tablet:gap-12">
         <div className="w-full max-w-[400px] tablet:max-w-full">

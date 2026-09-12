@@ -1,277 +1,280 @@
-#!/usr/bin/env python3
+# pyrefly: ignore [missing-import]
+import uuid
+
 from django.core.exceptions import ValidationError
-from django.db import models, transaction
+from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from datetime import timedelta
-import uuid
-
-
-'''Enrollment Request related Models'''
-
-
-class EnrollmentRequestStatus(models.TextChoices):
-    """Enumeration for enrollment request status choices."""
-    PENDING = "pending", _("معلق")
-    PROCESSING = "processing", _("قيد المعالجة")
-    REJECTED = "rejected", _("مرفوض")
-    # accepted but not necessarily paid (we'll treat accept==create enrollment)
-    ACCEPTED = "accepted", _("مقبول")
-    EXPIRED = "expired", _("منتهي الصلاحية")
+from ..signals import enrollment_request_approved
 
 
 class PaymentMethod(models.TextChoices):
     """Enumeration for payment method choices."""
-    CASH = 'cash', _('نقدًا')
-    INSTAPAY = 'instapay', _('إنستاباي')
-    VODAFONE_CASH = 'vodafone_cash', _('فودافون كاش')
+
+    CASH = "cash", _("نقدًا")
+    CARD = "card", _("بطاقة")
+    BANK_TRANSFER = "bank_transfer", _("تحويل بنكي")
+    INSTAPAY = "instapay", _("إنستاباي")
+    VODAFONE_CASH = "vodafone_cash", _("فودافون كاش")
+    OTHER = "other", _("طريقة أخرى")
 
 
 class EnrollmentRequest(models.Model):
-    """Model representing an enrollment request."""
+    """Model representing a request for enrollment."""
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     course = models.ForeignKey(
-        'courses.Course', verbose_name="الدورة", null=True, blank=True,
-        on_delete=models.CASCADE)
+        "courses.Course",
+        verbose_name="الدورة",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+    )
     online_course = models.ForeignKey(
-        'courses_online.OnlineCourse', verbose_name="الدورة الإلكترونية",
-        null=True, blank=True, on_delete=models.CASCADE)
+        "courses_online.OnlineCourse",
+        verbose_name="الدورة الإلكترونية",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+    )
 
     @property
     def course_instance(self):
         return self.course if self.course is not None else self.online_course
 
     parent = models.ForeignKey(
-        'parents.Parent', null=True, blank=True, on_delete=models.CASCADE)
+        "parents.Parent", null=True, blank=True, on_delete=models.CASCADE
+    )
+    child = models.ForeignKey(
+        "parents.Child", null=True, blank=True, on_delete=models.CASCADE
+    )
     student = models.ForeignKey(
-        'users.StudentUser', null=True, blank=True, on_delete=models.CASCADE)
-    child = models.ForeignKey('parents.Child', null=True,
-                              blank=True, on_delete=models.CASCADE)
+        "users.StudentUser", null=True, blank=True, on_delete=models.CASCADE
+    )
 
-    # ALLOW null before save() sets it
+    STATUS_CHOICES = [
+        ("pending", _("معلق")),
+        ("processing", _("جاري المعالجة")),
+        ("approved", _("مقبول")),
+        ("rejected", _("مرفوض")),
+        ("cancelled", _("ملغى")),
+    ]
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending",
+        verbose_name=_("الحالة"),
+    )
+
     price = models.DecimalField(
-        # parent may choose to pay a partial amount then pay the rest later
-        max_digits=10, decimal_places=2, null=True, blank=True)
+        max_digits=10, decimal_places=2, null=True, blank=True, verbose_name=_("السعر")
+    )
 
-    status = models.CharField(max_length=20, choices=EnrollmentRequestStatus.choices,
-                              default=EnrollmentRequestStatus.PENDING)
+    notes = models.TextField(blank=True, verbose_name=_("ملاحظات"))
 
-    created_at = models.DateTimeField(
-        auto_now_add=True, verbose_name=("تاريخ الإنشاء"))
-    processed_at = models.DateTimeField(null=True, blank=True)
-    expires_at = models.DateTimeField(null=True, blank=True)
-
-    notes = models.TextField(null=True, blank=True)
-
-    payment_method = models.CharField(max_length=20,
-                                      choices=PaymentMethod.choices,
-                                      default=PaymentMethod.CASH)
-
-    processed_by = models.ForeignKey("users.CustomUser", null=True, blank=True,
-                                     on_delete=models.SET_NULL, related_name="processed_enrollment_requests")
+    # Tracking
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("تاريخ الإنشاء"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("تاريخ التحديث"))
+    processed_at = models.DateTimeField(
+        null=True, blank=True, verbose_name=_("تاريخ المعالجة")
+    )
+    processed_by = models.ForeignKey(
+        "users.CustomUser",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        verbose_name=_("معالج بواسطة"),
+        related_name="processed_enrollment_requests",
+    )
 
     class Meta:
-        verbose_name = 'طلب إلتحاق'
-        verbose_name_plural = 'طلبات الإلتحاق'
-
-        indexes = [
-            models.Index(fields=["course"], name="er_course_idx"),
-            models.Index(fields=["parent"], name="er_parent_idx"),
-            models.Index(fields=["student"], name="er_student_idx"),
-            models.Index(fields=["child"], name="er_child_idx"),
-        ]
-
+        verbose_name = _("طلب التحاق")
+        verbose_name_plural = _("طلبات الالتحاق")
+        ordering = ["-created_at"]
         constraints = [
-
-            # Parent + child OR student only
+            # Check either parent+child OR student is provided
+            models.CheckConstraint(
+                condition=Q(parent__isnull=False, child__isnull=False, student__isnull=True)
+                | Q(parent__isnull=True, child__isnull=True, student__isnull=False),
+                name="parent_child_or_student",
+            ),
+            # price must be non-negative (only when price not null); 0 allowed for free courses
+            models.CheckConstraint(
+                condition=Q(price__gte=0) | Q(price__isnull=True), name="positive_price"
+            ),
+            # Exactly one course type
             models.CheckConstraint(
                 condition=(
-                    (Q(parent__isnull=False) & Q(child__isnull=False) & Q(student__isnull=True)) |
-                    (Q(student__isnull=False) & Q(
-                        parent__isnull=True) & Q(child__isnull=True))
+                    (Q(course__isnull=False) & Q(online_course__isnull=True))
+                    | (Q(course__isnull=True) & Q(online_course__isnull=False))
                 ),
-                name='parent_child_or_student'
+                name="exact_one_course_type_per_request",
             ),
-
-            # price must be positive (only when price not null)
-            models.CheckConstraint(
-                condition=Q(price__gt=0) | Q(price__isnull=True),
-                name='positive_price'
-            ),
-
             # Unique constraint when child is not null
             models.UniqueConstraint(
-                fields=['course', 'child'],
+                fields=["course", "child"],
                 condition=Q(course__isnull=False, child__isnull=False),
-                name='unique_course_child_request'
+                name="unique_course_child_request",
             ),
-
             # Unique constraint when student is not null
             models.UniqueConstraint(
-                fields=['course', 'student'],
+                fields=["course", "student"],
                 condition=Q(course__isnull=False, student__isnull=False),
-                name='unique_course_student_request'
+                name="unique_course_student_request",
             ),
 
             # Online requests are only unique while still in flight, so a
-            # course can be bought again after a previous request is closed.
-            # Mirrors the status scoping on Enrollment's online constraints.
+            # user can request again if previous was rejected/cancelled.
             models.UniqueConstraint(
-                fields=['online_course', 'child'],
-                condition=Q(online_course__isnull=False, child__isnull=False,
-                            status__in=['pending', 'processing']),
-                name='unique_online_course_child_request'
+                fields=["online_course", "child"],
+                condition=Q(online_course__isnull=False, child__isnull=False, status__in=["pending", "processing"]),
+                name="unique_pending_online_course_child_request"
             ),
             models.UniqueConstraint(
-                fields=['online_course', 'student'],
-                condition=Q(online_course__isnull=False, student__isnull=False,
-                            status__in=['pending', 'processing']),
-                name='unique_online_course_student_request'
-            ),
-            models.CheckConstraint(
-                condition=(
-                    (Q(course__isnull=False) & Q(online_course__isnull=True)) |
-                    (Q(course__isnull=True) & Q(online_course__isnull=False))
-                ),
-                name='exact_one_course_type_per_request'
+                fields=["online_course", "student"],
+                condition=Q(online_course__isnull=False, student__isnull=False, status__in=["pending", "processing"]),
+                name="unique_pending_online_course_student_request"
             ),
         ]
 
     def clean(self):
-        '''Custom validation logic for EnrollmentRequest model.'''
-        # Auto-set parent from child's primary_parent if child is provided without parent
-        if self.child and not self.parent:
-            self.parent = self.child.primary_parent
-        
-        # Clear parent/child if student is selected (mutual exclusivity)
+        super().clean()
+
         if self.student:
             self.parent = None
             self.child = None
-            
+
         if (self.course is None and self.online_course is None) or (self.course is not None and self.online_course is not None):
             raise ValidationError(
                 _("يجب تحديد إما الدورة الحضورية أو الدورة الإلكترونية فقط. / Must specify exactly one of course or online_course."))
-        
+
         # Parent + child OR student only
-        if not ((self.parent and self.child and not self.student) or
-                (self.student and not self.parent and not self.child)):
+        if not (
+            (self.parent and self.child and not self.student)
+            or (self.student and not self.parent and not self.child)
+        ):
             raise ValidationError(
-                _("اختر إما (طفل) أو (طالب) فقط. / Select either a child OR a student alone."))
+                _("يجب تحديد ولي أمر وطالب، أو طالب جامعي/خريج. / Must specify parent and child, or student.")
+            )
 
-        if self.parent and self.child:
-            if not (self.child.primary_parent_id == self.parent.id or self.child.extra_parents.filter(parent=self.parent).exists()):
-                raise ValidationError(
-                    _("ولي الأمر المحدد غير مرتبط بالطفل المختار. / The provided parent is not linked to the chosen child."))
-        
-        # expires_at must be future if provided
-        if self.expires_at and self.expires_at <= timezone.now():
-            raise ValidationError(_("تاريخ الانتهاء يجب أن يكون في المستقبل. / Expiration time must be in the future."))
+        if self.child and self.child.parent != self.parent:
+            raise ValidationError(
+                _("الطالب لا ينتمي لولي الأمر المحدد. / Child does not belong to specified parent.")
+            )
 
-    def save(self, *args, **kwargs):
-        '''Override save to set default values and validate.'''  # a payer may make a partial payment, yet be accepted in a course.
-        if not self.expires_at:
-            self.expires_at = timezone.now() + timedelta(days=7)
+        if self.price is not None and self.price < 0:
+            raise ValidationError(
+                _("لا يمكن أن يكون السعر أقل من الصفر. / Price cannot be negative.")
+            )
 
-        if self.price is None:
-            target = self.course_instance
-            if target:
-                self.price = target.price
-
-        self.full_clean()
-        super().save(*args, **kwargs)
-
-    def get_participant(self):
-        """Return the participant of the enrollment request, either a child or a student."""
-        return self.child or self.student
-
-    # link paid amount enrollment request price
-    def approve(self, processed_by_user, paid_amount=None, payment_method=None, payment_notes=None):
-        """Approve the enrollment request and create an Enrollment.
-
-        This method is atomic - if payment creation fails, the enrollment
-        creation will be rolled back.
-        
-        Payment amount logic:
-        1. If paid_amount is explicitly provided, use it
-        2. Otherwise, if self.price is set (partial/custom payment), use self.price
-        3. Otherwise, use the full course price
-        
-        This allows for partial payments where the remaining amount can be
-        collected later via additional Payment records.
+    def approve(
+        self,
+        processor,
+        payment_amount=None,
+        payment_method=None,
+        payment_reference="",
+        payment_notes="",
+    ):
         """
-        if self.status != EnrollmentRequestStatus.PENDING and self.status != EnrollmentRequestStatus.PROCESSING:
-            raise ValidationError("Only pending or processing requests may be approved.")
+        Approves the request, creates an Enrollment, and records a Payment if required.
+        Emits the enrollment_request_approved signal.
+        """
+        from .enrollment import Enrollment
+        from .payment import Payment, PaymentStatus
 
-        from .enrollment import Enrollment, EnrollmentStatus
+        if self.status not in ["pending", "processing"]:
+            raise ValueError("Can only approve pending or processing requests.")
+
+        from django.db import transaction
 
         with transaction.atomic():
+            # Update request status
+            self.status = "approved"
+            self.processed_by = processor
+            self.processed_at = timezone.now()
+            self.save(update_fields=["status", "processed_by", "processed_at"])
+
+            # Create Enrollment
             enrollment = Enrollment.objects.create(
                 course=self.course,
                 online_course=self.online_course,
                 student=self.student,
                 child=self.child,
-                enrolled_at=timezone.now(),
-                status=EnrollmentStatus.ACTIVE,
-                created_by=processed_by_user
+                created_by=processor,
+                status="active",
             )
-            
-            # Determine the payment amount:
-            # Priority: paid_amount param > enrollment_request.price > course.price
-            if paid_amount is not None:
-                final_amount = paid_amount
+
+            # Record Payment
+            # Determine payment amount
+            if payment_amount is not None:
+                final_amount = payment_amount
             elif self.price is not None:
                 final_amount = self.price
             else:
                 target = self.course_instance
-                final_amount = target.price if (target and target.price is not None) else 0
-            
+                final_amount = (
+                    target.price if (
+                        target and target.price is not None) else 0
+                )
+
             # Determine payment method
-            final_method = payment_method if payment_method else (self.payment_method or "cash")
-            
+            final_method = (
+                payment_method if payment_method else (
+                    PaymentMethod.CASH if final_amount > 0 else None
+                )
+            )
+
             # Build payment notes to track partial payments
             final_notes = payment_notes or ""
             target = self.course_instance
-            if target and self.price is not None and target.price and self.price < target.price:
+            if (
+                target
+                and self.price is not None
+                and target.price
+                and self.price < target.price
+            ):
                 remaining = float(target.price) - float(self.price)
                 partial_note = f"[دفعة جزئية] المبلغ المدفوع: {self.price} ج.م | المتبقي: {remaining} ج.م"
-                final_notes = f"{partial_note}\n{final_notes}".strip() if final_notes else partial_note
-            
-            from .payment import Payment
-            Payment.objects.create(
-                enrollment=enrollment,
-                payer_parent=self.parent if self.parent else None,
-                payer_student=self.student if self.student else None,
-                amount=final_amount,
-                method=final_method,
-                status="paid",
-                processed_by=processed_by_user,
-                processed_at=timezone.now(),
-                notes=final_notes if final_notes else None
-            )
-            
-            self.status = EnrollmentRequestStatus.ACCEPTED
-            self.processed_by = processed_by_user
-            self.processed_at = timezone.now()
-            self.save(update_fields=["status", "processed_by", "processed_at"])
+                final_notes = (
+                    f"{partial_note}\n{final_notes}".strip()
+                    if final_notes else partial_note
+                )
+
+            if final_amount > 0 and final_method:
+                Payment.objects.create(
+                    enrollment=enrollment,
+                    amount=final_amount,
+                    payment_method=final_method,
+                    reference_number=payment_reference or "",
+                    notes=final_notes,
+                    status=PaymentStatus.PAID,
+                    processed_by=processor,
+                    processed_at=timezone.now(),
+                )
+
+        # Trigger signal outside transaction so handlers can run safely
+        enrollment_request_approved.send(
+            sender=self.__class__, instance=self, enrollment=enrollment
+        )
 
         return enrollment
 
-    def reject(self, processed_by_user, reason=None):
-        """Reject the enrollment request."""
-        if self.status not in [EnrollmentRequestStatus.PENDING, EnrollmentRequestStatus.PROCESSING]:
-            raise ValidationError(_("يمكن رفض الطلبات المعلقة أو قيد المعالجة فقط. / Only pending or processing requests may be rejected."))
+    def reject(self, processor, reason=""):
+        """Rejects the request without creating enrollment."""
+        if self.status not in ["pending", "processing"]:
+            raise ValueError("Can only reject pending or processing requests.")
 
-        self.status = EnrollmentRequestStatus.REJECTED
-        self.processed_by = processed_by_user
+        self.status = "rejected"
+        self.processed_by = processor
         self.processed_at = timezone.now()
         if reason:
-            self.notes = (self.notes or "") + f"\n[سبب الرفض] {reason}"
+            self.notes = f"{self.notes}\nسبب الرفض: {reason}".strip()
         self.save(update_fields=[
                   "status", "processed_by", "processed_at", "notes"])
 
     def __str__(self):
-        participant = self.student or self.child or 'Unknown'
+        participant = self.student or self.child or "Unknown"
         return f"Enrollment Request for {participant} in {self.course_instance}"

@@ -1,44 +1,66 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { apiRequest, getAuthApiClient, unwrapPaginated } from "@/lib/api";
+import {
+  apiRequest,
+  getAuthApiClient,
+  toPaginatedResponse,
+} from "@/lib/api";
 import type { PaginatedResponse } from "@/types/config";
 import type { MemoryListItem, ParticipantSearchResult } from "@/types/entities";
 import { isAxiosError } from "axios";
 
 export async function getGeneralMemories(
-  page_size = 50,
-): Promise<MemoryListItem[]> {
+  page = 1,
+  page_size = 12,
+): Promise<PaginatedResponse<MemoryListItem>> {
   return apiRequest(
     "Failed to load general memories:",
     async () => {
       const apiClient = await getAuthApiClient();
       const { data } = await apiClient.get<
         PaginatedResponse<MemoryListItem> | MemoryListItem[]
-      >(`/api/memories/feed/general/?page_size=${page_size}`);
-      return unwrapPaginated(data);
+      >(`/api/memories/feed/general/?page=${page}&page_size=${page_size}`);
+      return toPaginatedResponse(data, page_size);
     },
-    [],
+    {
+      count: 0,
+      next: null,
+      previous: null,
+      total_pages: 0,
+      current_page: page,
+      page_size,
+      results: [],
+    },
   );
 }
 
 export async function getPrivateMemories(
   childId?: string,
-  page_size = 50,
-): Promise<MemoryListItem[]> {
+  page = 1,
+  page_size = 12,
+): Promise<PaginatedResponse<MemoryListItem>> {
   return apiRequest(
     "Failed to load private memories:",
     async () => {
       const apiClient = await getAuthApiClient();
       const url = childId
-        ? `/api/memories/feed/private/?child_id=${childId}&page_size=${page_size}`
-        : `/api/memories/feed/private/?page_size=${page_size}`;
+        ? `/api/memories/feed/private/?child_id=${childId}&page=${page}&page_size=${page_size}`
+        : `/api/memories/feed/private/?page=${page}&page_size=${page_size}`;
       const { data } = await apiClient.get<
         PaginatedResponse<MemoryListItem> | MemoryListItem[]
       >(url);
-      return unwrapPaginated(data);
+      return toPaginatedResponse(data, page_size);
     },
-    [],
+    {
+      count: 0,
+      next: null,
+      previous: null,
+      total_pages: 0,
+      current_page: page,
+      page_size,
+      results: [],
+    },
   );
 }
 

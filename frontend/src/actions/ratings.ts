@@ -98,7 +98,9 @@ export async function rateInstructor(
  */
 export async function getCourseRatings(courseId: string | number) {
   try {
-    const response = await publicApiClient.get(`/api/courses/${courseId}/ratings/`);
+    const response = await publicApiClient.get(
+      `/api/courses/${courseId}/ratings/`,
+    );
     return { success: true, data: response.data };
   } catch (error: unknown) {
     console.error("Error fetching course ratings:", error);

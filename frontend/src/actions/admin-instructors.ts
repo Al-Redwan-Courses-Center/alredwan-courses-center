@@ -82,12 +82,19 @@ export async function getInstructorAttendanceHistory(
 /**
  * Fetch list of all instructors.
  */
-export async function getInstructors(): Promise<Instructor[]> {
+export async function getInstructors(params?: {
+  page?: number;
+  page_size?: number;
+  search?: string;
+}): Promise<Instructor[]> {
   try {
     const apiClient = await getAuthApiClient();
-    const { data } = await apiClient.get(
-      "/api/users/instructors/?page_size=100",
-    );
+    const { data } = await apiClient.get("/api/users/instructors/", {
+      params: {
+        page_size: params?.page_size ?? 100,
+        ...params,
+      },
+    });
     return unwrapPaginated(data) as Instructor[];
   } catch (error: unknown) {
     if (

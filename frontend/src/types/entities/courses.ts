@@ -54,8 +54,10 @@ export interface CourseScheduleDetail {
   end_time: string;
 }
 
-export interface CourseDetail
-  extends Omit<CourseListItem, "average_rating" | "rating_count"> {
+export interface CourseDetail extends Omit<
+  CourseListItem,
+  "average_rating" | "rating_count"
+> {
   schedules: CourseScheduleDetail[];
 }
 
@@ -74,7 +76,6 @@ export type StudentOnlineCourse = import("./online-courses").OnlineCourseDetail 
 };
 
 export type StudentCourseItem = StudentPhysicalCourse | StudentOnlineCourse;
-
 export interface LandingPageCourse {
   id: number;
   order: number;

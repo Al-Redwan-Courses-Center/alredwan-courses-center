@@ -56,7 +56,9 @@ export default function StudentOverviewCoursesAccordion({
                   <span
                     className={cn(
                       "bg-gray-50 px-3 py-1 text-lg",
-                      index % 2 === 0 ? "rounded-[0.8rem_0]" : "rounded-[0_0.8rem]",
+                      index % 2 === 0
+                        ? "rounded-[0.8rem_0]"
+                        : "rounded-[0_0.8rem]",
                     )}
                     key={tag.id}
                   >
@@ -114,14 +116,15 @@ export default function StudentOverviewCoursesAccordion({
 
             <div className="grid grid-cols-[1fr_auto] items-center gap-x-3">
               <ProgressBar className="h-3" progress={course.course_progress} />
-              <span className="text-lg font-bold text-olive-700">
+              <span className="text-olive-700 text-lg font-bold">
                 {course.course_progress}% تقدم
               </span>
             </div>
 
             <div className="pt-1">
-              {course.enrollment_status === "pending" || course.enrollment_status === "processing" ? (
-                <span className="text-orange-500 font-bold px-4 py-2 bg-orange-50 rounded-lg">
+              {course.enrollment_status === "pending" ||
+              course.enrollment_status === "processing" ? (
+                <span className="rounded-lg bg-orange-50 px-4 py-2 font-bold text-orange-500">
                   {course.enrollment_status_display || "قيد المراجعة"}
                 </span>
               ) : (

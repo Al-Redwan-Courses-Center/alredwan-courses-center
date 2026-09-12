@@ -86,7 +86,6 @@ export async function getServerJwtToken() {
       return null;
     }
 
-
     if (decodedToken.exp) {
       if (typeof decodedToken.exp !== "number") {
         console.warn("No expiry");
