@@ -22,6 +22,8 @@ RUN pnpm build
 FROM node:lts-alpine3.23 AS final
 WORKDIR /app
 ENV NODE_ENV=production
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=3000
 
 COPY --from=build /app/.next/standalone .
 COPY --from=build /app/.next/static ./.next/static

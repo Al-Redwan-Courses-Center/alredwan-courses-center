@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.db.models import Q
 from .models import Memory
 from .serializers import MemorySerializer, MemoryUploadSerializer
-from .permissions import IsSupervisor, IsUploaderWithin24hOrAdmin
+from .permissions import IsInstructorOrSupervisor, IsUploaderWithin24hOrAdmin
 from parents.models import Child
 from users.models import StudentUser
 
@@ -81,7 +81,7 @@ class MemoryUploadView(generics.CreateAPIView):
     Supervisors only.
     """
     serializer_class = MemoryUploadSerializer
-    permission_classes = [permissions.IsAuthenticated, IsSupervisor]
+    permission_classes = [permissions.IsAuthenticated, IsInstructorOrSupervisor]
     
     def perform_create(self, serializer):
         from users.models import Instructor
@@ -89,7 +89,7 @@ class MemoryUploadView(generics.CreateAPIView):
             user=self.request.user,
             defaults={
                 'monthly_salary': 0, 
-                'type': Instructor.InstructorType.SUPERVISOR
+                'type': Instructor.InstructorType.NORMAL if self.request.user.role == 'instructor' else Instructor.InstructorType.SUPERVISOR
             }
         )
         serializer.save(uploaded_by=instructor)
@@ -131,7 +131,7 @@ class ParticipantSearchView(views.APIView):
     API endpoint to search for children/students by name or code.
     Supervisors only (used for tagging).
     """
-    permission_classes = [permissions.IsAuthenticated, IsSupervisor]
+    permission_classes = [permissions.IsAuthenticated, IsInstructorOrSupervisor]
     
     def get(self, request):
         query = request.query_params.get('q', '').strip()
@@ -180,7 +180,7 @@ class CloudinarySignatureView(views.APIView):
     API endpoint to get a secure signature for direct client-side upload to Cloudinary.
     Supervisors only.
     """
-    permission_classes = [permissions.IsAuthenticated, IsSupervisor]
+    permission_classes = [permissions.IsAuthenticated, IsInstructorOrSupervisor]
     
     def get(self, request):
         timestamp = int(time.time())

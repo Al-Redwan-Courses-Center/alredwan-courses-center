@@ -13,7 +13,6 @@ export default async function InstructorPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-
   const [instructor, session] = await Promise.all([
     getInstructorById(id, true),
     getOptionalUser(),
@@ -154,7 +153,7 @@ export default async function InstructorPage({
           type="instructor"
           id={id}
           showForm={session?.role === "student" || session?.role === "parent"}
-          courseId={undefined}
+          courseId={undefined} // Form will fetch list of courses taught by this instructor for selection
         />
       </section>
     </div>

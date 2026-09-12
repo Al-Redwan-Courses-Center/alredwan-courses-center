@@ -39,3 +39,4 @@ authApiClient.interceptors.request.use(async (config) => {
 export async function getAuthApiClient(): Promise<AxiosInstance> {
   return authApiClient;
 }
+

@@ -21,6 +21,7 @@ export default function PublicCourseCard({
   const startDate = parseISO(course.start_date);
   // const endDate = parseISO(course.start_date);
   const lectureCount = course.num_lectures;
+  const isEven = index % 2 === 0;
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const imgUrl = course.image?.startsWith("/")
     ? backendUrl + course.image
@@ -42,7 +43,9 @@ export default function PublicCourseCard({
             fill
             alt="Course Image"
             draggable="false"
-            className="object-cover"
+            width={500}
+            height={300}
+            className="object-cover w-full h-full"
           />
         ) : (
           <div className="grid place-items-center bg-gray-200">
@@ -53,7 +56,8 @@ export default function PublicCourseCard({
       cardFooter={
         <div
           className={cn(
-            "relative mx-auto mt-3 mb-15 grid w-6/10 grid-cols-2 gap-4",
+            "relative mt-3 mb-15 grid w-6/10 grid-cols-2 gap-4",
+            isEven && "justify-self-end",
           )}
         >
           <Button
@@ -106,27 +110,10 @@ export default function PublicCourseCard({
           <CalendarIcon />
           <span>يبدأ: {formatDate(startDate)}</span>
         </li>
-
-        <li>
-          <BookIcon />
-          <span>
-            {toHindiDigits(lectureCount)}{" "}
-            {getArabicPlural(lectureCount, {
-              singular: "محاضرة",
-              twofer: "محاضرتان",
-              plural: "محاضرات",
-            })}
-          </span>
-        </li>
-
         <li>
           <PeopleIcon />
           <span>
-            الأماكن المتاحة:{" "}
-            <span className="font-bold">
-              {toHindiDigits(course.available_spots)}
-            </span>{" "}
-            من {toHindiDigits(course.capacity)}
+            العمر المناسب: {course.for_adults ? "للبالغين (+18)" : (course.min_age && course.max_age ? `من ${toHindiDigits(course.min_age)} إلى ${toHindiDigits(course.max_age)} سنة` : course.min_age ? `${toHindiDigits(course.min_age)} سنة فأكثر` : course.max_age ? `${toHindiDigits(course.max_age)} سنة كحد أقصى` : "الكل")}
           </span>
         </li>
       </ul>

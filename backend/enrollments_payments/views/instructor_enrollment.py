@@ -17,6 +17,7 @@ from ..serializers.instructor_enrollment import (
 from ..models import Enrollment
 from ..models.enrollment import EnrollmentStatus
 from courses.models import Course
+from courses_online.models import OnlineCourse
 
 
 class IsInstructor(IsAuthenticated):
@@ -41,28 +42,36 @@ class InstructorEnrollmentFilter(filters.FilterSet):
     def filter_course_id(self, queryset, name, value):
         if not value:
             return queryset
-        try:
+        if str(value).isdigit():
             return queryset.filter(course_id=int(value))
-        except (ValueError, TypeError):
-            return queryset.none()
+        return queryset.filter(online_course_id=value)
 
 
 def _get_instructor_course(course_id, instructor):
     """
-    Helper to look up a Course by course_id.
-    Returns (course, is_online).
+    Helper to look up a Course or OnlineCourse by course_id (int or UUID).
+    Returns (course_instance, is_online).
     """
-    try:
-        course = Course.objects.get(id=int(course_id))
-        return course, False
-    except (Course.DoesNotExist, ValueError, TypeError):
-        return None, False
+    if str(course_id).isdigit():
+        try:
+            course = Course.objects.get(id=int(course_id))
+            return course, False
+        except Course.DoesNotExist:
+            return None, False
+    else:
+        try:
+            online_course = OnlineCourse.objects.get(id=course_id)
+            return online_course, True
+        except (OnlineCourse.DoesNotExist, ValidationError, ValueError):
+            return None, True
 
 
 class InstructorCourseEnrollmentListView(generics.ListAPIView):
     """
     GET /api/instructor/courses/{course_id}/enrollments/
     List enrollments in a specific course (instructor's own course only).
+    Supports integer physical course IDs and UUID online course IDs.
+    No financial data exposed.
     """
 
     serializer_class = InstructorEnrollmentListSerializer
@@ -80,25 +89,31 @@ class InstructorCourseEnrollmentListView(generics.ListAPIView):
         if not course_obj or course_obj.instructor_id != instructor.id:
             return Enrollment.objects.none()
 
-        return (
-            Enrollment.objects.filter(course=course_obj)
-            .select_related(
-                "course",
-                "child",
-                "child__primary_parent",
-                "child__primary_parent__user",
-                "student",
-                "student__user",
-            )
-            .prefetch_related("course__lectures")
-            .order_by("-enrolled_at")
-        )
+        if is_online:
+            return Enrollment.objects.filter(
+                online_course=course_obj
+            ).select_related(
+                "online_course", "child", "child__primary_parent", "child__primary_parent__user",
+                "student", "student__user"
+            ).prefetch_related(
+                "online_course__video_lectures"
+            ).order_by("-enrolled_at")
+        else:
+            return Enrollment.objects.filter(
+                course=course_obj
+            ).select_related(
+                "course", "child", "child__primary_parent", "child__primary_parent__user",
+                "student", "student__user"
+            ).prefetch_related(
+                "course__lectures"
+            ).order_by("-enrolled_at")
 
 
 class InstructorAllEnrollmentsListView(generics.ListAPIView):
     """
     GET /api/instructor/enrollments/
-    List all enrollments across instructor's courses.
+    List all enrollments across instructor's courses (physical & online).
+    Query params: ?course_id=id&status=active
     """
 
     serializer_class = InstructorEnrollmentListSerializer
@@ -112,26 +127,23 @@ class InstructorAllEnrollmentsListView(generics.ListAPIView):
         if not instructor:
             return Enrollment.objects.none()
 
-        # Get all courses taught by this instructor
-        return (
-            Enrollment.objects.filter(course__instructor=instructor)
-            .select_related(
-                "course",
-                "child",
-                "child__primary_parent",
-                "child__primary_parent__user",
-                "student",
-                "student__user",
-            )
-            .prefetch_related("course__lectures")
-            .order_by("-enrolled_at")
-        )
+        # Get all courses (physical and online) taught by this instructor
+        return Enrollment.objects.filter(
+            Q(course__instructor=instructor) | Q(online_course__instructor=instructor)
+        ).select_related(
+            "course", "online_course", "child", "child__primary_parent", "child__primary_parent__user",
+            "student", "student__user"
+        ).prefetch_related(
+            "course__lectures", "online_course__video_lectures"
+        ).order_by("-enrolled_at")
 
 
 class InstructorCourseEnrollmentStatsView(APIView):
     """
     GET /api/instructor/courses/{course_id}/enrollment-stats/
     Get enrollment statistics for a course (instructor's own course only).
+    Supports integer physical course IDs and UUID online course IDs.
+    No financial data exposed.
     """
 
     permission_classes = [IsInstructor]
@@ -158,9 +170,13 @@ class InstructorCourseEnrollmentStatsView(APIView):
             )
 
         # Calculate enrollment statistics
-        enrollments = Enrollment.objects.filter(course=course_obj)
-        capacity = course_obj.capacity
-
+        if is_online:
+            enrollments = Enrollment.objects.filter(online_course=course_obj)
+            capacity = None
+        else:
+            enrollments = Enrollment.objects.filter(course=course_obj)
+            capacity = course_obj.capacity
+        
         status_counts = enrollments.values("status").annotate(count=Count("id"))
         status_dict = {item["status"]: item["count"] for item in status_counts}
 

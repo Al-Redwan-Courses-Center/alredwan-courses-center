@@ -11,8 +11,9 @@ export default async function StudentMyCoursesPage({
 }: {
   childId?: string;
 }) {
-  const { first_name: name, role } = await getUser();
+  const { first_name, role } = await getUser();
   let myActiveCourses: StudentCourseItem[];
+  let name = first_name;
   let activeChildId = childId;
 
   if (role === "parent") {
@@ -26,6 +27,7 @@ export default async function StudentMyCoursesPage({
     if (!child) return notFound();
 
     myActiveCourses = await getChildCourses(activeChildId);
+    name = child.first_name;
   } else if (role === "student") {
     myActiveCourses = await getStudentCourses();
   } else {

@@ -185,6 +185,12 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       label: "دوراتي",
       href: "/dashboard/my-courses",
       icon: <MyCoursesIcon />,
+      nestedNavLinks: [
+        {
+          href: "",
+          label: "تفاصيل الدورة",
+        },
+      ],
     },
     {
       label: "جميع الدورات",

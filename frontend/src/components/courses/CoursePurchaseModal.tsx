@@ -15,22 +15,19 @@ import {
   ModalTrigger,
 } from "@/components/ui/Modal";
 import type { EnrollmentRequestCreateBody } from "@/types/entities";
+import { toHindiDigits } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 
 type PaymentMethod = NonNullable<EnrollmentRequestCreateBody["payment_method"]>;
 
 const paymentOptions: { value: PaymentMethod; label: string }[] = [
   { value: "cash", label: "نقدًا" },
-  { value: "card", label: "بطاقة" },
-  { value: "bank_transfer", label: "تحويل بنكي" },
   { value: "instapay", label: "إنستاباي" },
   { value: "vodafone_cash", label: "فودافون كاش" },
-  { value: "other", label: "طريقة أخرى" },
 ];
 
 interface PurchaseFormInputs {
   child: string;
-  price: string;
   payment_method: PaymentMethod;
   notes: string;
 }
@@ -45,11 +42,13 @@ export default function CoursePurchaseModal({
   role,
   courseId,
   coursePrice,
+  courseType = "physical",
   childrenOptions = [],
 }: {
   role: "parent" | "student";
   courseId: string;
   coursePrice: string;
+  courseType?: "physical" | "online";
   childrenOptions?: ParentChildDetail[];
 }) {
   const searchParams = useSearchParams();
@@ -60,35 +59,24 @@ export default function CoursePurchaseModal({
     setError,
     clearErrors,
     reset,
+    watch,
     formState: { isSubmitting, errors },
   } = useForm<PurchaseFormInputs>({
     defaultValues: {
       child: childrenOptions[0]?.id || "",
-      price: "",
       payment_method: "cash",
       notes: "",
     },
   });
 
+  const selectedPaymentMethod = watch("payment_method");
   const hasNoChildren = role === "parent" && childrenOptions.length === 0;
 
   const onSubmit: SubmitHandler<PurchaseFormInputs> = async (values) => {
-    let parsedPrice: number | undefined;
-
-    if (values.price.trim()) {
-      parsedPrice = Number(values.price.trim());
-
-      if (Number.isNaN(parsedPrice) || parsedPrice <= 0) {
-        setError("price", { message: "يرجى إدخال مبلغ صحيح أكبر من صفر." });
-        return;
-      }
-    }
-
     const payload: EnrollmentRequestCreateBody = {
-      course: courseId,
+      ...(courseType === "online" ? { online_course: courseId } : { course: courseId }),
       payment_method: values.payment_method,
       notes: values.notes.trim() || undefined,
-      price: parsedPrice,
       ...(role === "parent" ? { child: values.child } : {}),
     };
 
@@ -99,9 +87,6 @@ export default function CoursePurchaseModal({
 
       if (fieldErrors.child?.[0]) {
         setError("child", { message: fieldErrors.child[0] });
-      }
-      if (fieldErrors.price?.[0]) {
-        setError("price", { message: fieldErrors.price[0] });
       }
       if (fieldErrors.payment_method?.[0]) {
         setError("payment_method", { message: fieldErrors.payment_method[0] });
@@ -125,7 +110,6 @@ export default function CoursePurchaseModal({
     setIsOpen(false);
     reset({
       child: childrenOptions[0]?.id || "",
-      price: "",
       payment_method: "cash",
       notes: "",
     });
@@ -141,7 +125,6 @@ export default function CoursePurchaseModal({
           clearErrors();
           reset({
             child: childrenOptions[0]?.id || "",
-            price: "",
             payment_method: "cash",
             notes: "",
           });
@@ -210,36 +193,11 @@ export default function CoursePurchaseModal({
             </p>
           )}
 
-          <div className="space-y-3">
-            <label
-              htmlFor="price"
-              className="block text-2xl font-bold text-gray-900"
-            >
-              المبلغ المراد دفعه (اختياري)
-            </label>
-
-            <input
-              id="price"
-              type="number"
-              min="0"
-              step="0.01"
-              {...register("price", {
-                validate: (value) => {
-                  if (!value.trim()) return true;
-
-                  const numericValue = Number(value.trim());
-
-                  if (Number.isNaN(numericValue) || numericValue <= 0)
-                    return "يرجى إدخال مبلغ صحيح أكبر من صفر.";
-
-                  return true;
-                },
-              })}
-              placeholder={`اتركه فارغًا لاستخدام سعر الدورة (${coursePrice} جنيه)`}
-              className="shadow-soft h-18 w-full rounded-[0_1.4rem] bg-gray-50 px-6 text-2xl focus:outline-none"
-            />
-
-            {renderError(errors.price?.message)}
+          <div className="flex items-center justify-between rounded-[1.2rem_0] bg-gray-50 px-6 py-4">
+            <span className="text-2xl font-bold text-gray-700">رسوم الدورة:</span>
+            <span className="text-2xl font-bold text-olive-700">
+              {toHindiDigits(coursePrice)} جنيه مصري
+            </span>
           </div>
 
           <div className="space-y-3">
@@ -269,6 +227,18 @@ export default function CoursePurchaseModal({
                 </label>
               ))}
             </div>
+
+            {selectedPaymentMethod === "cash" && (
+              <p className="rounded-[1.2rem_0] bg-olive-100/50 px-5 py-4 text-2xl text-olive-800 font-bold">
+                يرجى التوجه للواحة
+              </p>
+            )}
+            {(selectedPaymentMethod === "instapay" ||
+              selectedPaymentMethod === "vodafone_cash") && (
+              <p className="rounded-[1.2rem_0] bg-olive-100/50 px-5 py-4 text-2xl text-olive-800 font-bold">
+                يرجى التواصل مع رقم واتس الواحة: 01233313590
+              </p>
+            )}
 
             {renderError(errors.payment_method?.message)}
           </div>

@@ -38,7 +38,7 @@ class IsOwnerOrAdminOrSupervisorOrInstructor(IsAuthenticated):
         # Course instructor can view enrollments in their courses
         if user.role == "instructor":
             instructor = getattr(user, "instructor_profile", None)
-            target = obj.course
+            target = obj.course_instance
             if instructor and target and target.instructor_id == instructor.id:
                 return True
 
@@ -90,6 +90,9 @@ class EnrollmentListView(generics.ListAPIView):
                 "course",
                 "course__instructor",
                 "course__instructor__user",
+                "online_course",
+                "online_course__instructor",
+                "online_course__instructor__user",
                 "child",
                 "student",
                 "student__user",
@@ -145,6 +148,9 @@ class EnrollmentDetailView(generics.RetrieveAPIView):
             "course__instructor",
             "course__instructor__user",
             "course__season",
+            "online_course",
+            "online_course__instructor",
+            "online_course__instructor__user",
             "child",
             "child__primary_parent",
             "child__primary_parent__user",
@@ -169,7 +175,7 @@ class EnrollmentProgressView(APIView):
         try:
             return (
                 Enrollment.objects.select_related(
-                    "course", "child", "child__primary_parent", "student"
+                    "course", "online_course", "child", "child__primary_parent", "student"
                 )
                 .prefetch_related("course__lectures")
                 .get(id=id)
@@ -188,7 +194,7 @@ class EnrollmentProgressView(APIView):
         # Course instructor can view
         if user.role == "instructor":
             instructor = getattr(user, "instructor_profile", None)
-            target = obj.course
+            target = obj.course_instance
             if instructor and target and target.instructor_id == instructor.id:
                 return True
 

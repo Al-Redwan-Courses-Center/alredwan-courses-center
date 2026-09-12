@@ -24,8 +24,8 @@ export default function StudentOverviewCoursesAccordion({
       {courses.map((course) => {
         const tags = "tags" in course ? course.tags : [];
         const startDate = "start_date" in course ? course.start_date : null;
-        const numLectures =
-          "num_lectures" in course ? course.num_lectures : undefined;
+        const numLectures = "num_lectures" in course ? course.num_lectures : undefined;
+        const videoCount = "video_count" in course ? course.video_count : undefined;
         const schedules = "schedules" in course ? course.schedules : undefined;
 
         return (
@@ -52,21 +52,19 @@ export default function StudentOverviewCoursesAccordion({
 
             {tags && tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {tags.map(
-                  (tag: { id: number; name: string }, index: number) => (
-                    <span
-                      className={cn(
-                        "bg-gray-50 px-3 py-1 text-lg",
-                        index % 2 === 0
-                          ? "rounded-[0.8rem_0]"
-                          : "rounded-[0_0.8rem]",
-                      )}
-                      key={tag.id}
-                    >
-                      {tag.name}
-                    </span>
-                  ),
-                )}
+                {tags.map((tag: { id: number; name: string }, index: number) => (
+                  <span
+                    className={cn(
+                      "bg-gray-50 px-3 py-1 text-lg",
+                      index % 2 === 0
+                        ? "rounded-[0.8rem_0]"
+                        : "rounded-[0_0.8rem]",
+                    )}
+                    key={tag.id}
+                  >
+                    {tag.name}
+                  </span>
+                ))}
               </div>
             )}
 
@@ -79,7 +77,7 @@ export default function StudentOverviewCoursesAccordion({
                   </span>
                 </li>
               )}
-
+              
               {numLectures !== undefined && (
                 <li className="flex items-center gap-2">
                   <BookIcon className="text-olive-500" />
@@ -94,12 +92,24 @@ export default function StudentOverviewCoursesAccordion({
                 </li>
               )}
 
+              {videoCount !== undefined && (
+                <li className="flex items-center gap-2">
+                  <BookIcon className="text-olive-500" />
+                  <span>
+                    {toHindiDigits(videoCount)}{" "}
+                    {getArabicPlural(videoCount, {
+                      singular: "فيديو",
+                      twofer: "فيديوهان",
+                      plural: "فيديوهات",
+                    })}
+                  </span>
+                </li>
+              )}
+
               {schedules && schedules.length > 0 && (
                 <li className="flex items-center gap-2">
                   <CalendarIcon className="text-olive-500" />
-                  <span>
-                    {schedules.map((s) => s.weekday_display).join(" \\ ")}
-                  </span>
+                  <span>{schedules.map((s) => s.weekday_display).join(" \\ ")}</span>
                 </li>
               )}
             </ul>
@@ -118,11 +128,15 @@ export default function StudentOverviewCoursesAccordion({
                   {course.enrollment_status_display || "قيد المراجعة"}
                 </span>
               ) : (
-                <Button
-                  size="small"
-                  href={`/dashboard/my-courses/${course.id}`}
+                <Button 
+                  size="small" 
+                  href={
+                    course.type === "online" 
+                      ? `/dashboard/online-courses/${course.id}/learn`
+                      : `/dashboard/my-courses/${course.id}`
+                  }
                 >
-                  عرض الدورة
+                  {course.type === "online" ? "مشاهدة الدورة" : "عرض الدورة"}
                 </Button>
               )}
             </div>

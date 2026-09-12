@@ -16,6 +16,7 @@ from courses.models import Lecture, LectureStatus
 from enrollments_payments.models import Enrollment, EnrollmentStatus
 from enrollments_payments.models import EnrollmentRequest, EnrollmentRequestStatus
 from attendance.models import LectureAttendance
+from courses_online.models import OnlineCourse, VideoLecture, OnlineLectureMaterial, VideoWatchProgress, VideoPlatform, MaterialType
 
 # ==========================================
 # MOCK DATA FROM db.ts
@@ -140,7 +141,9 @@ class Command(BaseCommand):
                 self.seed_parents_and_children()
                 self.seed_independent_students()
                 self.seed_courses_and_lectures()
+                self.seed_online_courses()
                 self.seed_enrollments_and_attendance()
+                self.seed_online_enrollments_and_progress()
                 self.seed_enrollment_requests()
                 
             self.stdout.write(self.style.SUCCESS("Successfully seeded the database!"))
@@ -153,11 +156,15 @@ class Command(BaseCommand):
     def clear_data(self):
         # Delete in order to respect foreign keys
         LectureAttendance.objects.all().delete()
+        VideoWatchProgress.objects.all().delete()
         Enrollment.objects.all().delete()
         EnrollmentRequest.objects.all().delete()
         Lecture.objects.all().delete()
         CourseSchedule.objects.all().delete()
         Course.objects.all().delete()
+        OnlineLectureMaterial.objects.all().delete()
+        VideoLecture.objects.all().delete()
+        OnlineCourse.objects.all().delete()
         Tag.objects.all().delete()
         Season.objects.all().delete()
         Child.objects.all().delete()
@@ -433,31 +440,171 @@ class Command(BaseCommand):
     def seed_enrollment_requests(self):
         self.stdout.write("Seeding enrollment requests...")
         courses = list(Course.objects.all())
+        online_courses = list(OnlineCourse.objects.all())
         students = list(StudentUser.objects.all())
         children = list(Child.objects.all())
         
-        for i in range(50): # Stress testing
-            course = random.choice(courses)
+        for i in range(75): # Stress testing
+            is_online = random.random() < 0.3
+            course = random.choice(online_courses) if (is_online and online_courses) else random.choice(courses)
             status = random.choice(EnrollmentRequestStatus.choices)[0]
             
+            q_kwargs = {}
+            if is_online:
+                q_kwargs['online_course'] = course
+            else:
+                q_kwargs['course'] = course
+
             if random.random() < 0.5:
                 # Student request
                 student = random.choice(students)
-                if not EnrollmentRequest.objects.filter(course=course, student=student).exists():
+                q_kwargs['student'] = student
+                if not EnrollmentRequest.objects.filter(**q_kwargs).exists():
                     EnrollmentRequest.objects.create(
-                        course=course,
-                        student=student,
                         status=status,
                         price=course.price,
+                        **q_kwargs
                     )
             else:
                 # Parent/Child request
                 child = random.choice(children)
-                if not EnrollmentRequest.objects.filter(course=course, child=child).exists():
+                q_kwargs['child'] = child
+                q_kwargs['parent'] = child.primary_parent
+                if not EnrollmentRequest.objects.filter(**q_kwargs).exists():
                     EnrollmentRequest.objects.create(
-                        course=course,
-                        child=child,
-                        parent=child.primary_parent,
                         status=status,
                         price=course.price,
+                        **q_kwargs
                     )
+
+    def seed_online_courses(self):
+        self.stdout.write("Seeding online courses...")
+        instructors = list(Instructor.objects.all())
+        tags = list(Tag.objects.all())
+        
+        ONLINE_COURSES_MOCK = [
+            {
+                "name": "تعلم الآلة والذكاء الاصطناعي للشباب",
+                "slug": "ml-ai-youth",
+                "price": 1800,
+                "tag_idx": 0, # programming
+                "lectures": [
+                    {"title": "مقدمة في الذكاء الاصطناعي", "duration": 1800, "platform": VideoPlatform.YOUTUBE, "url": "https://www.youtube.com/watch?v=mock1"},
+                    {"title": "ما هو تعلم الآلة؟", "duration": 2400, "platform": VideoPlatform.BUNNY, "url": "https://bunny.net/mock2"},
+                    {"title": "بناء النموذج الأول الخاص بك", "duration": 3600, "platform": VideoPlatform.VIMEO, "url": "https://vimeo.com/mock3"},
+                ]
+            },
+            {
+                "name": "تجويد القرآن الكريم برواية حفص",
+                "slug": "tajweed-hafs",
+                "price": 600,
+                "tag_idx": 3, # quran
+                "lectures": [
+                    {"title": "أحكام النون الساكنة والتنوين", "duration": 1500, "platform": VideoPlatform.YOUTUBE, "url": "https://www.youtube.com/watch?v=mock4"},
+                    {"title": "أحكام الميم الساكنة", "duration": 1200, "platform": VideoPlatform.YOUTUBE, "url": "https://www.youtube.com/watch?v=mock5"},
+                    {"title": "مخارج الحروف والصفات", "duration": 2000, "platform": VideoPlatform.YOUTUBE, "url": "https://www.youtube.com/watch?v=mock6"},
+                ]
+            },
+            {
+                "name": "تطوير تطبيقات الموبايل باستخدام فلاتر",
+                "slug": "flutter-apps",
+                "price": 2400,
+                "tag_idx": 0, # programming
+                "lectures": [
+                    {"title": "تهيئة بيئة العمل وفهم Flutter", "duration": 2700, "platform": VideoPlatform.BUNNY, "url": "https://bunny.net/mock7"},
+                    {"title": "بناء الواجهات والـ Widgets الأساسية", "duration": 3200, "platform": VideoPlatform.BUNNY, "url": "https://bunny.net/mock8"},
+                    {"title": "التعامل مع الحالة State Management", "duration": 3600, "platform": VideoPlatform.BUNNY, "url": "https://bunny.net/mock9"},
+                    {"title": "ربط التطبيق بقاعدة البيانات", "duration": 4000, "platform": VideoPlatform.BUNNY, "url": "https://bunny.net/mock10"},
+                ]
+            }
+        ]
+
+        for mock in ONLINE_COURSES_MOCK:
+            course, _ = OnlineCourse.objects.get_or_create(
+                slug=mock["slug"],
+                defaults={
+                    "name": mock["name"],
+                    "price": Decimal(mock["price"]),
+                    "instructor": random.choice(instructors) if instructors else None,
+                    "is_published": True,
+                    "is_active": True,
+                }
+            )
+            if tags and mock["tag_idx"] < len(tags):
+                course.tags.add(tags[mock["tag_idx"]])
+
+            for idx, lec_data in enumerate(mock["lectures"]):
+                lecture, _ = VideoLecture.objects.get_or_create(
+                    course=course,
+                    order=idx + 1,
+                    defaults={
+                        "title": lec_data["title"],
+                        "duration_seconds": lec_data["duration"],
+                        "video_platform": lec_data["platform"],
+                        "video_url": lec_data["url"],
+                    }
+                )
+                
+                # Add mock materials for first video lecture
+                if idx == 0:
+                    OnlineLectureMaterial.objects.get_or_create(
+                        lecture=lecture,
+                        title="ملخص المحاضرة PDF",
+                        defaults={
+                            "external_url": "https://drive.google.com/file/d/mockpdf/view",
+                            "file_type": MaterialType.PDF,
+                            "order": 1,
+                        }
+                    )
+
+    def seed_online_enrollments_and_progress(self):
+        self.stdout.write("Seeding online enrollments and progress...")
+        online_courses = list(OnlineCourse.objects.all())
+        students = list(StudentUser.objects.all())
+        children = list(Child.objects.all())
+        participants = students + children
+        admin_user = CustomUser.objects.filter(role="admin").first()
+
+        for course in online_courses:
+            # Enroll 15-40 students/children randomly
+            count = random.randint(15, min(40, len(participants)))
+            chosen = random.sample(participants, count)
+            
+            for p in chosen:
+                is_student = isinstance(p, StudentUser)
+                existing = Enrollment.objects.filter(
+                    online_course=course,
+                    student=p if is_student else None,
+                    child=None if is_student else p
+                ).exists()
+                
+                if not existing:
+                    enrollment = Enrollment.objects.create(
+                        online_course=course,
+                        student=p if is_student else None,
+                        child=None if is_student else p,
+                        status=EnrollmentStatus.ACTIVE if random.random() < 0.95 else EnrollmentStatus.DROPPED,
+                        created_by=admin_user
+                    )
+                    
+                    # If enrollment is active, seed some progress for the lectures
+                    if enrollment.status == EnrollmentStatus.ACTIVE:
+                        for lecture in course.video_lectures.all():
+                            # Random chance student has watched this video
+                            if random.random() < 0.7:
+                                watched_pct = random.uniform(0.1, 1.0)
+                                is_completed = watched_pct >= 0.9
+                                total_sec = lecture.duration_seconds
+                                watched_sec = int(total_sec * watched_pct)
+                                
+                                VideoWatchProgress.objects.create(
+                                    lecture=lecture,
+                                    student=p if is_student else None,
+                                    child=None if is_student else p,
+                                    watched_seconds=watched_sec,
+                                    total_seconds=total_sec,
+                                    completion_percentage=watched_pct * 100,
+                                    is_completed=is_completed,
+                                    last_position_seconds=watched_sec if not is_completed else 0,
+                                    watch_count=1 if is_completed else 0,
+                                )

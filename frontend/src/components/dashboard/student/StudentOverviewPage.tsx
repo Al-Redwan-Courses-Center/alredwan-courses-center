@@ -5,10 +5,7 @@ import StudentOverviewEnrollmentRequestsAccordion from "@/components/dashboard/s
 import StudentOverviewHeader from "@/components/dashboard/student/StudentOverviewHeader";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
-import type {
-  EnrollmentRequestListItem,
-  StudentCourseItem,
-} from "@/types/entities";
+import type { EnrollmentRequestListItem, StudentCourseItem } from "@/types/entities";
 import type { UserEntity } from "@/types/auth";
 
 const emptyActionClassName =

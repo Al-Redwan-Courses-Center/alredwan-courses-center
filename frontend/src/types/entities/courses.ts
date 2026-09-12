@@ -63,11 +63,19 @@ export interface CourseDetail extends Omit<
 
 export type StudentPhysicalCourse = CourseDetail & {
   course_progress: number;
+  type: "physical";
   enrollment_status?: string;
   enrollment_status_display?: string;
 };
 
-export type StudentCourseItem = StudentPhysicalCourse;
+export type StudentOnlineCourse = import("./online-courses").OnlineCourseDetail & {
+  course_progress: number;
+  type: "online";
+  enrollment_status?: string;
+  enrollment_status_display?: string;
+};
+
+export type StudentCourseItem = StudentPhysicalCourse | StudentOnlineCourse;
 export interface LandingPageCourse {
   id: number;
   order: number;
