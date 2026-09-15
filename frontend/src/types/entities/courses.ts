@@ -61,13 +61,23 @@ export interface CourseDetail extends Omit<
   schedules: CourseScheduleDetail[];
 }
 
+import { OnlineCourseDetail } from "./online-courses";
+
 export type StudentPhysicalCourse = CourseDetail & {
+  type: "physical";
   course_progress: number;
   enrollment_status?: string;
   enrollment_status_display?: string;
 };
 
-export type StudentCourseItem = StudentPhysicalCourse;
+export type StudentOnlineCourse = OnlineCourseDetail & {
+  type: "online";
+  course_progress: number;
+  enrollment_status?: string;
+  enrollment_status_display?: string;
+};
+
+export type StudentCourseItem = StudentPhysicalCourse | StudentOnlineCourse;
 export interface LandingPageCourse {
   id: number;
   order: number;

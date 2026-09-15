@@ -13,11 +13,14 @@ import {
   toPaginatedResponse,
   unwrapPaginated,
 } from "@/lib/api";
+import { cache } from "react";
 import type { PaginatedResponse } from "@/types/config";
 import type {
   CourseDetail,
   CourseListItem,
+  OnlineCourseDetail,
   StudentCourseItem,
+  VideoLectureItem,
 } from "@/types/entities";
 
 export interface CourseQueryParams {
@@ -36,9 +39,9 @@ export interface CourseQueryParams {
   is_active?: boolean;
 }
 
-export async function getPublicCourses(
+export const getPublicCourses = cache(async (
   params?: CourseQueryParams,
-): Promise<PaginatedResponse<CourseListItem>> {
+): Promise<PaginatedResponse<CourseListItem>> => {
   try {
     const { data } = await publicApiClient.get<
       PaginatedResponse<CourseListItem> | CourseListItem[]
@@ -70,7 +73,7 @@ export async function getPublicCourses(
       results: [],
     };
   }
-}
+});
 
 export async function getAllCourses(
   params?: CourseQueryParams,
@@ -196,25 +199,117 @@ export async function getStudentCourses(): Promise<StudentCourseItem[]> {
     "Failed to load student courses:",
     async () => {
       const myEnrollments = await getMyEnrollments();
+      const myRequests = await getMyEnrollmentRequests();
 
-      const myCoursesInitial = await Promise.all(
-        myEnrollments.map((e) => getCourseById(e.course)),
-      );
-      const myEnrollmentsProgresses = await Promise.all(
-        myEnrollments.map((e) => getEnrollmentProgressById(e.id)),
+      const pendingRequests = myRequests.filter(
+        (r) => r.status === "pending" || r.status === "processing",
       );
 
-      return myCoursesInitial
-        .map((c, i) => {
-          if (!c) return null;
+      const physicalEnrollments = myEnrollments.filter(
+        (e) => e.course !== null,
+      );
+      const onlineEnrollments = myEnrollments.filter(
+        (e) => e.online_course !== null,
+      );
+
+      const physicalRequests = pendingRequests.filter((r) => r.course !== null);
+      const onlineRequests = pendingRequests.filter(
+        (r) => r.online_course !== null,
+      );
+
+      const getUniqueIds = <T, K extends keyof T>(
+        arr: T[],
+        key: K,
+      ): NonNullable<T[K]>[] =>
+        Array.from(
+          new Set(
+            arr
+              .map((item) => item[key])
+              .filter(
+                (val): val is NonNullable<T[K]> =>
+                  val !== null && val !== undefined,
+              ),
+          ),
+        );
+
+      const physicalCourseIds = getUniqueIds(
+        [...physicalEnrollments, ...physicalRequests],
+        "course",
+      );
+      const onlineCourseIds = getUniqueIds(
+        [...onlineEnrollments, ...onlineRequests],
+        "online_course",
+      );
+
+      const [myCoursesInitial, myEnrollmentsProgresses] = await Promise.all([
+        Promise.all(physicalCourseIds.map((id) => getCourseById(id as number))),
+        Promise.all(
+          physicalEnrollments.map((e) => getEnrollmentProgressById(e.id)),
+        ),
+      ]);
+
+      const physical = myCoursesInitial
+        .filter((c): c is NonNullable<typeof c> => c !== null)
+        .map((c) => {
+          const isPending = !physicalEnrollments.find(
+            (e) => e.course === c?.id,
+          );
+          const req = physicalRequests.find((r) => r.course === c?.id);
+          const activeIndex = physicalEnrollments.findIndex(
+            (e) => e.course === c?.id,
+          );
+
           return {
             ...c,
-            course_progress: myEnrollmentsProgresses[i]?.percentage ?? 0,
+            course_progress: isPending
+              ? 0
+              : myEnrollmentsProgresses[activeIndex]?.percentage || 0,
+            type: "physical" as const,
+            enrollment_status: isPending ? req?.status : "active",
+            enrollment_status_display: isPending ? req?.status_display : "نشط",
           };
-        })
-        .filter(
-          (c): c is CourseDetail & { course_progress: number } => c !== null,
-        );
+        });
+
+      const apiClient = await getAuthApiClient();
+      let onlineCoursesInitial: OnlineCourseDetail[] = [];
+      if (onlineCourseIds.length > 0) {
+        const res = await apiClient
+          .get<OnlineCourseDetail[]>(`/api/online-courses/courses/batch/`, {
+            params: { ids: onlineCourseIds.join(",") },
+          })
+          .catch(() => ({ data: [] }));
+        onlineCoursesInitial = res.data;
+      }
+
+      const online = onlineCoursesInitial
+        .filter((c): c is OnlineCourseDetail => c !== null)
+        .map((c: OnlineCourseDetail) => {
+          const isPending = !onlineEnrollments.find(
+            (e) => e.online_course === c?.id,
+          );
+          const req = onlineRequests.find((r) => r.online_course === c?.id);
+
+          const completedLecturesCount =
+            c.video_lectures?.filter(
+              (l: VideoLectureItem) => l.watch_progress?.is_completed,
+            ).length || 0;
+          const progressPercentage =
+            c.video_lectures && c.video_lectures.length > 0
+              ? Math.round(
+                  (completedLecturesCount / c.video_lectures.length) * 100,
+                )
+              : 0;
+
+          return {
+            ...c,
+            course_progress: progressPercentage,
+            type: "online" as const,
+            enrollment_status: isPending ? req?.status : "active",
+            enrollment_status_display: isPending ? req?.status_display : "نشط",
+          };
+        });
+
+      return [...physical, ...online];
     },
     [],
   );

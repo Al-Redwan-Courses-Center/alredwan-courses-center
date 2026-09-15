@@ -3,6 +3,7 @@
 import { isAxiosError } from "axios";
 import { revalidatePath } from "next/cache";
 import { getCourseById } from "@/actions/courses";
+import { getOnlineCourseById } from "@/actions/online-courses";
 import { getEnrollmentProgressById } from "@/actions/enrollments";
 import {
   apiRequest,
@@ -221,9 +222,19 @@ export async function getChildCourses(
 ): Promise<StudentCourseItem[]> {
   try {
     const myEnrollments = await getChildEnrollments(childId);
+    console.log(myEnrollments);
 
     const myCoursesInitial = await Promise.all(
-      myEnrollments.map((e) => getCourseById(e.course)),
+      myEnrollments.map(async (e) => {
+        if (e.course) {
+          const c = await getCourseById(e.course);
+          return c ? { ...c, type: "physical" as const } : null;
+        } else if (e.online_course) {
+          const c = await getOnlineCourseById(String(e.online_course), childId);
+          return c ? { ...c, type: "online" as const } : null;
+        }
+        return null;
+      })
     );
     const myEnrollmentsProgresses = await Promise.all(
       myEnrollments.map((e) => getEnrollmentProgressById(e.id)),
@@ -235,10 +246,10 @@ export async function getChildCourses(
         return {
           ...c,
           course_progress: myEnrollmentsProgresses[i]?.percentage ?? 0,
-        };
+        } as StudentCourseItem;
       })
       .filter(
-        (c): c is CourseDetail & { course_progress: number } => c !== null,
+        (c): c is StudentCourseItem => c !== null,
       );
 
     return myCourses;
