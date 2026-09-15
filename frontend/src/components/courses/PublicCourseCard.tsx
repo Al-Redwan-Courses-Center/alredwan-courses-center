@@ -46,7 +46,7 @@ export default function PublicCourseCard({
           />
         ) : (
           <div className="grid place-items-center bg-gray-200">
-            <OpenBookIcon className="text-olive-700 h-auto w-25" />
+            <OpenBookIcon className="h-auto w-25 text-olive-700" />
           </div>
         )
       }
@@ -101,7 +101,7 @@ export default function PublicCourseCard({
         ))}
       </div>
 
-      <ul className="[&_svg]:text-olive-500 mb-7 flex flex-col gap-3 [&_svg]:h-auto [&_svg]:w-[1.525rem] [&>li]:flex [&>li]:items-center [&>li]:gap-2">
+      <ul className="mb-7 flex flex-col gap-3 [&_svg]:h-auto [&_svg]:w-[1.525rem] [&_svg]:text-olive-500 [&>li]:flex [&>li]:items-center [&>li]:gap-2">
         <li>
           <CalendarIcon />
           <span>يبدأ: {formatDate(startDate)}</span>
@@ -131,7 +131,7 @@ export default function PublicCourseCard({
         </li>
       </ul>
 
-      <p className="text-olive-500 text-4xl font-bold">
+      <p className="text-4xl font-bold text-olive-500">
         {toHindiDigits(course.price)} جنيه
       </p>
     </ItemCard>

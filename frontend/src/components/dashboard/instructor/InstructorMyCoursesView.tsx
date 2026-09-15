@@ -42,7 +42,7 @@ export default function InstructorMyCoursesView({
       filterConfig={filterConfig}
       sortConfig={sortConfig}
     >
-      <div className="tablet:flex-col tablet:items-stretch tablet:gap-12 relative z-60 mb-14 flex items-center justify-between gap-16 px-16">
+      <div className="tablet:flex-col tablet:items-stretch tablet:gap-12 relative z-60 mb-14 flex items-center justify-between gap-16 px-4 tablet:px-16 tablet-sm:px-4">
         <div className="tablet:max-w-full w-full max-w-[400px]">
           <DataViewSearch />
         </div>
@@ -59,7 +59,7 @@ export default function InstructorMyCoursesView({
         </div>
       </div>
 
-      <DataViewHeaderLegacy className="mx-16">
+      <DataViewHeaderLegacy className="mx-4 tablet:mx-16 tablet-sm:mx-4">
         <DataViewCellLegacy>م</DataViewCellLegacy>
         <DataViewCellLegacy>الدورة</DataViewCellLegacy>
         <DataViewCellLegacy>الموسم</DataViewCellLegacy>
@@ -69,7 +69,7 @@ export default function InstructorMyCoursesView({
       </DataViewHeaderLegacy>
 
       <DataViewBody
-        className="px-16"
+        className="px-4 tablet:px-16 tablet-sm:px-4 tablet-sm:!grid tablet-sm:!grid-cols-1 tablet-sm:!overflow-hidden w-full [&_>_div]:!min-w-0"
         render={{
           table: (course: CourseViewItem, i) => (
             <DataViewRowLegacy index={i} key={course.id}>

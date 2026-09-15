@@ -249,9 +249,6 @@ export default function CourseLecturesView({
               <div className="w-auto flex-1">
                 <DataViewFilter />
               </div>
-              <div className="w-auto shrink-0">
-                <DataViewLayoutToggle />
-              </div>
             </div>
           </div>
 
@@ -324,7 +321,7 @@ export default function CourseLecturesView({
                           className="flex min-w-0 flex-1 cursor-pointer flex-col justify-between p-3 sm:p-4"
                         >
                           <div className="flex min-w-0 items-start justify-between gap-2">
-                            <span className="line-clamp-2 text-base font-semibold text-olive-700 sm:text-[1.5rem]">
+                            <span className="line-clamp-2 min-w-0 text-base font-semibold text-olive-700 sm:text-[1.5rem]">
                               {lecture.display_title}
                             </span>
                             <StatusBadge

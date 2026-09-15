@@ -27,7 +27,7 @@ export default function DataViewBodyLegacy<T>({
     return (
       <div
         className={cn(
-          "grid grid-cols-4 laptop-sm:grid-cols-3 tablet:grid-cols-2 max-sm:flex max-sm:w-full max-sm:overflow-x-auto max-sm:touch-pan-x max-sm:pb-4 gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-8",
+          "grid grid-cols-4 laptop-sm:grid-cols-3 tablet:grid-cols-2 max-sm:grid max-sm:grid-cols-1 gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-8 w-full",
           className,
         )}
       >

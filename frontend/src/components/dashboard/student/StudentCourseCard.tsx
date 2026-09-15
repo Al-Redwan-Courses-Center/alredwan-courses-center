@@ -8,7 +8,7 @@ import CalendarIcon from "@/components/icons/CalendarIcon";
 import Button from "@/components/ui/Button";
 import ItemCard from "@/components/ui/ItemCard";
 import ProgressBar from "@/components/ui/ProgressBar";
-import { StudentPhysicalCourse } from "@/types/entities";
+import { StudentCourseItem } from "@/types/entities";
 import { cn, formatDate, getArabicPlural, toHindiDigits } from "@/lib/utils";
 import type { UserEntity } from "@/types/auth";
 
@@ -18,7 +18,7 @@ export default function StudentCourseCard({
   role,
   childId,
 }: {
-  course: StudentPhysicalCourse;
+  course: StudentCourseItem;
   index: number;
   role: UserEntity["role"];
   childId?: string;
@@ -30,19 +30,32 @@ export default function StudentCourseCard({
       ? pathname.split("/")[3]
       : undefined);
 
-  let targetHref = `/dashboard/my-courses/${course.id}`;
+  const isOnline = course.type === "online";
+  let targetHref = isOnline
+    ? `/dashboard/online-courses/${course.id}/learn`
+    : `/dashboard/my-courses/${course.id}`;
+
   if (role === "parent" && activeChildId) {
-    if (pathname.startsWith("/dashboard/my-children/")) {
-      targetHref = `/dashboard/my-children/${activeChildId}/courses/${course.id}`;
+    if (isOnline) {
+      targetHref = `/dashboard/online-courses/${course.id}/learn?child=${activeChildId}`;
     } else {
-      targetHref = `/dashboard/my-courses/${course.id}?child=${activeChildId}`;
+      if (pathname.startsWith("/dashboard/my-children/")) {
+        targetHref = `/dashboard/my-children/${activeChildId}/courses/${course.id}`;
+      } else {
+        targetHref = `/dashboard/my-courses/${course.id}?child=${activeChildId}`;
+      }
     }
   }
-  const imageSrc = course.image || CourseImage;
-  const tags = course.tags || [];
-  const startDate = course.start_date;
-  const numLectures = course.num_lectures;
-  const schedules = course.schedules;
+
+  const imageSrc =
+    (isOnline ? ("thumbnail" in course ? (course.thumbnail as string) : null) : ("image" in course ? (course.image as string) : null)) ||
+    CourseImage.src;
+
+  const tags = "tags" in course ? course.tags : [];
+  const startDate = "start_date" in course ? course.start_date : null;
+  const numLectures = "num_lectures" in course ? course.num_lectures : undefined;
+  const videoCount = "video_count" in course ? course.video_count : undefined;
+  const schedules = "schedules" in course ? course.schedules : undefined;
 
   return (
     <ItemCard
@@ -71,7 +84,7 @@ export default function StudentCourseCard({
             </span>
           ) : (
             <Button size="small" href={targetHref}>
-              عرض الدورة
+              {isOnline ? "مشاهدة الدورة" : "عرض الدورة"}
             </Button>
           )}
         </div>
@@ -79,6 +92,11 @@ export default function StudentCourseCard({
     >
       <div className="mb-3 flex items-start justify-between">
         <h3 className="text-[1.28rem] font-bold">{course.name}</h3>
+        {isOnline && (
+          <span className="rounded bg-blue-100 px-2 py-1 text-sm text-blue-700">
+            أونلاين
+          </span>
+        )}
       </div>
       <p className="mb-5 line-clamp-2">{course.description}</p>
 
@@ -122,6 +140,20 @@ export default function StudentCourseCard({
           </li>
         )}
 
+        {isOnline && videoCount !== undefined && (
+          <li>
+            <BookIcon />
+            <span>
+              {toHindiDigits(videoCount)}{" "}
+              {getArabicPlural(videoCount, {
+                singular: "فيديو",
+                twofer: "فيديوهان",
+                plural: "فيديوهات",
+              })}
+            </span>
+          </li>
+        )}
+
         {schedules && schedules.length > 0 && (
           <li>
             <CalendarIcon />
@@ -132,6 +164,7 @@ export default function StudentCourseCard({
             </span>
           </li>
         )}
+
       </ul>
 
       <div className="mt-auto grid grid-cols-[1fr_auto] items-center gap-x-3">

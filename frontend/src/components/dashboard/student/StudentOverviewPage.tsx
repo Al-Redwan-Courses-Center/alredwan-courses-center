@@ -65,7 +65,7 @@ export default function StudentOverviewPage({
         <div className="flex flex-col gap-6">
           <h2 className="dashboard-section-title">آخر الكورسات المسجلة</h2>
 
-          <div className="hidden min-[1000px]:flex min-[1000px]:grow min-[1000px]:items-center min-[1000px]:gap-12">
+          <div className="hidden min-[1000px]:grid min-[1000px]:grid-cols-2 min-[1000px]:gap-12 min-[1000px]:items-stretch">
             {overviewCourses.length > 0 ? (
               overviewCourses.map((c, i) => (
                 <StudentCourseCard
