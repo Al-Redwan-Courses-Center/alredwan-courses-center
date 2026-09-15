@@ -90,6 +90,9 @@ class EnrollmentListView(generics.ListAPIView):
                 "course",
                 "course__instructor",
                 "course__instructor__user",
+                "online_course",
+                "online_course__instructor",
+                "online_course__instructor__user",
                 "child",
                 "student",
                 "student__user",
@@ -145,6 +148,9 @@ class EnrollmentDetailView(generics.RetrieveAPIView):
             "course__instructor",
             "course__instructor__user",
             "course__season",
+            "online_course",
+            "online_course__instructor",
+            "online_course__instructor__user",
             "child",
             "child__primary_parent",
             "child__primary_parent__user",
@@ -165,11 +171,10 @@ class EnrollmentProgressView(APIView):
 
     def get_object(self, id):
         from django.core.exceptions import ValidationError
-
         try:
             return (
                 Enrollment.objects.select_related(
-                    "course", "child", "child__primary_parent", "student"
+                    "course", "online_course", "child", "child__primary_parent", "student"
                 )
                 .prefetch_related("course__lectures")
                 .get(id=id)

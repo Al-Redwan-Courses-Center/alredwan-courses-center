@@ -36,6 +36,7 @@ urlpatterns = [
     path('api/', include('enrollments_payments.urls')),
     path('api/parents/', include('parents.urls')),
     path('api/memories/', include('memories.urls')),
+    path('api/online-courses/', include('courses_online.urls')),
 ]
 
 

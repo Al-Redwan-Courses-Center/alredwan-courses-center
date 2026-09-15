@@ -9,11 +9,8 @@ from django.db.models import Q
 class PaymentMethod(models.TextChoices):
     """Enumeration for payment method choices."""
     CASH = 'cash', 'Cash'
-    CARD = 'card', 'Card'
-    BANK_TRANSFER = 'bank_transfer', 'Bank Transfer'
     INSTAPAY = 'instapay', 'Instapay'
     VODAFONE_CASH = 'vodafone_cash', 'Vodafone Cash'
-    OTHER = 'other', 'Other'
 
 
 class PaymentStatus(models.TextChoices):

@@ -11,14 +11,12 @@ from ..models.payment import Payment, PaymentStatus
 class EnrollmentListSerializer(serializers.ModelSerializer):
     """Serializer for listing user's enrollments with course and payment summary"""
     # Course info
-    course_name = serializers.CharField(source='course.name', read_only=True)
-    course_price = serializers.DecimalField(
-        source='course.price', max_digits=10, decimal_places=2, read_only=True)
-    course_start_date = serializers.DateField(
-        source='course.start_date', read_only=True)
-    course_end_date = serializers.DateField(
-        source='course.end_date', read_only=True)
+    course_name = serializers.SerializerMethodField()
+    course_price = serializers.SerializerMethodField()
+    course_start_date = serializers.SerializerMethodField()
+    course_end_date = serializers.SerializerMethodField()
     course_instructor = serializers.SerializerMethodField()
+    is_online = serializers.BooleanField(read_only=True)
 
     # Participant info
     child_id = serializers.UUIDField(
@@ -41,8 +39,8 @@ class EnrollmentListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enrollment
         fields = [
-            'id', 'course', 'course_name', 'course_price',
-            'course_start_date', 'course_end_date', 'course_instructor',
+            'id', 'course', 'online_course', 'course_name', 'course_price',
+            'course_start_date', 'course_end_date', 'course_instructor', 'is_online',
             'child_id', 'participant_name', 'participant_type',
             'status', 'status_display',
             'enrolled_at', 'completed_at',
@@ -51,9 +49,30 @@ class EnrollmentListSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
+    def get_course_name(self, obj):
+        target = obj.get_course_instance()
+        return target.name if target else None
+        
+    def get_course_price(self, obj):
+        target = obj.get_course_instance()
+        return str(target.price) if target else None
+
+    def get_course_start_date(self, obj):
+        target = obj.get_course_instance()
+        if hasattr(target, 'start_date'):
+            return target.start_date
+        return target.created_at.date() if target else None
+        
+    def get_course_end_date(self, obj):
+        target = obj.get_course_instance()
+        if hasattr(target, 'end_date'):
+            return target.end_date
+        return None
+
     def get_course_instructor(self, obj):
-        if obj.course and obj.course.instructor:
-            return obj.course.instructor.user.get_full_name()
+        target = obj.get_course_instance()
+        if target and target.instructor:
+            return target.instructor.user.get_full_name()
         return None
 
     def get_participant_name(self, obj):
@@ -112,18 +131,14 @@ class PaymentSummarySerializer(serializers.ModelSerializer):
 class EnrollmentDetailSerializer(serializers.ModelSerializer):
     """Detailed serializer for viewing a single enrollment"""
     # Course info
-    course_name = serializers.CharField(source='course.name', read_only=True)
-    course_description = serializers.CharField(
-        source='course.description', read_only=True)
-    course_price = serializers.DecimalField(
-        source='course.price', max_digits=10, decimal_places=2, read_only=True)
-    course_start_date = serializers.DateField(
-        source='course.start_date', read_only=True)
-    course_end_date = serializers.DateField(
-        source='course.end_date', read_only=True)
+    course_name = serializers.SerializerMethodField()
+    course_description = serializers.SerializerMethodField()
+    course_price = serializers.SerializerMethodField()
+    course_start_date = serializers.SerializerMethodField()
+    course_end_date = serializers.SerializerMethodField()
     course_instructor = serializers.SerializerMethodField()
-    course_num_lectures = serializers.IntegerField(
-        source='course.num_lectures', read_only=True)
+    course_num_lectures = serializers.SerializerMethodField()
+    is_online = serializers.BooleanField(read_only=True)
 
     # Participant info
     participant_name = serializers.SerializerMethodField()
@@ -149,9 +164,9 @@ class EnrollmentDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enrollment
         fields = [
-            'id', 'course', 'course_name', 'course_description',
+            'id', 'course', 'online_course', 'course_name', 'course_description',
             'course_price', 'course_start_date', 'course_end_date',
-            'course_instructor', 'course_num_lectures',
+            'course_instructor', 'course_num_lectures', 'is_online',
             'student', 'child',
             'participant_name', 'participant_type', 'participant_id',
             'status', 'status_display',
@@ -162,9 +177,42 @@ class EnrollmentDetailSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
+    def get_course_name(self, obj):
+        target = obj.get_course_instance()
+        return target.name if target else None
+
+    def get_course_description(self, obj):
+        target = obj.get_course_instance()
+        return target.description if target else None
+        
+    def get_course_price(self, obj):
+        target = obj.get_course_instance()
+        return str(target.price) if target else None
+
+    def get_course_start_date(self, obj):
+        target = obj.get_course_instance()
+        if hasattr(target, 'start_date'):
+            return target.start_date
+        return target.created_at.date() if target else None
+        
+    def get_course_end_date(self, obj):
+        target = obj.get_course_instance()
+        if hasattr(target, 'end_date'):
+            return target.end_date
+        return None
+        
+    def get_course_num_lectures(self, obj):
+        target = obj.get_course_instance()
+        if hasattr(target, 'num_lectures'):
+            return target.num_lectures
+        elif hasattr(target, 'video_lectures'):
+            return target.video_lectures.count()
+        return None
+
     def get_course_instructor(self, obj):
-        if obj.course and obj.course.instructor:
-            return obj.course.instructor.user.get_full_name()
+        target = obj.get_course_instance()
+        if target and target.instructor:
+            return target.instructor.user.get_full_name()
         return None
 
     def get_participant_name(self, obj):

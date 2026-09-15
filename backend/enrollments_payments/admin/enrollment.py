@@ -57,6 +57,7 @@ class PaymentStatusFilter(admin.SimpleListFilter):
             Max(
                 Case(
                     When(course__isnull=False, then=F('course__price')),
+                    When(online_course__isnull=False, then=F('online_course__price')),
                     default=Value(Decimal('0')),
                     output_field=DecimalField()
                 )
@@ -471,6 +472,13 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
                 '📚 {}</a>',
                 url, obj.course.name
             )
+        elif obj.online_course:
+            url = reverse('admin:courses_online_onlinecourse_change', args=[obj.online_course.pk])
+            return format_html(
+                '<a href="{}" style="color: #2980b9; text-decoration: none;">'
+                '💻 {}</a>',
+                url, obj.online_course.name
+            )
         return '-'
 
     @admin.display(description=_('الحالة'), ordering='status')
@@ -545,7 +553,8 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
     def get_payment_status(self, obj):
         """Display payment status with visual indicator."""
         paid = float(obj.amount_paid())
-        course_price = float(obj.course.price) if obj.course.price else 0
+        course_obj = obj.course or obj.online_course
+        course_price = float(course_obj.price) if course_obj and course_obj.price else 0
         remaining = float(obj.remaining_amount())
 
         if course_price == 0:
@@ -573,7 +582,8 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
     def get_payment_progress(self, obj):
         """Display payment progress with amounts."""
         paid = obj.amount_paid()
-        course_price = obj.course.price if obj.course.price else 0
+        course_obj = obj.course or obj.online_course
+        course_price = course_obj.price if course_obj and course_obj.price else 0
         remaining = obj.remaining_amount()
 
         if course_price == 0:
@@ -685,10 +695,10 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
     @admin.display(description=_('معلومات الدورة'))
     def get_course_info(self, obj):
         """Display detailed course info in edit form."""
-        target = obj.course
+        target = obj.get_course_instance()
         if not target:
             return '-'
-        prefix = '📚 الدورة'
+        prefix = '💻 الدورة الإلكترونية' if obj.online_course else '📚 الدورة'
         instructor = getattr(target, 'instructor', None) or '-'
         price = getattr(target, 'price', None) or 'مجاني'
         enrolled = getattr(target, 'enrolled_count', 0)

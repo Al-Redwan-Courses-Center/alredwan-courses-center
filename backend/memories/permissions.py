@@ -3,15 +3,14 @@ from rest_framework import permissions
 from django.utils import timezone
 from datetime import timedelta
 
-class IsSupervisor(permissions.BasePermission):
+class IsInstructorOrSupervisor(permissions.BasePermission):
     """
-    Allows access only to supervisors (or admins).
+    Allows access to supervisors, admins, and normal instructors.
     """
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
-        # Adjust this depending on how you identify supervisors/admins in your CustomUser
-        return request.user.role in ['supervisor', 'admin']
+        return request.user.role in ['supervisor', 'admin', 'instructor']
 
 class IsInstructor(permissions.BasePermission):
     def has_permission(self, request, view):
