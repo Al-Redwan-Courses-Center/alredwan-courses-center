@@ -26,6 +26,7 @@ export default async function Page({
   ]);
   const isParent = user.role === "parent";
   const enrollmentRole = isParent ? "parent" : "student";
+  const isEnrollable = ["parent", "student"].includes(user.role);
 
   const [myEnrollments, myEnrollmentRequests, parentChildren] =
     await Promise.all([
@@ -39,7 +40,8 @@ export default async function Page({
       .filter(
         (enrollment) =>
           String(enrollment.course) === String(courseId) &&
-          (enrollment.participant_type === "child" || Boolean(enrollment.child_id)) &&
+          (enrollment.participant_type === "child" ||
+            Boolean(enrollment.child_id)) &&
           Boolean(enrollment.child_id),
       )
       .map((enrollment) => String(enrollment.child_id)),
@@ -63,7 +65,7 @@ export default async function Page({
     return (
       <div className="flex h-full items-center justify-center px-16">
         <div className="shadow-soft rounded-[2.5rem_0] bg-gray-50 px-16 py-12 text-center">
-          <h2 className="text-olive-500 mb-4 text-5xl font-bold">
+          <h2 className="mb-4 text-5xl font-bold text-olive-500">
             لم نتمكن من تحميل تفاصيل الدورة
           </h2>
           <Button href="/dashboard/courses" size="small">
@@ -107,7 +109,7 @@ export default async function Page({
             </div>
 
             <div className="shadow-soft flex flex-col gap-6 rounded-[2.5rem] border border-white/60 bg-white/40 p-10 backdrop-blur-md max-[1000px]:p-6">
-              <h2 className="text-olive-700 flex items-center gap-4 text-4xl font-bold">
+              <h2 className="flex items-center gap-4 text-4xl font-bold text-olive-700">
                 <Pencil size={24} className="text-olive-400" />
                 عن الدورة
               </h2>
@@ -119,7 +121,7 @@ export default async function Page({
                 {course.tags.map((tag) => (
                   <span
                     key={tag.id}
-                    className="bg-olive-50 text-olive-600 border-olive-100 rounded-full border px-6 py-2 text-xl font-bold"
+                    className="rounded-full border border-olive-100 bg-olive-50 px-6 py-2 text-xl font-bold text-olive-600"
                   >
                     {tag.name}
                   </span>
@@ -134,10 +136,10 @@ export default async function Page({
               <div className="flex flex-col gap-2">
                 <span className="text-xl text-gray-400">رسوم الدورة</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-olive-700 text-6xl font-bold">
+                  <span className="text-6xl font-bold text-olive-700">
                     {toHindiDigits(course.price)}
                   </span>
-                  <span className="text-olive-500 text-2xl font-bold">
+                  <span className="text-2xl font-bold text-olive-500">
                     جنيه مصري
                   </span>
                 </div>
@@ -157,12 +159,14 @@ export default async function Page({
                     طلبك قيد المراجعة
                   </Button>
                 ) : (
-                  <CoursePurchaseModal
-                    role={enrollmentRole}
-                    courseId={courseId}
-                    coursePrice={course.price}
-                    childrenOptions={childrenOptions}
-                  />
+                  isEnrollable && (
+                    <CoursePurchaseModal
+                      role={enrollmentRole}
+                      courseId={courseId}
+                      coursePrice={course.price}
+                      childrenOptions={childrenOptions}
+                    />
+                  )
                 )}
 
                 <Button
@@ -176,7 +180,7 @@ export default async function Page({
             </div>
 
             <div className="shadow-soft rounded-[2.5rem] border border-white/60 bg-white/40 p-10 backdrop-blur-md max-[1000px]:p-6">
-              <h3 className="text-olive-700 mb-6 text-3xl font-bold">
+              <h3 className="mb-6 text-3xl font-bold text-olive-700">
                 لماذا تختار الرضوان؟
               </h3>
               <ul className="space-y-4">
@@ -190,7 +194,7 @@ export default async function Page({
                     key={i}
                     className="flex items-center gap-3 text-xl text-gray-600"
                   >
-                    <div className="bg-olive-400 h-2 w-2 rounded-full" />
+                    <div className="h-2 w-2 rounded-full bg-olive-400" />
                     {item}
                   </li>
                 ))}
@@ -201,7 +205,7 @@ export default async function Page({
 
         {/* Ratings Section */}
         <div className="shadow-soft mt-8 rounded-[3rem] border border-white/60 bg-white/40 p-10 backdrop-blur-md max-[1000px]:p-6">
-          <h2 className="text-olive-700 mb-10 text-center text-4xl font-bold">
+          <h2 className="mb-10 text-center text-4xl font-bold text-olive-700">
             تقييمات الدورة وآراء الطلاب
           </h2>
           <RatingsSection

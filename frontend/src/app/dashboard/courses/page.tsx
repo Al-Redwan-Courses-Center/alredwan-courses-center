@@ -14,16 +14,17 @@ export default async function Page(props: {
   const season =
     typeof searchParams.season === "string" ? searchParams.season : undefined;
 
-  const [{ first_name }, paginatedCourses, onlineCourses] = await Promise.all([
-    getUser(),
-    getAllCourses({
-      page,
-      search,
-      season,
-      page_size: 8,
-    }),
-    getAllOnlineCourses()
-  ]);
+  const [{ first_name, role }, paginatedCourses, onlineCourses] =
+    await Promise.all([
+      getUser(),
+      getAllCourses({
+        page,
+        search,
+        season,
+        page_size: 8,
+      }),
+      getAllOnlineCourses(),
+    ]);
 
   return (
     <div className="flex flex-col pt-15 min-[1000px]:pt-32">
@@ -40,6 +41,7 @@ export default async function Page(props: {
           }
         >
           <PublicCourseCatalog
+            showEnroll={["parent", "student"].includes(role)}
             physical={paginatedCourses.results}
             online={onlineCourses}
             linkTo="dashboard"

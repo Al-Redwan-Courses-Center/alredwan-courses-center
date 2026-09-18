@@ -14,13 +14,18 @@ export default function PublicCourseCatalog({
   physical,
   online,
   linkTo = "landing",
-}: PublicCourseCatalogProps & { linkTo?: "landing" | "dashboard" }) {
+  showEnroll = false,
+}: PublicCourseCatalogProps & {
+  linkTo?: "landing" | "dashboard";
+  showEnroll: boolean;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   // The tab lives in the URL so it survives refreshes and back/forward,
   // and so it needs no state to keep in sync.
-  const activeTab = searchParams.get("type") === "online" ? "online" : "physical";
+  const activeTab =
+    searchParams.get("type") === "online" ? "online" : "physical";
 
   const setActiveTab = (tab: "physical" | "online") => {
     const params = new URLSearchParams(searchParams.toString());
@@ -30,17 +35,17 @@ export default function PublicCourseCatalog({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-center justify-center gap-6 mb-8 w-full mt-2">
+      <div className="mt-2 mb-8 flex w-full flex-col items-center justify-center gap-6">
         {linkTo !== "dashboard" && (
-          <h1 className="text-4xl font-extrabold text-gray-900 font-medad">
+          <h1 className="font-medad text-4xl font-extrabold text-gray-900">
             معرض الدورات
           </h1>
         )}
-        
+
         <div className="flex w-full max-w-[600px] rounded-xl bg-gray-100 p-1.5 shadow-inner">
           <button
             onClick={() => setActiveTab("physical")}
-            className={`flex-1 py-3 text-lg font-bold rounded-lg transition-all duration-300 ${
+            className={`flex-1 rounded-lg py-3 text-lg font-bold transition-all duration-300 ${
               activeTab === "physical"
                 ? "bg-white text-gray-900 shadow-sm"
                 : "text-gray-500 hover:text-gray-800"
@@ -50,7 +55,7 @@ export default function PublicCourseCatalog({
           </button>
           <button
             onClick={() => setActiveTab("online")}
-            className={`flex-1 py-3 text-lg font-bold rounded-lg transition-all duration-300 ${
+            className={`flex-1 rounded-lg py-3 text-lg font-bold transition-all duration-300 ${
               activeTab === "online"
                 ? "bg-white text-gray-900 shadow-sm"
                 : "text-gray-500 hover:text-gray-800"
@@ -63,7 +68,11 @@ export default function PublicCourseCatalog({
 
       {activeTab === "physical" && (
         <div className="w-full">
-          <DashboardAllCoursesView courses={physical} linkTo={linkTo} />
+          <DashboardAllCoursesView
+            courses={physical}
+            linkTo={linkTo}
+            showEnroll={showEnroll}
+          />
         </div>
       )}
 
