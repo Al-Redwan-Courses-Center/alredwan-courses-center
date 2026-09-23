@@ -1,54 +1,58 @@
 "use server";
 
-import { apiRequest, getAuthApiClient, publicApiClient, unwrapPaginated } from "@/lib/api";
+import {
+  apiRequest,
+  getAuthApiClient,
+  publicApiClient,
+  unwrapPaginated,
+} from "@/lib/api";
 import { PaginatedResponse } from "@/types/config";
-import { OnlineCourseListItem, OnlineCourseDetail, VideoWatchProgressItem } from "@/types/entities";
+import {
+  OnlineCourseListItem,
+  OnlineCourseDetail,
+  VideoWatchProgressItem,
+} from "@/types/entities";
 import { getMyEnrollments } from "@/actions/enrollments";
 import { getUser } from "@/actions/auth";
 import { revalidatePath } from "next/cache";
+import { cache } from "react";
 
-export async function getPublicOnlineCourses(): Promise<OnlineCourseListItem[]> {
-  try {
-    const { data } = await publicApiClient.get<
-      PaginatedResponse<OnlineCourseListItem> | OnlineCourseListItem[]
-    >("/api/online-courses/courses/?page_size=100");
+const ONLINE_COURSES_LIST_URL = "/api/online-courses/courses/?page_size=100";
 
-    return Array.isArray(data) ? data : data.results;
-  } catch (error: unknown) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "digest" in error &&
-      error.digest === "DYNAMIC_SERVER_USAGE"
-    ) {
-      throw error;
-    }
-    console.error("Failed to load public online courses:", error);
-    return [];
-  }
+export async function getPublicOnlineCourses(): Promise<
+  OnlineCourseListItem[]
+> {
+  return apiRequest(
+    "Failed to load public online courses:",
+    async () => {
+      const { data } = await publicApiClient.get<
+        PaginatedResponse<OnlineCourseListItem> | OnlineCourseListItem[]
+      >(ONLINE_COURSES_LIST_URL);
+
+      return unwrapPaginated(data);
+    },
+    [],
+  );
 }
 
-export async function getPublicOnlineCourseById(
-  courseId: string,
-): Promise<OnlineCourseDetail | null> {
-  try {
-    const { data } = await publicApiClient.get<OnlineCourseDetail>(
-      `/api/online-courses/courses/${courseId}/`,
+// Cached so `generateMetadata` and the page share one request per render.
+export const getPublicOnlineCourseById = cache(
+  async function getPublicOnlineCourseById(
+    courseId: string,
+  ): Promise<OnlineCourseDetail | null> {
+    return apiRequest(
+      "Failed to load public online course details:",
+      async () => {
+        const { data } = await publicApiClient.get<OnlineCourseDetail>(
+          `/api/online-courses/courses/${courseId}/`,
+        );
+
+        return data;
+      },
+      null,
     );
-    return data;
-  } catch (error: unknown) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "digest" in error &&
-      error.digest === "DYNAMIC_SERVER_USAGE"
-    ) {
-      throw error;
-    }
-    console.error("Failed to load public online course details:", error);
-    return null;
-  }
-}
+  },
+);
 
 export async function getAllOnlineCourses(): Promise<OnlineCourseListItem[]> {
   return apiRequest(
@@ -62,7 +66,7 @@ export async function getAllOnlineCourses(): Promise<OnlineCourseListItem[]> {
 
       const { data } = await apiClient.get<
         PaginatedResponse<OnlineCourseListItem> | OnlineCourseListItem[]
-      >("/api/online-courses/courses/?page_size=100");
+      >(ONLINE_COURSES_LIST_URL);
 
       const courses = unwrapPaginated(data);
 
@@ -106,10 +110,37 @@ export async function getOnlineCourseById(
   );
 }
 
+/** Loads several online courses (with the viewer's watch progress) in one request. */
+export async function getOnlineCoursesByIds(
+  courseIds: (string | number)[],
+): Promise<OnlineCourseDetail[]> {
+  if (courseIds.length === 0) return [];
+
+  return apiRequest(
+    "Failed to load online courses batch:",
+    async () => {
+      const apiClient = await getAuthApiClient();
+
+      const { data } = await apiClient.get<
+        OnlineCourseDetail[] | PaginatedResponse<OnlineCourseDetail>
+      >("/api/online-courses/courses/batch/", {
+        params: { ids: courseIds.join(",") },
+      });
+
+      return unwrapPaginated(data);
+    },
+    [],
+  );
+}
+
 export async function updateVideoWatchProgress(
   courseId: string,
   lectureId: string,
-  payload: { watched_seconds: number; total_seconds: number; last_position_seconds: number },
+  payload: {
+    watched_seconds: number;
+    total_seconds: number;
+    last_position_seconds: number;
+  },
   childId?: string | null,
 ): Promise<VideoWatchProgressItem | null> {
   return apiRequest(
@@ -119,12 +150,13 @@ export async function updateVideoWatchProgress(
 
       const { data } = await apiClient.post<VideoWatchProgressItem>(
         `/api/online-courses/courses/${courseId}/lectures/${lectureId}/progress/`,
-        childId ? { ...payload, child: childId } : payload
+        childId ? { ...payload, child: childId } : payload,
       );
 
       revalidatePath(`/dashboard/online-courses/${courseId}/learn`);
-      revalidatePath(`/dashboard/my-courses`);
-      
+      revalidatePath("/dashboard/my-courses");
+      revalidatePath("/dashboard/overview");
+
       return data;
     },
     null,

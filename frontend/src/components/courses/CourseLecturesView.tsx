@@ -17,7 +17,6 @@ import DataView from "@/components/ui/data-view/DataView";
 import DataViewBody from "@/components/ui/data-view/DataViewBody";
 import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
 import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
-import DataViewLayoutToggle from "@/components/ui/data-view/DataViewLayoutToggle";
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -187,7 +186,7 @@ export default function CourseLecturesView({
     return (
       <div
         className={cn(
-          "flex shrink-0 items-center justify-center *:text-olive-300 *:transition-colors *:hover:text-olive-700",
+          "*:text-olive-300 *:hover:text-olive-700 flex shrink-0 items-center justify-center *:transition-colors",
           isCard ? "gap-3" : "gap-6",
         )}
       >
@@ -321,7 +320,7 @@ export default function CourseLecturesView({
                           className="flex min-w-0 flex-1 cursor-pointer flex-col justify-between p-3 sm:p-4"
                         >
                           <div className="flex min-w-0 items-start justify-between gap-2">
-                            <span className="line-clamp-2 min-w-0 text-base font-semibold text-olive-700 sm:text-[1.5rem]">
+                            <span className="text-olive-700 line-clamp-2 min-w-0 text-base font-semibold sm:text-[1.5rem]">
                               {lecture.display_title}
                             </span>
                             <StatusBadge
@@ -385,7 +384,7 @@ export default function CourseLecturesView({
             dir="rtl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="font-medad mb-1 text-lg font-bold text-olive-800 sm:text-[2rem]">
+            <h2 className="font-medad text-olive-800 mb-1 text-lg font-bold sm:text-[2rem]">
               تعديل المحاضرة
             </h2>
             <p className="mb-4 text-xs text-gray-500 sm:mb-5 sm:text-[1.4rem]">
@@ -403,7 +402,7 @@ export default function CourseLecturesView({
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-olive-400 focus:ring-1 focus:ring-olive-400 focus:outline-none sm:text-[1.4rem]"
+                  className="focus:border-olive-400 focus:ring-olive-400 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-1 focus:outline-none sm:text-[1.4rem]"
                   placeholder="أدخل عنوان المحاضرة"
                 />
               </div>
@@ -422,7 +421,7 @@ export default function CourseLecturesView({
                     type="date"
                     value={day}
                     onChange={(e) => setDay(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-olive-400 focus:ring-1 focus:ring-olive-400 focus:outline-none sm:text-[1.4rem]"
+                    className="focus:border-olive-400 focus:ring-olive-400 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-1 focus:outline-none sm:text-[1.4rem]"
                   />
                 ) : (
                   <div className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 sm:text-[1.4rem]">
@@ -446,7 +445,7 @@ export default function CourseLecturesView({
                       type="time"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-olive-400 focus:ring-1 focus:ring-olive-400 focus:outline-none sm:text-[1.4rem]"
+                      className="focus:border-olive-400 focus:ring-olive-400 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-1 focus:outline-none sm:text-[1.4rem]"
                     />
                   ) : (
                     <div className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 sm:text-[1.4rem]">
@@ -468,7 +467,7 @@ export default function CourseLecturesView({
                       type="time"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-olive-400 focus:ring-1 focus:ring-olive-400 focus:outline-none sm:text-[1.4rem]"
+                      className="focus:border-olive-400 focus:ring-olive-400 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-1 focus:outline-none sm:text-[1.4rem]"
                     />
                   ) : (
                     <div className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600 sm:text-[1.4rem]">
@@ -485,7 +484,7 @@ export default function CourseLecturesView({
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-olive-400 focus:ring-1 focus:ring-olive-400 focus:outline-none sm:text-[1.4rem]"
+                  className="focus:border-olive-400 focus:ring-olive-400 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-1 focus:outline-none sm:text-[1.4rem]"
                 >
                   <option value="scheduled">مجدولة</option>
                   <option value="completed">مكتملة</option>
@@ -506,7 +505,7 @@ export default function CourseLecturesView({
                 type="button"
                 onClick={handleSave}
                 disabled={isSubmitting}
-                className="flex-1 rounded-lg bg-olive-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-olive-700 disabled:opacity-60 sm:text-[1.4rem]"
+                className="bg-olive-600 hover:bg-olive-700 flex-1 rounded-lg px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition disabled:opacity-60 sm:text-[1.4rem]"
               >
                 {isSubmitting ? "جاري الحفظ..." : "💾 حفظ التعديلات"}
               </button>

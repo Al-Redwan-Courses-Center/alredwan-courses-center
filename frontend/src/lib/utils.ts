@@ -69,15 +69,31 @@ export function formatTime(dateStr: string | Date | undefined) {
     .replaceAll("ص", "صـ");
 }
 
-export function formatCurrency(amount: number | string) {
-  const num = typeof amount === "string" ? parseFloat(amount) : amount;
-  if (isNaN(num)) return amount.toString();
-  return new Intl.NumberFormat("ar-EG", {
-    style: "currency",
-    currency: "EGP",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(num);
+/**
+ * Formats a duration given in seconds.
+ * - `long` (default): Arabic words with Hindi digits, e.g. "٢ ساعة ١٥ دقيقة".
+ * - `clock`: compact timer form, e.g. "12:05" or "1:02:05".
+ */
+export function formatDuration(
+  seconds: number,
+  style: "long" | "clock" = "long",
+) {
+  const total = Math.max(0, Math.floor(Number(seconds) || 0));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const secs = total % 60;
+
+  if (style === "clock") {
+    const mm = hours > 0 ? String(minutes).padStart(2, "0") : String(minutes);
+    const ss = String(secs).padStart(2, "0");
+    return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`;
+  }
+
+  if (total < 60) return "أقل من دقيقة";
+  if (hours > 0 && minutes > 0)
+    return `${toHindiDigits(hours)} ساعة ${toHindiDigits(minutes)} دقيقة`;
+  if (hours > 0) return `${toHindiDigits(hours)} ساعة`;
+  return `${toHindiDigits(minutes)} دقيقة`;
 }
 
 const WEEKDAYS = [
@@ -98,7 +114,10 @@ export function getWeekDayIndex(weekday: string) {
   return WEEKDAYS.findIndex((w) => w === weekday);
 }
 
-export function debounceFn<Args extends unknown[]>(fn: (...args: Args) => void, delay: number) {
+export function debounceFn<Args extends unknown[]>(
+  fn: (...args: Args) => void,
+  delay: number,
+) {
   let timerId: NodeJS.Timeout;
 
   return (...args: Args) => {

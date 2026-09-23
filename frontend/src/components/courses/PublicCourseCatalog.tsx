@@ -1,24 +1,30 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { CourseListItem, OnlineCourseListItem } from "@/types/entities";
 import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
 import DashboardOnlineCoursesView from "@/components/dashboard/DashboardOnlineCoursesView";
+import { CourseListItem, OnlineCourseListItem } from "@/types/entities";
 
 interface PublicCourseCatalogProps {
   physical: CourseListItem[];
   online: OnlineCourseListItem[];
+  /** Server-side pagination info for the physical courses list. */
+  totalCount?: number;
+  totalPages?: number;
+  currentPage?: number;
+  linkTo?: "landing" | "dashboard";
+  showEnroll?: boolean;
 }
 
 export default function PublicCourseCatalog({
   physical,
   online,
+  totalCount,
+  totalPages,
+  currentPage,
   linkTo = "landing",
   showEnroll = false,
-}: PublicCourseCatalogProps & {
-  linkTo?: "landing" | "dashboard";
-  showEnroll: boolean;
-}) {
+}: PublicCourseCatalogProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -28,8 +34,13 @@ export default function PublicCourseCatalog({
     searchParams.get("type") === "online" ? "online" : "physical";
 
   const setActiveTab = (tab: "physical" | "online") => {
+    if (tab === activeTab) return;
+
     const params = new URLSearchParams(searchParams.toString());
     params.set("type", tab);
+    // Each tab paginates its own list, so a page number from one tab
+    // is meaningless on the other.
+    params.delete("page");
     router.replace(`?${params.toString()}`, { scroll: false });
   };
 
@@ -70,6 +81,9 @@ export default function PublicCourseCatalog({
         <div className="w-full">
           <DashboardAllCoursesView
             courses={physical}
+            totalCount={totalCount}
+            totalPages={totalPages}
+            currentPage={currentPage}
             linkTo={linkTo}
             showEnroll={showEnroll}
           />

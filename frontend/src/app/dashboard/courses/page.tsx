@@ -43,6 +43,9 @@ export default async function Page(props: {
           <PublicCourseCatalog
             showEnroll={["parent", "student"].includes(role)}
             physical={paginatedCourses.results}
+            totalCount={paginatedCourses.count}
+            totalPages={paginatedCourses.total_pages}
+            currentPage={paginatedCourses.current_page}
             online={onlineCourses}
             linkTo="dashboard"
           />

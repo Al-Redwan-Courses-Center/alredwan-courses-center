@@ -22,11 +22,12 @@ export default function MyCourseCard({
   return (
     <ItemCard
       cardHeader={
-        <img
-          src={typeof course.image === 'string' ? course.image : CourseImage.src}
+        <Image
+          src={course.image || CourseImage}
           alt="Course Image"
           draggable="false"
-          className="object-cover w-full h-full"
+          fill
+          className="object-cover"
         />
       }
       cardFooter={

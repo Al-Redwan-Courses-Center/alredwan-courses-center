@@ -6,21 +6,19 @@ import {
   getMyEnrollmentRequests,
   getMyEnrollments,
 } from "@/actions/enrollments";
+import { getOnlineCoursesByIds } from "@/actions/online-courses";
 import {
   apiRequest,
   getAuthApiClient,
   publicApiClient,
   toPaginatedResponse,
-  unwrapPaginated,
 } from "@/lib/api";
-import { cache } from "react";
+import { getOnlineCourseProgress } from "@/lib/online-courses";
 import type { PaginatedResponse } from "@/types/config";
 import type {
   CourseDetail,
   CourseListItem,
-  OnlineCourseDetail,
   StudentCourseItem,
-  VideoLectureItem,
 } from "@/types/entities";
 
 export interface CourseQueryParams {
@@ -39,41 +37,36 @@ export interface CourseQueryParams {
   is_active?: boolean;
 }
 
-export const getPublicCourses = cache(async (
+export async function getPublicCourses(
   params?: CourseQueryParams,
-): Promise<PaginatedResponse<CourseListItem>> => {
-  try {
-    const { data } = await publicApiClient.get<
-      PaginatedResponse<CourseListItem> | CourseListItem[]
-    >("/api/courses/", {
-      params: {
-        page_size: params?.page_size ?? 8,
-        ...params,
-      },
-    });
+): Promise<PaginatedResponse<CourseListItem>> {
+  const pageSize = params?.page_size ?? 8;
 
-    return toPaginatedResponse(data, params?.page_size ?? 8);
-  } catch (error: unknown) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "digest" in error &&
-      error.digest === "DYNAMIC_SERVER_USAGE"
-    ) {
-      throw error;
-    }
-    console.error("Failed to load public courses:", error);
-    return {
+  return apiRequest(
+    "Failed to load public courses:",
+    async () => {
+      const { data } = await publicApiClient.get<
+        PaginatedResponse<CourseListItem> | CourseListItem[]
+      >("/api/courses/", {
+        params: {
+          page_size: pageSize,
+          ...params,
+        },
+      });
+
+      return toPaginatedResponse(data, pageSize);
+    },
+    {
       count: 0,
       next: null,
       previous: null,
       total_pages: 0,
       current_page: 1,
-      page_size: params?.page_size ?? 8,
+      page_size: pageSize,
       results: [],
-    };
-  }
-});
+    },
+  );
+}
 
 export async function getAllCourses(
   params?: CourseQueryParams,
@@ -183,8 +176,6 @@ export async function getCourseById(
   return apiRequest(
     "Failed to load course details:",
     async () => {
-      const apiClient = await getAuthApiClient();
-
       const { data } = await publicApiClient.get<CourseDetail>(
         `/api/courses/${courseId}/`,
       );
@@ -270,44 +261,22 @@ export async function getStudentCourses(): Promise<StudentCourseItem[]> {
           };
         });
 
-      const apiClient = await getAuthApiClient();
-      let onlineCoursesInitial: OnlineCourseDetail[] = [];
-      if (onlineCourseIds.length > 0) {
-        const res = await apiClient
-          .get<OnlineCourseDetail[]>(`/api/online-courses/courses/batch/`, {
-            params: { ids: onlineCourseIds.join(",") },
-          })
-          .catch(() => ({ data: [] }));
-        onlineCoursesInitial = res.data;
-      }
+      const onlineCoursesInitial = await getOnlineCoursesByIds(onlineCourseIds);
 
-      const online = onlineCoursesInitial
-        .filter((c): c is OnlineCourseDetail => c !== null)
-        .map((c: OnlineCourseDetail) => {
-          const isPending = !onlineEnrollments.find(
-            (e) => e.online_course === c?.id,
-          );
-          const req = onlineRequests.find((r) => r.online_course === c?.id);
+      const online = onlineCoursesInitial.map((c) => {
+        const isPending = !onlineEnrollments.find(
+          (e) => e.online_course === c.id,
+        );
+        const req = onlineRequests.find((r) => r.online_course === c.id);
 
-          const completedLecturesCount =
-            c.video_lectures?.filter(
-              (l: VideoLectureItem) => l.watch_progress?.is_completed,
-            ).length || 0;
-          const progressPercentage =
-            c.video_lectures && c.video_lectures.length > 0
-              ? Math.round(
-                  (completedLecturesCount / c.video_lectures.length) * 100,
-                )
-              : 0;
-
-          return {
-            ...c,
-            course_progress: progressPercentage,
-            type: "online" as const,
-            enrollment_status: isPending ? req?.status : "active",
-            enrollment_status_display: isPending ? req?.status_display : "نشط",
-          };
-        });
+        return {
+          ...c,
+          course_progress: getOnlineCourseProgress(c.video_lectures),
+          type: "online" as const,
+          enrollment_status: isPending ? req?.status : "active",
+          enrollment_status_display: isPending ? req?.status_display : "نشط",
+        };
+      });
 
       return [...physical, ...online];
     },
