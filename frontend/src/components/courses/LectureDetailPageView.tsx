@@ -129,7 +129,7 @@ function MetaItem({
         <p className="text-muted-foreground text-xs font-semibold sm:text-lg">
           {label}
         </p>
-        <p className="break-words text-sm font-extrabold text-[#1a3c34] sm:text-2xl">
+        <p className="text-sm font-extrabold break-words text-[#1a3c34] sm:text-2xl">
           {value}
         </p>
       </div>
@@ -178,12 +178,15 @@ export default async function LectureDetailPageView({
     : `/dashboard/my-courses/${courseId}`;
 
   return (
-    <div className="mx-auto w-full max-w-7xl min-w-0 space-y-4 px-3 pb-16 sm:space-y-10 sm:px-8 sm:pb-24" dir="rtl">
+    <div
+      className="mx-auto w-full max-w-7xl min-w-0 space-y-4 px-3 pb-16 sm:space-y-10 sm:px-8 sm:pb-24"
+      dir="rtl"
+    >
       {/* العودة */}
       <div className="flex justify-start">
         <Link
           href={backHref}
-          className="inline-flex max-w-full items-center justify-center gap-2 rounded-xl border-2 border-[#c5d9cc] bg-white px-3.5 py-2 text-xs font-bold text-[#2f5d50] shadow-md transition hover:bg-[#e8f0ea] sm:rounded-2xl sm:gap-3 sm:px-7 sm:py-3.5 sm:text-xl"
+          className="inline-flex max-w-full items-center justify-center gap-2 rounded-xl border-2 border-[#c5d9cc] bg-white px-3.5 py-2 text-xs font-bold text-[#2f5d50] shadow-md transition hover:bg-[#e8f0ea] sm:gap-3 sm:rounded-2xl sm:px-7 sm:py-3.5 sm:text-xl"
         >
           <span>العودة إلى قائمة المحاضرات</span>
         </Link>
@@ -199,7 +202,7 @@ export default async function LectureDetailPageView({
               label={lecture.status_display}
             />
           </div>
-          <h1 className="break-words text-xl font-black tracking-tight text-[#1a3c34] sm:text-5xl lg:text-6xl">
+          <h1 className="text-xl font-black tracking-tight break-words text-[#1a3c34] sm:text-5xl lg:text-6xl">
             {lecture.title || `محاضرة رقم ${lecture.lecture_number}`}
           </h1>
           <p className="text-muted-foreground mt-1.5 text-xs font-medium sm:mt-4 sm:text-2xl">
@@ -208,7 +211,7 @@ export default async function LectureDetailPageView({
         </div>
 
         {/* الملاحظات والمواعيد */}
-        <div className="grid grid-cols-1 gap-4 border-b-2 border-[#e8f0ea] px-3 py-6 sm:grid-cols-2 lg:grid-cols-4 sm:gap-8 sm:px-16 sm:py-12">
+        <div className="grid grid-cols-1 gap-4 border-b-2 border-[#e8f0ea] px-3 py-6 sm:grid-cols-2 sm:gap-8 sm:px-16 sm:py-12 lg:grid-cols-4">
           <MetaItem icon="📅" label="التاريخ" value={formatDate(lecture.day)} />
           <MetaItem
             icon="🕐"
@@ -234,7 +237,7 @@ export default async function LectureDetailPageView({
           </h2>
 
           {attendance ? (
-            <div className="flex flex-col gap-4 rounded-xl border-2 border-[#dce8e1] bg-[#f7faf8] p-3.5 sm:gap-6 sm:rounded-3xl sm:p-10 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 rounded-xl border-2 border-[#dce8e1] bg-[#f7faf8] p-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:rounded-3xl sm:p-10">
               <div className="flex items-center gap-3 sm:gap-6">
                 <div
                   className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xl font-black sm:h-20 sm:w-20 sm:rounded-2xl sm:text-4xl ${
@@ -280,7 +283,7 @@ export default async function LectureDetailPageView({
               )}
             </div>
           ) : (
-            <div className="rounded-xl border-2 border-dashed border-[#c5d9cc] bg-[#f7faf8] px-3 py-6 sm:rounded-3xl sm:px-8 sm:py-14 text-center">
+            <div className="rounded-xl border-2 border-dashed border-[#c5d9cc] bg-[#f7faf8] px-3 py-6 text-center sm:rounded-3xl sm:px-8 sm:py-14">
               <p className="text-base font-black text-[#2f5d50] sm:text-3xl lg:text-4xl">
                 لم يتم تسجيل الحضور بعد
               </p>
@@ -301,7 +304,7 @@ export default async function LectureDetailPageView({
           </p>
 
           {noteContent ? (
-            <div className="break-words rounded-xl border-2 border-amber-200 bg-amber-50/90 px-3.5 py-3 text-sm font-medium leading-relaxed text-amber-950 sm:rounded-3xl sm:px-8 sm:py-6 sm:text-2xl">
+            <div className="rounded-xl border-2 border-amber-200 bg-amber-50/90 px-3.5 py-3 text-sm leading-relaxed font-medium break-words text-amber-950 sm:rounded-3xl sm:px-8 sm:py-6 sm:text-2xl">
               {noteContent}
             </div>
           ) : (

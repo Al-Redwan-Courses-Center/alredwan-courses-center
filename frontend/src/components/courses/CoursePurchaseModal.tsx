@@ -21,9 +21,9 @@ type PaymentMethod = NonNullable<EnrollmentRequestCreateBody["payment_method"]>;
 
 const paymentOptions: { value: PaymentMethod; label: string }[] = [
   { value: "cash", label: "نقدًا" },
-      { value: "instapay", label: "إنستاباي" },
+  { value: "instapay", label: "إنستاباي" },
   { value: "vodafone_cash", label: "فودافون كاش" },
-  ];
+];
 
 interface PurchaseFormInputs {
   child: string;
@@ -263,7 +263,7 @@ export default function CoursePurchaseModal({
                     {...register("payment_method", {
                       required: "يرجى اختيار طريقة الدفع.",
                     })}
-                    className="h-6 w-6 accent-olive-500"
+                    className="accent-olive-500 h-6 w-6"
                   />
                   <span>{option.label}</span>
                 </label>
