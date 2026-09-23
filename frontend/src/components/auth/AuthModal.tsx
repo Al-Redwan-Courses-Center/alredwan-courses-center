@@ -27,7 +27,11 @@ function PreAuthModal({
   defaultMode?: AuthMode;
 }) {
   const { searchParams } = useMutateSearchParams();
-  const isTablet = useMediaQuery("(max-width: 900px)");
+  // Render the desktop trigger on the server and the first client pass so the
+  // markup matches during hydration; the tablet trigger swaps in after mount.
+  const isTablet = useMediaQuery("(max-width: 900px)", {
+    initializeWithValue: false,
+  });
 
   const [callbackUrl] = useState(searchParams.get("callbackUrl"));
   const [isOpen, setIsOpen] = useState(searchParams.get("login") === "true");

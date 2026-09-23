@@ -24,7 +24,7 @@ export default function DashboardOnlineCoursesView({
   linkTo = "dashboard",
 }: {
   courses?: OnlineCourseListItem[];
-  linkTo?: "dashboard" | "landing";
+  linkTo?: "dashboard" | "landing" | "studio";
 }) {
   const courses = buildOnlineCoursesView(inputCourses);
   const filterConfig = getOnlineCoursesFilterConfig(courses);
@@ -40,7 +40,7 @@ export default function DashboardOnlineCoursesView({
       sortConfig={sortOnlineCoursesConfig}
       viewLayout="cards"
     >
-      <div className="tablet:flex-col tablet:items-stretch tablet:gap-12 relative z-60 mb-14 flex items-center justify-between gap-16 px-4 tablet:px-16 tablet-sm:px-4">
+      <div className="tablet:flex-col tablet:items-stretch tablet:gap-12 tablet:px-16 tablet-sm:px-4 relative z-60 mb-14 flex items-center justify-between gap-16 px-4">
         <div className="tablet:max-w-full w-full max-w-[400px]">
           <DataViewSearchLegacy />
         </div>
@@ -54,7 +54,7 @@ export default function DashboardOnlineCoursesView({
         </div>
       </div>
 
-      <DataViewHeaderLegacy className="mx-4 tablet:mx-16 tablet-sm:mx-4">
+      <DataViewHeaderLegacy className="tablet:mx-16 tablet-sm:mx-4 mx-4">
         <DataViewCellLegacy>م</DataViewCellLegacy>
         <DataViewCellLegacy>الدورة</DataViewCellLegacy>
         <DataViewCellLegacy>المدرب</DataViewCellLegacy>
@@ -64,7 +64,7 @@ export default function DashboardOnlineCoursesView({
       </DataViewHeaderLegacy>
 
       <DataViewBodyLegacy
-        className="px-4 tablet:px-16 tablet-sm:px-4 tablet-sm:!grid tablet-sm:!grid-cols-1 tablet-sm:!overflow-hidden w-full [&_>_div]:!min-w-0"
+        className="tablet:px-16 tablet-sm:px-4 tablet-sm:!grid tablet-sm:!grid-cols-1 tablet-sm:!overflow-hidden w-full px-4 [&_>_div]:!min-w-0"
         render={{
           table: () => null,
           cards: (item: OnlineCourseListItem, index) => (

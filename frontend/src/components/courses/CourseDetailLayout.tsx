@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import CoursePurchaseModal from "@/components/courses/CoursePurchaseModal";
 import RatingsSection from "@/components/ratings/RatingsSection";
 import Button from "@/components/ui/Button";
+import ImageLightbox from "@/components/ui/ImageLightbox";
 import type { CourseEnrollmentState } from "@/lib/course-enrollment";
 import { toHindiDigits } from "@/lib/utils";
 
@@ -66,14 +67,21 @@ export default function CourseDetailLayout({
           {/* Left Column: Image & Details */}
           <div className="flex flex-col gap-10">
             <div className="shadow-soft relative aspect-video overflow-hidden rounded-[3rem] border-4 border-white/40">
-              <Image
+              <ImageLightbox
                 src={imageSrc}
                 alt={imageAlt}
-                fill
-                className="object-cover"
-                draggable="false"
-                priority
-              />
+                className="absolute inset-0 h-full w-full"
+              >
+                <Image
+                  src={imageSrc}
+                  alt={imageAlt}
+                  fill
+                  sizes="(max-width: 1000px) 100vw, 60vw"
+                  className="object-cover"
+                  draggable="false"
+                  priority
+                />
+              </ImageLightbox>
             </div>
 
             <div className="shadow-soft flex flex-col gap-6 rounded-[2.5rem] border border-white/60 bg-white/40 p-10 backdrop-blur-md max-[1000px]:p-6">

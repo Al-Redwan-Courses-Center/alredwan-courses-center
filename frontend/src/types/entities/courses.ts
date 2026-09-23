@@ -54,11 +54,25 @@ export interface CourseScheduleDetail {
   end_time: string;
 }
 
+/** Public lecture outline entry returned by `GET /api/courses/{id}/`. */
+export interface LectureOutlineItem {
+  id: number;
+  lecture_number: number;
+  title: string;
+  day: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  status_display: string;
+}
+
 export interface CourseDetail extends Omit<
   CourseListItem,
   "average_rating" | "rating_count"
 > {
   schedules: CourseScheduleDetail[];
+  /** Sorted by `lecture_number`; may be absent on older responses. */
+  lectures?: LectureOutlineItem[];
 }
 
 import { OnlineCourseDetail } from "./online-courses";

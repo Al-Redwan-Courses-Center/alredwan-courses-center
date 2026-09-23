@@ -9,11 +9,16 @@ import {
 import { getOnlineCoursesByIds } from "@/actions/online-courses";
 import {
   apiRequest,
+  getApiErrorDetail,
   getAuthApiClient,
+  logApiError,
+  parseApiFieldErrors,
   publicApiClient,
   toPaginatedResponse,
 } from "@/lib/api";
 import { getOnlineCourseProgress } from "@/lib/online-courses";
+import { revalidatePath } from "next/cache";
+import { unstable_rethrow } from "next/navigation";
 import type { PaginatedResponse } from "@/types/config";
 import type {
   CourseDetail,
@@ -183,6 +188,57 @@ export async function getCourseById(
     },
     null,
   );
+}
+
+export interface CourseUpdatePayload {
+  name?: string;
+  description?: string;
+  /** YYYY-MM-DD */
+  start_date?: string;
+  /** YYYY-MM-DD */
+  end_date?: string;
+}
+
+export type CourseUpdateResult =
+  | { success: true; data: CourseDetail }
+  | { success: false; message: string };
+
+/** Instructor of the course or admin: edits the basic course fields. */
+export async function updateCourse(
+  courseId: number | string,
+  payload: CourseUpdatePayload,
+): Promise<CourseUpdateResult> {
+  try {
+    const apiClient = await getAuthApiClient();
+
+    const { data } = await apiClient.patch<CourseDetail>(
+      `/api/courses/${courseId}/edit/`,
+      payload,
+    );
+
+    revalidatePath(`/dashboard/my-courses/${courseId}`);
+    revalidatePath(`/dashboard/courses/${courseId}`);
+    revalidatePath("/dashboard/my-courses");
+    revalidatePath("/dashboard/courses");
+
+    return { success: true, data };
+  } catch (error) {
+    unstable_rethrow(error);
+    logApiError("Failed to update course:", error);
+
+    const fieldErrors = parseApiFieldErrors(error);
+    const firstFieldError = fieldErrors
+      ? Object.values(fieldErrors).flat()[0]
+      : undefined;
+
+    return {
+      success: false,
+      message:
+        getApiErrorDetail(error) ??
+        firstFieldError ??
+        "حدث خطأ أثناء حفظ بيانات الدورة",
+    };
+  }
 }
 
 export async function getStudentCourses(): Promise<StudentCourseItem[]> {

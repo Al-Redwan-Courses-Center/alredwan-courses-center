@@ -89,6 +89,29 @@ export async function getAllOnlineCourses(): Promise<OnlineCourseListItem[]> {
   );
 }
 
+/** Online courses assigned to one instructor (the "جميع الدورات" online tab). */
+export async function getInstructorOnlineCourses(
+  instructorId: string | number | undefined,
+): Promise<OnlineCourseListItem[]> {
+  if (!instructorId) return [];
+
+  return apiRequest(
+    "Failed to load instructor online courses:",
+    async () => {
+      const apiClient = await getAuthApiClient();
+
+      const { data } = await apiClient.get<
+        PaginatedResponse<OnlineCourseListItem> | OnlineCourseListItem[]
+      >("/api/online-courses/courses/", {
+        params: { instructor: instructorId, page_size: 100 },
+      });
+
+      return unwrapPaginated(data);
+    },
+    [],
+  );
+}
+
 // `childId` is required for parents: it says whose watch progress to return.
 export async function getOnlineCourseById(
   courseId: string,

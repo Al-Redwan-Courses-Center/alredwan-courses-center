@@ -9,7 +9,21 @@ import { OnlineCourseListItem } from "@/types/entities";
 interface OnlineCourseCardProps {
   course: OnlineCourseListItem;
   index?: number;
-  linkTo?: "dashboard" | "landing";
+  /** `studio`: instructor's read-only content viewer, no enroll/price CTA. */
+  linkTo?: "dashboard" | "landing" | "studio";
+}
+
+function getCourseHref(
+  course: OnlineCourseListItem,
+  linkTo: NonNullable<OnlineCourseCardProps["linkTo"]>,
+) {
+  if (linkTo === "studio") return `/dashboard/studio/${course.id}`;
+  if (linkTo === "dashboard") {
+    return course.is_enrolled
+      ? `/dashboard/online-courses/${course.id}/learn`
+      : `/dashboard/online-courses/${course.id}`;
+  }
+  return `/online-courses/${course.id}`;
 }
 
 export default function OnlineCourseCard({
@@ -19,6 +33,7 @@ export default function OnlineCourseCard({
 }: OnlineCourseCardProps) {
   const isCourseImageValid =
     course.thumbnail?.startsWith("http") || course.thumbnail?.startsWith("/");
+  const isStudio = linkTo === "studio";
 
   return (
     <ItemCard
@@ -46,16 +61,14 @@ export default function OnlineCourseCard({
           <Button
             variant="primary"
             size="small"
-            href={
-              course.is_enrolled && linkTo === "dashboard"
-                ? `/dashboard/online-courses/${course.id}/learn`
-                : linkTo === "dashboard"
-                  ? `/dashboard/online-courses/${course.id}`
-                  : `/online-courses/${course.id}`
-            }
+            href={getCourseHref(course, linkTo)}
             className="mobile-lg:text-[1.8rem] mobile:text-[2.2rem] px-0 text-[1.125rem]"
           >
-            {course.is_enrolled ? "مشاهدة الدورة" : "عرض الدورة"}
+            {isStudio
+              ? "عرض المحتوى"
+              : course.is_enrolled
+                ? "مشاهدة الدورة"
+                : "عرض الدورة"}
           </Button>
         </div>
       }
@@ -76,9 +89,11 @@ export default function OnlineCourseCard({
         </li>
       </ul>
 
-      <p className="text-olive-500 text-4xl font-bold">
-        {toHindiDigits(Number(course.price))} جنيه
-      </p>
+      {!isStudio && (
+        <p className="text-olive-500 text-4xl font-bold">
+          {toHindiDigits(Number(course.price))} جنيه
+        </p>
+      )}
     </ItemCard>
   );
 }
