@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from ..models import OnlineCourse, VideoLecture, OnlineLectureMaterial, VideoWatchProgress
 from ..participants import resolve_participant, user_has_online_course_access
+from ..locking import is_lecture_locked
 
 
 class OnlineLectureMaterialSerializer(serializers.ModelSerializer):
@@ -30,20 +31,33 @@ class VideoLectureSerializer(serializers.ModelSerializer):
 
     Access is decided once per course by ``OnlineCourseViewSet.retrieve`` and
     handed in through ``context['has_access']``; the same goes for the
-    resolved ``context['participant']`` used for watch progress. When the
+    resolved ``context['participant']`` used for watch progress and the
+    sequential-unlock state in ``context['locked_lecture_ids']``. When the
     serializer is used without those keys it falls back to computing them
-    per lecture, which is correct but costs a query per row.
+    per lecture, which is correct but costs queries per row.
+
+    A locked lecture (an earlier lecture is still incomplete) keeps its title
+    and duration but withholds ``video_url``, ``materials`` and
+    ``description`` until the learner catches up.
     """
     video_url = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
     materials = serializers.SerializerMethodField()
     watch_progress = serializers.SerializerMethodField()
+    is_locked = serializers.SerializerMethodField()
 
     class Meta:
         model = VideoLecture
-        fields = ['id', 'order', 'title', 'description', 'video_url', 'video_platform', 'duration_seconds', 'is_live_stream', 'live_stream_time', 'materials', 'watch_progress']
+        fields = ['id', 'order', 'title', 'description', 'video_url', 'video_platform', 'duration_seconds', 'is_live_stream', 'live_stream_time', 'is_locked', 'materials', 'watch_progress']
 
     def _child_param(self, request):
         return request.query_params.get('child') if hasattr(request, 'query_params') else None
+
+    def _participant(self, request):
+        participant = self.context.get('participant')
+        if participant is None:
+            participant = resolve_participant(request.user, self._child_param(request))
+        return participant
 
     def _has_access(self, obj):
         has_access = self.context.get('has_access')
@@ -54,13 +68,34 @@ class VideoLectureSerializer(serializers.ModelSerializer):
             return False
         return user_has_online_course_access(request.user, obj.course, self._child_param(request))
 
+    def _is_locked(self, obj):
+        locked_ids = self.context.get('locked_lecture_ids')
+        if locked_ids is not None:
+            return obj.id in locked_ids
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        student, child = self._participant(request)
+        return is_lecture_locked(obj, student, child)
+
+    def _can_view_content(self, obj):
+        return self._has_access(obj) and not self._is_locked(obj)
+
+    def get_is_locked(self, obj):
+        return self._is_locked(obj)
+
     def get_video_url(self, obj):
-        if self._has_access(obj):
+        if self._can_view_content(obj):
             return obj.video_url
         return None
 
+    def get_description(self, obj):
+        if self._is_locked(obj):
+            return ""
+        return obj.description
+
     def get_materials(self, obj):
-        if self._has_access(obj):
+        if self._can_view_content(obj):
             return OnlineLectureMaterialSerializer(obj.materials.all(), many=True, context=self.context).data
         return []
 
@@ -73,10 +108,7 @@ class VideoLectureSerializer(serializers.ModelSerializer):
             progress = obj.prefetched_watch_progress[0] if obj.prefetched_watch_progress else None
             return VideoWatchProgressSerializer(progress).data if progress else None
 
-        participant = self.context.get('participant')
-        if participant is None:
-            participant = resolve_participant(request.user, self._child_param(request))
-        student, child = participant
+        student, child = self._participant(request)
         if student is None and child is None:
             return None
 

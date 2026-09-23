@@ -1,29 +1,36 @@
 "use client";
 
 import {
+  ArrowLeft,
   CheckCircle2,
   ChevronRight,
   FileText,
+  Lock,
   Menu,
   PlayCircle,
+  Radio,
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { updateVideoWatchProgress } from "@/actions/online-courses";
 import Button from "@/components/ui/Button";
 import { getFullImageUrl } from "@/lib/image-utils";
 import {
   getCompletedLectureIds,
+  getLockedLectureIds,
+  getNextOpenLectureId,
   getOnlineCourseProgress,
 } from "@/lib/online-courses";
-import { cn, toHindiDigits } from "@/lib/utils";
-import { OnlineCourseDetail } from "@/types/entities";
-import VideoPlayer from "./VideoPlayer";
+import { cn, formatDate, formatTime, toHindiDigits } from "@/lib/utils";
+import { OnlineCourseDetail, VideoLectureItem } from "@/types/entities";
+import VideoPlayer, { getEmbedUrl } from "./VideoPlayer";
 
 // Matches the `min-[1000px]` breakpoint used by the dashboard layout.
 const DESKTOP_MEDIA_QUERY = "(min-width: 1000px)";
+
+const LOCKED_HINT = "أكمل المحاضرة السابقة أولاً لفتح هذه المحاضرة";
 
 export default function StudentOnlineCourseViewer({
   course,
@@ -32,11 +39,39 @@ export default function StudentOnlineCourseViewer({
   course: OnlineCourseDetail;
   childId?: string | null;
 }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const lectureIdParam = searchParams.get("lecture");
-  const [activeLectureId, setActiveLectureId] = useState<string | null>(
-    lectureIdParam ?? course.video_lectures[0]?.id ?? null,
+  const lectures = course.video_lectures;
+
+  const [optimisticCompletedIds, setOptimisticCompletedIds] = useState(() =>
+    getCompletedLectureIds(lectures),
   );
+
+  // Resync the optimistic set whenever the server sends a fresh course
+  // (e.g. after `revalidatePath`), without an extra effect render.
+  const [syncedCourse, setSyncedCourse] = useState(course);
+  if (syncedCourse !== course) {
+    setSyncedCourse(course);
+    setOptimisticCompletedIds(getCompletedLectureIds(lectures));
+  }
+
+  // A lecture is locked when the server says so (its content is withheld) or
+  // when the client-side rule says so; the two only differ for the moment
+  // between an optimistic completion and the refreshed course arriving.
+  const clientLockedIds = getLockedLectureIds(lectures, optimisticCompletedIds);
+  const isLocked = (lecture: VideoLectureItem) =>
+    lecture.is_locked || clientLockedIds.has(lecture.id);
+
+  const [activeLectureId, setActiveLectureId] = useState<string | null>(() => {
+    const requested = lectures.find((lecture) => lecture.id === lectureIdParam);
+    if (requested && !isLocked(requested)) return requested.id;
+    return getNextOpenLectureId(
+      lectures,
+      optimisticCompletedIds,
+      clientLockedIds,
+    );
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Closed during SSR and hydration (no layout info yet), then opened on
@@ -48,37 +83,29 @@ export default function StudentOnlineCourseViewer({
     }
   }, []);
 
-  const [optimisticCompletedIds, setOptimisticCompletedIds] = useState(() =>
-    getCompletedLectureIds(course.video_lectures),
-  );
-
-  // Resync the optimistic set whenever the server sends a fresh course
-  // (e.g. after `revalidatePath`), without an extra effect render.
-  const [syncedCourse, setSyncedCourse] = useState(course);
-  if (syncedCourse !== course) {
-    setSyncedCourse(course);
-    setOptimisticCompletedIds(getCompletedLectureIds(course.video_lectures));
-  }
-
   const progressPercentage = getOnlineCourseProgress(
-    course.video_lectures,
+    lectures,
     optimisticCompletedIds.size,
   );
 
-  const activeLecture = course.video_lectures.find(
+  const activeIndex = lectures.findIndex(
     (lecture) => lecture.id === activeLectureId,
   );
+  const activeLecture = activeIndex >= 0 ? lectures[activeIndex] : undefined;
+  const nextLecture = activeIndex >= 0 ? lectures[activeIndex + 1] : undefined;
   const isActiveCompleted = activeLecture
     ? optimisticCompletedIds.has(activeLecture.id)
     : false;
+  const isActiveLocked = activeLecture ? isLocked(activeLecture) : false;
 
-  const selectLecture = (lectureId: string) => {
-    setActiveLectureId(lectureId);
+  const selectLecture = (lecture: VideoLectureItem) => {
+    if (isLocked(lecture)) return;
+    setActiveLectureId(lecture.id);
 
     // Keep the lecture in the URL for refresh/back-forward without
     // re-running the server page; Next syncs `useSearchParams` with this.
     const params = new URLSearchParams(window.location.search);
-    params.set("lecture", lectureId);
+    params.set("lecture", lecture.id);
     window.history.replaceState(
       null,
       "",
@@ -91,7 +118,7 @@ export default function StudentOnlineCourseViewer({
   };
 
   const handleMarkAsCompleted = async () => {
-    if (!activeLecture) return;
+    if (!activeLecture || isActiveLocked) return;
 
     const previousCompletedIds = new Set(optimisticCompletedIds);
     const lectureSeconds = activeLecture.duration_seconds || 1;
@@ -111,8 +138,14 @@ export default function StudentOnlineCourseViewer({
         childId,
       );
 
-      // The action swallows API errors and returns null, so roll back on that too.
-      if (!result) setOptimisticCompletedIds(previousCompletedIds);
+      if (result) {
+        // The next lecture's content is only sent once the server sees the
+        // completion, so pull the fresh course in.
+        router.refresh();
+      } else {
+        // The action swallows API errors and returns null, so roll back on that too.
+        setOptimisticCompletedIds(previousCompletedIds);
+      }
     } catch (err) {
       console.error("Failed to mark lecture as completed:", err);
       setOptimisticCompletedIds(previousCompletedIds);
@@ -125,6 +158,9 @@ export default function StudentOnlineCourseViewer({
     activeLecture?.materials?.filter((m) => m.file_type === "image") ?? [];
   const fileMaterials =
     activeLecture?.materials?.filter((m) => m.file_type !== "image") ?? [];
+  const hasEmbeddableVideo = activeLecture
+    ? getEmbedUrl(activeLecture) !== null
+    : false;
 
   return (
     <div className="relative flex h-[calc(100dvh-6rem)] w-full overflow-hidden bg-white">
@@ -161,7 +197,7 @@ export default function StudentOnlineCourseViewer({
             {course.name}
           </h1>
           <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
-            <span>{toHindiDigits(course.video_lectures.length)} محاضرة</span>
+            <span>{toHindiDigits(lectures.length)} محاضرة</span>
             <span>•</span>
             <span>
               {toHindiDigits(Math.round(course.total_duration_seconds / 60))}{" "}
@@ -181,29 +217,37 @@ export default function StudentOnlineCourseViewer({
         </div>
 
         <div className="w-full flex-1 space-y-2 overflow-y-auto p-4">
-          {course.video_lectures.length === 0 ? (
+          {lectures.length === 0 ? (
             <p className="py-8 text-center text-gray-500">
               لا يوجد محتوى متاح حالياً
             </p>
           ) : (
-            course.video_lectures.map((lecture, index) => {
+            lectures.map((lecture, index) => {
               const isActive = activeLectureId === lecture.id;
               const isCompleted = optimisticCompletedIds.has(lecture.id);
+              const locked = isLocked(lecture);
 
               return (
                 <button
                   key={lecture.id}
-                  onClick={() => selectLecture(lecture.id)}
+                  onClick={() => selectLecture(lecture)}
+                  disabled={locked}
+                  aria-disabled={locked}
+                  title={locked ? LOCKED_HINT : undefined}
                   className={cn(
                     "flex w-full items-start rounded-xl border p-4 text-start transition-all",
                     isActive
                       ? "border-olive-200 bg-olive-50 shadow-sm"
                       : "border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50",
+                    locked &&
+                      "cursor-not-allowed bg-gray-50 opacity-60 hover:border-gray-100 hover:bg-gray-50",
                   )}
                 >
                   <div className="me-3 mt-1 shrink-0">
                     {isCompleted ? (
                       <CheckCircle2 className="h-6 w-6 text-green-500" />
+                    ) : locked ? (
+                      <Lock className="h-6 w-6 text-gray-400" />
                     ) : (
                       <PlayCircle
                         className={cn(
@@ -222,12 +266,22 @@ export default function StudentOnlineCourseViewer({
                     >
                       {toHindiDigits(index + 1)}. {lecture.title}
                     </h3>
-                    <div className="flex items-center gap-3 text-sm text-gray-500">
-                      {lecture.materials.length > 0 && (
-                        <span className="flex items-center gap-1">
-                          <FileText className="h-3 w-3" />
-                          {toHindiDigits(lecture.materials.length)} مرفقات
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
+                      {lecture.is_live_stream && (
+                        <span className="flex items-center gap-1 text-red-500">
+                          <Radio className="h-3 w-3" />
+                          بث مباشر
                         </span>
+                      )}
+                      {locked ? (
+                        <span>مقفلة</span>
+                      ) : (
+                        lecture.materials.length > 0 && (
+                          <span className="flex items-center gap-1">
+                            <FileText className="h-3 w-3" />
+                            {toHindiDigits(lecture.materials.length)} مرفقات
+                          </span>
+                        )
                       )}
                     </div>
                   </div>
@@ -238,7 +292,7 @@ export default function StudentOnlineCourseViewer({
         </div>
       </aside>
 
-      {/* Main Content: Video Player and Materials */}
+      {/* Main Content */}
       <div className="relative flex h-full w-full flex-1 flex-col overflow-y-auto bg-gray-50">
         {!isSidebarOpen && (
           <button
@@ -251,10 +305,36 @@ export default function StudentOnlineCourseViewer({
           </button>
         )}
 
-        {activeLecture ? (
+        {!activeLecture ? (
+          <div className="flex flex-1 items-center justify-center">
+            <p className="text-xl font-bold text-gray-500">
+              يرجى اختيار محاضرة لعرضها
+            </p>
+          </div>
+        ) : isActiveLocked ? (
+          <div className="flex flex-1 items-center justify-center p-6">
+            <div className="shadow-soft flex max-w-xl flex-col items-center gap-4 rounded-[2.5rem] border border-gray-100 bg-white p-10 text-center">
+              <Lock className="h-12 w-12 text-gray-400" />
+              <h2 className="text-3xl font-bold text-gray-900">
+                {activeLecture.title}
+              </h2>
+              <p className="text-xl text-gray-500">{LOCKED_HINT}</p>
+            </div>
+          </div>
+        ) : (
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 p-6 pt-20 md:p-10 md:pt-10">
             {/* Top Action Bar */}
-            <div className="flex w-full justify-end">
+            <div className="flex w-full flex-wrap justify-end gap-4">
+              {isActiveCompleted && nextLecture && !isLocked(nextLecture) && (
+                <Button
+                  onClick={() => selectLecture(nextLecture)}
+                  variant="secondary"
+                  className="shadow-soft px-8"
+                >
+                  المحاضرة التالية
+                  <ArrowLeft className="ms-2 inline h-5 w-5" />
+                </Button>
+              )}
               <Button
                 onClick={handleMarkAsCompleted}
                 disabled={isSubmitting || isActiveCompleted}
@@ -269,7 +349,13 @@ export default function StudentOnlineCourseViewer({
               </Button>
             </div>
 
-            <VideoPlayer lecture={activeLecture} />
+            {/* Live stream */}
+            {activeLecture.is_live_stream && (
+              <LiveStreamCard lecture={activeLecture} />
+            )}
+
+            {/* Video (hidden when the lecture has no embeddable video) */}
+            {hasEmbeddableVideo && <VideoPlayer lecture={activeLecture} />}
 
             {/* Image Materials */}
             {imageMaterials.map((img) => {
@@ -295,6 +381,7 @@ export default function StudentOnlineCourseViewer({
               );
             })}
 
+            {/* Title & written content */}
             <div className="shadow-soft flex min-w-0 flex-col gap-6 rounded-[2.5rem] border border-gray-100 bg-white p-10">
               <h2 className="text-3xl font-bold break-words text-gray-900">
                 {activeLecture.title}
@@ -306,7 +393,7 @@ export default function StudentOnlineCourseViewer({
               )}
             </div>
 
-            {/* Other Materials Section */}
+            {/* Files */}
             {fileMaterials.length > 0 && (
               <div className="shadow-soft flex flex-col gap-6 rounded-[2.5rem] border border-gray-100 bg-white p-10">
                 <h3 className="text-olive-700 flex items-center gap-3 text-2xl font-bold">
@@ -343,14 +430,45 @@ export default function StudentOnlineCourseViewer({
               </div>
             )}
           </div>
-        ) : (
-          <div className="flex flex-1 items-center justify-center">
-            <p className="text-xl font-bold text-gray-500">
-              يرجى اختيار محاضرة لعرضها
-            </p>
-          </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function LiveStreamCard({ lecture }: { lecture: VideoLectureItem }) {
+  const streamTime = lecture.live_stream_time
+    ? new Date(lecture.live_stream_time)
+    : null;
+  const hasValidTime =
+    streamTime !== null && !Number.isNaN(streamTime.getTime());
+
+  return (
+    <div className="shadow-soft flex flex-col gap-5 rounded-[2.5rem] border border-red-100 bg-red-50/60 p-8">
+      <div className="flex items-center gap-3">
+        <Radio className="h-7 w-7 animate-pulse text-red-500" />
+        <h3 className="text-2xl font-bold text-gray-900">بث مباشر</h3>
+      </div>
+
+      {hasValidTime && (
+        <p className="text-xl text-gray-700">
+          الموعد: {formatDate(streamTime)} - {formatTime(streamTime)}
+        </p>
+      )}
+
+      {lecture.video_url ? (
+        <Button
+          href={lecture.video_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          size="small"
+          className="w-fit"
+        >
+          انضم للبث المباشر
+        </Button>
+      ) : (
+        <p className="text-lg text-gray-500">سيتم إضافة رابط البث قبل الموعد</p>
+      )}
     </div>
   );
 }

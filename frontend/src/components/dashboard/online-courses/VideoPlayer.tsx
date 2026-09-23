@@ -1,9 +1,12 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { VideoLectureItem } from "@/types/entities";
 
 interface VideoPlayerProps {
   lecture: VideoLectureItem;
+  /** Rendered instead of the player when the lecture has no embeddable video. Defaults to nothing. */
+  fallback?: ReactNode;
 }
 
 const YOUTUBE_HOSTS = new Set([
@@ -91,7 +94,7 @@ function getBunnyEmbedUrl(url: URL): string | null {
  * anything else (or anything unparsable) yields `null` so the iframe never
  * receives an arbitrary URL.
  */
-function getEmbedUrl(lecture: VideoLectureItem): string | null {
+export function getEmbedUrl(lecture: VideoLectureItem): string | null {
   const raw = lecture.video_url?.trim();
   if (!raw) return null;
 
@@ -115,17 +118,25 @@ function getEmbedUrl(lecture: VideoLectureItem): string | null {
   }
 }
 
-export default function VideoPlayer({ lecture }: VideoPlayerProps) {
+/** Placeholder for surfaces that want to say a lecture has no video (e.g. the studio). */
+export function VideoUnavailable({ message }: { message?: string }) {
+  return (
+    <div className="shadow-soft grid aspect-video w-full place-items-center rounded-2xl bg-black p-4 text-center text-gray-400">
+      <p className="text-xl font-medium break-words">
+        {message ?? "لا يوجد فيديو متاح لهذه المحاضرة"}
+      </p>
+    </div>
+  );
+}
+
+export default function VideoPlayer({
+  lecture,
+  fallback = null,
+}: VideoPlayerProps) {
   const embedUrl = getEmbedUrl(lecture);
 
   if (!embedUrl) {
-    return (
-      <div className="shadow-soft grid aspect-video w-full place-items-center rounded-2xl bg-black p-4 text-center text-gray-400">
-        <p className="text-xl font-medium break-words">
-          لا يوجد فيديو متاح لهذه المحاضرة أو غير مصرح بالمشاهدة
-        </p>
-      </div>
-    );
+    return <>{fallback}</>;
   }
 
   return (

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import ArrowRight from "@/components/icons/ArrowRight";
 import { OnlineCourseDetail, VideoLectureItem } from "@/types/entities";
-import VideoPlayer from "./VideoPlayer";
+import VideoPlayer, { VideoUnavailable } from "./VideoPlayer";
 import VideoPlaylist from "./VideoPlaylist";
 
 interface VideoStudioWorkspaceProps {
@@ -47,7 +47,10 @@ export default function VideoStudioWorkspace({
           {activeLecture ? (
             <div className="flex flex-1 flex-col justify-center p-4 lg:p-6">
               <div className="mx-auto w-full max-w-[1200px]">
-                <VideoPlayer lecture={activeLecture} />
+                <VideoPlayer
+                  lecture={activeLecture}
+                  fallback={<VideoUnavailable />}
+                />
 
                 <div className="mt-6 text-white">
                   <h2 className="mb-2 text-2xl font-bold">

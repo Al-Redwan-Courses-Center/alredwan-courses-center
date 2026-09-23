@@ -58,19 +58,33 @@ def active_online_enrollments(course, **filters):
     return qs
 
 
-def user_has_online_course_access(user, course, child_id=None):
-    """Check if the user has permission to view video URLs and materials for an online course."""
+def is_privileged_viewer(user, course):
+    """Staff, admins, supervisors and the course's own instructor.
+
+    They see every lecture regardless of enrollment and are never subject to
+    sequential locking.
+    """
     if not user or not user.is_authenticated or not course:
         return False
 
     if user.is_staff or user.is_superuser or getattr(user, 'role', None) in ('admin', 'supervisor'):
         return True
 
-    # Check if user is the assigned instructor of the course
     instructor = getattr(user, 'instructor_profile', None) or getattr(user, 'instructor', None)
     if instructor and course.instructor_id == instructor.id:
         return True
     if course.instructor and getattr(course.instructor, 'user_id', None) == user.id:
+        return True
+
+    return False
+
+
+def user_has_online_course_access(user, course, child_id=None):
+    """Check if the user has permission to view video URLs and materials for an online course."""
+    if not user or not user.is_authenticated or not course:
+        return False
+
+    if is_privileged_viewer(user, course):
         return True
 
     from parents.models import Child

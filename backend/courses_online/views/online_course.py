@@ -6,7 +6,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from ..models import OnlineCourse, VideoWatchProgress, VideoLecture
 from ..serializers import OnlineCourseListSerializer, OnlineCourseDetailSerializer
-from ..participants import resolve_participant, user_has_online_course_access
+from ..participants import resolve_participant, user_has_online_course_access, is_privileged_viewer
+from ..locking import get_locked_lecture_ids
 
 
 class OnlineCourseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -64,8 +65,27 @@ class OnlineCourseViewSet(viewsets.ReadOnlyModelViewSet):
         context = self.get_serializer_context()
         context['has_access'] = user_has_online_course_access(
             request.user, course, self._child_param())
+        context['locked_lecture_ids'] = self._locked_lecture_ids(course)
         serializer = self.get_serializer(course, context=context)
         return Response(serializer.data)
+
+    def _locked_lecture_ids(self, course):
+        """Sequential-unlock state for the current participant, from prefetched progress.
+
+        Privileged viewers and visitors without a participant are never locked.
+        Uses the ``prefetched_watch_progress`` rows attached in ``get_queryset``
+        so this adds no queries.
+        """
+        student, child = self._participant()
+        if (student is None and child is None) or is_privileged_viewer(self.request.user, course):
+            return set()
+
+        lectures = course.video_lectures.all()
+        completed = {
+            lecture.id for lecture in lectures
+            if any(p.is_completed for p in getattr(lecture, 'prefetched_watch_progress', []))
+        }
+        return get_locked_lecture_ids(lectures, completed)
 
     @action(detail=False, methods=['get'])
     def batch(self, request):

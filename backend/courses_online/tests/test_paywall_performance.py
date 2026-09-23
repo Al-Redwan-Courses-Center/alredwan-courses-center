@@ -355,10 +355,16 @@ class PaywallAndPerformanceTests(TestCase):
         with CaptureQueriesContext(connection) as ctx:
             response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Every lecture is unlocked, so access really was evaluated.
-        for lec in response.json()['video_lectures']:
-            self.assertIsNotNone(lec['video_url'])
-            self.assertEqual(len(lec['materials']), 1)
+        # The learner has access, so the first lecture is open; later lectures
+        # are sequentially locked until the earlier ones are completed and the
+        # lock state must come from the prefetched progress rows, not queries.
+        lectures = response.json()['video_lectures']
+        self.assertFalse(lectures[0]['is_locked'])
+        self.assertIsNotNone(lectures[0]['video_url'])
+        for lec in lectures[1:]:
+            self.assertTrue(lec['is_locked'])
+            self.assertIsNone(lec['video_url'])
+            self.assertEqual(lec['materials'], [])
         return len(ctx.captured_queries)
 
     def test_detail_query_count_is_constant_in_lecture_count_for_student(self):

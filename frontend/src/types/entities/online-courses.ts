@@ -20,11 +20,14 @@ export interface VideoLectureItem {
   order: number;
   title: string;
   description: string;
-  video_url: string;
+  /** Null when the viewer is paywalled or the lecture is still locked. */
+  video_url: string | null;
   video_platform: "youtube" | "vimeo" | "bunny";
   duration_seconds: number;
   is_live_stream: boolean;
   live_stream_time: string | null;
+  /** Sequential unlock: true while an earlier lecture is still incomplete. */
+  is_locked: boolean;
   materials: OnlineLectureMaterialItem[];
   watch_progress?: VideoWatchProgressItem | null;
 }

@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 from ..models import VideoLecture, VideoWatchProgress
 from ..participants import resolve_participant, active_online_enrollments
+from ..locking import is_lecture_locked
 from ..serializers import VideoWatchProgressSerializer
 
 COMPLETION_THRESHOLD = 90.0
@@ -46,6 +47,14 @@ class VideoProgressUpdateView(views.APIView):
         ).exists():
             return Response(
                 {"detail": "يجب أن تكون مسجلاً ونشطاً في هذه الدورة للوصول إلى محتواها."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Lectures unlock in order: no progress may be recorded on a lecture
+        # while an earlier one is still incomplete.
+        if is_lecture_locked(lecture, student, child):
+            return Response(
+                {"detail": "أكمل المحاضرة السابقة أولاً لفتح هذه المحاضرة."},
                 status=status.HTTP_403_FORBIDDEN
             )
 
