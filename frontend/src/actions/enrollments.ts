@@ -117,9 +117,11 @@ export async function createEnrollmentRequest(
         return {
           ok: false,
           message:
-            getApiErrorDetail(error) || fieldErrors?.course
-              ? fieldErrors?.course[0]
-              : axiosFallbackMessage,
+            getApiErrorDetail(error) ||
+            fieldErrors?.course?.[0] ||
+            fieldErrors?.online_course?.[0] ||
+            fieldErrors?.non_field_errors?.[0] ||
+            axiosFallbackMessage,
           fieldErrors,
         };
       }

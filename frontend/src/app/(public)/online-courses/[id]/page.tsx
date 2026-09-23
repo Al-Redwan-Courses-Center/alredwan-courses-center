@@ -186,7 +186,13 @@ export default async function Page({ params }: PageProps) {
               </div>
             )}
 
-            <RatingsSection type="online_course" id={id} />
+            <RatingsSection
+              type="online_course"
+              id={id}
+              showForm={
+                session?.role === "student" || session?.role === "parent"
+              }
+            />
           </div>
 
           {/* Sidebar */}

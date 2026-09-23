@@ -61,10 +61,14 @@ export async function getCourseEnrollmentState({
   const isEnrollable = ENROLLABLE_ROLES.includes(user.role);
   const courseKey = courseType === "online" ? "online_course" : "course";
 
+  // Enrollment endpoints are only open to parents and students; staff roles
+  // just view the course, so skip the calls instead of logging 403s.
   const [myEnrollments, myEnrollmentRequests, parentChildren] =
     await Promise.all([
-      getMyEnrollments(),
-      isParent ? Promise.resolve([]) : getMyEnrollmentRequests(),
+      isEnrollable ? getMyEnrollments() : Promise.resolve([]),
+      isEnrollable && !isParent
+        ? getMyEnrollmentRequests()
+        : Promise.resolve([]),
       isParent ? getParentChildren() : Promise.resolve([]),
     ]);
 
