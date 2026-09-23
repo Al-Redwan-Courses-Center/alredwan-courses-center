@@ -72,12 +72,12 @@ class PaymentInline(admin.TabularInline):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.select_related('enrollment', 'enrollment__course')
+        return qs.select_related(
+            'enrollment', 'enrollment__course', 'enrollment__online_course')
 
     def get_enrollment_info(self, obj):
-        if obj.enrollment:
-            return f"{obj.enrollment.course.name}"
-        return "-"
+        target = obj.enrollment.course_instance if obj.enrollment else None
+        return target.name if target else "-"
     get_enrollment_info.short_description = "الدورة"
 
     def get_status_badge(self, obj):
@@ -116,10 +116,11 @@ class EnrollmentInline(admin.TabularInline):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.select_related('course')
+        return qs.select_related('course', 'online_course')
 
     def get_course_name(self, obj):
-        return obj.course.name if obj.course else "-"
+        target = obj.course_instance
+        return target.name if target else "-"
     get_course_name.short_description = "الدورة"
 
     def get_status_badge(self, obj):

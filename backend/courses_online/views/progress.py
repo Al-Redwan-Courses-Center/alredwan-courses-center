@@ -4,9 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from ..models import VideoLecture, VideoWatchProgress
-from ..participants import resolve_participant
+from ..participants import resolve_participant, active_online_enrollments
 from ..serializers import VideoWatchProgressSerializer
-from enrollments_payments.models import Enrollment
 
 COMPLETION_THRESHOLD = 90.0
 
@@ -25,7 +24,13 @@ class VideoProgressUpdateView(views.APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk, lecture_id):
-        lecture = get_object_or_404(VideoLecture, id=lecture_id, course_id=pk)
+        # Same visibility rule as OnlineCourseViewSet: unpublished or inactive
+        # courses do not exist as far as the API is concerned.
+        lecture = get_object_or_404(
+            VideoLecture.objects.select_related('course'),
+            id=lecture_id, course_id=pk,
+            course__is_active=True, course__is_published=True,
+        )
 
         student, child = resolve_participant(
             request.user, request.data.get('child'))
@@ -35,9 +40,9 @@ class VideoProgressUpdateView(views.APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Verify active enrollment
-        if not Enrollment.objects.filter(
-            online_course_id=pk, status='active', student=student, child=child
+        # Verify an active, unexpired enrollment
+        if not active_online_enrollments(
+            lecture.course, student=student, child=child
         ).exists():
             return Response(
                 {"detail": "يجب أن تكون مسجلاً ونشطاً في هذه الدورة للوصول إلى محتواها."},
@@ -47,7 +52,11 @@ class VideoProgressUpdateView(views.APIView):
         with transaction.atomic():
             # get_or_create already retries the lookup if a concurrent
             # request wins the race and trips the unique constraint.
-            progress, _ = VideoWatchProgress.objects.get_or_create(
+            VideoWatchProgress.objects.get_or_create(
+                lecture=lecture, student=student, child=child)
+            # Lock the row so concurrent progress pings serialise on the
+            # high-water mark instead of overwriting each other.
+            progress = VideoWatchProgress.objects.select_for_update().get(
                 lecture=lecture, student=student, child=child)
 
             incoming_watched = _seconds(

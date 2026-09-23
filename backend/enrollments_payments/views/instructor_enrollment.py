@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Instructor views for viewing enrollments in their courses."""
 
+import uuid
+
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -8,7 +10,6 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from django_filters import rest_framework as filters
 from django.db.models import Count, Q
-from django.core.exceptions import ValidationError
 
 from ..serializers.instructor_enrollment import (
     InstructorEnrollmentListSerializer,
@@ -43,9 +44,15 @@ class InstructorEnrollmentFilter(filters.FilterSet):
     def filter_course_id(self, queryset, name, value):
         if not value:
             return queryset
-        if str(value).isdigit():
+        value = str(value).strip()
+        if value.isdigit():
             return queryset.filter(course_id=int(value))
-        return queryset.filter(online_course_id=value)
+        try:
+            online_id = uuid.UUID(value)
+        except (ValueError, AttributeError, TypeError):
+            # Neither a physical course id nor an online course UUID.
+            return queryset.none()
+        return queryset.filter(online_course_id=online_id)
 
 
 def _get_instructor_course(course_id, instructor):
@@ -59,12 +66,14 @@ def _get_instructor_course(course_id, instructor):
             return course, False
         except Course.DoesNotExist:
             return None, False
-    else:
-        try:
-            online_course = OnlineCourse.objects.get(id=course_id)
-            return online_course, True
-        except (OnlineCourse.DoesNotExist, ValidationError, ValueError):
-            return None, True
+    try:
+        online_id = uuid.UUID(str(course_id))
+    except (ValueError, AttributeError, TypeError):
+        return None, True
+    try:
+        return OnlineCourse.objects.get(id=online_id), True
+    except OnlineCourse.DoesNotExist:
+        return None, True
 
 
 class InstructorCourseEnrollmentListView(generics.ListAPIView):

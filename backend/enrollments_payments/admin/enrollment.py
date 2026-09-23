@@ -722,7 +722,7 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
     def get_payment_summary(self, obj):
         """Display payment summary with visual progress."""
         paid = obj.amount_paid()
-        target = obj.course
+        target = obj.get_course_instance()
         course_price = target.price if (target and target.price) else 0
         remaining = obj.remaining_amount()
         payments_count = obj.payments.count()

@@ -2,7 +2,7 @@ from django.db.models import Count, Q
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from core.utils import ExcelExportMixin
-from courses_online.models import OnlineCourse, VideoLecture, OnlineLectureMaterial
+from courses_online.models import OnlineCourse, VideoLecture
 
 class VideoLectureInline(admin.TabularInline):
     model = VideoLecture
@@ -34,5 +34,3 @@ class OnlineCourseAdmin(ExcelExportMixin, admin.ModelAdmin):
         return getattr(obj, 'annotated_enrolled_count', obj.enrolled_count)
     get_enrolled_count.short_description = _("عدد المسجلين")
     get_enrolled_count.admin_order_field = 'annotated_enrolled_count'
-
-    enrolled_count = get_enrolled_count

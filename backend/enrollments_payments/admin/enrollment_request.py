@@ -51,8 +51,6 @@ class PaymentMethodFilter(admin.SimpleListFilter):
     def lookups(self, request, model_admin):
         return (
             ("cash", _("💵 نقدًا")),
-            ("card", _("💳 بطاقة")),
-            ("bank_transfer", _("🏦 تحويل بنكي")),
             ("instapay", _("📱 إنستاباي")),
             ("vodafone_cash", _("📲 فودافون كاش")),
             ("other", _("📋 طريقة أخرى")),
@@ -137,7 +135,7 @@ def approve_selected(modeladmin, request, queryset):
             approved_count += 1
 
             # Track if this was a partial payment
-            target = enrollment_request.course
+            target = enrollment_request.course_instance
             if (
                 enrollment_request.price is not None
                 and target
@@ -473,7 +471,8 @@ class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
     def get_price_display(self, obj):
         """Display price with currency and comparison to course price."""
         if obj.price is not None:
-            course_price = obj.course.price if obj.course else None
+            target = obj.course_instance
+            course_price = target.price if target else None
 
             if course_price and obj.price < course_price:
                 # Discounted price
@@ -525,8 +524,6 @@ class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
         """Display payment method with icon."""
         method_config = {
             "cash": ("💵", "#27ae60"),
-            "card": ("💳", "#3498db"),
-            "bank_transfer": ("🏦", "#9b59b6"),
             "instapay": ("📱", "#e74c3c"),
             "vodafone_cash": ("📲", "#e74c3c"),
             "other": ("📋", "#95a5a6"),

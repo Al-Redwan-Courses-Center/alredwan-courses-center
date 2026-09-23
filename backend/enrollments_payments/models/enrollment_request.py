@@ -27,8 +27,6 @@ class PaymentMethod(models.TextChoices):
     """Enumeration for payment method choices."""
 
     CASH = "cash", _("نقدًا")
-    CARD = "card", _("بطاقة")
-    BANK_TRANSFER = "bank_transfer", _("تحويل بنكي")
     INSTAPAY = "instapay", _("إنستاباي")
     VODAFONE_CASH = "vodafone_cash", _("فودافون كاش")
     OTHER = "other", _("طريقة أخرى")

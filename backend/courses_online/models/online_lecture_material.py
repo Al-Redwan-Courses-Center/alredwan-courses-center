@@ -1,17 +1,13 @@
 import uuid
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from cloudinary.models import CloudinaryField
+
 
 class MaterialType(models.TextChoices):
     PDF = 'pdf', _('PDF')
     IMAGE = 'image', _('صورة')
     DOC = 'doc', _('مستند')
 
-from django.core.files.storage import FileSystemStorage
-from django.conf import settings
-
-local_storage = FileSystemStorage(location=settings.MEDIA_ROOT, base_url=settings.MEDIA_URL)
 
 class OnlineLectureMaterial(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

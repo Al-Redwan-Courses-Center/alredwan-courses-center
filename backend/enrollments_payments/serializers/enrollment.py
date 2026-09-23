@@ -6,9 +6,10 @@ from django.db.models import Sum
 from ..models import Enrollment
 from ..models.enrollment import EnrollmentStatus
 from ..models.payment import Payment, PaymentStatus
+from .course_info import CourseInfoSerializerMixin
 
 
-class EnrollmentListSerializer(serializers.ModelSerializer):
+class EnrollmentListSerializer(CourseInfoSerializerMixin, serializers.ModelSerializer):
     """Serializer for listing user's enrollments with course and payment summary"""
     # Course info
     course_name = serializers.SerializerMethodField()
@@ -48,32 +49,6 @@ class EnrollmentListSerializer(serializers.ModelSerializer):
             'completion_percentage'
         ]
         read_only_fields = fields
-
-    def get_course_name(self, obj):
-        target = obj.get_course_instance()
-        return target.name if target else None
-        
-    def get_course_price(self, obj):
-        target = obj.get_course_instance()
-        return str(target.price) if target else None
-
-    def get_course_start_date(self, obj):
-        target = obj.get_course_instance()
-        if hasattr(target, 'start_date'):
-            return target.start_date
-        return target.created_at.date() if target else None
-        
-    def get_course_end_date(self, obj):
-        target = obj.get_course_instance()
-        if hasattr(target, 'end_date'):
-            return target.end_date
-        return None
-
-    def get_course_instructor(self, obj):
-        target = obj.get_course_instance()
-        if target and target.instructor:
-            return target.instructor.user.get_full_name()
-        return None
 
     def get_participant_name(self, obj):
         if obj.child:
@@ -128,7 +103,7 @@ class PaymentSummarySerializer(serializers.ModelSerializer):
         return None
 
 
-class EnrollmentDetailSerializer(serializers.ModelSerializer):
+class EnrollmentDetailSerializer(CourseInfoSerializerMixin, serializers.ModelSerializer):
     """Detailed serializer for viewing a single enrollment"""
     # Course info
     course_name = serializers.SerializerMethodField()
@@ -176,44 +151,6 @@ class EnrollmentDetailSerializer(serializers.ModelSerializer):
             'created_by', 'created_by_name'
         ]
         read_only_fields = fields
-
-    def get_course_name(self, obj):
-        target = obj.get_course_instance()
-        return target.name if target else None
-
-    def get_course_description(self, obj):
-        target = obj.get_course_instance()
-        return target.description if target else None
-        
-    def get_course_price(self, obj):
-        target = obj.get_course_instance()
-        return str(target.price) if target else None
-
-    def get_course_start_date(self, obj):
-        target = obj.get_course_instance()
-        if hasattr(target, 'start_date'):
-            return target.start_date
-        return target.created_at.date() if target else None
-        
-    def get_course_end_date(self, obj):
-        target = obj.get_course_instance()
-        if hasattr(target, 'end_date'):
-            return target.end_date
-        return None
-        
-    def get_course_num_lectures(self, obj):
-        target = obj.get_course_instance()
-        if hasattr(target, 'num_lectures'):
-            return target.num_lectures
-        elif hasattr(target, 'video_lectures'):
-            return target.video_lectures.count()
-        return None
-
-    def get_course_instructor(self, obj):
-        target = obj.get_course_instance()
-        if target and target.instructor:
-            return target.instructor.user.get_full_name()
-        return None
 
     def get_participant_name(self, obj):
         if obj.child:
