@@ -115,7 +115,8 @@ class CourseDetailView(generics.RetrieveAPIView):
             'season'
         ).prefetch_related(
             'tags',
-            'schedules'
+            'schedules',
+            'lectures',
         ).annotate(
             _enrolled_count=Count(
                 'enrollments',

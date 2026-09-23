@@ -112,6 +112,20 @@ class CourseListSerializer(serializers.ModelSerializer):
         return obj.rating_count
 
 
+class LectureOutlineSerializer(serializers.ModelSerializer):
+    """Public, read-only outline row: what a visitor may know about a lecture.
+
+    No attendance, instructor or acceptance details; just enough to show the
+    course plan on the public course page.
+    """
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = Lecture
+        fields = ['id', 'lecture_number', 'title', 'day', 'start_time', 'end_time', 'status', 'status_display']
+        read_only_fields = fields
+
+
 class CourseDetailSerializer(serializers.ModelSerializer):
     """
     Serializer for detailed course view.
@@ -122,6 +136,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
     instructor = InstructorSerializer(read_only=True)
     season = SeasonSerializer(read_only=True)
     schedules = CourseScheduleSerializer(many=True, read_only=True)
+    lectures = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
     enrolled_count = serializers.SerializerMethodField()
     available_spots = serializers.SerializerMethodField()
@@ -132,10 +147,15 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'slug', 'description', 'image', 'start_date', 'end_date',
             'num_lectures', 'capacity', 'price', 'is_active',
-            'season', 'instructor', 'tags', 'schedules', 'for_adults',
+            'season', 'instructor', 'tags', 'schedules', 'lectures', 'for_adults',
             'min_age', 'max_age', 'enrolled_count', 'available_spots',
             'is_full', 'created_at', 'updated_at'
         ]
+
+    def get_lectures(self, obj):
+        """Course plan in lecture order; uses the prefetched rows when present."""
+        lectures = sorted(obj.lectures.all(), key=lambda lecture: (lecture.lecture_number, lecture.day))
+        return LectureOutlineSerializer(lectures, many=True).data
 
     def get_image(self, obj):
         if obj.image:

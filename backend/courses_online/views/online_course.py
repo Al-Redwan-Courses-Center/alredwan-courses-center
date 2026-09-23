@@ -29,6 +29,15 @@ class OnlineCourseViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         qs = OnlineCourse.objects.filter(is_active=True, is_published=True).select_related('instructor', 'instructor__user').prefetch_related('tags')
 
+        # ?instructor=<id> narrows the catalogue to one instructor's courses
+        # (used by the instructor dashboard). Invalid values match nothing.
+        instructor_param = self.request.query_params.get('instructor')
+        if instructor_param:
+            try:
+                qs = qs.filter(instructor_id=int(instructor_param))
+            except (TypeError, ValueError):
+                qs = qs.none()
+
         student, child = self._participant()
         if student or child:
             watch_progress_qs = VideoWatchProgress.objects.filter(student=student, child=child)
