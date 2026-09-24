@@ -58,19 +58,24 @@ export async function getAllOnlineCourses(): Promise<OnlineCourseListItem[]> {
   return apiRequest(
     "Failed to load online courses:",
     async () => {
-      const [user, apiClient, myEnrollments] = await Promise.all([
+      const [user, apiClient] = await Promise.all([
         getUser(),
         getAuthApiClient(),
-        getMyEnrollments().catch(() => []),
       ]);
 
-      const { data } = await apiClient.get<
-        PaginatedResponse<OnlineCourseListItem> | OnlineCourseListItem[]
-      >(ONLINE_COURSES_LIST_URL);
+      // Only students and parents hold enrollments; other roles would just
+      // get a 403 from the enrollments endpoint.
+      const canEnroll = user.role === "student" || user.role === "parent";
+      const [{ data }, myEnrollments] = await Promise.all([
+        apiClient.get<
+          PaginatedResponse<OnlineCourseListItem> | OnlineCourseListItem[]
+        >(ONLINE_COURSES_LIST_URL),
+        canEnroll ? getMyEnrollments() : Promise.resolve([]),
+      ]);
 
       const courses = unwrapPaginated(data);
 
-      if (user.role !== "student") {
+      if (!canEnroll) {
         return courses;
       }
 
