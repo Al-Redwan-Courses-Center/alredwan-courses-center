@@ -34,7 +34,7 @@ export default function MemoriesClient({
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  const canManageMemories = ["supervisor", "instructor", "admin"].includes(role);
+  const isSupervisor = role === "supervisor";
   const hasPrivateFeed = role === "parent" || role === "student";
 
   const fetchTabMemories = async (tab: "general" | "private") => {
@@ -113,11 +113,10 @@ export default function MemoriesClient({
             </Button>
           )}
         </div>
-        
-        {canManageMemories && (
-          <Button onClick={() => setIsUploadModalOpen(true)}>
-            إضافة ذكرى
-          </Button>        )}
+
+        {isSupervisor && (
+          <Button onClick={() => setIsUploadModalOpen(true)}>إضافة ذكرى</Button>
+        )}
       </div>
 
       {loading ? (
@@ -160,7 +159,7 @@ export default function MemoriesClient({
             setMemories((prev) => prev.filter((m) => m.id !== id));
             setLightboxIndex(null);
           }}
-          isSupervisor={canManageMemories}
+          isSupervisor={isSupervisor}
         />
       )}
 

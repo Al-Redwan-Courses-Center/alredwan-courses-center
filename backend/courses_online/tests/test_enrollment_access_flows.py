@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Empirical Challenge & Stress-Testing Suite for Milestone 1 Backend.
+Enrollment and access flow tests for online courses.
 Covers Paywall Security, Polymorphic Enrollment Requests, UUID Batch Resilience,
 Watch Progress High-Water Mark & Replays, Secondary Parent Access, and Age Eligibility.
 """

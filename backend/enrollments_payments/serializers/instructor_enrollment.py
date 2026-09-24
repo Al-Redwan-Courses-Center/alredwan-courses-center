@@ -4,9 +4,10 @@
 from rest_framework import serializers
 from ..models import Enrollment
 from ..models.enrollment import EnrollmentStatus
+from .course_info import CourseInfoSerializerMixin
 
 
-class InstructorEnrollmentListSerializer(serializers.ModelSerializer):
+class InstructorEnrollmentListSerializer(CourseInfoSerializerMixin, serializers.ModelSerializer):
     """Serializer for instructor viewing enrollments - no financial data"""
 
     # Course info
@@ -45,20 +46,6 @@ class InstructorEnrollmentListSerializer(serializers.ModelSerializer):
             "completion_percentage",
         ]
         read_only_fields = fields
-
-    def get_course_name(self, obj):
-        target = obj.course
-        return target.name if target else None
-
-    def get_course_start_date(self, obj):
-        if obj.course:
-            return obj.course.start_date
-        return None
-
-    def get_course_end_date(self, obj):
-        if obj.course:
-            return obj.course.end_date
-        return None
 
     def get_participant_name(self, obj):
         if obj.child:

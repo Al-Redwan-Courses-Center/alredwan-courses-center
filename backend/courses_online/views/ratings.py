@@ -12,6 +12,11 @@ from users.models.student_instructor_rating import StudentOnlineCourseRating, Pa
 from courses_online.serializers.ratings import OnlineCourseRatingSerializer, OnlineCourseRatingDetailSerializer
 
 
+def _visible_courses():
+    """Same visibility rule as OnlineCourseViewSet."""
+    return OnlineCourse.objects.filter(is_active=True, is_published=True)
+
+
 class StudentRatingsPagination(PageNumberPagination):
     page_size = 20
     page_query_param = 'student_page'
@@ -35,7 +40,7 @@ class OnlineCourseRatingsView(generics.RetrieveAPIView):
     def get_object(self):
         """Get course by UUID"""
         lookup_value = self.kwargs.get('pk')
-        return get_object_or_404(OnlineCourse, pk=lookup_value)
+        return get_object_or_404(_visible_courses(), pk=lookup_value)
 
     def retrieve(self, request, *args, **kwargs):
         """Retrieve course ratings and statistics"""
@@ -134,7 +139,7 @@ class OnlineCourseRateView(generics.CreateAPIView):
         return StudentOnlineCourseRateSerializer
 
     def create(self, request, *args, **kwargs):
-        course = get_object_or_404(OnlineCourse, pk=self.kwargs.get('pk'))
+        course = get_object_or_404(_visible_courses(), pk=self.kwargs.get('pk'))
 
         serializer = self.get_serializer(
             data=request.data,

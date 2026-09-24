@@ -26,6 +26,7 @@ admin.site.site_title = "واحة الرضوان"
 admin.site.index_title = "الصفحة الرئيسية"
 urlpatterns = [
     path('Al-Redwan-superadmin-dashboard/', admin.site.urls),
+    path('Al-Redwan-superadmin-dashboard/nested_admin/', include('nested_admin.urls')),
     path('health/', health_check, name='health_check'),
     path('api/diagnostics/fonts/', font_diagnostic, name='font_diagnostic'),
     re_path(r'^auth/', include('djoser.urls')),

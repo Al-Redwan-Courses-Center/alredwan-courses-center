@@ -1,8 +1,13 @@
 import { getUser, protect } from "@/actions/auth";
+import { getLectureById } from "@/actions/lectures";
 import { getParentChildren } from "@/actions/user";
+import LectureEditButton from "@/components/courses/LectureEditButton";
 import { getAuthApiClient } from "@/lib/auth-api";
+import type { UserEntity } from "@/types/auth";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+
+const STAFF_ROLES: UserEntity["role"][] = ["instructor", "supervisor", "admin"];
 
 interface AttendanceInfo {
   present: boolean;
@@ -129,9 +134,118 @@ function MetaItem({
         <p className="text-muted-foreground text-xs font-semibold sm:text-lg">
           {label}
         </p>
-        <p className="break-words text-sm font-extrabold text-[#1a3c34] sm:text-2xl">
+        <p className="text-sm font-extrabold break-words text-[#1a3c34] sm:text-2xl">
           {value}
         </p>
+      </div>
+    </div>
+  );
+}
+
+function BackLink({ href }: { href: string }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex max-w-full items-center justify-center gap-2 rounded-xl border-2 border-[#c5d9cc] bg-white px-3.5 py-2 text-xs font-bold text-[#2f5d50] shadow-md transition hover:bg-[#e8f0ea] sm:gap-3 sm:rounded-2xl sm:px-7 sm:py-3.5 sm:text-xl"
+    >
+      <span>العودة إلى قائمة المحاضرات</span>
+    </Link>
+  );
+}
+
+interface LectureSummary {
+  lecture_number: number;
+  title: string;
+  day: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  status: string;
+  status_display: string;
+  is_accepted: boolean;
+}
+
+/** Status pill + title, and the four meta items: shared by every role. */
+function LectureHeaderAndMeta({ lecture }: { lecture: LectureSummary }) {
+  return (
+    <>
+      {/* العنوان */}
+      <div className="border-b-2 border-[#e8f0ea] px-3 py-6 text-center sm:px-16 sm:py-12">
+        <div className="mb-3 flex justify-center sm:mb-6">
+          <StatusPill status={lecture.status} label={lecture.status_display} />
+        </div>
+        <h1 className="text-xl font-black tracking-tight break-words text-[#1a3c34] sm:text-5xl lg:text-6xl">
+          {lecture.title || `محاضرة رقم ${lecture.lecture_number}`}
+        </h1>
+        <p className="text-muted-foreground mt-1.5 text-xs font-medium sm:mt-4 sm:text-2xl">
+          محاضرة رقم {lecture.lecture_number} في الكورس
+        </p>
+      </div>
+
+      {/* الملاحظات والمواعيد */}
+      <div className="grid grid-cols-1 gap-4 border-b-2 border-[#e8f0ea] px-3 py-6 sm:grid-cols-2 sm:gap-8 sm:px-16 sm:py-12 lg:grid-cols-4">
+        <MetaItem icon="📅" label="التاريخ" value={formatDate(lecture.day)} />
+        <MetaItem
+          icon="🕐"
+          label="المواعيد"
+          value={formatLectureTime(lecture.start_time, lecture.end_time)}
+        />
+        <MetaItem
+          icon="#️⃣"
+          label="رقم المحاضرة"
+          value={String(lecture.lecture_number)}
+        />
+        <MetaItem
+          icon="✅"
+          label="حالة القبول"
+          value={lecture.is_accepted ? "مقبولة" : "قيد المراجعة"}
+        />
+      </div>
+    </>
+  );
+}
+
+/** Instructor / supervisor / admin view: no personal attendance, can edit. */
+async function StaffLectureDetail({
+  courseId,
+  lectureId,
+  role,
+}: {
+  courseId: string;
+  lectureId: string;
+  role: UserEntity["role"];
+}) {
+  const lecture = await getLectureById(lectureId);
+
+  if (!lecture || String(lecture.course?.id) !== String(courseId)) {
+    notFound();
+  }
+
+  const backHref =
+    role === "instructor"
+      ? `/dashboard/my-courses/${courseId}`
+      : `/dashboard/courses/${courseId}`;
+
+  return (
+    <div
+      className="mx-auto w-full max-w-7xl min-w-0 space-y-4 px-3 pb-16 sm:space-y-10 sm:px-8 sm:pb-24"
+      dir="rtl"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <BackLink href={backHref} />
+        <LectureEditButton lecture={lecture} isAdmin={role === "admin"} />
+      </div>
+
+      <div className="w-full min-w-0 overflow-hidden rounded-xl border-2 border-[#dce8e1] bg-white shadow-[0_15px_45px_rgb(0,0,0,0.06)] sm:rounded-[2.5rem]">
+        <LectureHeaderAndMeta lecture={lecture} />
+
+        <div className="grid grid-cols-1 gap-4 px-3 py-6 sm:grid-cols-2 sm:gap-8 sm:px-16 sm:py-12">
+          <MetaItem icon="📚" label="الدورة" value={lecture.course.name} />
+          <MetaItem
+            icon="👤"
+            label="المحاضر"
+            value={lecture.instructor?.full_name || "غير محدد"}
+          />
+        </div>
       </div>
     </div>
   );
@@ -146,9 +260,20 @@ export default async function LectureDetailPageView({
   lectureId: string;
   childId?: string;
 }) {
-  await protect(["student", "parent", "admin"]);
+  await protect(["student", "parent", ...STAFF_ROLES]);
 
   const user = await getUser();
+
+  if (STAFF_ROLES.includes(user.role)) {
+    return (
+      <StaffLectureDetail
+        courseId={courseId}
+        lectureId={lectureId}
+        role={user.role}
+      />
+    );
+  }
+
   let activeChildId = childId;
 
   let lecture: LectureFromList | null = null;
@@ -178,54 +303,18 @@ export default async function LectureDetailPageView({
     : `/dashboard/my-courses/${courseId}`;
 
   return (
-    <div className="mx-auto w-full max-w-7xl min-w-0 space-y-4 px-3 pb-16 sm:space-y-10 sm:px-8 sm:pb-24" dir="rtl">
+    <div
+      className="mx-auto w-full max-w-7xl min-w-0 space-y-4 px-3 pb-16 sm:space-y-10 sm:px-8 sm:pb-24"
+      dir="rtl"
+    >
       {/* العودة */}
       <div className="flex justify-start">
-        <Link
-          href={backHref}
-          className="inline-flex max-w-full items-center justify-center gap-2 rounded-xl border-2 border-[#c5d9cc] bg-white px-3.5 py-2 text-xs font-bold text-[#2f5d50] shadow-md transition hover:bg-[#e8f0ea] sm:rounded-2xl sm:gap-3 sm:px-7 sm:py-3.5 sm:text-xl"
-        >
-          <span>العودة إلى قائمة المحاضرات</span>
-        </Link>
+        <BackLink href={backHref} />
       </div>
 
       {/* البطاقة الرئيسية */}
       <div className="w-full min-w-0 overflow-hidden rounded-xl border-2 border-[#dce8e1] bg-white shadow-[0_15px_45px_rgb(0,0,0,0.06)] sm:rounded-[2.5rem]">
-        {/* العنوان */}
-        <div className="border-b-2 border-[#e8f0ea] px-3 py-6 text-center sm:px-16 sm:py-12">
-          <div className="mb-3 flex justify-center sm:mb-6">
-            <StatusPill
-              status={lecture.status}
-              label={lecture.status_display}
-            />
-          </div>
-          <h1 className="break-words text-xl font-black tracking-tight text-[#1a3c34] sm:text-5xl lg:text-6xl">
-            {lecture.title || `محاضرة رقم ${lecture.lecture_number}`}
-          </h1>
-          <p className="text-muted-foreground mt-1.5 text-xs font-medium sm:mt-4 sm:text-2xl">
-            محاضرة رقم {lecture.lecture_number} في الكورس
-          </p>
-        </div>
-
-        {/* الملاحظات والمواعيد */}
-        <div className="grid grid-cols-1 gap-4 border-b-2 border-[#e8f0ea] px-3 py-6 sm:grid-cols-2 lg:grid-cols-4 sm:gap-8 sm:px-16 sm:py-12">
-          <MetaItem icon="📅" label="التاريخ" value={formatDate(lecture.day)} />
-          <MetaItem
-            icon="🕐"
-            label="المواعيد"
-            value={formatLectureTime(lecture.start_time, lecture.end_time)}
-          />
-          <MetaItem
-            icon="#️⃣"
-            label="رقم المحاضرة"
-            value={String(lecture.lecture_number)}
-          />
-          <MetaItem
-            icon="✅"
-            label="حالة القبول"
-            value={lecture.is_accepted ? "مقبولة" : "قيد المراجعة"}
-          />
-        </div>
+        <LectureHeaderAndMeta lecture={lecture} />
 
         {/* الحضور */}
         <div className="px-3 py-6 sm:px-16 sm:py-12">
@@ -234,7 +323,7 @@ export default async function LectureDetailPageView({
           </h2>
 
           {attendance ? (
-            <div className="flex flex-col gap-4 rounded-xl border-2 border-[#dce8e1] bg-[#f7faf8] p-3.5 sm:gap-6 sm:rounded-3xl sm:p-10 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 rounded-xl border-2 border-[#dce8e1] bg-[#f7faf8] p-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:rounded-3xl sm:p-10">
               <div className="flex items-center gap-3 sm:gap-6">
                 <div
                   className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xl font-black sm:h-20 sm:w-20 sm:rounded-2xl sm:text-4xl ${
@@ -280,7 +369,7 @@ export default async function LectureDetailPageView({
               )}
             </div>
           ) : (
-            <div className="rounded-xl border-2 border-dashed border-[#c5d9cc] bg-[#f7faf8] px-3 py-6 sm:rounded-3xl sm:px-8 sm:py-14 text-center">
+            <div className="rounded-xl border-2 border-dashed border-[#c5d9cc] bg-[#f7faf8] px-3 py-6 text-center sm:rounded-3xl sm:px-8 sm:py-14">
               <p className="text-base font-black text-[#2f5d50] sm:text-3xl lg:text-4xl">
                 لم يتم تسجيل الحضور بعد
               </p>
@@ -301,7 +390,7 @@ export default async function LectureDetailPageView({
           </p>
 
           {noteContent ? (
-            <div className="break-words rounded-xl border-2 border-amber-200 bg-amber-50/90 px-3.5 py-3 text-sm font-medium leading-relaxed text-amber-950 sm:rounded-3xl sm:px-8 sm:py-6 sm:text-2xl">
+            <div className="rounded-xl border-2 border-amber-200 bg-amber-50/90 px-3.5 py-3 text-sm leading-relaxed font-medium break-words text-amber-950 sm:rounded-3xl sm:px-8 sm:py-6 sm:text-2xl">
               {noteContent}
             </div>
           ) : (

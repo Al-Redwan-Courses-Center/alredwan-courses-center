@@ -2,8 +2,10 @@
 
 import { isAxiosError } from "axios";
 import { revalidatePath } from "next/cache";
+import { unstable_rethrow } from "next/navigation";
 import { getServerJwtToken } from "@/actions/auth";
 import { getAuthApiClient } from "@/lib/auth-api";
+import type { UserEntity } from "@/types/auth";
 
 export async function updateProfile(data: {
   first_name: string;
@@ -36,10 +38,21 @@ export async function updateProfile(data: {
   }
 }
 
-export async function getMe() {
+export interface MeWithStatus {
+  user: UserEntity | null;
+  /** True when the backend rejected the session token (401/403). */
+  unauthorized: boolean;
+}
+
+/**
+ * Loads the signed-in user from the backend and says whether the session
+ * token itself was rejected, so callers can sign out instead of rendering a
+ * dashboard that fails every request.
+ */
+export async function getMeWithStatus(): Promise<MeWithStatus> {
   try {
     const token = await getServerJwtToken();
-    if (!token?.jwt_access_token) return null;
+    if (!token?.jwt_access_token) return { user: null, unauthorized: false };
 
     const response = await fetch(`${process.env.REST_API_URL}/auth/users/me/`, {
       headers: {
@@ -48,13 +61,28 @@ export async function getMe() {
       cache: "no-store",
     });
 
-    if (!response.ok) {
-      console.error("getMe failed:", response.status, await response.text());
-      return null;
+    if (response.status === 401 || response.status === 403) {
+      console.error("Session token rejected by the API:", response.status);
+      return { user: null, unauthorized: true };
     }
 
-    const data = await response.json();
-    return data;
+    if (!response.ok) {
+      console.error("getMe failed:", response.status, await response.text());
+      return { user: null, unauthorized: false };
+    }
+
+    return { user: (await response.json()) as UserEntity, unauthorized: false };
+  } catch (error: unknown) {
+    unstable_rethrow(error);
+    console.error("getMe failed:", error);
+    return { user: null, unauthorized: false };
+  }
+}
+
+export async function getMe() {
+  try {
+    const { user } = await getMeWithStatus();
+    return user;
   } catch (error: unknown) {
     if (
       error &&

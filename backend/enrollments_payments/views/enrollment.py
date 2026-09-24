@@ -38,7 +38,7 @@ class IsOwnerOrAdminOrSupervisorOrInstructor(IsAuthenticated):
         # Course instructor can view enrollments in their courses
         if user.role == "instructor":
             instructor = getattr(user, "instructor_profile", None)
-            target = obj.course
+            target = obj.course_instance
             if instructor and target and target.instructor_id == instructor.id:
                 return True
 
@@ -193,7 +193,7 @@ class EnrollmentProgressView(APIView):
         # Course instructor can view
         if user.role == "instructor":
             instructor = getattr(user, "instructor_profile", None)
-            target = obj.course
+            target = obj.course_instance
             if instructor and target and target.instructor_id == instructor.id:
                 return True
 

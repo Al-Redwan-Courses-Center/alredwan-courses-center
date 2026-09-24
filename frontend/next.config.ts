@@ -131,7 +131,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "no-store, no-cache, must-revalidate, proxy-revalidate",
+            value: "public, max-age=300, stale-while-revalidate=59",
           },
         ],
       },
@@ -212,20 +212,6 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [];
   },
-
-  async rewrites() {
-    const backendUrl = process.env.REST_API_URL || "http://127.0.0.1:8000";
-
-    return {
-      fallback: [
-        {
-          source: "/api/:path*",
-          destination: `${backendUrl}/api/:path*`, // Proxy to Backend
-        },
-      ],
-    };
-  },
-
   trailingSlash: false,
 };
 

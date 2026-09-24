@@ -2,6 +2,7 @@
 """Serializers for Online Course Ratings"""
 from rest_framework import serializers
 from users.models.student_instructor_rating import StudentOnlineCourseRating, ParentOnlineCourseRating
+from ..participants import active_online_enrollments
 
 class OnlineCourseRatingSerializer(serializers.Serializer):
     """Serializer for individual online course ratings (both student and parent)"""
@@ -14,17 +15,17 @@ class OnlineCourseRatingSerializer(serializers.Serializer):
 
     def get_rater_name(self, obj):
         """Get the name of the person who gave the rating"""
-        if hasattr(obj, 'student'):
+        if isinstance(obj, StudentOnlineCourseRating):
             return obj.student.user.get_full_name()
-        elif hasattr(obj, 'parent'):
+        if isinstance(obj, ParentOnlineCourseRating):
             return obj.parent.user.get_full_name()
         return None
 
     def get_rater_type(self, obj):
         """Return whether the rater is a student or parent"""
-        if hasattr(obj, 'student'):
+        if isinstance(obj, StudentOnlineCourseRating):
             return 'student'
-        elif hasattr(obj, 'parent'):
+        if isinstance(obj, ParentOnlineCourseRating):
             return 'parent'
         return None
 
@@ -56,9 +57,8 @@ class StudentOnlineCourseRateSerializer(serializers.ModelSerializer):
 
         course = self.context['course']
 
-        # Check if student is enrolled in the online course
-        from enrollments_payments.models import Enrollment
-        if not Enrollment.objects.filter(student=student, online_course=course).exists():
+        # Only an active (unexpired) enrollment may rate the course
+        if not active_online_enrollments(course, student=student).exists():
             raise serializers.ValidationError(
                 "يجب أن تكون مشتركاً في الدورة لتتمكن من تقييمها.")
 
@@ -84,8 +84,7 @@ class ParentOnlineCourseRateSerializer(serializers.ModelSerializer):
 
         course = self.context['course']
 
-        # Check if parent has a child enrolled in the online course
-        from enrollments_payments.models import Enrollment
+        # Check if parent has a child actively enrolled in the online course
         from parents.models import Child
 
         # Get parent's children
@@ -95,7 +94,7 @@ class ParentOnlineCourseRateSerializer(serializers.ModelSerializer):
             parent.extra_children.values_list('child_id', flat=True))
         all_child_ids = set(child_ids + extra_child_ids)
 
-        if not Enrollment.objects.filter(child_id__in=all_child_ids, online_course=course).exists():
+        if not active_online_enrollments(course, child_id__in=all_child_ids).exists():
             raise serializers.ValidationError(
                 "يجب أن يكون أحد أبنائك مشتركاً في الدورة لتتمكن من تقييمها.")
 

@@ -1,4 +1,5 @@
 import uuid
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -38,3 +39,28 @@ class VideoWatchProgress(models.Model):
                 name='video_watch_requires_participant'
             ),
         ]
+
+    def clean(self):
+        """Progress may only belong to a participant enrolled in the lecture's course.
+
+        The API already verifies the enrollment before recording progress; this
+        guards the admin (and any other ModelForm) so a record cannot be
+        re-assigned to a student or child who is not enrolled in that course.
+        """
+        super().clean()
+        if self.student_id and self.child_id:
+            raise ValidationError(_("اختر طالباً أو طفلاً، وليس الاثنين معاً."))
+        if not self.student_id and not self.child_id:
+            raise ValidationError(_("يجب تحديد الطالب أو الطفل صاحب التقدم."))
+        if not self.lecture_id:
+            return
+
+        from courses_online.participants import active_online_enrollments
+
+        course = self.lecture.course
+        participant_filter = {'student_id': self.student_id} if self.student_id else {'child_id': self.child_id}
+        if not active_online_enrollments(course, **participant_filter).exists():
+            field = 'student' if self.student_id else 'child'
+            raise ValidationError({
+                field: _("هذا المشارك غير مشترك (اشتراك نشط) في الدورة الإلكترونية «%(course)s».") % {'course': course.name},
+            })

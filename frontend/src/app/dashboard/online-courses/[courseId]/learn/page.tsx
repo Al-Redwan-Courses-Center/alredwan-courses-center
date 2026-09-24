@@ -12,17 +12,17 @@ export default async function Page({
   searchParams: Promise<{ child?: string }>;
 }) {
   await protect(["student", "parent"]);
-  
+
   const { courseId } = await params;
   const { child } = await searchParams;
 
   // Verify enrollment status before rendering content
   const myEnrollments = await getMyEnrollments();
   const enrollment = myEnrollments.find(
-    (e) => 
-      String(e.online_course) === String(courseId) && 
+    (e) =>
+      String(e.online_course) === String(courseId) &&
       e.status === "active" &&
-      (!child || String(e.child_id) === String(child))
+      (!child || String(e.child_id) === String(child)),
   );
 
   if (!enrollment) {

@@ -42,8 +42,6 @@ class PaymentMethodFilter(admin.SimpleListFilter):
     def lookups(self, request, model_admin):
         return (
             ('cash', _('💵 نقدًا')),
-            ('card', _('💳 بطاقة')),
-            ('bank_transfer', _('🏦 تحويل بنكي')),
             ('instapay', _('📱 إنستاباي')),
             ('vodafone_cash', _('📲 فودافون كاش')),
             ('other', _('📋 أخرى')),
@@ -409,8 +407,6 @@ class PaymentAdmin(ExcelExportMixin, admin.ModelAdmin):
         """Display payment method with icon."""
         method_config = {
             'cash': ('💵', '#27ae60', 'نقدًا'),
-            'card': ('💳', '#3498db', 'بطاقة'),
-            'bank_transfer': ('🏦', '#9b59b6', 'تحويل بنكي'),
             'instapay': ('📱', '#e74c3c', 'إنستاباي'),
             'vodafone_cash': ('📲', '#e74c3c', 'فودافون كاش'),
             'other': ('📋', '#95a5a6', 'أخرى'),

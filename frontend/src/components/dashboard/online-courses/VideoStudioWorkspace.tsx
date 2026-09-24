@@ -1,50 +1,63 @@
 "use client";
 
-import { useState } from "react";
-import { OnlineCourseDetail, VideoLectureItem } from "@/types/entities";
-import VideoPlayer from "./VideoPlayer";
-import VideoPlaylist from "./VideoPlaylist";
 import Link from "next/link";
+import { useState } from "react";
 import ArrowRight from "@/components/icons/ArrowRight";
+import { OnlineCourseDetail, VideoLectureItem } from "@/types/entities";
+import VideoPlayer, { VideoUnavailable } from "./VideoPlayer";
+import VideoPlaylist from "./VideoPlaylist";
 
 interface VideoStudioWorkspaceProps {
   course: OnlineCourseDetail;
 }
 
-export default function VideoStudioWorkspace({ course }: VideoStudioWorkspaceProps) {
+export default function VideoStudioWorkspace({
+  course,
+}: VideoStudioWorkspaceProps) {
+  const lectures = course.video_lectures ?? [];
   const [activeLecture, setActiveLecture] = useState<VideoLectureItem | null>(
-    course.video_lectures?.[0] || null
+    lectures[0] ?? null,
   );
 
   return (
-    <div className="min-h-screen bg-black -m-6 flex flex-col font-sans">
+    <div className="flex min-h-full flex-col bg-gray-900">
       {/* Header */}
-      <header className="flex items-center gap-4 p-4 border-b border-gray-800 bg-[#111]">
-        <Link 
-          href="/dashboard/courses" 
-          className="p-2 rounded-full hover:bg-[#222] transition-colors text-white"
+      <header className="bg-olive-900 flex items-center gap-4 border-b border-gray-800 p-4">
+        <Link
+          href="/dashboard/courses?type=online"
+          className="rounded-full p-2 text-white transition-colors hover:bg-gray-800"
+          aria-label="العودة إلى الدورات الإلكترونية"
         >
-          <ArrowRight className="w-5 h-5 rotate-180" />
+          <ArrowRight className="h-5 w-5 rotate-180" />
         </Link>
         <div>
-          <h1 className="text-xl font-bold text-white line-clamp-1">{course.name}</h1>
-          <p className="text-sm text-gray-400 mt-1">{course.instructor?.name || "بدون معلم"}</p>
+          <h1 className="line-clamp-1 text-xl font-bold text-white">
+            {course.name}
+          </h1>
+          <p className="mt-1 text-sm text-gray-400">
+            {course.instructor?.name || "بدون معلم"}
+          </p>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <main className="flex flex-1 flex-col overflow-hidden lg:flex-row">
         {/* Video Area */}
-        <div className="flex-1 flex flex-col min-w-0 bg-black relative">
+        <div className="relative flex min-w-0 flex-1 flex-col bg-black">
           {activeLecture ? (
-            <div className="flex-1 p-4 lg:p-6 flex flex-col justify-center">
-              <div className="max-w-[1200px] w-full mx-auto">
-                <VideoPlayer lecture={activeLecture} />
-                
+            <div className="flex flex-1 flex-col justify-center p-4 lg:p-6">
+              <div className="mx-auto w-full max-w-[1200px]">
+                <VideoPlayer
+                  lecture={activeLecture}
+                  fallback={<VideoUnavailable />}
+                />
+
                 <div className="mt-6 text-white">
-                  <h2 className="text-2xl font-bold mb-2">{activeLecture.title}</h2>
+                  <h2 className="mb-2 text-2xl font-bold">
+                    {activeLecture.title}
+                  </h2>
                   {activeLecture.description && (
-                    <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-line">
+                    <p className="text-sm leading-relaxed whitespace-pre-line text-gray-400">
                       {activeLecture.description}
                     </p>
                   )}
@@ -52,17 +65,17 @@ export default function VideoStudioWorkspace({ course }: VideoStudioWorkspacePro
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
+            <div className="flex flex-1 items-center justify-center text-gray-500">
               لا توجد محاضرات في هذه الدورة
             </div>
           )}
         </div>
 
         {/* Sidebar */}
-        <div className="w-full lg:w-[400px] flex-shrink-0 border-t lg:border-t-0 lg:border-s lg:border-gray-800 bg-[#0a0a0a] flex flex-col max-h-[500px] lg:max-h-none">
-          <VideoPlaylist 
-            lectures={course.video_lectures || []}
-            activeLecture={activeLecture!}
+        <div className="flex max-h-[500px] w-full shrink-0 flex-col border-t border-gray-800 bg-gray-900 lg:max-h-none lg:w-[400px] lg:border-s lg:border-t-0">
+          <VideoPlaylist
+            lectures={lectures}
+            activeLecture={activeLecture}
             onSelectLecture={setActiveLecture}
           />
         </div>

@@ -57,18 +57,18 @@ export default async function StudentCourseDetailPage({
       <div className="grid w-full max-w-full grid-cols-1 gap-4 sm:gap-6 md:gap-10">
         {/* Description Section */}
         <div className="shadow-soft flex w-full max-w-full flex-col gap-4 overflow-hidden rounded-2xl border border-white/60 bg-white/40 p-4 backdrop-blur-md sm:gap-6 sm:rounded-[2.5rem] sm:p-10">
-          <h2 className="flex items-center gap-2 text-xl font-bold text-olive-700 sm:gap-4 sm:text-4xl">
-            <Pencil className="h-5 w-5 text-olive-400 sm:h-6 sm:w-6" />
+          <h2 className="text-olive-700 flex items-center gap-2 text-xl font-bold sm:gap-4 sm:text-4xl">
+            <Pencil className="text-olive-400 h-5 w-5 sm:h-6 sm:w-6" />
             تفاصيل الدورة
           </h2>
-          <p className="break-words text-sm font-normal leading-relaxed whitespace-pre-wrap text-gray-600 sm:text-2xl">
+          <p className="text-sm leading-relaxed font-normal break-words whitespace-pre-wrap text-gray-600 sm:text-2xl">
             {course?.description || "لا يوجد وصف متاح لهذه الدورة حالياً."}
           </p>
         </div>
 
         {/* Course Lectures View Section */}
         <div className="shadow-soft flex w-full max-w-full transform-gpu flex-col gap-4 overflow-hidden rounded-2xl border border-white/60 bg-white/60 p-3 backdrop-blur-md sm:gap-6 sm:rounded-[2.5rem] sm:p-10">
-          <h2 className="mb-3 text-center text-xl font-bold text-olive-700 sm:mb-10 sm:text-4xl">
+          <h2 className="text-olive-700 mb-3 text-center text-xl font-bold sm:mb-10 sm:text-4xl">
             محاضرات الدورة
           </h2>
           <CourseLecturesView
@@ -80,7 +80,7 @@ export default async function StudentCourseDetailPage({
 
         {/* Ratings Section */}
         <div className="shadow-soft w-full max-w-full overflow-hidden rounded-2xl border border-white/60 bg-white/40 p-4 backdrop-blur-md sm:rounded-[3rem] sm:p-10">
-          <h2 className="mb-4 text-center text-xl font-bold text-olive-700 sm:mb-10 sm:text-4xl">
+          <h2 className="text-olive-700 mb-4 text-center text-xl font-bold sm:mb-10 sm:text-4xl">
             تقييماتك وآراء الطلاب
           </h2>
           <RatingsSection type="course" id={courseId} showForm={true} />

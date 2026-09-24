@@ -10,6 +10,7 @@ from ..models.enrollment_request import (
     PaymentMethod,
 )
 from ..models.enrollment import Enrollment, EnrollmentStatus
+from .course_info import CourseInfoSerializerMixin
 
 
 class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
@@ -113,7 +114,7 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
             student = getattr(user, "student_profile", None)
             if not student:
                 raise serializers.ValidationError("لم يتم العثور على ملف الطالب.")
-            if not target_course.is_participant_eligible(student):
+            if course and (not target_course.is_participant_eligible(student)):
                 raise serializers.ValidationError(
                     "أنت غير مؤهل لهذه الدورة (تحقق من متطلبات العمر)."
                 )
@@ -196,7 +197,7 @@ class EnrollmentRequestCreateSerializer(serializers.ModelSerializer):
         return EnrollmentRequest.objects.create(**validated_data)
 
 
-class EnrollmentRequestListSerializer(serializers.ModelSerializer):
+class EnrollmentRequestListSerializer(CourseInfoSerializerMixin, serializers.ModelSerializer):
     """Serializer for listing EnrollmentRequests with minimal course info"""
 
     course_name = serializers.SerializerMethodField()
@@ -225,14 +226,6 @@ class EnrollmentRequestListSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_course_name(self, obj):
-        target = obj.course
-        return target.name if target else None
-
-    def get_course_price(self, obj):
-        target = obj.course
-        return target.price if (target and target.price is not None) else None
-
     def get_participant_name(self, obj):
         """Get the name of the participant (child or student)"""
         if obj.child:
@@ -242,7 +235,7 @@ class EnrollmentRequestListSerializer(serializers.ModelSerializer):
         return None
 
 
-class EnrollmentRequestDetailSerializer(serializers.ModelSerializer):
+class EnrollmentRequestDetailSerializer(CourseInfoSerializerMixin, serializers.ModelSerializer):
     """Serializer for detailed view of EnrollmentRequest"""
 
     course_name = serializers.SerializerMethodField()
@@ -287,30 +280,6 @@ class EnrollmentRequestDetailSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_course_name(self, obj):
-        target = obj.course
-        return target.name if target else None
-
-    def get_course_description(self, obj):
-        target = obj.course
-        return target.description if target else None
-
-    def get_course_price(self, obj):
-        target = obj.course
-        return target.price if (target and target.price is not None) else None
-
-    def get_course_start_date(self, obj):
-        if obj.course:
-            return obj.course.start_date
-        return None
-
-    def get_course_instructor(self, obj):
-        """Get the instructor name for the course"""
-        target = obj.course
-        if target and target.instructor and target.instructor.user:
-            return target.instructor.user.get_full_name()
-        return None
-
     def get_participant_name(self, obj):
         """Get the name of the participant"""
         if obj.child:
@@ -337,7 +306,7 @@ class EnrollmentRequestDetailSerializer(serializers.ModelSerializer):
 # ============== Admin Serializers ==============
 
 
-class AdminEnrollmentRequestListSerializer(serializers.ModelSerializer):
+class AdminEnrollmentRequestListSerializer(CourseInfoSerializerMixin, serializers.ModelSerializer):
     """Serializer for admin listing of EnrollmentRequests with full info"""
 
     course_name = serializers.SerializerMethodField()
@@ -378,15 +347,8 @@ class AdminEnrollmentRequestListSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_course_name(self, obj):
-        target = obj.course
-        return target.name if target else None
-
-    def get_course_price(self, obj):
-        target = obj.course
-        return target.price if (target and target.price is not None) else None
-
     def get_season_name(self, obj):
+        """Season only exists for physical courses."""
         if obj.course and obj.course.season:
             return obj.course.season.name
         return None
@@ -432,7 +394,7 @@ class AdminEnrollmentRequestUpdateSerializer(serializers.ModelSerializer):
         if value is not None:
             if value < 0:
                 raise serializers.ValidationError("السعر يجب أن يكون قيمة موجبة.")
-            target = self.instance.course if self.instance else None
+            target = self.instance.course_instance if self.instance else None
             if target and target.price is not None and value > target.price:
                 raise serializers.ValidationError(
                     "السعر لا يمكن أن يكون أكبر من سعر الدورة."

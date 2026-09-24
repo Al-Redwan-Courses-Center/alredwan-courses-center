@@ -1,6 +1,8 @@
-import uuid
-from decimal import Decimal
+from datetime import timedelta
+
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -13,10 +15,10 @@ from courses_online.models import (
 from enrollments_payments.models import Enrollment, EnrollmentStatus
 
 
-class Milestone5PaywallAndPerformanceTests(TestCase):
+class PaywallAndPerformanceTests(TestCase):
     """
-    Comprehensive Milestone 5 verification for online course paywall security,
-    prefetching performance, video watch progress high-water mark, and ratings pagination.
+    Online course paywall security, access validity, prefetching performance
+    and video watch progress high-water mark.
     """
 
     def setUp(self):
@@ -266,3 +268,129 @@ class Milestone5PaywallAndPerformanceTests(TestCase):
         self.assertEqual(res5.status_code, status.HTTP_200_OK)
         self.assertTrue(res5.json()['is_completed'])
         self.assertEqual(res5.json()['watch_count'], 2)
+
+    def _progress_url(self, lecture):
+        return f'/api/online-courses/courses/{self.course.id}/lectures/{lecture.id}/progress/'
+
+    def test_expired_enrollment_is_paywalled(self):
+        """An active enrollment older than access_validity_days no longer unlocks content."""
+        self.course.access_validity_days = 30
+        self.course.save(update_fields=['access_validity_days'])
+        Enrollment.objects.create(
+            online_course=self.course,
+            student=self.student,
+            status=EnrollmentStatus.ACTIVE,
+            enrolled_at=timezone.now() - timedelta(days=31),
+        )
+        self.client.force_authenticate(user=self.student_user)
+
+        response = self.client.get(f'/api/online-courses/courses/{self.course.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for lec in response.json()['video_lectures']:
+            self.assertIsNone(lec['video_url'])
+            self.assertEqual(lec['materials'], [])
+
+        # Progress tracking is gated by the same rule.
+        res = self.client.post(self._progress_url(self.lecture_1),
+                               {'watched_seconds': 10, 'total_seconds': 1800, 'last_position_seconds': 10})
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Ratings too.
+        res = self.client.post(f'/api/online-courses/courses/{self.course.id}/rate/',
+                               {'rating': 8, 'feedback': 'late'})
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_enrollment_within_validity_window_has_access(self):
+        """An enrollment younger than access_validity_days still unlocks content."""
+        self.course.access_validity_days = 30
+        self.course.save(update_fields=['access_validity_days'])
+        Enrollment.objects.create(
+            online_course=self.course,
+            student=self.student,
+            status=EnrollmentStatus.ACTIVE,
+            enrolled_at=timezone.now() - timedelta(days=29),
+        )
+        self.client.force_authenticate(user=self.student_user)
+        response = self.client.get(f'/api/online-courses/courses/{self.course.id}/')
+        self.assertEqual(response.json()['video_lectures'][0]['video_url'],
+                         'https://cdn.example.com/videos/datascience-lec1.mp4')
+
+    def test_zero_validity_means_unlimited_access(self):
+        """access_validity_days=0 disables expiry entirely."""
+        self.course.access_validity_days = 0
+        self.course.save(update_fields=['access_validity_days'])
+        Enrollment.objects.create(
+            online_course=self.course,
+            student=self.student,
+            status=EnrollmentStatus.ACTIVE,
+            enrolled_at=timezone.now() - timedelta(days=5 * 365),
+        )
+        self.client.force_authenticate(user=self.student_user)
+        response = self.client.get(f'/api/online-courses/courses/{self.course.id}/')
+        self.assertEqual(response.json()['video_lectures'][0]['video_url'],
+                         'https://cdn.example.com/videos/datascience-lec1.mp4')
+
+    def _add_lectures(self, count, start_order, student=None):
+        for i in range(count):
+            lecture = VideoLecture.objects.create(
+                course=self.course,
+                title=f'Extra lecture {start_order + i}',
+                order=start_order + i,
+                video_url=f'https://cdn.example.com/videos/extra-{start_order + i}.mp4',
+                duration_seconds=600,
+            )
+            OnlineLectureMaterial.objects.create(
+                lecture=lecture, title=f'Notes {start_order + i}',
+                external_url=f'https://cdn.example.com/files/extra-{start_order + i}.pdf', order=1,
+            )
+            if student is not None:
+                VideoWatchProgress.objects.create(
+                    lecture=lecture, student=student, watched_seconds=60, total_seconds=600)
+
+    def _count_detail_queries(self, url):
+        # force_authenticate reuses one user instance across requests, so the
+        # first request also warms its profile caches. Warm up uncounted so both
+        # measurements start from the same state.
+        self.client.get(url)
+        with CaptureQueriesContext(connection) as ctx:
+            response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # The learner has access, so the first lecture is open; later lectures
+        # are sequentially locked until the earlier ones are completed and the
+        # lock state must come from the prefetched progress rows, not queries.
+        lectures = response.json()['video_lectures']
+        self.assertFalse(lectures[0]['is_locked'])
+        self.assertIsNotNone(lectures[0]['video_url'])
+        for lec in lectures[1:]:
+            self.assertTrue(lec['is_locked'])
+            self.assertIsNone(lec['video_url'])
+            self.assertEqual(lec['materials'], [])
+        return len(ctx.captured_queries)
+
+    def test_detail_query_count_is_constant_in_lecture_count_for_student(self):
+        """Paywall access is resolved once per course, not once per lecture."""
+        Enrollment.objects.create(
+            online_course=self.course, student=self.student, status=EnrollmentStatus.ACTIVE)
+        OnlineLectureMaterial.objects.create(
+            lecture=self.lecture_2, title='Lecture 02 Notes',
+            external_url='https://cdn.example.com/files/datascience-lec2.pdf', order=1)
+        self.client.force_authenticate(user=self.student_user)
+        url = f'/api/online-courses/courses/{self.course.id}/'
+
+        baseline = self._count_detail_queries(url)
+        self._add_lectures(8, start_order=3, student=self.student)
+        self.assertEqual(self._count_detail_queries(url), baseline)
+
+    def test_detail_query_count_is_constant_in_lecture_count_for_parent_child(self):
+        """Same guarantee for a parent browsing on behalf of a child (?child=)."""
+        Enrollment.objects.create(
+            online_course=self.course, child=self.child, status=EnrollmentStatus.ACTIVE)
+        OnlineLectureMaterial.objects.create(
+            lecture=self.lecture_2, title='Lecture 02 Notes',
+            external_url='https://cdn.example.com/files/datascience-lec2.pdf', order=1)
+        self.client.force_authenticate(user=self.secondary_parent_user)
+        url = f'/api/online-courses/courses/{self.course.id}/?child={self.child.id}'
+
+        baseline = self._count_detail_queries(url)
+        self._add_lectures(8, start_order=3)
+        self.assertEqual(self._count_detail_queries(url), baseline)

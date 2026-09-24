@@ -12,8 +12,8 @@ import {
   publicApiClient,
 } from "@/lib/api";
 import type { PaginatedResponse } from "@/types/config";
+import { getOnlineCourseProgress } from "@/lib/online-courses";
 import type {
-  CourseDetail,
   EnrollmentListItem,
   EnrollmentRequestListItem,
   StudentCourseItem,
@@ -220,51 +220,51 @@ export async function getChildEnrollmentRequests(
 export async function getChildCourses(
   childId: string,
 ): Promise<StudentCourseItem[]> {
-  try {
-    const myEnrollments = await getChildEnrollments(childId);
-    console.log(myEnrollments);
+  return apiRequest(
+    "Failed to load child courses:",
+    async () => {
+      const myEnrollments = await getChildEnrollments(childId);
 
-    const myCoursesInitial = await Promise.all(
-      myEnrollments.map(async (e) => {
-        if (e.course) {
-          const c = await getCourseById(e.course);
-          return c ? { ...c, type: "physical" as const } : null;
-        } else if (e.online_course) {
-          const c = await getOnlineCourseById(String(e.online_course), childId);
-          return c ? { ...c, type: "online" as const } : null;
-        }
-        return null;
-      })
-    );
-    const myEnrollmentsProgresses = await Promise.all(
-      myEnrollments.map((e) => getEnrollmentProgressById(e.id)),
-    );
+      const myCourses = await Promise.all(
+        myEnrollments.map(async (e): Promise<StudentCourseItem | null> => {
+          if (e.course) {
+            const [course, progress] = await Promise.all([
+              getCourseById(e.course),
+              getEnrollmentProgressById(e.id),
+            ]);
+            if (!course) return null;
 
-    const myCourses = myCoursesInitial
-      .map((c, i) => {
-        if (!c) return null;
-        return {
-          ...c,
-          course_progress: myEnrollmentsProgresses[i]?.percentage ?? 0,
-        } as StudentCourseItem;
-      })
-      .filter(
-        (c): c is StudentCourseItem => c !== null,
+            return {
+              ...course,
+              type: "physical" as const,
+              course_progress: progress?.percentage ?? 0,
+            };
+          }
+
+          if (e.online_course) {
+            // Online progress comes from the child's video watch records,
+            // which the course detail already carries when `child` is given.
+            const course = await getOnlineCourseById(
+              String(e.online_course),
+              childId,
+            );
+            if (!course) return null;
+
+            return {
+              ...course,
+              type: "online" as const,
+              course_progress: getOnlineCourseProgress(course.video_lectures),
+            };
+          }
+
+          return null;
+        }),
       );
 
-    return myCourses;
-  } catch (error: unknown) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "digest" in error &&
-      error.digest === "DYNAMIC_SERVER_USAGE"
-    ) {
-      throw error;
-    }
-    console.error("Failed to load child courses:", error);
-    return [];
-  }
+      return myCourses.filter((c): c is StudentCourseItem => c !== null);
+    },
+    [],
+  );
 }
 
 // export async function getInstructorId(phoneNum: string) {

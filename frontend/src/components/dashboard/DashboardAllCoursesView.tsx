@@ -30,7 +30,7 @@ export default function DashboardAllCoursesView({
   totalPages?: number;
   currentPage?: number;
   linkTo?: "dashboard" | "landing";
-  showEnroll: boolean;
+  showEnroll?: boolean;
 }) {
   const courses = buildAllCoursesView(inputCourses);
   const filterConfig = getAllCoursesFilterConfig(courses);
