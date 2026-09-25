@@ -1,5 +1,8 @@
-import type { ColumnDef } from "@tanstack/react-table";
-import type { ColumnFiltersState, SortingState } from "@tanstack/react-table";
+import type {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+} from "@tanstack/react-table";
 import type { ReactNode } from "react";
 
 /** A single search input config bound to a column key. */

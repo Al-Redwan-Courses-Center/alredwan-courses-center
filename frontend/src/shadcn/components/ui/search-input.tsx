@@ -1,8 +1,7 @@
-import * as React from "react";
 import { Search } from "lucide-react";
-
+import * as React from "react";
+import { cn } from "../../../lib/utils";
 import { Input } from "./input";
-import { cn } from "@/lib/utils"; // تأكد من مسار الـ utils
 
 interface SearchInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   containerClassName?: string;
@@ -21,7 +20,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           containerClassName,
         )}
       >
-        <Search className="h-5 w-5 shrink-0 text-olive-300" />
+        <Search className="text-olive-300 h-5 w-5 shrink-0" />
 
         <Input
           id={id}

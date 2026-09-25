@@ -1,4 +1,4 @@
-import { CourseListItem } from "./courses";
+import type { CourseListItem } from "./courses";
 
 export interface LectureCourseLite {
   id: number;

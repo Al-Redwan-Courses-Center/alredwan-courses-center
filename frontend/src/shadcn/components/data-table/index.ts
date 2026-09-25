@@ -1,16 +1,16 @@
-export { DataTable } from "./data-table";
 export { DataCards } from "./data-cards";
-export { DataTablePagination } from "./data-table-pagination";
+export { DataTable } from "./data-table";
 export { DataTableMobileView } from "./data-table-mobile";
+export { DataTablePagination } from "./data-table-pagination";
 
 export type {
-  DataTableProps,
-  DataTableMobileConfig,
   DataCardsProps,
   DataTableFilterConfig,
   DataTableFilterOption,
+  DataTableMobileConfig,
   DataTableMobileContentItem,
   DataTablePaginationOptions,
+  DataTableProps,
   DataTableRemoteState,
   DataTableSearchConfig,
 } from "./types";

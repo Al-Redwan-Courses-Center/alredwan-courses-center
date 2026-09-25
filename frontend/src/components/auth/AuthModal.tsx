@@ -1,5 +1,9 @@
 "use client";
 
+import Image from "next/image";
+import { type ReactNode, Suspense, useState } from "react";
+import { useMediaQuery } from "usehooks-ts";
+import Logo from "@/assets/logo.svg";
 import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
 import Button from "@/components/ui/Button";
@@ -11,11 +15,7 @@ import {
   ModalTrigger,
 } from "@/components/ui/Modal";
 import { useMutateSearchParams } from "@/hooks/useMutateSearchParams";
-import Image from "next/image";
-import { ReactNode, Suspense, useState } from "react";
-import Logo from "@/assets/logo.svg";
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "usehooks-ts";
 
 type AuthMode = "login" | "signup";
 
@@ -26,8 +26,12 @@ function PreAuthModal({
   trigger?: ReactNode;
   defaultMode?: AuthMode;
 }) {
-  const { searchParams, mutateSearchParams } = useMutateSearchParams();
-  const isTablet = useMediaQuery("(max-width: 900px)");
+  const { searchParams } = useMutateSearchParams();
+  // Render the desktop trigger on the server and the first client pass so the
+  // markup matches during hydration; the tablet trigger swaps in after mount.
+  const isTablet = useMediaQuery("(max-width: 900px)", {
+    initializeWithValue: false,
+  });
 
   const [callbackUrl] = useState(searchParams.get("callbackUrl"));
   const [isOpen, setIsOpen] = useState(searchParams.get("login") === "true");

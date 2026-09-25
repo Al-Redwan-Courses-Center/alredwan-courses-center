@@ -152,13 +152,16 @@ class InstructorAttendanceSerializer(serializers.ModelSerializer):
     attendance_type_display = serializers.CharField(
         source="get_attendance_type_display", read_only=True
     )
-    rated_by_name = serializers.CharField(
-        source="rated_by.get_full_name", read_only=True, allow_null=True
-    )
+    rated_by_name = serializers.SerializerMethodField()
     lecture_title = serializers.CharField(
         source="lecture.title", read_only=True, allow_null=True
     )
     schedule_info = serializers.SerializerMethodField()
+
+    def get_rated_by_name(self, obj):
+        if obj.rated_by:
+            return obj.rated_by.get_full_name()
+        return None
 
     class Meta:
         model = InstructorAttendance
@@ -252,6 +255,13 @@ class InstructorAttendanceListSerializer(serializers.ModelSerializer):
 
         return None
 
+    rated_by_name = serializers.SerializerMethodField()
+
+    def get_rated_by_name(self, obj: InstructorAttendance):
+        if obj.rated_by:
+            return obj.rated_by.get_full_name()
+        return None
+
     class Meta:
         model = InstructorAttendance
         fields = [
@@ -269,6 +279,10 @@ class InstructorAttendanceListSerializer(serializers.ModelSerializer):
             "attendance_type",
             "attendance_type_display",
             "rating",
+            "rated_by",
+            "rated_by_name",
+            "rated_at",
+            "notes",
         ]
 
 

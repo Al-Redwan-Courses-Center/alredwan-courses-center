@@ -1,5 +1,5 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { ReactNode } from "react";
 
 type HeadingLevel = "h2" | "h3" | "h4";
 
@@ -30,7 +30,10 @@ export default function EmptyState({
       )}
     >
       <Heading
-        className={cn("text-4xl max-[1000px]:text-3xl font-bold text-gray-600", titleClassName)}
+        className={cn(
+          "text-4xl max-[1000px]:text-3xl font-bold text-gray-600",
+          titleClassName,
+        )}
       >
         {title}
       </Heading>

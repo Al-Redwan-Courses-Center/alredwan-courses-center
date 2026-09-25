@@ -1,9 +1,9 @@
 "use client";
 
-import EmptyState from "@/components/ui/EmptyState";
+import { type ReactNode, useContext } from "react";
 import { DataViewContext } from "@/components/ui/data-view/DataView";
+import EmptyState from "@/components/ui/EmptyState";
 import { cn } from "@/lib/utils";
-import { ReactNode, useContext } from "react";
 
 export default function DataViewBodyLegacy<T>({
   render,
@@ -27,7 +27,7 @@ export default function DataViewBodyLegacy<T>({
     return (
       <div
         className={cn(
-          "grid grid-cols-4 laptop-sm:grid-cols-3 tablet:grid-cols-2 mobile-lg:grid-cols-1 gap-20 tablet:gap-10 p-16 mobile-lg:p-8 tablet:pe-8",
+          "laptop-sm:grid-cols-3 tablet:grid-cols-2 grid w-full grid-cols-4 gap-4 p-4 max-sm:grid max-sm:grid-cols-1 sm:gap-6 sm:p-8 lg:gap-8",
           className,
         )}
       >
@@ -36,7 +36,13 @@ export default function DataViewBodyLegacy<T>({
     );
 
   return (
-    <div className={cn("flex flex-col gap-6", className)}>
+    <div
+      className={cn(
+        // Rows stack into cards on phones, so the body no longer needs to grow past the viewport.
+        "tablet-sm:min-w-0 flex w-full min-w-max flex-col gap-6",
+        className,
+      )}
+    >
       {data.map(render[layout])}
     </div>
   );

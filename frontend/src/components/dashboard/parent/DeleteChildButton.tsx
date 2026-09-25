@@ -1,17 +1,17 @@
 "use client";
 
-import { deleteChild } from "@/actions/user";
 import { Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { deleteChild } from "@/actions/user";
+import Button from "@/components/ui/Button";
 import {
   Modal,
   ModalContent,
   ModalTitle,
   ModalTrigger,
 } from "@/components/ui/Modal";
-import Button from "@/components/ui/Button";
 
 export default function DeleteChildButton({
   childId,
@@ -51,15 +51,21 @@ export default function DeleteChildButton({
       </ModalTrigger>
 
       <ModalContent className="max-w-md [&>div,&>form]:px-4 sm:[&>div,&>form]:px-20 [&>div,&>form]:last:p-[1.5rem_1.5rem_2rem_1.5rem] sm:[&>div,&>form]:last:p-[2rem_5rem_5rem_5rem]">
-        <ModalTitle className="text-red-800 text-center font-bold">تأكيد حذف الطفل</ModalTitle>
-        
+        <ModalTitle className="text-red-800 text-center font-bold">
+          تأكيد حذف الطفل
+        </ModalTitle>
+
         <div className="flex flex-col gap-6 text-center py-6 px-2 sm:px-10">
           <p className="text-2xl text-gray-700 leading-relaxed">
-            هل أنت متأكد من رغبتك في حذف <strong className="text-gray-900">{childName}</strong>؟
+            هل أنت متأكد من رغبتك في حذف{" "}
+            <strong className="text-gray-900">{childName}</strong>؟
             <br />
-            <span className="text-red-600 text-xl font-bold mt-2 block">هذا الإجراء لا يمكن التراجع عنه وسيتم مسح كافة البيانات المتعلقة بالطفل.</span>
+            <span className="text-red-600 text-xl font-bold mt-2 block">
+              هذا الإجراء لا يمكن التراجع عنه وسيتم مسح كافة البيانات المتعلقة
+              بالطفل.
+            </span>
           </p>
-          
+
           <div className="flex gap-4 justify-center mt-6">
             <Button
               onClick={() => setIsOpen(false)}

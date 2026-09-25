@@ -1,6 +1,6 @@
+import { NextResponse, type ProxyConfig } from "next/server";
 import { withAuth } from "next-auth/middleware";
-import { NextResponse, ProxyConfig } from "next/server";
-import { JwtToken } from "@/types/auth";
+import type { JwtToken } from "@/types/auth";
 
 export default withAuth(
   function middleware(req) {
@@ -8,12 +8,15 @@ export default withAuth(
     const pathname = req.nextUrl.pathname;
     const userRole = token?.role;
 
-    // console.log(pathname);
-    // console.log(userRole);
-
     if (pathname === "/dashboard") {
       switch (userRole) {
         case "admin": {
+          return NextResponse.redirect(
+            new URL("/dashboard/todays-staff-attendances", req.url),
+          );
+        }
+
+        case "supervisor": {
           return NextResponse.redirect(
             new URL("/dashboard/todays-staff-attendances", req.url),
           );

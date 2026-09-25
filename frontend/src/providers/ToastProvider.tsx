@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
 import { Toaster } from "react-hot-toast";
+import { cn } from "@/lib/utils";
 
 export default function ToastProvider() {
   return (

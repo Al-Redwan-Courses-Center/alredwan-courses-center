@@ -1,13 +1,13 @@
-import { protect } from "@/actions/auth";
+import { notFound } from "next/navigation";
+import { getUser, protect } from "@/actions/auth";
 import {
   getChildById,
   getChildCourses,
-  getChildEnrollments,
   getChildEnrollmentRequests,
+  getChildEnrollments,
 } from "@/actions/user";
-import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
 import StudentOverviewPage from "@/components/dashboard/student/StudentOverviewPage";
-import { notFound } from "next/navigation";
+import { ENROLLMENT_REQUEST_STATUS_WEIGHTS } from "@/lib/config";
 
 export default async function Page({
   params,
@@ -17,7 +17,10 @@ export default async function Page({
   await protect(["parent"]);
   const { childId } = await params;
 
-  const child = await getChildById(childId);
+  const [parentUser, child] = await Promise.all([
+    getUser(),
+    getChildById(childId),
+  ]);
   if (!child) {
     return notFound();
   }
@@ -38,8 +41,12 @@ export default async function Page({
       ],
   );
 
-  const activeCoursesCount = enrollments.filter((e) => e.status === "active").length;
-  const pendingRequestsCount = enrollmentRequests.filter((e) => e.status === "pending").length;
+  const activeCoursesCount = enrollments.filter(
+    (e) => e.status === "active",
+  ).length;
+  const pendingRequestsCount = enrollmentRequests.filter(
+    (e) => e.status === "pending",
+  ).length;
   const attendanceRate = enrollments.length
     ? Math.round(
         enrollments.reduce(
@@ -48,15 +55,16 @@ export default async function Page({
         ) / enrollments.length,
       )
     : 0;
-
   return (
     <StudentOverviewPage
       name={child.first_name}
+      parentName={parentUser.first_name}
       activeCourses={activeCourses}
       enrollmentRequests={sortedRequests}
       activeCoursesCount={activeCoursesCount}
       pendingRequestsCount={pendingRequestsCount}
       attendanceRate={attendanceRate}
+      role={"parent"}
     />
   );
 }

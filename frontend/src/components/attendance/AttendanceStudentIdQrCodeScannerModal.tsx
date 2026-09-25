@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import QrCodeScanner from "@/components/attendance/QrCodeScanner";
 import QrCodeIcon from "@/components/icons/QrCodeIcon";
 import {
@@ -9,7 +10,6 @@ import {
   ModalTrigger,
 } from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
 export default function AttendanceStudentIdQrCodeScannerModal({
   disabled = false,
@@ -42,7 +42,6 @@ export default function AttendanceStudentIdQrCodeScannerModal({
           autoStart
           isActive={isModalOpen}
           onScan={(text) => {
-            console.log(text);
             onScan?.(text);
           }}
         />

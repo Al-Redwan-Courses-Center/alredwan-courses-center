@@ -1,21 +1,31 @@
 "use server";
 
-import { getServerJwtToken } from "@/actions/auth";
 import axios, { type AxiosInstance } from "axios";
+import { getServerJwtToken } from "@/actions/auth";
 
-const baseConfig = {
-  baseURL:
+const getApiBaseUrl = () => {
+  const url =
     process.env.REST_API_URL ||
     // NEXT_PUBLIC_API_URL ends with "/api" but action paths already include "/api/…",
     // so strip the trailing /api to avoid a double /api/api/ prefix.
-    process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, ""),
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "");
+  if (!url) {
+    return "http://localhost:8000";
+  }
+  return url;
 };
 
-export const publicApiClient: AxiosInstance = axios.create(baseConfig);
+export const publicApiClient: AxiosInstance = axios.create();
 
-const authApiClient: AxiosInstance = axios.create(baseConfig);
+publicApiClient.interceptors.request.use((config) => {
+  config.baseURL = getApiBaseUrl();
+  return config;
+});
+
+const authApiClient: AxiosInstance = axios.create();
 
 authApiClient.interceptors.request.use(async (config) => {
+  config.baseURL = getApiBaseUrl();
   const token = await getServerJwtToken();
   const jwtAccessToken = token?.jwt_access_token;
 

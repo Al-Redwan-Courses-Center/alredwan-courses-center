@@ -1,55 +1,107 @@
+import Image from "next/image";
+import { getServerSession } from "next-auth";
 import { authConfig } from "@/app/api/auth/[...nextauth]/route";
 import HeroBG from "@/assets/hero-bg.svg";
+import SignupModal from "@/components/auth/SignupModal";
 import SectionDivider from "@/components/landing-page/SectionDivider";
 import Button from "@/components/ui/Button";
-import { getServerSession } from "next-auth";
-import Image from "next/image";
-import SignupModal from "@/components/auth/SignupModal";
+
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import { Sparkles, MonitorPlay, ArrowLeft } from "lucide-react";
 
 export default async function HeroSection() {
   const session = await getServerSession(authConfig);
 
   return (
-    <section className="relative flex min-h-[80dvh] tablet:min-h-[60dvh] items-center justify-center bg-[linear-gradient(6deg,#D2DBC8_3.29%,#557767_188.07%)] overflow-hidden pt-20">
+    <section className="tablet:min-h-[60dvh] relative flex min-h-[80dvh] items-center justify-center overflow-hidden bg-[linear-gradient(6deg,#D2DBC8_3.29%,#557767_188.07%)] pt-20">
       <Image
         src={HeroBG}
         alt="Hero Background"
         priority
-        className="absolute left-0 bottom-0 max-w-1/2 opacity-60 object-cover tablet:right-0 tablet:left-auto tablet:max-w-4/5 tablet:opacity-100 scale-x-[-1] tablet:scale-x-100"
+        className="tablet:right-0 tablet:left-auto tablet:max-w-4/5 tablet:opacity-100 tablet:scale-x-100 absolute bottom-0 left-0 max-w-1/2 scale-x-[-1] object-cover opacity-60"
         draggable="false"
       />
 
-      <div className="relative z-10 w-full max-w-260 mr-12 lg:mr-32 xl:mr-64 ml-auto flex flex-col items-start text-right px-6 tablet:mx-auto tablet:items-center tablet:text-center">
-        <ScrollReveal direction="up" delay={0.1} className="w-full flex flex-col items-start tablet:items-center">
-          <h1 className="font-medad text-shadow-primary text-[8rem] md:text-[4.8rem] font-black text-gray-100 mb-4 leading-tight">
+      {/* New Online Courses Floating Badge (Desktop/Tablet Only) */}
+      <div className="tablet:hidden absolute top-1/2 left-0 z-20 flex -translate-y-1/2 flex-col items-center">
+        <ScrollReveal direction="left" delay={0.6}>
+          <a
+            href="#courses"
+            className="group relative flex flex-col items-center rounded-[2.5rem] border border-white/20 bg-white/10 p-12 shadow-[0_20px_60px_rgba(0,0,0,0.4)] backdrop-blur-md transition-all duration-500 hover:-translate-y-4 hover:scale-110 hover:bg-white/20"
+          >
+            {/* "New" Tag */}
+            <div className="-top-6 absolute -right-6 flex animate-bounce items-center gap-2 rounded-full bg-yellow-400 px-6 py-2.5 text-xl font-bold text-yellow-900 shadow-xl z-30">
+              <Sparkles size={24} />
+              <span>إضافة جديدة</span>
+            </div>
+
+            {/* Icon */}
+            <div className="group-hover:bg-beige-500/90 mb-6 rounded-full bg-white/20 p-8 shadow-inner transition-colors duration-500">
+              <MonitorPlay size={72} className="text-white" strokeWidth={1.5} />
+            </div>
+
+            {/* Text */}
+            <h3 className="font-medad mb-3 text-5xl font-black tracking-wide text-white text-shadow-sm">
+              الدورات الإلكترونية
+            </h3>
+            <p className="mb-8 max-w-[280px] text-center text-2xl font-medium text-gray-100">
+              تعلم عن بعد وفي أي وقت بكل سهولة
+            </p>
+
+            {/* Call to Action */}
+            <div className="text-beige-300 flex items-center gap-3 text-3xl font-bold transition-colors group-hover:text-white">
+              <span>اكتشف الآن</span>
+              <ArrowLeft
+                size={28}
+                className="transition-transform duration-300 group-hover:-translate-x-4"
+              />
+            </div>
+          </a>
+        </ScrollReveal>
+      </div>
+
+      <div className="tablet:mx-auto tablet:items-center tablet:text-center relative z-10 mr-12 ml-auto flex w-full max-w-260 flex-col items-start px-6 text-right lg:mr-32 xl:mr-64">
+        <ScrollReveal
+          direction="up"
+          delay={0.1}
+          className="tablet:items-center flex w-full flex-col items-start"
+        >
+          <h1 className="font-medad text-shadow-primary mb-4 text-[8rem] leading-tight font-black text-gray-100 md:text-[4.8rem]">
             واحة الرضوان التعليمية
           </h1>
         </ScrollReveal>
-        <ScrollReveal direction="up" delay={0.2} className="w-full flex flex-col items-start tablet:items-center">
-          <p className="text-olive-900 text-shadow-soft text-[3rem] md:text-[2.2rem] lg:text-[2.6rem] font-medium mb-12 tablet:mb-16">
+        <ScrollReveal
+          direction="up"
+          delay={0.2}
+          className="tablet:items-center flex w-full flex-col items-start"
+        >
+          <p className="text-shadow-soft tablet:mb-16 mb-12 text-[3rem] font-medium text-olive-900 md:text-[2.2rem] lg:text-[2.6rem]">
             علمٌ يُزهر، وإيمانٌ يُثمر
           </p>
         </ScrollReveal>
 
-        <ScrollReveal direction="up" delay={0.3} className="w-full flex flex-col items-start tablet:items-center">
+        <ScrollReveal
+          direction="up"
+          delay={0.3}
+          className="tablet:items-center flex w-full flex-col items-start"
+        >
           <div className="flex gap-4 md:gap-6">
             <Button
               variant="primary"
               size="medium"
-              href="/#courses"
-              className="w-full sm:w-auto text-[1.6rem] md:text-[1.8rem] font-semibold py-4 px-10 md:py-5 md:px-12 flex items-center justify-center text-nowrap"
+              href="/courses"
+              className="flex w-full items-center justify-center px-10 py-4 text-[1.6rem] font-semibold text-nowrap sm:w-auto md:px-12 md:py-5 md:text-[1.8rem]"
             >
               تصفح الدورات
             </Button>
 
-            {!!session?.user ? (
+            {session?.user ? (
               <Button
                 variant="secondary"
                 size="medium"
                 href="/dashboard"
                 revert
-                className="w-full sm:w-auto text-[1.6rem] md:text-[1.8rem] font-semibold py-4 px-10 md:py-5 md:px-12 flex items-center justify-center text-nowrap"
+                className="flex w-full items-center justify-center px-10 py-4 text-[1.6rem] font-semibold text-nowrap sm:w-auto md:px-12 md:py-5 md:text-[1.8rem]"
               >
                 لوحة التحكم
               </Button>
@@ -60,7 +112,7 @@ export default async function HeroSection() {
                     variant="secondary"
                     size="medium"
                     revert
-                    className="w-full sm:w-auto text-[1.6rem] md:text-[1.8rem] font-semibold py-4 px-10 md:py-5 md:px-12 flex items-center justify-center text-nowrap"
+                    className="flex w-full items-center justify-center px-10 py-4 text-[1.6rem] font-semibold text-nowrap sm:w-auto md:px-12 md:py-5 md:text-[1.8rem]"
                   >
                     سجل الآن
                   </Button>

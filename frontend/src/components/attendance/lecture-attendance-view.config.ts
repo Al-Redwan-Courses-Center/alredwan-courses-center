@@ -1,25 +1,8 @@
-import {
+import type {
   DataViewFilterConfig,
   DataViewSortConfig,
-  StatusMap,
 } from "@/types/components";
-import { Child, LectureAttendanceDetail, Student } from "@/types/entities";
-import { parse } from "date-fns";
-
-const headers = [
-  "م",
-  "المحاضرة",
-  "التاريخ",
-  "البداية",
-  "النهاية",
-  "الحالة",
-  "",
-];
-
-const statusWeights = {
-  submitted: 1,
-  pending: 0,
-};
+import type { LectureAttendanceDetail } from "@/types/entities";
 
 const sortConfig: DataViewSortConfig<LectureAttendanceDetail> = {
   // lecture: {

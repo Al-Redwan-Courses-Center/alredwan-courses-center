@@ -1,5 +1,6 @@
 "use server";
 
+import { isAxiosError } from "axios";
 import {
   apiRequest,
   getApiErrorDetail,
@@ -7,9 +8,8 @@ import {
   parseApiFieldErrors,
   unwrapPaginated,
 } from "@/lib/api";
-import { isAxiosError } from "axios";
-import { PaginatedResponse } from "@/types/config";
-import {
+import type { PaginatedResponse } from "@/types/config";
+import type {
   EnrollmentListItem,
   EnrollmentProgress,
   EnrollmentRequestCreateBody,
@@ -32,7 +32,8 @@ export async function getMyEnrollmentRequests(): Promise<
       const apiClient = await getAuthApiClient();
 
       const { data } = await apiClient.get<
-        PaginatedResponse<EnrollmentRequestListItem> | EnrollmentRequestListItem[]
+        | PaginatedResponse<EnrollmentRequestListItem>
+        | EnrollmentRequestListItem[]
       >("/api/enrollment-requests/my-requests/?page_size=100");
 
       return unwrapPaginated(data);
@@ -112,10 +113,16 @@ export async function createEnrollmentRequest(
     { ok: false, message: unexpectedMessage },
     (error) => {
       if (isAxiosError(error)) {
+        const fieldErrors = parseApiFieldErrors(error);
         return {
           ok: false,
-          message: getApiErrorDetail(error) || axiosFallbackMessage,
-          fieldErrors: parseApiFieldErrors(error),
+          message:
+            getApiErrorDetail(error) ||
+            fieldErrors?.course?.[0] ||
+            fieldErrors?.online_course?.[0] ||
+            fieldErrors?.non_field_errors?.[0] ||
+            axiosFallbackMessage,
+          fieldErrors,
         };
       }
 

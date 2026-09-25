@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-'''Instructor views for viewing enrollments in their courses.'''
+"""Instructor views for viewing enrollments in their courses."""
+
+import uuid
 
 from rest_framework import generics, status
 from rest_framework.views import APIView
@@ -11,156 +13,222 @@ from django.db.models import Count, Q
 
 from ..serializers.instructor_enrollment import (
     InstructorEnrollmentListSerializer,
-    CourseEnrollmentStatsSerializer
+    CourseEnrollmentStatsSerializer,
 )
 from ..models import Enrollment
 from ..models.enrollment import EnrollmentStatus
 from courses.models import Course
 
+from courses_online.models import OnlineCourse
+
 
 class IsInstructor(IsAuthenticated):
     """Permission class that only allows instructors"""
-    
+
     def has_permission(self, request, view):
         if not super().has_permission(request, view):
             return False
-        return request.user.role == 'instructor'
+        return request.user.role == "instructor"
 
 
 class InstructorEnrollmentFilter(filters.FilterSet):
     """Filter for instructor enrollment listing"""
+
     status = filters.ChoiceFilter(choices=EnrollmentStatus.choices)
-    course_id = filters.UUIDFilter(field_name='course__id')
-    
+    course_id = filters.CharFilter(method="filter_course_id")
+
     class Meta:
         model = Enrollment
-        fields = ['status', 'course_id']
+        fields = ["status", "course_id"]
+
+    def filter_course_id(self, queryset, name, value):
+        if not value:
+            return queryset
+        value = str(value).strip()
+        if value.isdigit():
+            return queryset.filter(course_id=int(value))
+        try:
+            online_id = uuid.UUID(value)
+        except (ValueError, AttributeError, TypeError):
+            # Neither a physical course id nor an online course UUID.
+            return queryset.none()
+        return queryset.filter(online_course_id=online_id)
+
+
+def _get_instructor_course(course_id, instructor):
+    """
+    Helper to look up a Course or OnlineCourse by course_id (int or UUID).
+    Returns (course_instance, is_online).
+    """
+    if str(course_id).isdigit():
+        try:
+            course = Course.objects.get(id=int(course_id))
+            return course, False
+        except Course.DoesNotExist:
+            return None, False
+    try:
+        online_id = uuid.UUID(str(course_id))
+    except (ValueError, AttributeError, TypeError):
+        return None, True
+    try:
+        return OnlineCourse.objects.get(id=online_id), True
+    except OnlineCourse.DoesNotExist:
+        return None, True
 
 
 class InstructorCourseEnrollmentListView(generics.ListAPIView):
     """
     GET /api/instructor/courses/{course_id}/enrollments/
     List enrollments in a specific course (instructor's own course only).
+    Supports integer physical course IDs and UUID online course IDs.
     No financial data exposed.
     """
+
     serializer_class = InstructorEnrollmentListSerializer
     permission_classes = [IsInstructor]
 
     def get_queryset(self):
         user = self.request.user
-        course_id = self.kwargs.get('course_id')
-        
-        instructor = getattr(user, 'instructor_profile', None)
+        course_id = self.kwargs.get("course_id")
+
+        instructor = getattr(user, "instructor_profile", None)
         if not instructor:
             return Enrollment.objects.none()
-        
-        # Verify the course belongs to this instructor
-        try:
-            course = Course.objects.get(id=course_id)
-            if course.instructor_id != instructor.id:
-                return Enrollment.objects.none()
-        except Course.DoesNotExist:
+        course_obj, is_online = _get_instructor_course(course_id, instructor)
+        if not course_obj or course_obj.instructor_id != instructor.id:
             return Enrollment.objects.none()
-        
-        return Enrollment.objects.filter(
-            course_id=course_id
-        ).select_related(
-            'course', 'child', 'child__primary_parent', 'child__primary_parent__user',
-            'student', 'student__user'
-        ).prefetch_related(
-            'course__lectures'
-        ).order_by('-enrolled_at')
+
+        if is_online:
+            return (
+                Enrollment.objects.filter(online_course=course_obj)
+                .select_related(
+                    "online_course",
+                    "child",
+                    "child__primary_parent",
+                    "child__primary_parent__user",
+                    "student",
+                    "student__user",
+                )
+                .prefetch_related("online_course__video_lectures")
+                .order_by("-enrolled_at")
+            )
+        else:
+            return (
+                Enrollment.objects.filter(course=course_obj)
+                .select_related(
+                    "course",
+                    "child",
+                    "child__primary_parent",
+                    "child__primary_parent__user",
+                    "student",
+                    "student__user",
+                )
+                .prefetch_related("course__lectures")
+                .order_by("-enrolled_at")
+            )
 
 
 class InstructorAllEnrollmentsListView(generics.ListAPIView):
     """
     GET /api/instructor/enrollments/
-    List all enrollments across instructor's courses.
-    Query params: ?course_id=uuid&status=active
+    List all enrollments across instructor's courses (physical & online).
+    Query params: ?course_id=id&status=active
     """
+
     serializer_class = InstructorEnrollmentListSerializer
     permission_classes = [IsInstructor]
     filterset_class = InstructorEnrollmentFilter
 
     def get_queryset(self):
         user = self.request.user
-        
-        instructor = getattr(user, 'instructor_profile', None)
+
+        instructor = getattr(user, "instructor_profile", None)
         if not instructor:
             return Enrollment.objects.none()
-        
-        # Get all courses taught by this instructor
-        return Enrollment.objects.filter(
-            course__instructor=instructor
-        ).select_related(
-            'course', 'child', 'child__primary_parent', 'child__primary_parent__user',
-            'student', 'student__user'
-        ).prefetch_related(
-            'course__lectures'
-        ).order_by('-enrolled_at')
+        # Get all courses (physical and online) taught by this instructor
+        return (
+            Enrollment.objects.filter(
+                Q(course__instructor=instructor) | Q(online_course__instructor=instructor)
+            )
+            .select_related(
+                "course",
+                "online_course",
+                "child",
+                "child__primary_parent",
+                "child__primary_parent__user",
+                "student",
+                "student__user",
+            )
+            .prefetch_related("course__lectures", "online_course__video_lectures")
+            .order_by("-enrolled_at")
+        )
 
 
 class InstructorCourseEnrollmentStatsView(APIView):
     """
     GET /api/instructor/courses/{course_id}/enrollment-stats/
     Get enrollment statistics for a course (instructor's own course only).
+    Supports integer physical course IDs and UUID online course IDs.
     No financial data exposed.
     """
+
     permission_classes = [IsInstructor]
 
     def get(self, request, course_id):
         user = request.user
-        
-        instructor = getattr(user, 'instructor_profile', None)
+
+        instructor = getattr(user, "instructor_profile", None)
         if not instructor:
             return Response(
-                {"detail": "ملف المدرس غير موجود."},
-                status=status.HTTP_403_FORBIDDEN
+                {"detail": "ملف المدرس غير موجود."}, status=status.HTTP_403_FORBIDDEN
             )
-        
-        # Get the course and verify ownership
-        try:
-            course = Course.objects.get(id=course_id)
-        except Course.DoesNotExist:
+
+        course_obj, is_online = _get_instructor_course(course_id, instructor)
+        if not course_obj:
             return Response(
-                {"detail": "الدورة غير موجودة."},
-                status=status.HTTP_404_NOT_FOUND
+                {"detail": "الدورة غير موجودة."}, status=status.HTTP_404_NOT_FOUND
             )
-        
-        if course.instructor_id != instructor.id:
+
+        if course_obj.instructor_id != instructor.id:
             return Response(
                 {"detail": "ليس لديك صلاحية لعرض إحصائيات هذه الدورة."},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_403_FORBIDDEN,
             )
-        
+
         # Calculate enrollment statistics
-        enrollments = Enrollment.objects.filter(course=course)
-        
-        status_counts = enrollments.values('status').annotate(count=Count('id'))
-        status_dict = {item['status']: item['count'] for item in status_counts}
-        
+        if is_online:
+            enrollments = Enrollment.objects.filter(online_course=course_obj)
+            capacity = None
+        else:
+            enrollments = Enrollment.objects.filter(course=course_obj)
+            capacity = course_obj.capacity
+
+        status_counts = enrollments.values("status").annotate(count=Count("id"))
+        status_dict = {item["status"]: item["count"] for item in status_counts}
         active_count = status_dict.get(EnrollmentStatus.ACTIVE, 0)
         suspended_count = status_dict.get(EnrollmentStatus.SUSPENDED, 0)
         completed_count = status_dict.get(EnrollmentStatus.COMPLETED, 0)
         dropped_count = status_dict.get(EnrollmentStatus.DROPPED, 0)
         refunded_count = status_dict.get(EnrollmentStatus.REFUNDED, 0)
-        
+
         # enrolled_count typically means active + suspended (not dropped/refunded)
         enrolled_count = active_count + suspended_count
-        available_spots = max(0, course.capacity - enrolled_count)
-        
+        available_spots = (
+            max(0, capacity - enrolled_count) if capacity is not None else None
+        )
+
         stats = {
-            'course_id': str(course.id),
-            'course_name': course.name,
-            'capacity': course.capacity,
-            'enrolled_count': enrolled_count,
-            'available_spots': available_spots,
-            'active_students': active_count,
-            'suspended_students': suspended_count,
-            'completed_students': completed_count,
-            'dropped_students': dropped_count,
-            'refunded_students': refunded_count,
+            "course_id": str(course_obj.id),
+            "course_name": course_obj.name,
+            "capacity": capacity,
+            "enrolled_count": enrolled_count,
+            "available_spots": available_spots,
+            "active_students": active_count,
+            "suspended_students": suspended_count,
+            "completed_students": completed_count,
+            "dropped_students": dropped_count,
+            "refunded_students": refunded_count,
         }
-        
+
         serializer = CourseEnrollmentStatsSerializer(stats)
         return Response(serializer.data)

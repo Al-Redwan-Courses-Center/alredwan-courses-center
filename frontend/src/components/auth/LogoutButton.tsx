@@ -1,7 +1,7 @@
 "use client";
 
-import Button, { ButtonProps } from "@/components/ui/Button";
 import { signOut } from "next-auth/react";
+import Button, { type ButtonProps } from "@/components/ui/Button";
 
 export default function LogoutButton({ ...props }: ButtonProps) {
   return (

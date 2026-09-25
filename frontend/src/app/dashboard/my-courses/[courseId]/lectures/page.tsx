@@ -1,28 +1,17 @@
-import { getCourseById } from "@/actions/courses";
-import { getLecturesByCourseId } from "@/actions/lectures";
-import CourseHeader from "@/components/courses/CourseHeader";
-import CourseLecturesView from "@/components/courses/CourseLecturesView";
-import RatingsSection from "@/components/ratings/RatingsSection";
+import { redirect } from "next/navigation";
 
-export default async function page({
+export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ courseId: string }>;
+  searchParams?: Promise<{ child?: string }>;
 }) {
   const { courseId } = await params;
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const childId = resolvedSearchParams.child;
 
-  const course = await getCourseById(courseId);
-  const lectures = await getLecturesByCourseId(courseId);
-
-  return (
-    <div className="flex flex-col px-16 pt-4">
-      <CourseHeader course={course} />
-
-      <CourseLecturesView lectures={lectures} course={course} />
-
-      <div className="mt-12 pb-20">
-        <RatingsSection type="course" id={courseId} showForm={true} />
-      </div>
-    </div>
+  redirect(
+    `/dashboard/my-courses/${courseId}${childId ? `?child=${childId}` : ""}`,
   );
 }

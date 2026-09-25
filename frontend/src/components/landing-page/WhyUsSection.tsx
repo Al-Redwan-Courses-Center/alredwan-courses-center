@@ -13,7 +13,10 @@ export default function WhyUsSection() {
         draggable="false"
       />
 
-      <ScrollReveal direction="up" className="w-full flex flex-col items-center">
+      <ScrollReveal
+        direction="up"
+        className="w-full flex flex-col items-center"
+      >
         <div className="title-block">
           <h2>
             لماذا <span>واحة</span> الرضوان؟
@@ -25,7 +28,11 @@ export default function WhyUsSection() {
         </div>
       </ScrollReveal>
 
-      <ScrollReveal direction="up" delay={0.2} className="w-full flex flex-col items-center">
+      <ScrollReveal
+        direction="up"
+        delay={0.2}
+        className="w-full flex flex-col items-center"
+      >
         <FeaturesGrid />
       </ScrollReveal>
     </section>

@@ -1,13 +1,13 @@
+import type { ReactNode } from "react";
 import AllCoursesIcon from "@/components/icons/AllCoursesIcon";
 import ClipboardIcon from "@/components/icons/ClipboardIcon";
+import MosqueIcon from "@/components/icons/MosqueIcon";
 import MyCoursesIcon from "@/components/icons/MyCoursesIcon";
 import OverviewIcon from "@/components/icons/OverviewIcon";
 import PanelsIcon from "@/components/icons/PanelsIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
 import PersonIcon from "@/components/icons/PersonIcon";
-import MosqueIcon from "@/components/icons/MosqueIcon";
-import { UserEntity } from "@/types/auth";
-import { ReactNode } from "react";
+import type { UserEntity } from "@/types/auth";
 
 export interface DashboardNavItem {
   label: string;
@@ -43,6 +43,11 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       icon: <PanelsIcon />,
     },
     {
+      label: "جدول الإشراف",
+      href: "/dashboard/supervisor-schedules",
+      icon: <MosqueIcon />,
+    },
+    {
       label: "جميع الدورات",
       href: "/dashboard/courses",
       icon: <AllCoursesIcon />,
@@ -51,6 +56,12 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       label: "ذكريات المسجد",
       href: "/dashboard/memories",
       icon: <MosqueIcon />,
+    },
+    {
+      label: "الملف الشخصي",
+      href: "/dashboard/profile",
+      icon: <PersonIcon />,
+      className: "mb-auto",
     },
   ],
 
@@ -74,6 +85,12 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       label: "ذكريات المسجد",
       href: "/dashboard/memories",
       icon: <MosqueIcon />,
+    },
+    {
+      label: "الملف الشخصي",
+      href: "/dashboard/profile",
+      icon: <PersonIcon />,
+      className: "mb-auto",
     },
   ],
 
@@ -168,20 +185,6 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
       label: "دوراتي",
       href: "/dashboard/my-courses",
       icon: <MyCoursesIcon />,
-      nestedNavLinks: [
-        {
-          href: "lectures",
-          label: "المحاضرات",
-        },
-        {
-          href: "",
-          label: "تفاصيل الدورة",
-        },
-        {
-          href: "enrollments",
-          label: "الحجوزات",
-        },
-      ],
     },
     {
       label: "جميع الدورات",
@@ -205,4 +208,3 @@ const roleMap: Record<UserEntity["role"], DashboardNavItem[]> = {
 export function getDashboardNavItems(role: UserEntity["role"]) {
   return roleMap[role];
 }
-

@@ -1,9 +1,9 @@
 "use client";
 
-import { formatDate, formatTime } from "@/lib/utils";
 import { parseISO } from "date-fns";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useIsClient } from "usehooks-ts";
+import { formatDate, formatTime } from "@/lib/utils";
 
 export default function ClientLocalDateTime({
   iso,

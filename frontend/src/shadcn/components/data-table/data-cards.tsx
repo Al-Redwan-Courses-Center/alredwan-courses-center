@@ -1,27 +1,27 @@
 "use client";
 
-import * as React from "react";
 import {
   type ColumnFiltersState,
-  type OnChangeFn,
-  type PaginationState,
-  type SortingState,
-  type VisibilityState,
   functionalUpdate,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type OnChangeFn,
+  type PaginationState,
+  type SortingState,
   useReactTable,
+  type VisibilityState,
 } from "@tanstack/react-table";
+import * as React from "react";
+import { useMediaQuery } from "usehooks-ts";
+import Loader from "@/components/ui/Loader";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+import { cn } from "@/lib/utils";
 import { DataTablePagination } from "./data-table-pagination";
 import { DataCardsSkeleton } from "./data-table-skeletons";
 import { DataTableToolbar } from "./data-table-toolbar";
 import type { DataCardsProps } from "./types";
-import { cn } from "@/lib/utils";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
-import { useMediaQuery } from "usehooks-ts";
-import Loader from "@/components/ui/Loader";
 
 export function DataCards<TData, TValue>({
   columns,

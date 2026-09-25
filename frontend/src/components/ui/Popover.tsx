@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { Popover as PopoverPrimitive } from "radix-ui";
+import type * as React from "react";
 import { cn } from "@/lib/utils";
 
 function Popover({
@@ -22,7 +22,9 @@ function PopoverContent({
   sideOffset = 4,
   usePortal = true,
   ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Content> & { usePortal?: boolean }) {
+}: React.ComponentProps<typeof PopoverPrimitive.Content> & {
+  usePortal?: boolean;
+}) {
   const content = (
     <PopoverPrimitive.Content
       data-slot="popover-content"
@@ -85,10 +87,10 @@ function PopoverDescription({
 
 export {
   Popover,
-  PopoverTrigger,
-  PopoverContent,
   PopoverAnchor,
+  PopoverContent,
+  PopoverDescription,
   PopoverHeader,
   PopoverTitle,
-  PopoverDescription,
+  PopoverTrigger,
 };

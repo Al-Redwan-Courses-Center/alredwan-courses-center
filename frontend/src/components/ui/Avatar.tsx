@@ -1,6 +1,6 @@
+import Image, { type StaticImageData } from "next/image";
 import DefaultUser from "@/assets/images/default-user.svg";
 import { cn } from "@/lib/utils";
-import Image, { StaticImageData } from "next/image";
 
 interface AvatarProps {
   src?: string | null;
@@ -30,16 +30,17 @@ export default function Avatar({
   return (
     <div
       className={cn(
-        "relative aspect-square rounded-full overflow-hidden shrink-0",
+        "relative aspect-square shrink-0 overflow-hidden rounded-full",
         className,
         !hasSrc && fallbackClassName,
       )}
     >
       {hasSrc && src.startsWith("http") ? (
-        <img
+        <Image
           src={src.trim()}
           alt={alt}
-          className={cn("h-full w-full object-cover", imageClassName)}
+          fill
+          className={cn("object-cover", imageClassName)}
           draggable={draggable}
         />
       ) : (

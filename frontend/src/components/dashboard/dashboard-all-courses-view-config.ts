@@ -1,6 +1,9 @@
-import { DataViewFilterConfig, DataViewSortConfig } from "@/types/components";
-import { CourseListItem } from "@/types/entities";
 import { parseISO } from "date-fns";
+import type {
+  DataViewFilterConfig,
+  DataViewSortConfig,
+} from "@/types/components";
+import type { CourseListItem } from "@/types/entities";
 
 export type AllCoursesViewItem = CourseListItem & {
   course_state: "ongoing" | "upcoming" | "ended";

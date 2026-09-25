@@ -1,14 +1,14 @@
 "use client";
 
-import WhatsappIcon from "@/components/icons/WhatsappIcon";
-import Link from "next/link";
 import { motion } from "motion/react";
+import Link from "next/link";
+import WhatsappIcon from "@/components/icons/WhatsappIcon";
 
 export default function WhatsAppWidget() {
   const phoneNumber = "201233313590";
 
   return (
-    <motion.div
+    <motion.div id ="whatsapp-widget"
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: 1, type: "spring", stiffness: 260, damping: 20 }}

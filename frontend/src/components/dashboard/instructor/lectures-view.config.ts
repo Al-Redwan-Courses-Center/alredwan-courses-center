@@ -1,10 +1,10 @@
-import {
+import { parse } from "date-fns";
+import type {
   DataViewFilterConfig,
   DataViewSortConfig,
   StatusMap,
 } from "@/types/components";
-import { TodaysLectureListItem } from "@/types/config";
-import { parse } from "date-fns";
+import type { TodaysLectureListItem } from "@/types/config";
 
 const statusWeights: Record<TodaysLectureListItem["status"], number> = {
   scheduled: 0,

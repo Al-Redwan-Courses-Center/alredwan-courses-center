@@ -1,4 +1,4 @@
-import { StatusColors } from "@/components/ui/StatusBadge";
+import type { StatusColors } from "@/components/ui/StatusBadge";
 
 //
 // MARK: TABLE
@@ -21,7 +21,6 @@ export type StatusMap<T extends { status: string }> = Record<
   T["status"],
   { label: string; color: StatusColors }
 >;
-
 
 export interface AccordionItemData {
   id: string;

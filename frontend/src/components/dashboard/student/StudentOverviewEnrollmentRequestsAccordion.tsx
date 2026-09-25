@@ -3,12 +3,12 @@
 import EnrollmentRequestCancelButton from "@/components/enrollments/EnrollmentRequestCancelButton";
 import CalendarIcon from "@/components/icons/CalendarIcon";
 import MoneyIcon from "@/components/icons/MoneyIcon";
-import ClientLocalDateTime from "@/components/ui/ClientLocalDateTime";
 import Accordion from "@/components/ui/accordion/Accordion";
 import AccordionHeader from "@/components/ui/accordion/AccordionHeader";
 import AccordionItem from "@/components/ui/accordion/AccordionItem";
+import ClientLocalDateTime from "@/components/ui/ClientLocalDateTime";
 import { cn } from "@/lib/utils";
-import { EnrollmentRequestListItem } from "@/types/entities";
+import type { EnrollmentRequestListItem } from "@/types/entities";
 
 const statusMap = {
   pending: { label: "معلق", color: cn("bg-blue-300") },

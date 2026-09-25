@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { cn } from "@/lib/utils";
 
 const days = [
@@ -13,26 +12,28 @@ const days = [
   { label: "F", full: "الجمعة" },
 ];
 
-export default function DayFilterChips({ 
-  selectedDay, 
-  onSelect 
-}: { 
-  selectedDay?: string; 
-  onSelect?: (day: string) => void 
+export default function DayFilterChips({
+  selectedDay,
+  onSelect,
+}: {
+  selectedDay?: string;
+  onSelect?: (day: string) => void;
 }) {
   return (
     <div className="flex items-center gap-12">
-      <span className="text-[1.4rem] font-medad text-olive-800">اختر اليوم</span>
-      <div className="flex flex-row-reverse items-center gap-6 bg-stone-100 p-4 rounded-12">
+      <span className="font-medad text-olive-800 text-[1.4rem]">
+        اختر اليوم
+      </span>
+      <div className="rounded-12 flex flex-row-reverse items-center gap-6 bg-stone-100 p-4">
         {days.map((day, i) => (
           <button
             key={i}
             onClick={() => onSelect?.(day.full)}
             className={cn(
-              "w-36 h-36 flex items-center justify-center rounded-8 text-[1.2rem] font-bold transition-all",
-              selectedDay === day.full 
-                ? "bg-olive-600 text-white shadow-md" 
-                : "bg-white text-stone-400 hover:bg-stone-50"
+              "rounded-8 flex h-36 w-36 items-center justify-center text-[1.2rem] font-bold transition-all",
+              selectedDay === day.full
+                ? "bg-olive-600 text-white shadow-md"
+                : "bg-white text-stone-400 hover:bg-stone-50",
             )}
           >
             {day.label}

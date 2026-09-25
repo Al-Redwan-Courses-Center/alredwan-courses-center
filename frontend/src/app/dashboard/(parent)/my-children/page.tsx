@@ -1,10 +1,14 @@
 export const dynamic = "force-dynamic";
 
-import { getParentChildren, getChildEnrollments, getChildEnrollmentRequests } from "@/actions/user";
-import MyChildrenList from "@/components/dashboard/parent/MyChildrenList";
-import { EnrollmentRequestListItem } from "@/types/entities";
 import { Plus } from "lucide-react";
+import {
+  getChildEnrollmentRequests,
+  getChildEnrollments,
+  getParentChildren,
+} from "@/actions/user";
 import { AddChildButton } from "@/components/dashboard/parent/AddChildButtons";
+import MyChildrenList from "@/components/dashboard/parent/MyChildrenList";
+import type { EnrollmentRequestListItem } from "@/types/entities";
 
 export default async function Page() {
   const myChildren = await getParentChildren();
@@ -16,8 +20,12 @@ export default async function Page() {
           <Plus size={80} className="text-olive-500" />
         </div>
         <div className="flex flex-col gap-2">
-          <h3 className="text-olive-700 font-medad text-5xl">لا يوجد أطفال مضافون بعد</h3>
-          <p className="text-gray-600 text-2xl">ابدأ بإضافة أطفالك لتتمكن من إلحاقهم بالدورات التدريبية</p>
+          <h3 className="text-olive-700 font-medad text-5xl">
+            لا يوجد أطفال مضافون بعد
+          </h3>
+          <p className="text-gray-600 text-2xl">
+            ابدأ بإضافة أطفالك لتتمكن من إلحاقهم بالدورات التدريبية
+          </p>
         </div>
         <AddChildButton className="bg-olive-500 hover:bg-olive-600 text-white px-12 py-5 rounded-[0.5rem_2rem] font-bold text-3xl flex items-center gap-4 shadow-lg transition-transform hover:scale-105" />
       </div>
@@ -36,11 +44,12 @@ export default async function Page() {
         enrollments,
         enrollmentRequests,
       };
-    })
+    }),
   );
 
   // Extract enrollment requests mapping for the feed
-  const initialRequests: { [childId: string]: EnrollmentRequestListItem[] } = {};
+  const initialRequests: { [childId: string]: EnrollmentRequestListItem[] } =
+    {};
   childrenData.forEach((item) => {
     initialRequests[item.child.id] = item.enrollmentRequests;
   });
@@ -55,4 +64,3 @@ export default async function Page() {
     </div>
   );
 }
-

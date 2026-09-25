@@ -1,7 +1,7 @@
-import { cn } from "@/lib/utils";
 import EditIcon from "@/components/icons/EditIcon";
-import TrashIcon from "@/components/icons/TrashIcon";
 import InfoIcon from "@/components/icons/InfoIcon";
+import TrashIcon from "@/components/icons/TrashIcon";
+import { cn } from "@/lib/utils";
 
 interface ActionButtonsProps {
   onEdit?: () => void;

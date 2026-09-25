@@ -76,17 +76,24 @@ export default async function ParentOverviewPage() {
           >
             {myChildren.length > 0 ? (
               myChildren.slice(0, 2).map((c, i) => {
-                const childEnrollments = myEnrollments.filter((e) => e.child_id === c.id);
-                const childRequests = myEnrollmentRequests.filter((req) => req.child_id === c.id);
+                const childEnrollments = myEnrollments.filter(
+                  (e) => e.child_id === c.id,
+                );
+                const childRequests = myEnrollmentRequests.filter(
+                  (req) => req.child_id === c.id,
+                );
 
-                const activeCoursesCount = childEnrollments.filter((e) => e.status === "active").length;
-                const pendingEnrollmentsCount = childRequests.filter(
-                  (req) => ["pending", "processing"].includes(req.status)
+                const activeCoursesCount = childEnrollments.filter(
+                  (e) => e.status === "active",
+                ).length;
+                const pendingEnrollmentsCount = childRequests.filter((req) =>
+                  ["pending", "processing"].includes(req.status),
                 ).length;
                 const attendanceRate = childEnrollments.length
                   ? Math.round(
                       childEnrollments.reduce(
-                        (acc, enrollment) => acc + (enrollment.completion_percentage || 0),
+                        (acc, enrollment) =>
+                          acc + (enrollment.completion_percentage || 0),
                         0,
                       ) / childEnrollments.length,
                     )

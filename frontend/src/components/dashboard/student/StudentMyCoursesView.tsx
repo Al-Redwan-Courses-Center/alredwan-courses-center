@@ -10,14 +10,17 @@ import { DataViewHeaderLegacy } from "@/components/ui/data-view/DataViewRow";
 import DataViewSearchLegacy from "@/components/ui/data-view/DataViewSearch";
 import DataViewSortLegacy from "@/components/ui/data-view/DataViewSort";
 import { cn } from "@/lib/utils";
-import { CourseDetail } from "@/types/entities";
+import type { StudentCourseItem } from "@/types/entities";
+import type { UserEntity } from "@/types/auth";
 
 export default function StudentMyCoursesView({
   courses,
+  role,
+  childId,
 }: {
-  courses: CourseDetail[];
+  courses: StudentCourseItem[];
   childId?: string;
-  role?: string;
+  role: UserEntity["role"];
 }) {
   return (
     <DataViewLegacy
@@ -40,13 +43,21 @@ export default function StudentMyCoursesView({
       }}
       viewLayout="cards"
     >
-      <div className="mb-14 flex items-center gap-32 ps-16">
-        <DataViewSearchLegacy />
-        <DataViewSortLegacy />
-        <DataViewFilterLegacy />
+      <div className="tablet:flex-col tablet:items-stretch tablet:gap-12 relative z-60 mb-14 flex items-center justify-between gap-16 px-4 tablet:px-16 tablet-sm:px-4">
+        <div className="tablet:max-w-full w-full max-w-[400px]">
+          <DataViewSearchLegacy />
+        </div>
+        <div className="tablet:w-full flex items-center gap-12">
+          <div className="tablet:flex-1 w-auto">
+            <DataViewSortLegacy />
+          </div>
+          <div className="tablet:flex-1 w-auto">
+            <DataViewFilterLegacy />
+          </div>
+        </div>
       </div>
 
-      <DataViewHeaderLegacy className="mx-16">
+      <DataViewHeaderLegacy className="mx-4 tablet:mx-16 tablet-sm:mx-4 hidden lg:grid">
         <DataViewCellLegacy>م</DataViewCellLegacy>
         <DataViewCellLegacy>الدورة</DataViewCellLegacy>
         <DataViewCellLegacy>الموسم</DataViewCellLegacy>
@@ -56,16 +67,19 @@ export default function StudentMyCoursesView({
       </DataViewHeaderLegacy>
 
       <DataViewBodyLegacy
-        className="px-16"
+        className="px-4 tablet:px-16 tablet-sm:px-4 tablet-sm:!grid tablet-sm:!grid-cols-1 tablet-sm:!overflow-hidden w-full [&_>_div]:!min-w-0"
         render={{
           table: () => null,
 
-          cards: (
-            item: CourseDetail & {
-              course_progress: number;
-            },
-            index,
-          ) => <StudentCourseCard course={item} index={index} key={item.id} />,
+          cards: (item: StudentCourseItem, index) => (
+            <StudentCourseCard
+              course={item}
+              index={index}
+              key={item.id}
+              role={role}
+              childId={childId}
+            />
+          ),
         }}
       />
 

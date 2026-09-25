@@ -2,7 +2,10 @@ import CheckIcon from "@/components/icons/CheckIcon";
 import ClockIcon from "@/components/icons/ClockIcon";
 import InstructorIcon from "@/components/icons/InstructorIcon";
 import PeopleIcon from "@/components/icons/PeopleIcon";
-import { statistics as statisticsApi, Statistics } from "@/dev-data/statistics";
+import {
+  type Statistics,
+  statistics as statisticsApi,
+} from "@/dev-data/statistics";
 import { cn, toHindiDigits } from "@/lib/utils";
 
 const cardStyles = cn(

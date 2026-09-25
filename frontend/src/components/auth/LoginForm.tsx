@@ -1,15 +1,18 @@
 "use client";
 
-import Button from "@/components/ui/Button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/DropdownMenu";
-import FieldSetInput from "@/components/ui/FieldSetInput";
-import { LoginInputs } from "@/types/auth";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
-import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { type SubmitHandler, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import Button from "@/components/ui/Button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
+import FieldSetInput from "@/components/ui/FieldSetInput";
+import type { LoginInputs } from "@/types/auth";
 
 export default function LoginForm({
   callbackUrl,
@@ -30,7 +33,7 @@ export default function LoginForm({
   } = useForm<LoginInputs>({
     defaultValues: {
       phone_number1: "",
-      password: "password123",
+      password: "",
     },
   });
 
@@ -157,7 +160,7 @@ export default function LoginForm({
               if (countryCode !== "2" && val.startsWith("0")) {
                 setValue("phone_number1", val.replace(/^0+/, ""));
               }
-            }
+            },
           })}
         />
 
@@ -178,19 +181,12 @@ export default function LoginForm({
           تسجيل الدخول
         </Button>
 
-        <Link
-          href="/forgot-password"
-          className="text-olive-900 hover:text-olive-300 self-center text-2xl font-bold underline transition-colors"
-        >
-          نسيت كلمة المرور؟
-        </Link>
-
         <div className="flex flex-col">
           <span className="self-center text-2xl">ليس لديك حساب؟</span>
           <button
             type="button"
             onClick={() => onSwitchToSignup?.()}
-            className="text-olive-900 hover:text-olive-300 self-center text-2xl font-bold underline transition-colors"
+            className="self-center text-2xl font-bold text-olive-900 underline transition-colors hover:text-olive-300"
           >
             سجل حساب جديد الآن
           </button>

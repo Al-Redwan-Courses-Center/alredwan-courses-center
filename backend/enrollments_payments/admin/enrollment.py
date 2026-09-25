@@ -1,10 +1,12 @@
+from decimal import Decimal
 from django.contrib import admin
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
 from django.utils import timezone
 from django.urls import reverse
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, F, Q, Value, DecimalField, Max, Case, When
+from django.db.models.functions import Coalesce
 
 from core.utils import ExcelExportMixin
 from enrollments_payments.models.enrollment import Enrollment, EnrollmentStatus
@@ -48,36 +50,39 @@ class PaymentStatusFilter(admin.SimpleListFilter):
         )
 
     def queryset(self, request, queryset):
+        if not self.value():
+            return queryset
+
+        effective_price = Coalesce(
+            Max(
+                Case(
+                    When(course__isnull=False, then=F('course__price')),
+                    When(online_course__isnull=False, then=F('online_course__price')),
+                    default=Value(Decimal('0')),
+                    output_field=DecimalField()
+                )
+            ),
+            Value(Decimal('0')),
+            output_field=DecimalField()
+        )
+        total_paid = Coalesce(
+            Sum('payments__amount', filter=Q(payments__status='paid')),
+            Value(Decimal('0')),
+            output_field=DecimalField()
+        )
+        annotated_qs = queryset.annotate(
+            _total_paid=total_paid,
+            _effective_price=effective_price
+        )
+
         if self.value() == 'fully_paid':
-            # Get enrollments where paid >= course price
-            result_ids = []
-            for enrollment in queryset.select_related('course'):
-                if enrollment.remaining_amount() == 0:
-                    result_ids.append(enrollment.pk)
-            return queryset.filter(pk__in=result_ids)
-
+            return annotated_qs.filter(_total_paid__gte=F('_effective_price'), _effective_price__gt=0)
         elif self.value() == 'partial':
-            result_ids = []
-            for enrollment in queryset.select_related('course'):
-                remaining = enrollment.remaining_amount()
-                paid = enrollment.amount_paid()
-                if paid > 0 and remaining > 0:
-                    result_ids.append(enrollment.pk)
-            return queryset.filter(pk__in=result_ids)
-
+            return annotated_qs.filter(_total_paid__gt=0, _total_paid__lt=F('_effective_price'))
         elif self.value() == 'unpaid':
-            result_ids = []
-            for enrollment in queryset.select_related('course'):
-                if enrollment.amount_paid() == 0:
-                    result_ids.append(enrollment.pk)
-            return queryset.filter(pk__in=result_ids)
-
+            return annotated_qs.filter(_total_paid=0)
         elif self.value() == 'overpaid':
-            result_ids = []
-            for enrollment in queryset.select_related('course'):
-                if enrollment.remaining_amount() < 0:
-                    result_ids.append(enrollment.pk)
-            return queryset.filter(pk__in=result_ids)
+            return annotated_qs.filter(_total_paid__gt=F('_effective_price'))
 
         return queryset
 
@@ -467,6 +472,13 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
                 '📚 {}</a>',
                 url, obj.course.name
             )
+        elif obj.online_course:
+            url = reverse('admin:courses_online_onlinecourse_change', args=[obj.online_course.pk])
+            return format_html(
+                '<a href="{}" style="color: #2980b9; text-decoration: none;">'
+                '💻 {}</a>',
+                url, obj.online_course.name
+            )
         return '-'
 
     @admin.display(description=_('الحالة'), ordering='status')
@@ -541,7 +553,8 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
     def get_payment_status(self, obj):
         """Display payment status with visual indicator."""
         paid = float(obj.amount_paid())
-        course_price = float(obj.course.price) if obj.course.price else 0
+        course_obj = obj.course or obj.online_course
+        course_price = float(course_obj.price) if course_obj and course_obj.price else 0
         remaining = float(obj.remaining_amount())
 
         if course_price == 0:
@@ -569,7 +582,8 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
     def get_payment_progress(self, obj):
         """Display payment progress with amounts."""
         paid = obj.amount_paid()
-        course_price = obj.course.price if obj.course.price else 0
+        course_obj = obj.course or obj.online_course
+        course_price = course_obj.price if course_obj and course_obj.price else 0
         remaining = obj.remaining_amount()
 
         if course_price == 0:
@@ -681,27 +695,35 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
     @admin.display(description=_('معلومات الدورة'))
     def get_course_info(self, obj):
         """Display detailed course info in edit form."""
-        if obj.course:
-            return format_html(
-                '<div style="padding: 10px; background: #264b5d; border-radius: 5px;">'
-                '<strong>📚 الدورة:</strong> {}<br>'
-                '<strong>👨‍🏫 المدرس:</strong> {}<br>'
-                '<strong>💰 سعر الدورة:</strong> {} ج.م<br>'
-                '<strong>👥 المسجلين:</strong> {} / {}'
-                '</div>',
-                obj.course.name,
-                obj.course.instructor or '-',
-                obj.course.price or 'مجاني',
-                obj.course.enrolled_count,
-                obj.course.capacity
-            )
-        return '-'
+        target = obj.get_course_instance()
+        if not target:
+            return '-'
+        prefix = '💻 الدورة الإلكترونية' if obj.online_course else '📚 الدورة'
+        instructor = getattr(target, 'instructor', None) or '-'
+        price = getattr(target, 'price', None) or 'مجاني'
+        enrolled = getattr(target, 'enrolled_count', 0)
+        capacity = getattr(target, 'capacity', 'غير محدد')
+        return format_html(
+            '<div style="padding: 10px; background: #264b5d; border-radius: 5px;">'
+            '<strong>{}:</strong> {}<br>'
+            '<strong>👨‍🏫 المدرس:</strong> {}<br>'
+            '<strong>💰 سعر الدورة:</strong> {} ج.م<br>'
+            '<strong>👥 المسجلين:</strong> {} / {}'
+            '</div>',
+            prefix,
+            target.name,
+            instructor,
+            price,
+            enrolled,
+            capacity
+        )
 
     @admin.display(description=_('ملخص المدفوعات'))
     def get_payment_summary(self, obj):
         """Display payment summary with visual progress."""
         paid = obj.amount_paid()
-        course_price = obj.course.price if obj.course.price else 0
+        target = obj.get_course_instance()
+        course_price = target.price if (target and target.price) else 0
         remaining = obj.remaining_amount()
         payments_count = obj.payments.count()
 
@@ -728,7 +750,7 @@ class EnrollmentAdmin(ExcelExportMixin, admin.ModelAdmin):
             '<div style="font-size: 1.2em; color: #27ae60; font-weight: bold;">{} ج.م</div>'
             '<div style="font-size: 0.8em; color: #95a5a6;">المدفوع</div>'
             '</div>'
-            '<div style="background: #1a3a4ا; padding: 10px; border-radius: 5px;">'
+            '<div style="background: #1a3a4a; padding: 10px; border-radius: 5px;">'
             '<div style="font-size: 1.2em; color: {}; font-weight: bold;">{} ج.م</div>'
             '<div style="font-size: 0.8em; color: #95a5a6;">المتبقي</div>'
             '</div>'

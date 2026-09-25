@@ -1,14 +1,13 @@
-import { ReactNode } from "react";
-import AccordionArrow from "./AccordionArrow";
+import type { ReactNode } from "react";
 import ArrowDownHead from "@/components/icons/ArrowDownHead";
 import { cn } from "@/lib/utils";
+import AccordionArrow from "./AccordionArrow";
 
 interface AccordionHeaderProps {
   isOpen: boolean;
   children: ReactNode;
   className?: string;
 }
-
 
 export default function AccordionHeader({
   isOpen,

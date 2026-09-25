@@ -1,10 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import CheckMarkIcon from "@/components/icons/CheckMarkIcon";
 import NotepadIcon from "@/components/icons/NotepadIcon";
 import Input from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
 export default function AddLectureNotesInput() {
   const [lectureNote, setLectureNote] = useState("ملاحظة افتراضية");

@@ -1,11 +1,13 @@
-import { getGeneralMemories } from "@/actions/memories";
+export const dynamic = "force-dynamic";
+
 import { getUser } from "@/actions/auth";
+import { getGeneralMemories } from "@/actions/memories";
 import MemoriesClient from "@/components/dashboard/memories/MemoriesClient";
 
 export default async function MemoriesPage() {
-  const [initialMemories, user] = await Promise.all([
-    getGeneralMemories(),
-    getUser()
+  const [initialData, user] = await Promise.all([
+    getGeneralMemories(1, 12),
+    getUser(),
   ]);
 
   return (
@@ -15,7 +17,11 @@ export default async function MemoriesPage() {
         <span>ذكريات المسجد</span>
       </div>
 
-      <MemoriesClient initialMemories={initialMemories} role={user.role} />
+      <MemoriesClient
+        initialMemories={initialData.results}
+        initialHasMore={Boolean(initialData.next)}
+        role={user.role}
+      />
     </div>
   );
 }

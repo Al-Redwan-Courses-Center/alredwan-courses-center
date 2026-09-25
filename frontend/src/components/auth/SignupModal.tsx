@@ -1,8 +1,8 @@
 "use client";
 
+import type { ReactNode } from "react";
 import AuthModal from "@/components/auth/AuthModal";
 import Button from "@/components/ui/Button";
-import { ReactNode } from "react";
 
 export default function SignupModal({ trigger }: { trigger?: ReactNode }) {
   return (

@@ -1,6 +1,8 @@
 "use client";
 
-import { Table as TanStackTable, flexRender } from "@tanstack/react-table";
+import { flexRender, type Table as TanStackTable } from "@tanstack/react-table";
+import Loader from "@/components/ui/Loader";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import {
   Accordion,
   AccordionContent,
@@ -8,12 +10,10 @@ import {
   AccordionTrigger,
 } from "../ui/accordion";
 import { DataTableMobileSkeleton } from "./data-table-skeletons";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import type {
   DataTableMobileConfig,
   DataTableMobileContentItem,
 } from "./types";
-import Loader from "@/components/ui/Loader";
 
 interface DataTableMobileViewProps<TData> {
   table: TanStackTable<TData>;

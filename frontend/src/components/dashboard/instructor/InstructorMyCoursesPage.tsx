@@ -1,12 +1,16 @@
+import { Suspense } from "react";
 import { getUser } from "@/actions/auth";
 import { getInstructorCourses } from "@/actions/courses";
-import InstructorMyCoursesView from "@/components/dashboard/instructor/InstructorMyCoursesView";
-import { Suspense } from "react";
+import { getInstructorOnlineCourses } from "@/actions/online-courses";
+import InstructorMyCoursesCatalog from "@/components/dashboard/instructor/InstructorMyCoursesCatalog";
 
 export default async function InstructorMyCoursesPage() {
   const { first_name, instructor_id } = await getUser();
 
-  const courses = await getInstructorCourses(instructor_id);
+  const [courses, onlineCourses] = await Promise.all([
+    getInstructorCourses(instructor_id, { page_size: 100 }),
+    getInstructorOnlineCourses(instructor_id),
+  ]);
 
   return (
     <div className="flex h-full max-h-73/100 flex-col pt-15">
@@ -16,7 +20,10 @@ export default async function InstructorMyCoursesPage() {
 
       <div className="max-h-full w-full">
         <Suspense fallback={null}>
-          <InstructorMyCoursesView courses={courses} />
+          <InstructorMyCoursesCatalog
+            physical={courses.results}
+            online={onlineCourses}
+          />
         </Suspense>
       </div>
     </div>

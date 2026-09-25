@@ -1,4 +1,4 @@
-import { LectureListItem } from "./entities";
+import type { LectureListItem } from "./entities";
 
 export interface JSONResponse<T> {
   status: string;

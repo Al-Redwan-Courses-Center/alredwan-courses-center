@@ -3,8 +3,14 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 
 export default function ActivitiesSection() {
   return (
-    <section id="activities" className="mobile-lg:px-15! flex flex-col items-center px-28!">
-      <ScrollReveal direction="up" className="w-full flex flex-col items-center">
+    <section
+      id="activities"
+      className="mobile-lg:px-15! flex flex-col items-center px-28!"
+    >
+      <ScrollReveal
+        direction="up"
+        className="w-full flex flex-col items-center"
+      >
         <div className="title-block">
           <h2>
             أنشطتنا <span>المتنوعة</span>
@@ -17,7 +23,12 @@ export default function ActivitiesSection() {
         </div>
       </ScrollReveal>
 
-      <ScrollReveal direction="up" delay={0.2} amount={0.1} className="w-full flex flex-col items-center">
+      <ScrollReveal
+        direction="up"
+        delay={0.2}
+        amount={0.1}
+        className="w-full flex flex-col items-center"
+      >
         <PictureGrid />
       </ScrollReveal>
     </section>

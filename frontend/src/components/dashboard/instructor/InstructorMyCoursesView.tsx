@@ -1,9 +1,15 @@
 "use client";
 
+import { parseISO } from "date-fns";
+import Link from "next/link";
 import MyCourseCard from "@/components/courses/MyCourseCard";
+import buildInstructorMyCoursesConfig, {
+  type CourseViewItem,
+} from "@/components/dashboard/instructor/instructor-my-courses-view-config";
 import InfoIcon from "@/components/icons/InfoIcon";
 import DataView from "@/components/ui/data-view/DataView";
 import DataViewBody from "@/components/ui/data-view/DataViewBody";
+import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
 import DataViewFilter from "@/components/ui/data-view/DataViewFilter";
 import DataViewLayoutToggle from "@/components/ui/data-view/DataViewLayoutToggle";
 import { DataViewPaginationLegacy } from "@/components/ui/data-view/DataViewPagination";
@@ -14,13 +20,7 @@ import {
 import DataViewSearch from "@/components/ui/data-view/DataViewSearch";
 import DataViewSort from "@/components/ui/data-view/DataViewSort";
 import { cn, formatDate, toHindiDigits } from "@/lib/utils";
-import buildInstructorMyCoursesConfig, {
-  CourseViewItem,
-} from "@/components/dashboard/instructor/instructor-my-courses-view-config";
-import { parseISO } from "date-fns";
-import Link from "next/link";
-import { CourseListItem } from "@/types/entities";
-import DataViewCellLegacy from "@/components/ui/data-view/DataViewCell";
+import type { CourseListItem } from "@/types/entities";
 
 export default function InstructorMyCoursesView({
   courses,
@@ -42,14 +42,24 @@ export default function InstructorMyCoursesView({
       filterConfig={filterConfig}
       sortConfig={sortConfig}
     >
-      <div className="mb-14 flex items-center gap-32 ps-16">
-        <DataViewSearch />
-        <DataViewSort />
-        <DataViewFilter />
-        <DataViewLayoutToggle />
+      <div className="tablet:flex-col tablet:items-stretch tablet:gap-12 relative z-60 mb-14 flex items-center justify-between gap-16 px-4 tablet:px-16 tablet-sm:px-4">
+        <div className="tablet:max-w-full w-full max-w-[400px]">
+          <DataViewSearch />
+        </div>
+        <div className="tablet:w-full flex items-center gap-12">
+          <div className="tablet:flex-1 w-auto">
+            <DataViewSort />
+          </div>
+          <div className="tablet:flex-1 w-auto">
+            <DataViewFilter />
+          </div>
+          <div className="tablet:flex-1 w-auto">
+            <DataViewLayoutToggle />
+          </div>
+        </div>
       </div>
 
-      <DataViewHeaderLegacy className="mx-16">
+      <DataViewHeaderLegacy className="mx-4 tablet:mx-16 tablet-sm:mx-4">
         <DataViewCellLegacy>م</DataViewCellLegacy>
         <DataViewCellLegacy>الدورة</DataViewCellLegacy>
         <DataViewCellLegacy>الموسم</DataViewCellLegacy>
@@ -59,7 +69,7 @@ export default function InstructorMyCoursesView({
       </DataViewHeaderLegacy>
 
       <DataViewBody
-        className="px-16"
+        className="px-4 tablet:px-16 tablet-sm:px-4 tablet-sm:!grid tablet-sm:!grid-cols-1 tablet-sm:!overflow-hidden w-full [&_>_div]:!min-w-0"
         render={{
           table: (course: CourseViewItem, i) => (
             <DataViewRowLegacy index={i} key={course.id}>

@@ -11,14 +11,19 @@ from users.models import StudentUser
 class GeneralFeedView(generics.ListAPIView):
     """
     API endpoint for the general memories feed.
-    Visible to any authenticated user. Random order on every load.
+    Visible to any authenticated user. Deterministic indexed ordering.
     """
     serializer_class = MemorySerializer
     permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        # Order randomly for general feed
-        return Memory.objects.filter(is_active=True).order_by('?')
+        return Memory.objects.filter(
+            is_active=True
+        ).select_related(
+            'uploaded_by', 'uploaded_by__user'
+        ).prefetch_related(
+            'children', 'students', 'students__user'
+        ).order_by('-created_at')
 
 
 class PrivateFeedView(generics.ListAPIView):
@@ -32,7 +37,13 @@ class PrivateFeedView(generics.ListAPIView):
     
     def get_queryset(self):
         user = self.request.user
-        queryset = Memory.objects.filter(is_active=True)
+        queryset = Memory.objects.filter(
+            is_active=True
+        ).select_related(
+            'uploaded_by', 'uploaded_by__user'
+        ).prefetch_related(
+            'children', 'students', 'students__user'
+        )
         
         if user.role == 'parent':
             if hasattr(user, 'parent_profile'):

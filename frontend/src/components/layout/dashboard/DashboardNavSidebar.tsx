@@ -1,15 +1,15 @@
 import LogoutButton from "@/components/auth/LogoutButton";
 import {
-  DashboardNavItem,
+  type DashboardNavItem,
   getDashboardNavItems,
 } from "@/components/layout/dashboard/dashboardNavConfig";
 import Avatar from "@/components/ui/Avatar";
 import NavLink from "@/components/ui/navigation/NavLink";
 import ResourceCollapsibleNavList from "@/components/ui/navigation/ResourceCollapsibleNavList";
-import { UserEntity } from "@/types/auth";
+import type { UserEntity } from "@/types/auth";
 
 function renderNavLink(navLink: DashboardNavItem, i: number) {
-  if (!!navLink.nestedNavLinks?.length)
+  if (navLink.nestedNavLinks?.length)
     return (
       <ResourceCollapsibleNavList
         key={i}

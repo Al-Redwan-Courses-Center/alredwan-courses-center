@@ -1,10 +1,10 @@
 "use client";
 
+import { useContext } from "react";
 import FourSquares from "@/components/icons/FourSquares";
 import TableIcon from "@/components/icons/TableIcon";
 import { DataViewContext } from "@/components/ui/data-view/DataView";
 import Toggle from "@/components/ui/Toggle";
-import { useContext } from "react";
 
 export default function DataViewLayoutToggleLegacy() {
   const { layout, setLayout } = useContext(DataViewContext);

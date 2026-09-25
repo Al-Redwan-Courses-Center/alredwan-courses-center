@@ -1,5 +1,5 @@
+import type { Metadata } from "next";
 import ComingSoon from "@/components/ui/ComingSoon";
-import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "الأنشطة",

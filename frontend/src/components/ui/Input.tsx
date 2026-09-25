@@ -1,14 +1,19 @@
 "use client";
 
-import { cn, cva } from "@/lib/utils";
-import { VariantProps } from "class-variance-authority";
-import { ChangeEvent, InputHTMLAttributes, ReactNode, useState } from "react";
-import { UseFormRegisterReturn } from "react-hook-form";
+import type { VariantProps } from "class-variance-authority";
 import { Eye, EyeOff } from "lucide-react";
+import {
+  type ChangeEvent,
+  type InputHTMLAttributes,
+  type ReactNode,
+  useState,
+} from "react";
+import type { UseFormRegisterReturn } from "react-hook-form";
+import { cn, cva } from "@/lib/utils";
 
 const containerStyles = cva(
   cn(
-    "shadow-soft bg-gray-50 px-10 py-4 [&_input]:text-[1.8rem] [&_input::placeholder]:font-semibold [&_input::placeholder]:text-gray-600 relative",
+    "shadow-soft relative bg-gray-50 px-10 py-4 [&_input]:text-[2rem] [&_input::placeholder]:font-semibold [&_input::placeholder]:text-gray-600",
   ),
   {
     variants: {
@@ -32,6 +37,8 @@ interface BaseInput {
   wrapperStyles?: string;
   type?: InputHTMLAttributes<HTMLInputElement>["type"];
   unstyled?: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 interface UncontrolledInput extends BaseInput {
@@ -60,6 +67,8 @@ export default function Input({
   value,
   registerReturn,
   unstyled = false,
+  onFocus,
+  onBlur,
 }: UncontrolledInput | ControlledInput) {
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === "password";
@@ -70,7 +79,7 @@ export default function Input({
         "[&_svg]:text-olive-300 flex items-center gap-6",
         wrapperStyles,
         !unstyled && icon && containerStyles({ shape }),
-        isPassword && !unstyled && !icon && "relative"
+        isPassword && !unstyled && !icon && "relative",
       )}
     >
       {iconAlignment === "start" && icon}
@@ -80,9 +89,11 @@ export default function Input({
         value={value}
         {...registerReturn}
         placeholder={placeholder}
+        onFocus={onFocus}
+        onBlur={onBlur}
         className={cn(
           !unstyled && !icon && containerStyles({ shape }),
-          "focus:outline-none w-full",
+          "w-full focus:outline-none",
           isPassword && "pe-14",
           inputStyles,
         )}
@@ -93,7 +104,7 @@ export default function Input({
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none flex items-center justify-center"
+          className="absolute top-1/2 left-6 flex -translate-y-1/2 items-center justify-center text-gray-400 hover:text-gray-600 focus:outline-none"
           aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
         >
           {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}

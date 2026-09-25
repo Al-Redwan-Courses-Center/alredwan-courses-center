@@ -1,3 +1,4 @@
+import { useState } from "react";
 import StarIcon from "@/components/icons/StarIcon";
 import {
   Popover,
@@ -5,7 +6,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/Popover";
 import { cn, toHindiDigits } from "@/lib/utils";
-import { useState } from "react";
 
 export default function RatingPopover({
   rating,
@@ -54,7 +54,7 @@ export default function RatingPopover({
                 }}
                 className={cn(
                   "h-8 w-auto cursor-pointer px-1",
-                  (!!currentHoveredStar ? n <= currentHoveredStar : n <= rating)
+                  (currentHoveredStar ? n <= currentHoveredStar : n <= rating)
                     ? "text-beige-500"
                     : "text-gray-500",
                 )}

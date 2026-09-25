@@ -47,10 +47,23 @@ export interface CourseListItem {
 
 export interface CourseScheduleDetail {
   id: number;
+  course?: number;
   weekday: number;
   weekday_display: string;
   start_time: string;
   end_time: string;
+}
+
+/** Public lecture outline entry returned by `GET /api/courses/{id}/`. */
+export interface LectureOutlineItem {
+  id: number;
+  lecture_number: number;
+  title: string;
+  day: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  status_display: string;
 }
 
 export interface CourseDetail extends Omit<
@@ -58,8 +71,27 @@ export interface CourseDetail extends Omit<
   "average_rating" | "rating_count"
 > {
   schedules: CourseScheduleDetail[];
+  /** Sorted by `lecture_number`; may be absent on older responses. */
+  lectures?: LectureOutlineItem[];
 }
 
+import { OnlineCourseDetail } from "./online-courses";
+
+export type StudentPhysicalCourse = CourseDetail & {
+  type: "physical";
+  course_progress: number;
+  enrollment_status?: string;
+  enrollment_status_display?: string;
+};
+
+export type StudentOnlineCourse = OnlineCourseDetail & {
+  type: "online";
+  course_progress: number;
+  enrollment_status?: string;
+  enrollment_status_display?: string;
+};
+
+export type StudentCourseItem = StudentPhysicalCourse | StudentOnlineCourse;
 export interface LandingPageCourse {
   id: number;
   order: number;
@@ -73,9 +105,6 @@ export interface CourseStats {
   lectures: number;
 }
 */
-
-
-
 
 // TODO(types): Unused entity type; reintroduce when an API uses it.
 /*

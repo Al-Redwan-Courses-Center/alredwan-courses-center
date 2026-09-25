@@ -18,6 +18,8 @@ Comprehensive documentation for all course and lecture management endpoints.
    - [Update Lecture](#8-update-lecture)
    - [Check Lecture DateTime Availability](#9-check-lecture-datetime-availability)
    - [Get Today's Lectures](#10-get-todays-lectures)
+   - [Get Student Course Lectures](#11-get-student-course-lectures)
+   - [Get Parent Course Lectures](#12-get-parent-course-lectures)
 
 ---
 
@@ -784,7 +786,54 @@ Returns all lectures scheduled for today (both accepted and pending approval).
 
 ---
 
-## Quick Reference
+### 11. Get Student Course Lectures
+
+Get all lectures for a specific course for the logged-in student, including their personal attendance records.
+
+| | |
+|--|--|
+| **URL** | `GET /api/courses/{course_id}/student/lectures/` |
+| **Auth** | ✅ Required (IsAuthenticated) |
+| **Permissions** | Logged-in user must be a Student enrolled in the course. |
+
+**Success Response:**
+```json
+[
+  {
+    "id": 1,
+    "lecture_number": 1,
+    "title": "Introduction",
+    "day": "2026-02-18",
+    "status": "completed",
+    "status_display": "Completed",
+    "attendance_info": {
+      "present": true,
+      "rating": 9,
+      "notes": "Excellent participation",
+      "marked_at": "2026-02-18T10:30:00Z"
+    }
+  }
+]
+```
+
+---
+
+### 12. Get Parent Course Lectures
+
+Get all lectures for a specific course for a specific child of the logged-in parent, including the child's attendance records.
+
+| | |
+|--|--|
+| **URL** | `GET /api/courses/{course_id}/parent/{child_id}/lectures/` |
+| **Auth** | ✅ Required (IsAuthenticated) |
+| **Permissions** | Logged-in user must be a Parent, the child must belong to them, and the child must be enrolled in the course. |
+
+**Success Response:**
+Same format as the student endpoint.
+
+---
+
+## Quick Reference Summary
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|

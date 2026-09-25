@@ -1,10 +1,10 @@
 "use client";
 
+import type { VariantProps } from "class-variance-authority";
 import Link from "next/link";
-import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 import { cn, cva } from "@/lib/utils";
-import { VariantProps } from "class-variance-authority";
 
 const navLinkStyles = cva("", {
   variants: {

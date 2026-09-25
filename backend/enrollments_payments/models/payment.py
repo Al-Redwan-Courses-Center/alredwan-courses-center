@@ -7,10 +7,12 @@ from django.db.models import Q
 
 
 class PaymentMethod(models.TextChoices):
-    """Enumeration for payment method choices."""
+    """Enumeration for payment method choices.
+
+    ``card`` and ``bank_transfer`` were retired; legacy rows were folded into
+    ``other`` by the enrollments_payments data migration.
+    """
     CASH = 'cash', 'Cash'
-    CARD = 'card', 'Card'
-    BANK_TRANSFER = 'bank_transfer', 'Bank Transfer'
     INSTAPAY = 'instapay', 'Instapay'
     VODAFONE_CASH = 'vodafone_cash', 'Vodafone Cash'
     OTHER = 'other', 'Other'
@@ -67,19 +69,19 @@ class Payment(models.Model):
         constraints = [
             # Ensure that either payer_parent or payer_student is set, but not both
             models.CheckConstraint(
-                check=Q(payer_parent__isnull=False, payer_student__isnull=True) | Q(
+                condition=Q(payer_parent__isnull=False, payer_student__isnull=True) | Q(
                     payer_parent__isnull=True, payer_student__isnull=False),
                 name='payer_parent_or_student'
             ),
             # Ensure that payment_date is set if status is PAID or REFUNDED
             models.CheckConstraint(
-                check=~Q(
+                condition=~Q(
                     status__in=[PaymentStatus.PAID, PaymentStatus.REFUNDED], processed_at__isnull=True),
                 name='processed_at_required_for_paid_or_refunded'
             ),
             # Ensure amount is non-negative
             models.CheckConstraint(
-                check=Q(amount__gte=0),
+                condition=Q(amount__gte=0),
                 name='amount_non_negative'
             )
         ]
@@ -103,10 +105,6 @@ class Payment(models.Model):
 
         if self.amount is not None and self.amount < 0:
             raise ValidationError("Amount must be non-negative.")
-        # Reference number must be set for bank transfer method
-        if self.method == PaymentMethod.BANK_TRANSFER and not self.reference_number:
-            raise ValidationError(
-                "Reference number must be set for bank transfer method.")
 
     def update_status(self, new_status, processed_by=None, processed_at=None):
         """Update the payment status with validation."""

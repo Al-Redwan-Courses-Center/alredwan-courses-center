@@ -1,8 +1,8 @@
+import type { Metadata } from "next";
+import { Suspense } from "react";
 import { getUser, protect } from "@/actions/auth";
 import { getInstructorTodaysLectures } from "@/actions/lectures";
 import TodaysLecturesTable from "@/components/dashboard/instructor/TodaysLecturesTable";
-import { Metadata } from "next";
-import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "محاضرات اليوم",

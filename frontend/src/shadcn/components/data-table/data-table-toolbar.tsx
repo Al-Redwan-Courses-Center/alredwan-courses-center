@@ -1,8 +1,8 @@
 "use client";
 
-import { type SortingState, type Table } from "@tanstack/react-table";
-import React from "react";
+import type { SortingState, Table } from "@tanstack/react-table";
 import { ChevronDown } from "lucide-react";
+import React from "react";
 
 import { Button } from "../ui/button";
 import {
@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { SearchInput } from "../ui/search-input";
 import {
   Select,
   SelectContent,
@@ -20,10 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import type { DataTableFilterConfig, DataTableSearchConfig } from "./types";
 import { NO_SORT_VALUE } from "./toolbar-shared";
-
-import { SearchInput } from "../ui/search-input";
+import type { DataTableFilterConfig, DataTableSearchConfig } from "./types";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
