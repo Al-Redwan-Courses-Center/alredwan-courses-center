@@ -1,6 +1,7 @@
-import type React from "react";
+import React from "react";
 import RatingStars from "@/components/shared/RatingStars";
 import ProgressBar from "@/components/ui/ProgressBar";
+import { cn } from "@/lib/utils";
 
 interface RatingsBreakdownProps {
   statistics: {
@@ -11,9 +12,13 @@ interface RatingsBreakdownProps {
     parent_ratings_count: number;
     parent_average: number | null;
   };
+  compact?: boolean;
 }
 
-const RatingsBreakdown: React.FC<RatingsBreakdownProps> = ({ statistics }) => {
+const RatingsBreakdown: React.FC<RatingsBreakdownProps> = ({
+  statistics,
+  compact = false,
+}) => {
   const {
     average_rating,
     total_ratings,
@@ -25,41 +30,75 @@ const RatingsBreakdown: React.FC<RatingsBreakdownProps> = ({ statistics }) => {
 
   if (total_ratings === 0) {
     return (
-      <div className="text-center py-12 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-        <p className="text-gray-500 text-2xl font-medium">
+      <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50 py-12 text-center">
+        <p className="text-2xl font-medium text-gray-500">
           لا توجد تقييمات بعد
         </p>
       </div>
     );
   }
-
   return (
-    <div className="grid grid-cols-3 tablet:grid-cols-1 gap-8 bg-white rounded-3xl p-8 border border-gray-100 shadow-sm divide-x divide-x-reverse tablet:divide-x-0 tablet:divide-y divide-gray-100">
+    <div
+      className={cn(
+        "tablet:grid-cols-1 tablet:divide-x-0 tablet:divide-y grid grid-cols-3 divide-x divide-gray-100 rounded-3xl border border-gray-100 bg-white shadow-sm divide-x-reverse",
+        compact ? "gap-4 p-4" : "gap-8 p-8",
+      )}
+    >
       {/* Overall Score */}
-      <div className="flex flex-col items-center justify-center tablet:pt-0 tablet:pb-6">
-        <span className="text-2xl mobile-lg:text-3xl font-bold text-gray-500 mb-2">
+      <div className="tablet:pt-0 tablet:pb-6 flex flex-col items-center justify-center">
+        <span
+          className={cn(
+            "mb-2 font-bold text-gray-500",
+            compact ? "text-xl" : "mobile-lg:text-3xl text-2xl",
+          )}
+        >
           التقييم العام
         </span>
-        <div className="text-[6rem] mobile-lg:text-[8rem] leading-none font-black text-primary mb-2 mt-4">
+        <div
+          className={cn(
+            "text-primary mt-4 mb-2 leading-none font-black",
+            compact ? "text-6xl" : "mobile-lg:text-[8rem] text-[6rem]",
+          )}
+        >
           {average_rating ? average_rating.toFixed(1) : "0.0"}
         </div>
         <RatingStars rating={average_rating || 0} size="sm" />
-        <span className="text-xl mobile-lg:text-2xl text-gray-400 mt-2">
+        <span
+          className={cn(
+            "mt-2 text-gray-400",
+            compact ? "text-lg" : "mobile-lg:text-2xl text-xl",
+          )}
+        >
           من {total_ratings} تقييم
         </span>
       </div>
 
       {/* Student Score */}
-      <div className="flex flex-col items-center justify-center tablet:pt-6">
-        <span className="text-2xl mobile-lg:text-3xl font-bold text-blue-600 mb-2">
+      <div className="tablet:pt-6 flex flex-col items-center justify-center">
+        <span
+          className={cn(
+            "mb-2 font-bold text-blue-600",
+            compact ? "text-xl" : "mobile-lg:text-3xl text-2xl",
+          )}
+        >
           تقييم الطلاب
         </span>
-        <div className="text-[4rem] mobile-lg:text-[5rem] leading-none font-bold text-gray-900 mb-2 mt-2">
+        <div
+          className={cn(
+            "mt-2 mb-2 leading-none font-bold text-gray-900",
+            compact ? "text-5xl" : "mobile-lg:text-[5rem] text-[4rem]",
+          )}
+        >
           {student_average ? student_average.toFixed(1) : "0.0"}
         </div>
-        <div className="w-full max-w-[120px] space-y-2 mt-2">
+        <div className="mt-2 w-full max-w-[120px] space-y-2">
           <ProgressBar progress={(student_average || 0) * 10} className="h-2" />
-          <div className="flex justify-between text-xl mobile-lg:text-2xl text-gray-400">
+          <div
+            className={cn(
+              "flex justify-between text-gray-400",
+              compact ? "text-lg" : "mobile-lg:text-2xl text-xl",
+            )}
+          >
             <span>{student_ratings_count} تقييم</span>
             <span>10/10</span>
           </div>
@@ -67,16 +106,31 @@ const RatingsBreakdown: React.FC<RatingsBreakdownProps> = ({ statistics }) => {
       </div>
 
       {/* Parent Score */}
-      <div className="flex flex-col items-center justify-center tablet:pt-6">
-        <span className="text-2xl mobile-lg:text-3xl font-bold text-purple-600 mb-2">
+      <div className="tablet:pt-6 flex flex-col items-center justify-center">
+        <span
+          className={cn(
+            "mb-2 font-bold text-purple-600",
+            compact ? "text-xl" : "mobile-lg:text-3xl text-2xl",
+          )}
+        >
           تقييم أولياء الأمور
         </span>
-        <div className="text-[4rem] mobile-lg:text-[5rem] leading-none font-bold text-gray-900 mb-2 mt-2">
+        <div
+          className={cn(
+            "mt-2 mb-2 leading-none font-bold text-gray-900",
+            compact ? "text-5xl" : "mobile-lg:text-[5rem] text-[4rem]",
+          )}
+        >
           {parent_average ? parent_average.toFixed(1) : "0.0"}
         </div>
-        <div className="w-full max-w-[120px] space-y-2 mt-2">
+        <div className="mt-2 w-full max-w-[120px] space-y-2">
           <ProgressBar progress={(parent_average || 0) * 10} className="h-2" />
-          <div className="flex justify-between text-xl mobile-lg:text-2xl text-gray-400">
+          <div
+            className={cn(
+              "flex justify-between text-gray-400",
+              compact ? "text-lg" : "mobile-lg:text-2xl text-xl",
+            )}
+          >
             <span>{parent_ratings_count} تقييم</span>
             <span>10/10</span>
           </div>

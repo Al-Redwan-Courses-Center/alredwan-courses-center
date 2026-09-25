@@ -11,9 +11,9 @@ const dataPointWrapperStyles = cn(
   "flex flex-col items-center gap-1 text-center",
 );
 
-const dataPointIconStyles = cn("h-8 w-auto text-olive-400 mb-1");
+const dataPointIconStyles = cn("text-olive-400 mb-1 h-8 w-auto");
 
-const labelStyles = cn("text-gray-400 text-lg font-medium");
+const labelStyles = cn("text-lg font-medium text-gray-400");
 const valueStyles = cn("text-olive-700 text-xl font-bold");
 
 export default function CourseHeader({
@@ -34,13 +34,13 @@ export default function CourseHeader({
 
         {/* Title Section */}
         <div className="mt-2 text-center sm:mt-4">
-          <h2 className="font-medad text-xl font-bold text-olive-700 max-[1000px]:text-2xl sm:text-5xl">
+          <h2 className="font-medad text-olive-700 text-xl font-bold max-[1000px]:text-2xl sm:text-5xl">
             {course?.name} - مستوى متقدم
           </h2>
         </div>
 
         {/* Info Grid */}
-        <div className="grid w-full max-w-4xl grid-cols-2 gap-4 border-t border-olive-100/50 pt-4 sm:grid-cols-4 sm:gap-6 sm:pt-8 md:gap-x-20">
+        <div className="border-olive-100/50 grid w-full max-w-4xl grid-cols-2 gap-4 border-t pt-4 sm:grid-cols-4 sm:gap-6 sm:pt-8 md:gap-x-20">
           <div className={dataPointWrapperStyles}>
             <InstructorIcon className={dataPointIconStyles} />
             <span className={labelStyles}>المعلمين</span>
@@ -59,9 +59,17 @@ export default function CourseHeader({
 
           <div className={dataPointWrapperStyles}>
             <PeopleIcon className={dataPointIconStyles} />
-            <span className={labelStyles}>الحصة</span>
+            <span className={labelStyles}>العمر</span>
             <span className={valueStyles}>
-              {toHindiDigits(course?.capacity || 200)}
+              {course?.for_adults
+                ? "للبالغين (+18)"
+                : course?.min_age && course?.max_age
+                  ? `من ${toHindiDigits(course.min_age)} إلى ${toHindiDigits(course.max_age)}`
+                  : course?.min_age
+                    ? `+${toHindiDigits(course.min_age)}`
+                    : course?.max_age
+                      ? `حتى ${toHindiDigits(course.max_age)}`
+                      : "الكل"}
             </span>
           </div>
 

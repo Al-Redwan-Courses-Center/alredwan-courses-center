@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { cn, cva } from "@/lib/utils";
 
 const itemCardVariants = cva(
-  "shadow-soft relative flex min-w-111 group flex-col overflow-clip bg-[#f5f5f5] text-[1.2rem] mobile-lg:text-[2rem] mobile:text-[2.5rem]",
+  "shadow-soft relative flex group flex-col overflow-clip bg-[#f5f5f5] text-[1.2rem] mobile-lg:text-[2rem] mobile:text-[2.5rem] h-full",
   {
     variants: {
       shape: {

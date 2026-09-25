@@ -6,6 +6,9 @@ from django.utils import timezone
 from django.urls import reverse
 from django.db.models import Count
 from django import forms
+from courses.models import Course
+from courses_online.models import OnlineCourse
+from enrollments_payments.models.payment import Payment
 
 from core.utils import ExcelExportMixin
 from enrollments_payments.models.enrollment_request import (
@@ -48,8 +51,6 @@ class PaymentMethodFilter(admin.SimpleListFilter):
     def lookups(self, request, model_admin):
         return (
             ("cash", _("💵 نقدًا")),
-            ("card", _("💳 بطاقة")),
-            ("bank_transfer", _("🏦 تحويل بنكي")),
             ("instapay", _("📱 إنستاباي")),
             ("vodafone_cash", _("📲 فودافون كاش")),
             ("other", _("📋 طريقة أخرى")),
@@ -134,7 +135,7 @@ def approve_selected(modeladmin, request, queryset):
             approved_count += 1
 
             # Track if this was a partial payment
-            target = enrollment_request.course
+            target = enrollment_request.course_instance
             if (
                 enrollment_request.price is not None
                 and target
@@ -294,7 +295,7 @@ class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
                 (
                     _("معلومات الدورة"),
                     {
-                        "fields": ("course",),
+                        "fields": ("course", "online_course"),
                         "description": _("اختر الدورة المراد التسجيل فيها"),
                     },
                 ),
@@ -337,7 +338,7 @@ class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
                 (
                     _("معلومات الدورة"),
                     {
-                        "fields": ("course", "get_course_info"),
+                        "fields": ("course", "online_course", "get_course_info"),
                     },
                 ),
                 (
@@ -384,6 +385,7 @@ class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
                 "get_participant_info",
                 "get_course_info",
                 "course",
+                "online_course",
                 "student",
                 "child",
                 "parent",  # Lock participant info after creation
@@ -393,8 +395,8 @@ class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
         """Return autocomplete fields based on add/edit mode."""
         # Note: We check the URL to determine if we're adding
         if "/add/" in request.path:
-            return ["course", "student", "child"]
-        return ["course", "processed_by"]
+            return ["course", "online_course", "student", "child"]
+        return ["course", "online_course", "processed_by"]
 
     # =========================================================================
     # Query Optimization - Avoid N+1 queries
@@ -404,6 +406,7 @@ class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
         qs = super().get_queryset(request)
         return qs.select_related(
             "course",
+            "online_course",
             "course__season",
             "course__instructor",
             "parent",
@@ -448,12 +451,19 @@ class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
     @admin.display(description=_("الدورة"), ordering="course__name")
     def get_course_link(self, obj):
         """Display course as clickable link."""
-        if obj.course:
-            url = reverse("admin:courses_course_change", args=[obj.course.pk])
+        target = obj.course_instance
+        if target:
+            if isinstance(target, OnlineCourse):
+                url = reverse("admin:courses_online_onlinecourse_change", args=[target.pk])
+                icon = "💻"
+            else:
+                url = reverse("admin:courses_course_change", args=[target.pk])
+                icon = "📚"
             return format_html(
-                '<a href="{}" style="color: #2980b9; text-decoration: none;">📚 {}</a>',
+                '<a href="{}" style="color: #2980b9; text-decoration: none;">{} {}</a>',
                 url,
-                obj.course.name,
+                icon,
+                target.name,
             )
         return "-"
 
@@ -461,7 +471,8 @@ class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
     def get_price_display(self, obj):
         """Display price with currency and comparison to course price."""
         if obj.price is not None:
-            course_price = obj.course.price if obj.course else None
+            target = obj.course_instance
+            course_price = target.price if target else None
 
             if course_price and obj.price < course_price:
                 # Discounted price
@@ -513,8 +524,6 @@ class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
         """Display payment method with icon."""
         method_config = {
             "cash": ("💵", "#27ae60"),
-            "card": ("💳", "#3498db"),
-            "bank_transfer": ("🏦", "#9b59b6"),
             "instapay": ("📱", "#e74c3c"),
             "vodafone_cash": ("📲", "#e74c3c"),
             "other": ("📋", "#95a5a6"),
@@ -650,19 +659,22 @@ class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
     @admin.display(description=_("معلومات الدورة"))
     def get_course_info(self, obj):
         """Display detailed course info in edit form."""
-        if obj.course:
+        target = obj.course_instance
+        if target:
+            is_online = isinstance(target, OnlineCourse)
             return format_html(
                 '<div style="padding: 10px; background: #264b5d; border-radius: 5px;">'
                 "<strong>📚 الدورة:</strong> {}<br>"
                 "<strong>👨‍🏫 المدرس:</strong> {}<br>"
                 "<strong>💰 السعر الأصلي:</strong> {} ج.م<br>"
-                "<strong>👥 المسجلين:</strong> {} / {}"
+                "<strong>👥 المسجلين:</strong> {}"
+                "{}"
                 "</div>",
-                obj.course.name,
-                obj.course.instructor or "-",
-                obj.course.price or "مجاني",
-                obj.course.enrolled_count,
-                obj.course.capacity,
+                target.name,
+                target.instructor or "-",
+                target.price or "مجاني",
+                target.enrolled_count,
+                f" / {target.capacity}" if not is_online else "",
             )
         return "-"
 
@@ -675,6 +687,7 @@ class EnrollmentRequestAdmin(ExcelExportMixin, admin.ModelAdmin):
 
         labels = {
             "course": "الدورة",
+            "online_course": "الدورة الإلكترونية",
             "parent": "ولي الأمر",
             "student": "الطالب",
             "child": "الطفل",

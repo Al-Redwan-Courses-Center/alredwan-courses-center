@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "nested_admin",
     "rest_framework",
     "django_filters",
     "djoser",
@@ -65,6 +66,7 @@ INSTALLED_APPS = [
     "courses",
     "enrollments_payments",
     "memories",
+    "courses_online",
 ]
 
 MIDDLEWARE = [

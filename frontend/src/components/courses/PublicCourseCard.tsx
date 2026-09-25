@@ -13,10 +13,12 @@ export default function PublicCourseCard({
   course,
   index,
   linkTo = "landing",
+  showEnroll = false,
 }: {
   course: CourseListItem;
   index: number;
   linkTo?: "dashboard" | "landing";
+  showEnroll?: boolean;
 }) {
   const startDate = parseISO(course.start_date);
   // const endDate = parseISO(course.start_date);
@@ -69,15 +71,17 @@ export default function PublicCourseCard({
             عرض الدورة
           </Button>
 
-          <Button
-            variant="secondary"
-            size="small"
-            revert
-            href={`/dashboard/courses/${course.id}?openModal=1`}
-            className="mobile-lg:text-[1.8rem] mobile:text-[2.2rem] px-0 text-[1.125rem]"
-          >
-            سجل الآن
-          </Button>
+          {showEnroll && (
+            <Button
+              variant="secondary"
+              size="small"
+              revert
+              href={`/dashboard/courses/${course.id}?openModal=1`}
+              className="mobile-lg:text-[1.8rem] mobile:text-[2.2rem] px-0 text-[1.125rem]"
+            >
+              سجل الآن
+            </Button>
+          )}
         </div>
       }
       index={index}

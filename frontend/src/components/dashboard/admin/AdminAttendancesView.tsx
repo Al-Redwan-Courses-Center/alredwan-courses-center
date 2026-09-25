@@ -716,8 +716,8 @@ export default function AdminAttendancesView({
         sortConfig={{}}
       >
         <div className="flex w-full flex-1 flex-col">
-          <div className="w-full overflow-x-auto pb-4">
-            <div className="flex min-w-[1200px] flex-col">
+          <div className="tablet-sm:overflow-x-visible w-full overflow-x-auto pb-4">
+            <div className="tablet-sm:min-w-0 flex min-w-[1200px] flex-col">
               <DataViewHeaderLegacy>
                 <DataViewCellLegacy>م</DataViewCellLegacy>
                 <DataViewCellLegacy>الاسم</DataViewCellLegacy>

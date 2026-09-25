@@ -26,6 +26,7 @@ export default function StudentOverviewCoursesAccordion({
         const startDate = "start_date" in course ? course.start_date : null;
         const numLectures =
           "num_lectures" in course ? course.num_lectures : undefined;
+        const videoCount = "video_count" in course ? course.video_count : undefined;
         const schedules = "schedules" in course ? course.schedules : undefined;
 
         return (
@@ -80,6 +81,21 @@ export default function StudentOverviewCoursesAccordion({
                 </li>
               )}
 
+              {videoCount !== undefined && (
+                <li className="flex items-center gap-2">
+                  <BookIcon className="text-olive-500" />
+                  <span>
+                    {toHindiDigits(videoCount)}{" "}
+                    {getArabicPlural(videoCount, {
+                      singular: "فيديو",
+                      twofer: "فيديوهان",
+                      plural: "فيديوهات",
+                    })}
+                  </span>
+                </li>
+              )}
+
+
               {numLectures !== undefined && (
                 <li className="flex items-center gap-2">
                   <BookIcon className="text-olive-500" />
@@ -120,11 +136,16 @@ export default function StudentOverviewCoursesAccordion({
               ) : (
                 <Button
                   size="small"
-                  href={`/dashboard/my-courses/${course.id}`}
+                  href={
+                    course.type === "online" 
+                      ? `/dashboard/online-courses/${course.id}/learn`
+                      : `/dashboard/my-courses/${course.id}`
+                  }
                 >
-                  عرض الدورة
+                  {course.type === "online" ? "مشاهدة الدورة" : "عرض الدورة"}
                 </Button>
               )}
+
             </div>
           </AccordionItem>
         );

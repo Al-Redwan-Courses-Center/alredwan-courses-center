@@ -43,13 +43,21 @@ export default function StudentMyCoursesView({
       }}
       viewLayout="cards"
     >
-      <div className="mb-14 flex flex-wrap items-center gap-6 sm:gap-12 xl:gap-32 px-4 sm:px-8 xl:px-16">
-        <DataViewSearchLegacy />
-        <DataViewSortLegacy />
-        <DataViewFilterLegacy />
+      <div className="tablet:flex-col tablet:items-stretch tablet:gap-12 relative z-60 mb-14 flex items-center justify-between gap-16 px-4 tablet:px-16 tablet-sm:px-4">
+        <div className="tablet:max-w-full w-full max-w-[400px]">
+          <DataViewSearchLegacy />
+        </div>
+        <div className="tablet:w-full flex items-center gap-12">
+          <div className="tablet:flex-1 w-auto">
+            <DataViewSortLegacy />
+          </div>
+          <div className="tablet:flex-1 w-auto">
+            <DataViewFilterLegacy />
+          </div>
+        </div>
       </div>
 
-      <DataViewHeaderLegacy className="mx-4 sm:mx-8 xl:mx-16 hidden lg:grid">
+      <DataViewHeaderLegacy className="mx-4 tablet:mx-16 tablet-sm:mx-4 hidden lg:grid">
         <DataViewCellLegacy>م</DataViewCellLegacy>
         <DataViewCellLegacy>الدورة</DataViewCellLegacy>
         <DataViewCellLegacy>الموسم</DataViewCellLegacy>
@@ -59,7 +67,7 @@ export default function StudentMyCoursesView({
       </DataViewHeaderLegacy>
 
       <DataViewBodyLegacy
-        className="px-4 sm:px-8 xl:px-16"
+        className="px-4 tablet:px-16 tablet-sm:px-4 tablet-sm:!grid tablet-sm:!grid-cols-1 tablet-sm:!overflow-hidden w-full [&_>_div]:!min-w-0"
         render={{
           table: () => null,
 

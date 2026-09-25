@@ -21,11 +21,8 @@ type PaymentMethod = NonNullable<EnrollmentRequestCreateBody["payment_method"]>;
 
 const paymentOptions: { value: PaymentMethod; label: string }[] = [
   { value: "cash", label: "نقدًا" },
-  { value: "card", label: "بطاقة" },
-  { value: "bank_transfer", label: "تحويل بنكي" },
   { value: "instapay", label: "إنستاباي" },
   { value: "vodafone_cash", label: "فودافون كاش" },
-  { value: "other", label: "طريقة أخرى" },
 ];
 
 interface PurchaseFormInputs {
@@ -45,11 +42,13 @@ export default function CoursePurchaseModal({
   role,
   courseId,
   coursePrice,
+  courseType = "physical",
   childrenOptions = [],
 }: {
   role: "parent" | "student";
   courseId: string;
   coursePrice: string;
+  courseType?: "physical" | "online";
   childrenOptions?: ParentChildDetail[];
 }) {
   const searchParams = useSearchParams();
@@ -85,7 +84,8 @@ export default function CoursePurchaseModal({
     }
 
     const payload: EnrollmentRequestCreateBody = {
-      course: courseId,
+      course: courseType === "physical" ? courseId : undefined,
+      online_course: courseType === "online" ? courseId : undefined,
       payment_method: values.payment_method,
       notes: values.notes.trim() || undefined,
       price: parsedPrice,
@@ -263,7 +263,7 @@ export default function CoursePurchaseModal({
                     {...register("payment_method", {
                       required: "يرجى اختيار طريقة الدفع.",
                     })}
-                    className="h-6 w-6 accent-olive-500"
+                    className="accent-olive-500 h-6 w-6"
                   />
                   <span>{option.label}</span>
                 </label>

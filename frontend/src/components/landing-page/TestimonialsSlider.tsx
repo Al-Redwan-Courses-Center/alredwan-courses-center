@@ -39,8 +39,12 @@ export default function TestimonialsSlider({
   testimonials: Testimonial[];
 }) {
   const isClient = useIsClient();
-  const isSmallDesktop = useMediaQuery("(max-width: 1850px)");
-  const isMobile = useMediaQuery("(max-width: 900px)");
+  const isSmallDesktop = useMediaQuery("(max-width: 1850px)", {
+    initializeWithValue: false,
+  });
+  const isMobile = useMediaQuery("(max-width: 900px)", {
+    initializeWithValue: false,
+  });
 
   if (!isClient)
     return (

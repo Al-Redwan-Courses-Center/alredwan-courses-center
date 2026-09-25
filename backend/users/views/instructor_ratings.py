@@ -28,8 +28,9 @@ class InstructorRatingsView(generics.RetrieveAPIView):
     GET /api/instructors/{id}/ratings/
 
     Returns aggregated rating statistics and individual ratings in paginated envelopes.
+    Public, like course ratings: the instructor profile page shows them to visitors.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = InstructorRatingDetailSerializer
 
     def get_object(self):

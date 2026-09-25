@@ -6,6 +6,13 @@ import PhoneIcon from "@/components/icons/PhoneIcon";
 import TelegramIcon from "@/components/icons/TelegramIcon";
 import WhatsappIcon from "@/components/icons/WhatsappIcon";
 import YoutubeIcon from "@/components/icons/YoutubeIcon";
+import {
+  CONTACT_EMAIL,
+  CONTACT_EMAIL_HREF,
+  CONTACT_PHONE,
+  CONTACT_PHONE_HREF,
+  CONTACT_WHATSAPP_HREF,
+} from "@/lib/contact";
 import { toHindiDigits } from "@/lib/utils";
 
 export default function Footer() {
@@ -17,33 +24,33 @@ export default function Footer() {
           <ul className="flex flex-col gap-3 [&_svg]:w-[1.6rem] [&>li]:flex [&>li]:items-center [&>li]:gap-4">
             <li>
               <a
-                href="mailto:info@alredwan.edu"
+                href={CONTACT_EMAIL_HREF}
                 className="flex items-center gap-4 hover:underline"
               >
                 <EmailIcon />
-                <span>info@alredwan.edu</span>
+                <span>{CONTACT_EMAIL}</span>
               </a>
             </li>
 
             <li>
               <a
-                href="tel:+201234567890"
+                href={CONTACT_PHONE_HREF}
                 className="flex items-center gap-4 hover:underline"
               >
                 <PhoneIcon />
-                <span>٢٠١٢٣٤٥٦٧٨٩٠+</span>
+                <span dir="ltr">{toHindiDigits(CONTACT_PHONE, true)}</span>
               </a>
             </li>
 
             <li>
               <a
-                href="https://wa.me/201234567890"
+                href={CONTACT_WHATSAPP_HREF}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 hover:underline"
               >
                 <WhatsappIcon />
-                <span>٢٠١٢٣٤٥٦٧٨٩٠+</span>
+                <span dir="ltr">{toHindiDigits(CONTACT_PHONE, true)}</span>
               </a>
             </li>
           </ul>

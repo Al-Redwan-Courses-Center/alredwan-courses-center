@@ -55,7 +55,6 @@ export default async function Page({
         ) / enrollments.length,
       )
     : 0;
-
   return (
     <StudentOverviewPage
       name={child.first_name}

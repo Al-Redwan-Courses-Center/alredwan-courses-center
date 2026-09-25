@@ -31,6 +31,9 @@ interface DataViewContext<T> {
   filterConfig: DataViewFilterConfig;
   sortConfig: DataViewSortConfig<T>;
   manualPagination?: boolean;
+  /** Column captions captured from `DataViewHeaderLegacy`, used by stacked cells on phones. */
+  headerLabels: string[];
+  setHeaderLabels: Dispatch<SetStateAction<string[]>>;
 }
 
 const initialContext: DataViewContext<any> = {
@@ -46,6 +49,8 @@ const initialContext: DataViewContext<any> = {
   setPage: () => {},
   filterConfig: {},
   sortConfig: {},
+  headerLabels: [],
+  setHeaderLabels: () => {},
 };
 
 export const DataViewContext =
@@ -81,6 +86,7 @@ export default function DataViewLegacy<T extends Record<string, any>>({
   const [layout, setLayout] =
     useState<DataViewContext<T>["layout"]>(viewLayout);
   const maxItemsState = layout === "cards" ? 8 : maxItemsPerPage;
+  const [headerLabels, setHeaderLabels] = useState<string[]>([]);
 
   const { mutateSearchParams, searchParams } = useMutateSearchParams();
 
@@ -126,9 +132,7 @@ export default function DataViewLegacy<T extends Record<string, any>>({
     mutateSearchParams([{ key: "page", val: pageNum }]);
   };
 
-  const displayData = isRemote
-    ? data
-    : sortedData.slice(startIndex, endIndex);
+  const displayData = isRemote ? data : sortedData.slice(startIndex, endIndex);
 
   const value: DataViewContext<T> = {
     columnSizing: gridLayout,
@@ -145,6 +149,8 @@ export default function DataViewLegacy<T extends Record<string, any>>({
     filterConfig,
     sortConfig,
     manualPagination: isRemote,
+    headerLabels,
+    setHeaderLabels,
   };
 
   return <DataViewContext value={value}>{children}</DataViewContext>;

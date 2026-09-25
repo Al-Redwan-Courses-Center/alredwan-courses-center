@@ -5,7 +5,9 @@ import HeroBG from "@/assets/hero-bg.svg";
 import SignupModal from "@/components/auth/SignupModal";
 import SectionDivider from "@/components/landing-page/SectionDivider";
 import Button from "@/components/ui/Button";
+
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import { Sparkles, MonitorPlay, ArrowLeft } from "lucide-react";
 
 export default async function HeroSection() {
   const session = await getServerSession(authConfig);
@@ -19,6 +21,44 @@ export default async function HeroSection() {
         className="tablet:right-0 tablet:left-auto tablet:max-w-4/5 tablet:opacity-100 tablet:scale-x-100 absolute bottom-0 left-0 max-w-1/2 scale-x-[-1] object-cover opacity-60"
         draggable="false"
       />
+
+      {/* New Online Courses Floating Badge (Desktop/Tablet Only) */}
+      <div className="tablet:hidden absolute top-1/2 left-0 z-20 flex -translate-y-1/2 flex-col items-center">
+        <ScrollReveal direction="left" delay={0.6}>
+          <a
+            href="#courses"
+            className="group relative flex flex-col items-center rounded-[2.5rem] border border-white/20 bg-white/10 p-12 shadow-[0_20px_60px_rgba(0,0,0,0.4)] backdrop-blur-md transition-all duration-500 hover:-translate-y-4 hover:scale-110 hover:bg-white/20"
+          >
+            {/* "New" Tag */}
+            <div className="-top-6 absolute -right-6 flex animate-bounce items-center gap-2 rounded-full bg-yellow-400 px-6 py-2.5 text-xl font-bold text-yellow-900 shadow-xl z-30">
+              <Sparkles size={24} />
+              <span>إضافة جديدة</span>
+            </div>
+
+            {/* Icon */}
+            <div className="group-hover:bg-beige-500/90 mb-6 rounded-full bg-white/20 p-8 shadow-inner transition-colors duration-500">
+              <MonitorPlay size={72} className="text-white" strokeWidth={1.5} />
+            </div>
+
+            {/* Text */}
+            <h3 className="font-medad mb-3 text-5xl font-black tracking-wide text-white text-shadow-sm">
+              الدورات الإلكترونية
+            </h3>
+            <p className="mb-8 max-w-[280px] text-center text-2xl font-medium text-gray-100">
+              تعلم عن بعد وفي أي وقت بكل سهولة
+            </p>
+
+            {/* Call to Action */}
+            <div className="text-beige-300 flex items-center gap-3 text-3xl font-bold transition-colors group-hover:text-white">
+              <span>اكتشف الآن</span>
+              <ArrowLeft
+                size={28}
+                className="transition-transform duration-300 group-hover:-translate-x-4"
+              />
+            </div>
+          </a>
+        </ScrollReveal>
+      </div>
 
       <div className="tablet:mx-auto tablet:items-center tablet:text-center relative z-10 mr-12 ml-auto flex w-full max-w-260 flex-col items-start px-6 text-right lg:mr-32 xl:mr-64">
         <ScrollReveal

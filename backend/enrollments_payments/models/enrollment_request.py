@@ -27,8 +27,6 @@ class PaymentMethod(models.TextChoices):
     """Enumeration for payment method choices."""
 
     CASH = "cash", _("نقدًا")
-    CARD = "card", _("بطاقة")
-    BANK_TRANSFER = "bank_transfer", _("تحويل بنكي")
     INSTAPAY = "instapay", _("إنستاباي")
     VODAFONE_CASH = "vodafone_cash", _("فودافون كاش")
     OTHER = "other", _("طريقة أخرى")
@@ -40,8 +38,23 @@ class EnrollmentRequest(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     course = models.ForeignKey(
-        "courses.Course", verbose_name="الدورة", on_delete=models.CASCADE
+        "courses.Course",
+        verbose_name="الدورة",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
     )
+    online_course = models.ForeignKey(
+        "courses_online.OnlineCourse",
+        verbose_name="الدورة الإلكترونية",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+    )
+
+    @property
+    def course_instance(self):
+        return self.course if self.course is not None else self.online_course
 
     parent = models.ForeignKey(
         "parents.Parent", null=True, blank=True, on_delete=models.CASCADE
@@ -131,6 +144,28 @@ class EnrollmentRequest(models.Model):
                 condition=Q(student__isnull=False),
                 name="unique_course_student_request",
             ),
+            # Online requests are only unique while still in flight, so a
+            # course can be bought again after a previous request is closed.
+            # Mirrors the status scoping on Enrollment's online constraints.
+            models.UniqueConstraint(
+                fields=['online_course', 'child'],
+                condition=Q(online_course__isnull=False, child__isnull=False,
+                            status__in=['pending', 'processing']),
+                name='unique_online_course_child_request'
+            ),
+            models.UniqueConstraint(
+                fields=['online_course', 'student'],
+                condition=Q(online_course__isnull=False, student__isnull=False,
+                            status__in=['pending', 'processing']),
+                name='unique_online_course_student_request'
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (Q(course__isnull=False) & Q(online_course__isnull=True)) |
+                    (Q(course__isnull=True) & Q(online_course__isnull=False))
+                ),
+                name='exact_one_course_type_per_request'
+            ),
         ]
 
     def clean(self):
@@ -143,6 +178,12 @@ class EnrollmentRequest(models.Model):
         if self.student:
             self.parent = None
             self.child = None
+        if (self.course is None and self.online_course is None) or (
+            self.course is not None and self.online_course is not None
+        ):
+            raise ValidationError(
+                _("يجب تحديد إما الدورة الحضورية أو الدورة الإلكترونية فقط. / Must specify exactly one of course or online_course.")
+            )
 
         # Parent + child OR student only
         if not (
@@ -180,7 +221,9 @@ class EnrollmentRequest(models.Model):
             self.expires_at = timezone.now() + timedelta(days=7)
 
         if self.price is None:
-            self.price = self.course.price
+            target = self.course_instance
+            if target:
+                self.price = target.price
 
         self.full_clean()
         super().save(*args, **kwargs)
@@ -223,6 +266,7 @@ class EnrollmentRequest(models.Model):
         with transaction.atomic():
             enrollment = Enrollment.objects.create(
                 course=self.course,
+                online_course=self.online_course,
                 student=self.student,
                 child=self.child,
                 enrolled_at=timezone.now(),
@@ -232,12 +276,12 @@ class EnrollmentRequest(models.Model):
 
             # Determine the payment amount:
             # Priority: paid_amount param > enrollment_request.price > course.price
+            target = self.course_instance
             if paid_amount is not None:
                 final_amount = paid_amount
             elif self.price is not None:
                 final_amount = self.price
             else:
-                target = self.course
                 final_amount = (
                     target.price if (
                         target and target.price is not None) else 0
@@ -253,10 +297,11 @@ class EnrollmentRequest(models.Model):
             final_notes = payment_notes or ""
             if (
                 self.price is not None
-                and self.course.price
-                and self.price < self.course.price
+                and target
+                and target.price
+                and self.price < target.price
             ):
-                remaining = float(self.course.price) - float(self.price)
+                remaining = float(target.price) - float(self.price)
                 partial_note = f"[دفعة جزئية] المبلغ المدفوع: {self.price} ج.م | المتبقي: {remaining} ج.م"
                 final_notes = (
                     f"{partial_note}\n{final_notes}".strip()

@@ -7,6 +7,14 @@ import WhatsappIcon from "@/components/icons/WhatsappIcon";
 import SectionDivider from "@/components/landing-page/SectionDivider";
 import Button from "@/components/ui/Button";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import {
+  CONTACT_EMAIL,
+  CONTACT_EMAIL_HREF,
+  CONTACT_PHONE,
+  CONTACT_PHONE_HREF,
+  CONTACT_WHATSAPP_HREF,
+} from "@/lib/contact";
+import { toHindiDigits } from "@/lib/utils";
 
 export default function CallToActionSection() {
   return (
@@ -18,21 +26,21 @@ export default function CallToActionSection() {
         src={HeroBG}
         alt="Hero Background"
         priority
-        className="absolute right-0 bottom-0 max-w-full opacity-35 tablet:opacity-20 object-cover"
+        className="tablet:opacity-20 absolute right-0 bottom-0 max-w-full object-cover opacity-35"
         draggable="false"
       />
 
       <ScrollReveal
         direction="up"
-        className="w-full flex flex-col items-center"
+        className="flex w-full flex-col items-center"
       >
-        <div className="relative z-10 mx-auto text-center flex flex-col items-center text-gray-100 px-6 max-w-4xl">
-          <h2 className="text-shadow-primary mb-9 max-w-170 text-8xl mobile-lg:text-6xl font-bold">
+        <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-6 text-center text-gray-100">
+          <h2 className="text-shadow-primary mobile-lg:text-6xl mb-9 max-w-170 text-8xl font-bold">
             <span className="text-beige-500">ابدأ</span> رحلة التعلم مع أطفالك
             اليوم
           </h2>
 
-          <p className="mb-9 max-w-220 text-4xl mobile-lg:text-2xl">
+          <p className="mobile-lg:text-2xl mb-9 max-w-220 text-4xl">
             انضم إلى أكثر من 500 عائلة اختارت واحة الرضوان لتعليم أطفالهم القرآن
             الكريم والعلوم الإسلامية
           </p>
@@ -47,23 +55,23 @@ export default function CallToActionSection() {
             />
           </div>
 
-          <ul className="text-olive-500 flex items-center tablet:flex-col tablet:items-center gap-11 mobile-lg:gap-4 [&_span]:text-[1.4rem] [&>li]:flex [&>li]:items-center [&>li]:gap-3">
+          <ul className="text-olive-500 tablet:flex-col tablet:items-center mobile-lg:gap-4 flex items-center gap-11 [&_span]:text-[1.4rem] [&>li]:flex [&>li]:items-center [&>li]:gap-3">
             <li>
               <a
-                href="tel:+201234567890"
-                className="flex items-center gap-3 hover:text-white transition-colors duration-200"
+                href={CONTACT_PHONE_HREF}
+                className="flex items-center gap-3 transition-colors duration-200 hover:text-white"
               >
                 <PhoneIcon />
-                <span>٢٠١٢٣٤٥٦٧٨٩٠+</span>
+                <span dir="ltr">{toHindiDigits(CONTACT_PHONE, true)}</span>
               </a>
             </li>
 
             <li>
               <a
-                href="https://wa.me/201234567890"
+                href={CONTACT_WHATSAPP_HREF}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 hover:text-white transition-colors duration-200"
+                className="flex items-center gap-3 transition-colors duration-200 hover:text-white"
               >
                 <WhatsappIcon />
                 <span>واتساب مباشر</span>
@@ -72,11 +80,11 @@ export default function CallToActionSection() {
 
             <li>
               <a
-                href="mailto:info@alredwan.edu"
-                className="flex items-center gap-3 hover:text-white transition-colors duration-200"
+                href={CONTACT_EMAIL_HREF}
+                className="flex items-center gap-3 transition-colors duration-200 hover:text-white"
               >
                 <EmailIcon />
-                <span>info@alredwan.edu</span>
+                <span>{CONTACT_EMAIL}</span>
               </a>
             </li>
           </ul>

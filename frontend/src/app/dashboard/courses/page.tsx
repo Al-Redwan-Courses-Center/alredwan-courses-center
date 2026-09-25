@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import { getUser } from "@/actions/auth";
 import { getAllCourses } from "@/actions/courses";
-import DashboardAllCoursesView from "@/components/dashboard/DashboardAllCoursesView";
+import { getAllOnlineCourses } from "@/actions/online-courses";
+import PublicCourseCatalog from "@/components/courses/PublicCourseCatalog";
 
 export default async function Page(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -13,15 +14,17 @@ export default async function Page(props: {
   const season =
     typeof searchParams.season === "string" ? searchParams.season : undefined;
 
-  const [{ first_name }, paginatedCourses] = await Promise.all([
-    getUser(),
-    getAllCourses({
-      page,
-      search,
-      season,
-      page_size: 8,
-    }),
-  ]);
+  const [{ first_name, role }, paginatedCourses, onlineCourses] =
+    await Promise.all([
+      getUser(),
+      getAllCourses({
+        page,
+        search,
+        season,
+        page_size: 8,
+      }),
+      getAllOnlineCourses(),
+    ]);
 
   return (
     <div className="flex flex-col pt-15 min-[1000px]:pt-32">
@@ -37,11 +40,13 @@ export default async function Page(props: {
             </div>
           }
         >
-          <DashboardAllCoursesView
-            courses={paginatedCourses.results}
+          <PublicCourseCatalog
+            showEnroll={["parent", "student"].includes(role)}
+            physical={paginatedCourses.results}
             totalCount={paginatedCourses.count}
             totalPages={paginatedCourses.total_pages}
             currentPage={paginatedCourses.current_page}
+            online={onlineCourses}
             linkTo="dashboard"
           />
         </Suspense>

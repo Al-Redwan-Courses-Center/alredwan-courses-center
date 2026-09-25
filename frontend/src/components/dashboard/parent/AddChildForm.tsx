@@ -116,9 +116,9 @@ export default function AddChildForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="grid grid-cols-2 tablet:grid-cols-1 gap-x-12 tablet:gap-x-6 gap-y-10 tablet:gap-y-6 bg-white/50 p-10 tablet-sm:p-4 rounded-[2rem_0] shadow-soft"
+      className="tablet:grid-cols-1 tablet:gap-x-6 tablet:gap-y-6 tablet-sm:p-4 shadow-soft grid grid-cols-2 gap-x-12 gap-y-10 rounded-[2rem_0] bg-white/50 p-10"
     >
-      <div className="flex flex-col gap-2 col-span-1">
+      <div className="col-span-1 flex flex-col gap-2">
         <FieldSetInput
           label="الاسم الأول والثاني"
           placeholder="مثال: محمد أحمد"
@@ -127,13 +127,13 @@ export default function AddChildForm({
           })}
         />
         {errors.first_name && (
-          <span className="text-red-800 text-xl px-4">
+          <span className="px-4 text-2xl text-red-800">
             {errors.first_name.message}
           </span>
         )}
       </div>
 
-      <div className="flex flex-col gap-2 col-span-1">
+      <div className="col-span-1 flex flex-col gap-2">
         <FieldSetInput
           label="الاسم الثالث والرابع"
           placeholder="مثال: علي حسن"
@@ -142,27 +142,27 @@ export default function AddChildForm({
           })}
         />
         {errors.last_name && (
-          <span className="text-red-800 text-xl px-4">
+          <span className="px-4 text-2xl text-red-800">
             {errors.last_name.message}
           </span>
         )}
       </div>
 
-      <div className="flex flex-col gap-2 col-span-1">
+      <div className="col-span-1 flex flex-col gap-2">
         <FieldSetInput
           type="date"
           label="تاريخ الميلاد"
           registerReturn={register("dob", { required: "هذا الحقل مطلوب" })}
         />
         {errors.dob && (
-          <span className="text-red-800 text-xl px-4">
+          <span className="px-4 text-2xl text-red-800">
             {errors.dob.message}
           </span>
         )}
       </div>
 
-      <div className="flex flex-col gap-4 col-span-1">
-        <span className="text-2xl font-bold px-3">الجنس</span>
+      <div className="col-span-1 flex flex-col gap-4">
+        <span className="px-3 text-3xl font-bold">الجنس</span>
         <div
           className="flex gap-4"
           role="radiogroup"
@@ -185,14 +185,14 @@ export default function AddChildForm({
                   }
             }
             className={cn(
-              "flex-1 text-center py-4 rounded-lg transition-all text-2xl font-bold outline-hidden focus-visible:ring-2 focus-visible:ring-olive-500",
+              "focus-visible:ring-olive-500 flex-1 rounded-lg py-5 text-center text-3xl font-bold outline-hidden transition-all focus-visible:ring-2",
               isEditing
                 ? genderValue === "boy"
-                  ? "bg-olive-500 text-white shadow-md cursor-not-allowed"
-                  : "bg-gray-100 opacity-40 cursor-not-allowed"
+                  ? "bg-olive-500 cursor-not-allowed text-white shadow-md"
+                  : "cursor-not-allowed bg-gray-100 opacity-40"
                 : genderValue === "boy"
-                  ? "bg-olive-500 text-white shadow-md cursor-pointer"
-                  : "bg-gray-100 hover:bg-gray-200 cursor-pointer",
+                  ? "bg-olive-500 cursor-pointer text-white shadow-md"
+                  : "cursor-pointer bg-gray-100 hover:bg-gray-200",
             )}
           >
             ولد
@@ -213,14 +213,14 @@ export default function AddChildForm({
                   }
             }
             className={cn(
-              "flex-1 text-center py-4 rounded-lg transition-all text-2xl font-bold outline-hidden focus-visible:ring-2 focus-visible:ring-olive-500",
+              "focus-visible:ring-olive-500 flex-1 rounded-lg py-5 text-center text-3xl font-bold outline-hidden transition-all focus-visible:ring-2",
               isEditing
                 ? genderValue === "girl"
-                  ? "bg-olive-500 text-white shadow-md cursor-not-allowed"
-                  : "bg-gray-100 opacity-40 cursor-not-allowed"
+                  ? "bg-olive-500 cursor-not-allowed text-white shadow-md"
+                  : "cursor-not-allowed bg-gray-100 opacity-40"
                 : genderValue === "girl"
-                  ? "bg-olive-500 text-white shadow-md cursor-pointer"
-                  : "bg-gray-100 hover:bg-gray-200 cursor-pointer",
+                  ? "bg-olive-500 cursor-pointer text-white shadow-md"
+                  : "cursor-pointer bg-gray-100 hover:bg-gray-200",
             )}
           >
             بنت
@@ -229,11 +229,11 @@ export default function AddChildForm({
         <input type="hidden" {...register("gender")} />
       </div>
 
-      <div className="col-span-2 tablet:col-span-1 flex justify-center mt-10 tablet:mt-6">
+      <div className="tablet:col-span-1 tablet:mt-6 col-span-2 mt-10 flex justify-center">
         <Button
           type="submit"
           loading={isLoading}
-          className="w-auto px-20 py-6 text-4xl tablet-sm:w-full tablet-sm:px-12 tablet-sm:py-4 tablet-sm:text-2xl"
+          className="tablet-sm:w-full tablet-sm:px-12 tablet-sm:py-4 tablet-sm:text-2xl w-auto px-20 py-6 text-4xl"
         >
           حفظ البيانات
         </Button>

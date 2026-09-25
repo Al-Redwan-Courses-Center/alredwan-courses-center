@@ -244,10 +244,18 @@ class LandingPageInstructorAPITest(BaseAPITestCase):
 class InstructorRatingsAPITest(BaseAPITestCase):
     """Tests for instructor ratings endpoint."""
 
-    def test_ratings_requires_auth(self):
-        """Test that ratings endpoint requires authentication."""
+    def test_ratings_are_public(self):
+        """Ratings are shown on the public instructor page, so visitors may read them."""
         response = self.client.get(
             f'/api/users/instructors/{self.instructor1.id}/ratings/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('statistics', response.data)
+
+    def test_rating_submission_requires_auth(self):
+        """Submitting a rating still requires authentication."""
+        response = self.client.post(
+            f'/api/users/instructors/{self.instructor1.id}/rate/',
+            {'rating': 5, 'feedback': 'x'})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_ratings_success(self):
